@@ -7,7 +7,7 @@ import (
 	"io"
 	"crypto/sha256"
 
-	"github.com/bottos-project/core/library"
+	"github.com/bottos-project/bottos/core/library"
 )
 
 type Block struct {
