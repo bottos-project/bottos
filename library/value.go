@@ -1,4 +1,4 @@
-package types
+package library
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/bottos-project/bottos/core/library/rlp"
 )
 
 // Value can hold values of certain basic types and provides ways to

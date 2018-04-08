@@ -1,36 +1,24 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-package types
+package library
 
 import (
 	"fmt"
 	"math/big"
 	"math/rand"
 	"reflect"
+	"io"
+	"errors"
 )
 
 const (
 	hashLength    = 32
 	addressLength = 20
+	accountNameLength = 20 //TODO
 )
 
 type (
 	Hash    [hashLength]byte
 	Address [addressLength]byte
+	AccountName [accountNameLength]byte
 )
 
 func BytesToHash(b []byte) Hash {
@@ -82,6 +70,19 @@ func EmptyHash(h Hash) bool {
 	return h == Hash{}
 }
 
+func (h *Hash) Serialize(w io.Writer) error {
+	_, err := w.Write(h[:])
+	return err
+}
+
+func (h *Hash) Deserialize(r io.Reader) error {
+	n, err := r.Read(h[:])
+	if n != len(h[:]) || err != nil {
+		return errors.New("deserialize Hash error")
+	}
+	return nil
+}
+
 /////////// Address
 func BytesToAddress(b []byte) Address {
 	var a Address
@@ -125,4 +126,18 @@ func PP(value []byte) string {
 	}
 
 	return fmt.Sprintf("%x...%x", value[:4], value[len(value)-4])
+}
+
+
+func (n *AccountName) Serialize(w io.Writer) error {
+	_, err := w.Write(n[:])
+	return err
+}
+
+func (an *AccountName) Deserialize(r io.Reader) error {
+	n, err := r.Read(an[:])
+	if n != len(an[:]) || err != nil {
+		return errors.New("deserialize AccountName error")
+	}
+	return nil
 }

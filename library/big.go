@@ -1,4 +1,4 @@
-package types
+package library
 
 import "math/big"
 
