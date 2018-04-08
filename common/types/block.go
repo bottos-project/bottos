@@ -45,7 +45,7 @@ func (h *Header) Serialize(w io.Writer) error {
 
 func (h *Header) Deserialize(r io.Reader) error {
 
-	return err
+	return nil
 }
 
 func (b *Block) Serialize(w io.Writer) error {

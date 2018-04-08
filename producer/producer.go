@@ -7,7 +7,7 @@ import (
 
 	"github.com/bottos-project/bottos/core/event"
 	"github.com/bottos-project/bottos/core/common"
-	"github.com/bottos-project/bottos/core/common/types"
+	_"github.com/bottos-project/bottos/core/common/types"
 )
 
 type Producer struct {
@@ -59,11 +59,11 @@ func (p *Producer) ProducerLoop() {
 		}
 		p.mu.Unlock()
 		
-	    header := types.NewHeader([]byte{}, p.cnt)
-		b := types.NewBlock(header)
+	    //header := types.NewHeader([]byte{}, p.cnt)
+		//b := types.NewBlock(header)
 
-		p.bc.PushBlock(b)
-		p.em.Post(common.NewMinedBlockEvent{Block: b})
+		//p.bc.PushBlock(b)
+		//p.em.Post(common.NewMinedBlockEvent{Block: b})
 
 		time.Sleep(100 * time.Millisecond)
 	}
