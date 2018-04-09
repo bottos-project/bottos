@@ -4,6 +4,7 @@ import (
 	"time"
 	"fmt"
 	"os"
+	"path/filepath"
 	//"time"
 	//	"github.com/bottos-project/bottos/core/account"
 	"github.com/bottos-project/bottos/core/api"
@@ -13,10 +14,15 @@ import (
 	tr "github.com/bottos-project/bottos/core/trx"
 	pro "github.com/bottos-project/bottos/core/producer"
 	"github.com/bottos-project/bottos/core/account"
+	"github.com/bottos-project/bottos/core/db"
 	//"github.com/bottos-project/bottos/core/p2p"
 
 	"github.com/micro/go-micro"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	DataDir = "./datadir/"
 )
 
 /*
@@ -35,7 +41,12 @@ import (
 
 func main() {
 	fmt.Println("init db")
-	// db = CreateDB("blockDB")
+	
+	blockDb, err := db.NewKVDatabase(filepath.Join(DataDir, "blockchain"))
+	if err != nil {
+		fmt.Println("init kv database error")
+		return
+	}
 
 	fmt.Println("init eventmux")
 	var emux event.TypeMux
@@ -44,7 +55,7 @@ func main() {
 	account.CreateAccountManager()
 
 	fmt.Println("init blockchain")
-	bc, _ := common.CreateBlockChain(/*db*/)
+	bc, _ := common.CreateBlockChain(blockDb, &emux)
 
 	fmt.Println("init txpool")
 	txpool, _:= tr.CreateTxPool(&emux, bc)

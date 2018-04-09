@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 
 	"github.com/bottos-project/bottos/core/library"
+	"github.com/bottos-project/bottos/core/library/rlp"
 )
 
 type Block struct {
@@ -45,6 +46,7 @@ func (h *Header) Serialize(w io.Writer) error {
 
 func (h *Header) Deserialize(r io.Reader) error {
 
+
 	return nil
 }
 
@@ -68,15 +70,20 @@ func (b *Block) Deserialize(r io.Reader) error {
 	return nil
 }
 
-func (h *Header) Hash() library.Hash {
-	value := bytes.NewBuffer(nil)
-	h.Serialize(value)
-	temp := sha256.Sum256(value.Bytes())
-	return temp
-}
-
 func (b *Block) Hash() library.Hash {
 	return b.header.Hash()
+}
+
+func (h *Header) Hash() library.Hash {
+	v := rlpHash(h)
+	return v
+}
+
+func rlpHash(x interface{}) (h library.Hash) {
+	buf := new(bytes.Buffer)
+	rlp.Encode(buf, x)
+	temp := sha256.Sum256(buf.Bytes())
+	return temp
 }
 
 func copyHeader(h *Header) *Header {
