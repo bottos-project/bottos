@@ -5,9 +5,9 @@ import (
 	"time"
 	"sync"
 
-	"github.com/bottos-project/bottos/core/event"
-	"github.com/bottos-project/bottos/core/common"
-	_"github.com/bottos-project/bottos/core/common/types"
+	"github.com/bottos-project/core/event"
+	"github.com/bottos-project/core/common"
+	_"github.com/bottos-project/core/common/types"
 )
 
 type Producer struct {

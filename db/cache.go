@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/bottos-project/bottos/core/library"
+	"github.com/bottos-project/core/library"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 

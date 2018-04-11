@@ -3,9 +3,9 @@ package trx
 import (
 	"fmt"
 	"time"
-	"github.com/bottos-project/bottos/core/common"
-	"github.com/bottos-project/bottos/core/common/types"
-	"github.com/bottos-project/bottos/core/event"
+	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/event"
 )
 
 type TxPool struct{

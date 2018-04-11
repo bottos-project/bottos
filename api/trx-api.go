@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bottos-project/bottos/core/trx"
-	"github.com/bottos-project/bottos/core/common/types"
+	"github.com/bottos-project/core/trx"
+	"github.com/bottos-project/core/common/types"
 )
 
 type CoreService struct {

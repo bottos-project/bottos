@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/bottos-project/bottos/core/library/rlp"
+	"github.com/bottos-project/core/library/rlp"
 )
 
 // Value can hold values of certain basic types and provides ways to

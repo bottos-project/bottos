@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/bottos-project/bottos/core/db"
+	"github.com/bottos-project/core/db"
 )
 
 type Trie struct {

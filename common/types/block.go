@@ -7,8 +7,8 @@ import (
 	"io"
 	"crypto/sha256"
 
-	"github.com/bottos-project/bottos/core/library"
-	"github.com/bottos-project/bottos/core/library/rlp"
+	"github.com/bottos-project/core/library"
+	"github.com/bottos-project/core/library/rlp"
 )
 
 type Block struct {

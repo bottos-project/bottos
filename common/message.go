@@ -17,7 +17,7 @@
 package common
 
 import (
-	"github.com/bottos-project/bottos/core/common/types"
+	"github.com/bottos-project/core/common/types"
 )
 
 // TxPreEvent is posted when a transaction enters the transaction pool.

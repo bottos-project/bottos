@@ -3,9 +3,9 @@ package common
 import (
 	"fmt"
 	"sync"
-	"github.com/bottos-project/bottos/core/common/types"
-	"github.com/bottos-project/bottos/core/event"
-	"github.com/bottos-project/bottos/core/library"
+	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/event"
+	"github.com/bottos-project/core/library"
 
 	"github.com/hashicorp/golang-lru"
 )
