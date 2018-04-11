@@ -1,0 +1,22 @@
+@startuml
+title  钱包客户端文件上传
+start
+:"选择文件";
+if ("文件是否文件切割") then (true)
+    if ("是文本文件") then (no)
+        if ("图片") then (yes)
+           :"以相似度hash计算图片hash";
+        else (no)
+            :"计算视屏文件切片hash";
+        endif
+    else
+        if ("文本深度切割") then (yes)
+            :"计算文本切片hash sh256";
+        else (no)
+            :"广度大文本切片hash sh256";
+        endif
+    endif
+    :"组织文件切片hash变成hash树及merkle根";
+endif
+stop
+@enduml
