@@ -5,17 +5,15 @@ import (
 	//"time"
 	//"sync"
 
-	"github.com/bottos-project/core/event"
 	"github.com/bottos-project/core/common"
 )
 
 type Protocol struct {
-	em *event.TypeMux
 	bc *common.BlockChain
 }
 
-func NewProtocol(em *event.TypeMux, bc *common.BlockChain) *Protocol {
-	proto := Protocol{em, bc}
+func NewProtocol(bc *common.BlockChain) *Protocol {
+	proto := Protocol{bc}
 	return &proto
 }
 

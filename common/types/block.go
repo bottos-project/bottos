@@ -75,15 +75,7 @@ func (b *Block) Hash() library.Hash {
 }
 
 func (h *Header) Hash() library.Hash {
-	v := rlpHash(h)
-	return v
-}
-
-func rlpHash(x interface{}) (h library.Hash) {
-	buf := new(bytes.Buffer)
-	rlp.Encode(buf, x)
-	temp := sha256.Sum256(buf.Bytes())
-	return temp
+	return library.Hash{}
 }
 
 func copyHeader(h *Header) *Header {

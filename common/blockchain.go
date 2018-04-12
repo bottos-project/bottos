@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/event"
-	"github.com/bottos-project/core/library"
 
 	"github.com/hashicorp/golang-lru"
 )
@@ -19,7 +17,6 @@ type BlockChain struct {
 	blockDb			library.Database
 	//stateDb		library.Database
 	//extraDb		library.Database
-	eventMux		*event.TypeMux
 
 	genesisBlock 	*types.Block
 
@@ -30,16 +27,15 @@ type BlockChain struct {
 	currentBlock	*types.Block
 	lastBlockHash   library.Hash
 
-	cache           *lru.Cache // cache is the LRU caching
+	cache           *lru.Cache
 }
 
-func CreateBlockChain(blockDb library.Database, mux *event.TypeMux) (*BlockChain, error) {
+func CreateBlockChain(blockDb library.Database) (*BlockChain, error) {
 	cache, _ := lru.New(blockCacheLimit)
 	bc := &BlockChain{
 		blockDb:  blockDb,
 		//stateDb:  stateDb,
 		//extraDb:  extraDb,
-		eventMux: mux,
 		cache:    cache,
 	}
 
@@ -48,7 +44,6 @@ func CreateBlockChain(blockDb library.Database, mux *event.TypeMux) (*BlockChain
 		var err error
 		bc.genesisBlock, err = WriteGenesisBlock(blockDb)
 		if err != nil {
-			//log.Fatalf("Write genesis block error %s", err)
 			return nil, err
 		}
 	}
@@ -76,10 +71,7 @@ func (bc *BlockChain) HasBlock(hash library.Hash) bool {
 	return len(data) != 0
 }
 
-// GetBlock retrieves a block from the database by hash and number,
-// caching it if found.
 func (bc *BlockChain) GetBlock(hash library.Hash) *types.Block {
-	// Short circuit if the block's already in the cache, retrieve otherwise
 	if block, ok := bc.cache.Get(hash); ok {
 		return block.(*types.Block)
 	}
@@ -87,18 +79,14 @@ func (bc *BlockChain) GetBlock(hash library.Hash) *types.Block {
 	if block == nil {
 		return nil
 	}
-	// Cache the found block for next time and return
 	bc.cache.Add(block.Hash(), block)
 	return block
 }
 
-// GetBlockByHash retrieves a block from the database by hash, caching it if found.
 func (bc *BlockChain) GetBlockByHash(hash library.Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
 
-// GetBlockByNumber retrieves a block from the database by number, caching it
-// (associated with its hash) if found.
 func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 	hash := GetBlockHashByNumber(bc.blockDb, number)
 	if hash == (library.Hash{}) {
@@ -123,18 +111,13 @@ func (bc *BlockChain) loadLastState() error {
 
 			fmt.Printf("current block num = %v\n", bc.currentBlock.Number())
 		} else {
-			//log.Infof("LastBlock (%x) not found. Recovering...\n", data)
 			if bc.recover() {
-				//log.Infof("Recover successful\n")
 			} else {
-				//log.Fatalf("Recover failed. Please report\n")
 			}
 		}
 	} else {
 		bc.Reset()
 	}
-
-	//log.Infof("Last block (#%v) %x\n", bc.currentBlock.Number(), bc.currentBlock.Hash())
 
 	return nil
 }
@@ -148,12 +131,9 @@ func (bc *BlockChain) Reset() {
 	fmt.Println("TODO: BlockChain reset")
 }
 
-// insert injects a block into the current chain block chain. Note, this function
-// assumes that the `mu` mutex is held!
 func (bc *BlockChain) insert(block *types.Block) {
 	err := WriteHead(bc.blockDb, block)
 	if err != nil {
-		//log.Fatalf("db write fail %s", err)
 	}
 
 	bc.currentBlock = block
@@ -163,14 +143,12 @@ func (bc *BlockChain) insert(block *types.Block) {
 
 func (bc *BlockChain) makeCache() {
 	bc.cache, _ = lru.New(blockCacheLimit)
-	// load in last `blockCacheLimit` - 1 blocks. Last block is the current.
 	bc.cache.Add(bc.genesisBlock.Hash(), bc.genesisBlock)
 	for _, block := range bc.GetBlocksFromHash(bc.currentBlock.Hash(), blockCacheLimit) {
 		bc.cache.Add(block.Hash(), block)
 	}
 }
 
-// GetBlocksFromHash returns the block corresponding to hash and up to n-1 ancestors.
 func (bc *BlockChain) GetBlocksFromHash(hash library.Hash, n int) (blocks []*types.Block) {
 	for i := 0; i < n; i++ {
 		block := bc.GetBlockByHash(hash)
@@ -190,7 +168,6 @@ func (bc *BlockChain) ApplyBlock(block *types.Block) error {
 	return nil
 }
 
-/*InsertChain---eth1.0.3*/
 func (bc *BlockChain) PushBlock(block *types.Block) error {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
