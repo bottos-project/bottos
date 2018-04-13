@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bottos-project/core/trx"
+	"github.com/bottos-project/core/transaction"
 	"github.com/bottos-project/core/common/types"
 )
 
