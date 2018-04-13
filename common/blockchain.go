@@ -14,9 +14,9 @@ const (
 )
 
 type BlockChain struct {
-	blockDb			library.Database
-	//stateDb		library.Database
-	//extraDb		library.Database
+	blockDb			Database
+	//stateDb		Database
+	//extraDb		Database
 
 	genesisBlock 	*types.Block
 
@@ -25,12 +25,12 @@ type BlockChain struct {
 
 	checkpoint      int // TODO
 	currentBlock	*types.Block
-	lastBlockHash   library.Hash
+	lastBlockHash   Hash
 
 	cache           *lru.Cache
 }
 
-func CreateBlockChain(blockDb library.Database) (*BlockChain, error) {
+func CreateBlockChain(blockDb Database) (*BlockChain, error) {
 	cache, _ := lru.New(blockCacheLimit)
 	bc := &BlockChain{
 		blockDb:  blockDb,
@@ -62,7 +62,7 @@ func (bc *BlockChain) GetGenesisBlock() *types.Block {
 	return bc.genesisBlock
 }
 
-func (bc *BlockChain) HasBlock(hash library.Hash) bool {
+func (bc *BlockChain) HasBlock(hash Hash) bool {
 	if bc.cache.Contains(hash) {
 		return true
 	}
@@ -71,7 +71,7 @@ func (bc *BlockChain) HasBlock(hash library.Hash) bool {
 	return len(data) != 0
 }
 
-func (bc *BlockChain) GetBlock(hash library.Hash) *types.Block {
+func (bc *BlockChain) GetBlock(hash Hash) *types.Block {
 	if block, ok := bc.cache.Get(hash); ok {
 		return block.(*types.Block)
 	}
@@ -83,19 +83,19 @@ func (bc *BlockChain) GetBlock(hash library.Hash) *types.Block {
 	return block
 }
 
-func (bc *BlockChain) GetBlockByHash(hash library.Hash) *types.Block {
+func (bc *BlockChain) GetBlockByHash(hash Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
 
 func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 	hash := GetBlockHashByNumber(bc.blockDb, number)
-	if hash == (library.Hash{}) {
+	if hash == (Hash{}) {
 		return nil
 	}
 	return bc.GetBlock(hash)
 }
 
-func (bc *BlockChain) GetBlockHashByNumber(number uint32) library.Hash {
+func (bc *BlockChain) GetBlockHashByNumber(number uint32) Hash {
 	return GetBlockHashByNumber(bc.blockDb, number)
 }
 
@@ -104,7 +104,7 @@ func (bc *BlockChain) GetBlockHashByNumber(number uint32) library.Hash {
 func (bc *BlockChain) loadLastState() error {
 	data, _ := bc.blockDb.Get([]byte("LastBlock"))
 	if len(data) != 0 {
-		block := bc.GetBlockByHash(library.BytesToHash(data))
+		block := bc.GetBlockByHash(BytesToHash(data))
 		if block != nil {
 			bc.currentBlock = block
 			bc.lastBlockHash = block.Hash()
@@ -149,7 +149,7 @@ func (bc *BlockChain) makeCache() {
 	}
 }
 
-func (bc *BlockChain) GetBlocksFromHash(hash library.Hash, n int) (blocks []*types.Block) {
+func (bc *BlockChain) GetBlocksFromHash(hash Hash, n int) (blocks []*types.Block) {
 	for i := 0; i < n; i++ {
 		block := bc.GetBlockByHash(hash)
 		if block == nil {

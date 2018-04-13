@@ -6,9 +6,6 @@ import (
 	"bytes"
 	"io"
 	"crypto/sha256"
-
-	"github.com/bottos-project/core/library"
-	"github.com/bottos-project/core/library/rlp"
 )
 
 type Block struct {
@@ -17,13 +14,13 @@ type Block struct {
 }
 
 type Header struct {
-	PrevBlockHash	library.Hash		// Hash of Previos block
+	PrevBlockHash	Hash		// Hash of Previos block
 	Number      	uint32				// Block Number
 	Timestamp       uint32         		// Creation time
-	MerkleRoot		library.Hash
-	Producer		library.AccountName
-	ProducerChange	[]library.AccountName
-	ProducerSign	library.Hash	// TODO ECSDA sign type
+	MerkleRoot		Hash
+	Producer		AccountName
+	ProducerChange	[]AccountName
+	ProducerSign	Hash	// TODO ECSDA sign type
 }
 
 func NewBlock(h *Header, txs []*Transaction) *Block {
@@ -70,12 +67,12 @@ func (b *Block) Deserialize(r io.Reader) error {
 	return nil
 }
 
-func (b *Block) Hash() library.Hash {
+func (b *Block) Hash() Hash {
 	return b.header.Hash()
 }
 
-func (h *Header) Hash() library.Hash {
-	return library.Hash{}
+func (h *Header) Hash() Hash {
+	return Hash{}
 }
 
 func copyHeader(h *Header) *Header {
@@ -86,11 +83,11 @@ func copyHeader(h *Header) *Header {
 	return &cpy
 }
 
-func (b *Block) PrevBlockHash() library.Hash		{ return b.header.PrevBlockHash }
-func (b *Block) Number() uint32     				{ return b.header.Number }
-func (b *Block) Time() uint32						{ return b.header.Timestamp }
-func (b *Block) MerkleRoot() library.Hash			{ return b.header.MerkleRoot }
-func (b *Block) Producer() library.AccountName		{ return b.header.Producer }
+func (b *Block) PrevBlockHash() Hash		{ return b.header.PrevBlockHash }
+func (b *Block) Number() uint32     		{ return b.header.Number }
+func (b *Block) Time() uint32				{ return b.header.Timestamp }
+func (b *Block) MerkleRoot() Hash			{ return b.header.MerkleRoot }
+func (b *Block) Producer() AccountName		{ return b.header.Producer }
 
 func (b *Block) Header() *Header				{ return copyHeader(b.header) }
 

@@ -13,27 +13,27 @@ var (
 	blockNumPre   = []byte("bn-")
 )
 
-func GetBlock(db library.Database, hash library.Hash) *types.Block {
+func GetBlock(db Database, hash Hash) *types.Block {
 	return nil
 }
 
-func GetBlockHashByNumber(db library.Database, number uint32) library.Hash {
-	return library.Hash{}
+func GetBlockHashByNumber(db Database, number uint32) Hash {
+	return Hash{}
 }
 
 
-func WriteGenesisBlock(blockDb library.Database) (*types.Block, error) {
+func WriteGenesisBlock(blockDb Database) (*types.Block, error) {
 	// TODO process init account
 	
 	// TODO make block and write to db
 	header := &types.Header {
-		PrevBlockHash:	library.Hash{},
+		PrevBlockHash:	Hash{},
 		Number:			0,
 		Timestamp:		uint32(time.Now().Unix()),
-		MerkleRoot:     library.Hash{}, // TODO
-		Producer:		library.AccountName{},
-		ProducerChange:	[]library.AccountName{}, //  TODO
-		ProducerSign:	library.Hash{}, // TODO
+		MerkleRoot:     Hash{}, // TODO
+		Producer:		AccountName{},
+		ProducerChange:	[]AccountName{}, //  TODO
+		ProducerSign:	Hash{}, // TODO
 	}
 
 	block := types.NewBlock(header, []*types.Transaction{})
@@ -50,14 +50,14 @@ func WriteGenesisBlock(blockDb library.Database) (*types.Block, error) {
 	return block, nil
 }
 
-func WriteChainNumber(db library.Database, block *types.Block) error {
+func WriteChainNumber(db Database, block *types.Block) error {
 	return nil
 }
 
-func WriteHead(db library.Database, block *types.Block) error {
+func WriteHead(db Database, block *types.Block) error {
 	return nil
 }
 
-func WriteBlock(db library.Database, block *types.Block) error {
+func WriteBlock(db Database, block *types.Block) error {
 	return nil
 }
