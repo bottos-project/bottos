@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  file introduction for commom tip
+ * file description:  provide a interface such as time to seconds and epoch time etc.
  * @Author: May Luo
  * @Date:   2017-12-01
  * @Last Modified by:
@@ -29,16 +29,10 @@ import (
 	"time"
 )
 
-type Microseconds struct {
-	int64 micro
-}
-
 func NowToSeconds() int64 {
 	return time.Now().Unix()
 }
-func microseconds() int64 {
 
-}
 func millseconds(s int64) int64 {
 	return s * 1000
 }
@@ -49,5 +43,11 @@ func seconds(s int64) int64 {
 func getEpochTime() int64 {
 	now := time.Now() // get current time
 	epoch := time.Since(now)
-	return epoch.Nanoseconds * 1000 // microseconds
+	epochTime := int64(1000) * epoch.Nanoseconds()
+
+	return epochTime // microseconds
+}
+
+func GetSecondSincEpoch(when time.Time) int64 {
+	return when.Unix() - getEpochTime()
 }
