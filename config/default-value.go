@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  file introduction for commom tip
+ * file description:  define constants for this blockchain
  * @Author: May Luo
  * @Date:   2017-12-01
  * @Last Modified by:
