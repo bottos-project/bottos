@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package types;
+
+message Transaction {
+	uint32 RefBlockNum              = 1;
+	uint32 RefBlockHashPrefix       = 2;
+	uint64 Expiration               = 3;
+	uint64 Sender                   = 4;
+	uint64 Contract                 = 5;
+	uint64 Action                   = 6;
+	bytes Param                     = 7;
+	bytes Signature                 = 8;
+}

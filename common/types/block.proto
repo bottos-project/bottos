@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "transaction.proto";
+
+package types;
+
+message Block {
+	Header Header = 1;
+	repeated Transaction Transactions = 2;
+}
+
+message Header {
+	bytes PrevBlockHash             = 1;
+	uint32 Number                   = 2;
+	uint64 Timestamp                = 3;
+	bytes MerkleRoot                = 4;
+	bytes Producer                  = 5;
+	repeated bytes ProducerChange   = 6;
+	bytes ProducerSign              = 7;
+}
+
