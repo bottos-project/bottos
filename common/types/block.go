@@ -96,3 +96,17 @@ func (b *Block) GetProducerSign() Hash {
 	bh := b.GetHeader().GetProducerSign()
 	return BytesToHash(bh)
 }
+
+func (b *Block) GetTransactions(hash Hash) []*Transaction {
+	return b.Transactions
+} 
+
+func (b *Block) GetTransactionByHash(hash Hash) *Transaction {
+	for _, transaction := range b.Transactions {
+		if thransaction.Hash() == hash {
+			return transaction
+		}
+	}
+
+	return nil
+} 
