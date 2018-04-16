@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package example;
+
+import "github.com/bottos-project/core/common/types/transaction.proto";
+
+option go_package = "github.com/bottos-project/core/tool/example";
+
+message Example {
+	uint32 ID = 1;
+	types.Transaction Transaction = 2;
+}
+

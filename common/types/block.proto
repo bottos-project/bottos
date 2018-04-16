@@ -1,8 +1,10 @@
 syntax = "proto3";
 
-import "transaction.proto";
+import "github.com/bottos-project/core/common/types/transaction.proto";
 
 package types;
+
+option go_package = "github.com/bottos-project/core/common/types";
 
 message Block {
 	Header Header = 1;
@@ -18,4 +20,3 @@ message Header {
 	repeated bytes ProducerChange   = 6;
 	bytes ProducerSign              = 7;
 }
-

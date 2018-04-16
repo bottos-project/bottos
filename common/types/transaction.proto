@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package types;
 
+option go_package = "github.com/bottos-project/core/common/types";
+
 message Transaction {
 	uint32 RefBlockNum              = 1;
 	uint32 RefBlockHashPrefix       = 2;
