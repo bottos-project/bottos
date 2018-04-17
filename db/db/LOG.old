@@ -1,8 +1,0 @@
-=============== Apr 17, 2018 (CST) ===============
-20:24:57.408412 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-20:24:57.455538 db@open opening
-20:24:57.455538 journal@recovery F·1
-20:24:57.456540 journal@recovery recovering @1
-20:24:57.466567 mem@flush created L0@2 N·1 S·115B "abc,v1":"abc,v1"
-20:24:57.491634 db@janitor F·3 G·0
-20:24:57.491634 db@open done T·36.096ms
