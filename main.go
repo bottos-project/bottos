@@ -17,6 +17,8 @@ import (
 
 	//	"github.com/micro/go-micro"
 	//	log "github.com/sirupsen/logrus"
+	cactor "github.com/bottos-project/core/action/actor"
+	caapi "github.com/bottos-project/core/action/actor/api"
 )
 
 var (
@@ -33,6 +35,9 @@ func main() {
 
 	fmt.Println("init blockchain")
 	chain.CreateBlockChain(blockDb)
+
+	cactor.InitActors()
+	caapi.PushTransaction(2876568)
 
 	//	fmt.Println("init txpool")
 	//	txpool, _ := tr.CreateTxPool(&emux, bc)
