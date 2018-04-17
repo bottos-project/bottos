@@ -27,9 +27,9 @@ package netactor
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	log "github.com/AsynkronIT/protoactor-go/log"
 )
 
 var NetActorPid *actor.PID
@@ -55,28 +55,28 @@ func NewNetActor() *actor.PID {
 	}
 }
 
-func (NetActor *NetActor) handleSystemMsg(msg interface{}) {
+func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 
-	switch msg.(type) {
+	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.DebugLevel()
-		//log.Info("NetActor received started msg")
+		log.Printf("NetActor received started msg", msg)
 
 	case *actor.Stopping:
-		//log.Warn("NetActor received stopping msg")
+		log.Printf("NetActor received stopping msg")
 
 	case *actor.Restart:
-		//log.Warn("NetActor received restart msg")
+		log.Printf("NetActor received restart msg")
 
 	case *actor.Restarting:
-		//log.Warn("NetActor received restarting msg")
+		log.Printf("NetActor received restarting msg")
 	}
+
 }
 
 func (NetActor *NetActor) Receive(context actor.Context) {
 
-	NetActor.handleSystemMsg(context.Message)
+	NetActor.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 

@@ -27,6 +27,7 @@ package produceractor
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -54,27 +55,28 @@ func NewProducerActor() *actor.PID {
 	}
 }
 
-func (ProducerActor *ProducerActor) handleSystemMsg(msg interface{}) {
+func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
 
-	switch msg.(type) {
+	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		//log.Info("ProducerActor received started msg")
+		log.Printf("ProducerActor received started msg", msg)
 
 	case *actor.Stopping:
-		//log.Warn("ProducerActor received stopping msg")
+		log.Printf("ProducerActor received stopping msg")
 
 	case *actor.Restart:
-		//log.Warn("ProducerActor received restart msg")
+		log.Printf("ProducerActor received restart msg")
 
 	case *actor.Restarting:
-		//log.Warn("ProducerActor received restarting msg")
+		log.Printf("ProducerActor received restarting msg")
 	}
+
 }
 
 func (ProducerActor *ProducerActor) Receive(context actor.Context) {
 
-	ProducerActor.handleSystemMsg(context.Message)
+	ProducerActor.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 

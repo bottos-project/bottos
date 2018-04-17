@@ -7,11 +7,12 @@ import (
 	//	//"time"
 
 	"github.com/bottos-project/core/chain"
+	"github.com/bottos-project/core/db"
 	//	"github.com/bottos-project/core/account"
 	//	"github.com/bottos-project/core/api"
 	//	"github.com/bottos-project/core/common"
 	//	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
+
 	//	pro "github.com/bottos-project/core/producer"
 	//	//"github.com/bottos-project/core/p2p"
 
@@ -39,6 +40,7 @@ func main() {
 	cactor.InitActors()
 	caapi.PushTransaction(2876568)
 
+	//console.ReadLine()
 	//	fmt.Println("init txpool")
 	//	txpool, _ := tr.CreateTxPool(&emux, bc)
 

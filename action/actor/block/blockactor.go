@@ -27,6 +27,7 @@ package blockactor
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -54,27 +55,28 @@ func NewBlockActor() *actor.PID {
 	}
 }
 
-func (BlockActor *BlockActor) handleSystemMsg(msg interface{}) {
+func (BlockActor *BlockActor) handleSystemMsg(context actor.Context) {
 
-	switch msg.(type) {
+	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		//log.Info("BlockActor received started msg")
+		log.Printf("BlockActor received started msg", msg)
 
 	case *actor.Stopping:
-		//log.Warn("BlockActor received stopping msg")
+		log.Printf("BlockActor received stopping msg")
 
 	case *actor.Restart:
-		//log.Warn("BlockActor received restart msg")
+		log.Printf("BlockActor received restart msg")
 
 	case *actor.Restarting:
-		//log.Warn("BlockActor received restarting msg")
+		log.Printf("BlockActor received restarting msg")
 	}
+
 }
 
 func (BlockActor *BlockActor) Receive(context actor.Context) {
 
-	BlockActor.handleSystemMsg(context.Message)
+	BlockActor.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 
