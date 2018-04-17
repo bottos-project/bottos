@@ -29,7 +29,7 @@ var (
 func main() {
 	//	fmt.Println("init db")
 
-	blockDb := db.NewDbService(DataDir)
+	blockDb := db.NewDbService(DataDir, DataDir)
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
