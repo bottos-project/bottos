@@ -2,22 +2,21 @@ package main
 
 import (
 	"fmt"
-//	"os"
-	"path/filepath"
-//	"time"
-//	//"time"
-	"github.com/bottos-project/core/db/platform/kvdb"
-	"github.com/bottos-project/core/chain"
-//	"github.com/bottos-project/core/account"
-//	"github.com/bottos-project/core/api"
-//	"github.com/bottos-project/core/common"
-//	"github.com/bottos-project/core/common/types"
-//	"github.com/bottos-project/core/db"
-//	pro "github.com/bottos-project/core/producer"
-//	//"github.com/bottos-project/core/p2p"
+	//	"os"
+	//	"time"
+	//	//"time"
 
-//	"github.com/micro/go-micro"
-//	log "github.com/sirupsen/logrus"
+	"github.com/bottos-project/core/chain"
+	//	"github.com/bottos-project/core/account"
+	//	"github.com/bottos-project/core/api"
+	//	"github.com/bottos-project/core/common"
+	//	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/db"
+	//	pro "github.com/bottos-project/core/producer"
+	//	//"github.com/bottos-project/core/p2p"
+
+	//	"github.com/micro/go-micro"
+	//	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,11 +26,7 @@ var (
 func main() {
 	//	fmt.Println("init db")
 
-	blockDb, err := kvdb.NewKVDatabase(filepath.Join(DataDir, "blockchain"))
-	if err != nil {
-		fmt.Println("init kv database error")
-		return
-	}
+	blockDb := db.NewDbService(DataDir)
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
