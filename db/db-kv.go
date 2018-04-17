@@ -16,21 +16,33 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: database for contract
+ * file description: database interface
  * @Author: May Luo
- * @Date:   2017-12-01
+ * @Date:   2017-12-04
  * @Last Modified by:
  * @Last Modified time:
  */
-package codedb
 
-type CodeDbRepo interface {
-	CallCreatObject(objectName string, objectValue interface{}) error
-	CallCreatObjectIndex(objectName string, indexName string) error
-	CallSetObject(objectName string, objectValue interface{}) error
-	CallSetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
-	CallSetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
-	CallGetObject(objectName string) (interface{}, error)
-	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
-	CallGetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
+package db
+
+func (d *DBService) Put(key []byte, value []byte) error {
+	return d.kvRepo.CallPut(key, value)
+}
+
+func (d *DBService) Get(key []byte) ([]byte, error) {
+	return d.kvRepo.CallGet(key)
+}
+
+func (d *DBService) Delete(key []byte) error {
+
+	return d.kvRepo.CallDelete(key)
+}
+
+func (d *DBService) Flush() error {
+	return d.kvRepo.CallFlush()
+}
+
+func (d *DBService) Close() {
+
+	d.kvRepo.CallClose()
 }

@@ -123,3 +123,7 @@ func ToStringD(queryMap bson.D) string {
 
 	return string(json)
 }
+
+func (o *OptionDbRepository) CallOptionPut(string, string) {
+
+}

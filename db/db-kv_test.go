@@ -16,21 +16,37 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: database for contract
+ * file description: database interface
  * @Author: May Luo
- * @Date:   2017-12-01
+ * @Date:   2017-12-04
  * @Last Modified by:
  * @Last Modified time:
  */
-package codedb
+package db
 
-type CodeDbRepo interface {
-	CallCreatObject(objectName string, objectValue interface{}) error
-	CallCreatObjectIndex(objectName string, indexName string) error
-	CallSetObject(objectName string, objectValue interface{}) error
-	CallSetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
-	CallSetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
-	CallGetObject(objectName string) (interface{}, error)
-	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
-	CallGetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
+import (
+	"fmt"
+	"testing"
+)
+
+func TestDBService_Callput(t *testing.T) {
+	fmt.Println("abc")
+	ins := NewDbService("./db")
+	ins.Put([]byte("abc"), []byte("123"))
+	res, _ := ins.Get([]byte("abc"))
+	fmt.Println(res)
+	ins.Close()
+}
+func TestDBService_CallGet(t *testing.T) {
+	fmt.Println("abc")
+	ins := NewDbService("./db")
+	ins.Put([]byte("abc"), []byte("123"))
+	res, _ := ins.Get([]byte("abc"))
+	fmt.Println(res)
+}
+func TestDBService_CallFlush(t *testing.T) {
+	fmt.Println("abc")
+	ins := NewDbService("./db")
+	ins.Put([]byte("abc"), []byte("123"))
+	ins.Flush()
 }

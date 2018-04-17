@@ -25,9 +25,9 @@
 package kvdb
 
 type KvDBRepo interface {
-	Put(key []byte, value []byte) error
-	Get(key []byte) ([]byte, error)
-	Delete(key []byte) error
-	Close()
-	Flush() error
+	CallPut(key []byte, value []byte) error
+	CallGet(key []byte) ([]byte, error)
+	CallDelete(key []byte) error
+	CallClose()
+	CallFlush() error
 }

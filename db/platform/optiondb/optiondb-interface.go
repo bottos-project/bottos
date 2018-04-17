@@ -1,4 +1,3 @@
-
 // Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
@@ -17,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: option database interface 
+ * file description: option database interface
  * @Author: May Luo
  * @Date:   2017-12-01
  * @Last Modified by:
@@ -25,7 +24,6 @@
  */
 package optiondb
 
-
 type OptionDbRepo interface {
-	put(string, string)
+	CallOptionPut(string, string)
 }

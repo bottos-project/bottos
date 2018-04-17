@@ -23,7 +23,6 @@
  * @Last Modified time:
  */
 
-
 package kvdb
 
 import (
@@ -54,30 +53,30 @@ func NewKVDatabase(file string) (*KVDatabase, error) {
 	}, nil
 }
 
-func (self *KVDatabase) Put(key []byte, value []byte) error {
+func (k *KVDatabase) CallPut(key []byte, value []byte) error {
 
-	return self.db.Put(key, value, nil)
+	return k.db.Put(key, value, nil)
 }
 
-func (self *KVDatabase) Get(key []byte) ([]byte, error) {
-	return self.db.Get(key, nil)
+func (k *KVDatabase) CallGet(key []byte) ([]byte, error) {
+	return k.db.Get(key, nil)
 }
 
-func (self *KVDatabase) Delete(key []byte) error {
+func (k *KVDatabase) CallDelete(key []byte) error {
 
-	return self.db.Delete(key, nil)
+	return k.db.Delete(key, nil)
 }
 
-func (self *KVDatabase) NewIterator() iterator.Iterator {
-	return self.db.NewIterator(nil, nil)
+func (k *KVDatabase) CallNewIterator() iterator.Iterator {
+	return k.db.NewIterator(nil, nil)
 }
 
-func (self *KVDatabase) Flush() error {
+func (k *KVDatabase) CallFlush() error {
 	return nil
 }
 
-func (self *KVDatabase) Close() {
+func (k *KVDatabase) CallClose() {
 
-	self.db.Close()
-	fmt.Println("flushed and closed db:", self.fn)
+	k.db.Close()
+	fmt.Println("flushed and closed db:", k.fn)
 }

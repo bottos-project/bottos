@@ -37,6 +37,33 @@ type DBService struct {
 	codeDb    codedb.CodeDbRepo
 }
 
-func NewDbService(opt optiondb.OptionDbRepo, kv kvdb.KvDBRepo) *DBService {
-	return &DBService{optDbRepo: opt, kvRepo: kv}
+func NewDbService(path string) *DBService {
+	kv, err := kvdb.NewKVDatabase(path)
+	if err != nil {
+		return nil
+	}
+	optiondb := optiondb.NewOptionDbRepository(path)
+
+	return &DBService{optDbRepo: optiondb, kvRepo: kv}
+}
+
+type DBApi interface {
+	//kv database interface
+	Put(key []byte, value []byte) error
+	Get(key []byte) ([]byte, error)
+	Delete(key []byte) error
+	Close()
+	Flush() error
+	//code db interface can rollback
+	CreatObject(objectName string, objectValue interface{}) error
+	CreatObjectIndex(objectName string, indexName string) error
+	SetObject(objectName string, objectValue interface{}) error
+	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
+	SetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
+	GetObject(objectName string) (interface{}, error)
+	GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
+	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
+
+	//mongodb interface
+	Set(string, string)
 }
