@@ -16,21 +16,11 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  delegate role
- * @Author: May Luo
- * @Date:   2017-12-02
+ * file description:  general Hash type
+ * @Author: Gong Zibin
+ * @Date:   2017-12-07
  * @Last Modified by:
  * @Last Modified time:
  */
 
 package role
-
-type Delegate struct {
-	Id uint32
-
-	//owner AccountName
-	LastAslot uint64
-	//signing_key   PublicKeyType
-	TotalMissed           int64
-	LastConfirmedBlockNum uint32
-}

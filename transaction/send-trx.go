@@ -1,4 +1,4 @@
-package trx
+package transaction
 
 import (
 	"fmt"

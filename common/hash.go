@@ -22,13 +22,15 @@
  * @Last Modified by:
  * @Last Modified time:
  */
- package common
+package common
 
- import (
+import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
- )
- 
+	"fmt"
+)
+
 const (
 	HashLength = 32
 )
@@ -52,7 +54,7 @@ func EmptyHash(h Hash) bool {
 }
 
 func HexToHash(s string) Hash {
-	return BytesToHash(FromHex(s))
+	return BytesToHash(HexStringToBytes(s))
 }
 
 func (h Hash) ToString() string {
@@ -64,11 +66,11 @@ func (h Hash) Bytes() []byte {
 }
 
 func (h Hash) ToHexString() string {
-	return Bytes2Hex(h[:])
+	return BytesToHex(h[:])
 }
 
 func (h *Hash) SetString(s string) {
-	h.SetBytes([]byte(s)) 
+	h.SetBytes([]byte(s))
 }
 
 func (h *Hash) SetBytes(b []byte) {
@@ -111,4 +113,3 @@ func HexStringToBytes(s string) []byte {
 	}
 	return nil
 }
-
