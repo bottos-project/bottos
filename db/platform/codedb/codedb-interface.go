@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: database for contract
+ * file description: database for object
  * @Author: May Luo
  * @Date:   2017-12-01
  * @Last Modified by:

@@ -32,19 +32,20 @@ import (
 )
 
 type DBService struct {
-	optDbRepo optiondb.OptionDbRepo
-	kvRepo    kvdb.KvDBRepo
-	codeDb    codedb.CodeDbRepo
+	optDbRepo  optiondb.OptionDbRepo
+	kvRepo     kvdb.KvDBRepo
+	codeDbRepo codedb.CodeDbRepo
 }
 
-func NewDbService(path string) *DBService {
+func NewDbService(path string, codedbPath string) *DBService {
 	kv, err := kvdb.NewKVDatabase(path)
 	if err != nil {
 		return nil
 	}
 	optiondb := optiondb.NewOptionDbRepository(path)
+	codedb, err := codedb.NewCodeDbRepository(codedbPath)
 
-	return &DBService{optDbRepo: optiondb, kvRepo: kv}
+	return &DBService{optDbRepo: optiondb, kvRepo: kv, codeDbRepo: codedb}
 }
 
 type DBApi interface {
