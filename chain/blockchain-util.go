@@ -23,119 +23,120 @@
  * @Last Modified time:
  */
 
- package chain
+package chain
 
- import (
-	 "time"
-	 "fmt"
-	 "github.com/bottos-project/core/common"
-	 "github.com/bottos-project/core/common/types"
-	 "github.com/bottos-project/core/db/platform/kvdb"
+import (
+	"fmt"
+	"time"
 
-	 "github.com/golang/protobuf/proto"
- )
- 
- var (
-	 BlockHashPrefix  	 = []byte("bh-")
-	 BlockNumberPrefix   = []byte("bn-")
-	 LastBlockKey		 = []byte("lb")
- )
- 
- func HasBlock(db kvdb.KvDBRepo, hash common.Hash) bool {
-	 data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
-	 if len(data) != 0 {
-		 return true
-	 }
- 
-	 return false
- }
- 
- func GetBlock(db kvdb.KvDBRepo, hash common.Hash) *types.Block {
-	 data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
-	 if len(data) == 0 {
-		 return nil
-	 }
- 
-	 block := types.Block{}
-	 if err := proto.Unmarshal(data, &block); err != nil {
-		 return nil
-	 }
- 
-	 fmt.Printf("GetBlock, hash: %x, data: %x\n", hash.Bytes(), data)
- 
-	 return &block
- }
- func GetBlockHashByNumber(db kvdb.KvDBRepo, number uint32) common.Hash {
-	 hash, _ := db.Get(append(BlockNumberPrefix, common.NumberToBytes(number,32)...))
-	 if len(hash) == 0 {
-		 return common.Hash{}
-	 }
-	 return common.BytesToHash(hash)
- }
- 
- func GetLastBlock(db kvdb.KvDBRepo) *types.Block {
-	 data, _ := db.Get(LastBlockKey)
-	 if len(data) == 0 {
-		 return nil
-	 }
- 
-	 block := types.Block{}
-	 if err := proto.Unmarshal(data, &block); err != nil {
-		 return nil
-	 }
- 
-	 return &block
- }
- 
- func WriteGenesisBlock(blockDb kvdb.KvDBRepo) (*types.Block, error) {
-	 // TODO make block and write to db
-	 header := &types.Header {
-		 PrevBlockHash:		[]byte{},
-		 Number:			0,
-		 Timestamp:			uint64(time.Now().Unix()),
-		 MerkleRoot:    	[]byte{},
-		 Producer:			[]byte{},
-		 ProducerChange:	[][]byte{},
-		 ProducerSign:		[]byte{},
-	 }
- 
-	 block := types.NewBlock(header, []*types.Transaction{})
- 
-	 if err := WriteBlock(blockDb, block); err != nil {
-		 return nil, err
-	 }
- 
-	 if err := writeHead(blockDb, block); err != nil {
-		 return nil, err
-	 }
-	 
-	 return block, nil
- }
- 
- func writeHead(db kvdb.KvDBRepo, block *types.Block) error {
-	 key := append(BlockNumberPrefix, common.NumberToBytes(block.GetNumber(),32)...)
-	 err := db.Put(key, block.Hash().Bytes())
-	 if err != nil {
-		 return err
-	 }
- 
-	 err = db.Put(LastBlockKey, block.Hash().Bytes())
-	 if err != nil {
-		 return err
-	 }
-	 return nil
- }
- 
- func WriteBlock(db kvdb.KvDBRepo, block *types.Block) error {
-	 key := append(BlockHashPrefix, block.Hash().Bytes()...)
-	 data, _ := proto.Marshal(block)
- 
-	 err := db.Put(key, data)
-	 if err != nil {
-		 return err
-	 }
- 
-	 fmt.Printf("WriteBlock, hash: %x, key: %x, value: %x\n", block.Hash().Bytes(), key, data)
- 
-	 return writeHead(db, block)
- }
+	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/db"
+
+	"github.com/golang/protobuf/proto"
+)
+
+var (
+	BlockHashPrefix   = []byte("bh-")
+	BlockNumberPrefix = []byte("bn-")
+	LastBlockKey      = []byte("lb")
+)
+
+func HasBlock(db *db.DBService, hash common.Hash) bool {
+	data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
+	if len(data) != 0 {
+		return true
+	}
+
+	return false
+}
+
+func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
+	data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
+	if len(data) == 0 {
+		return nil
+	}
+
+	block := types.Block{}
+	if err := proto.Unmarshal(data, &block); err != nil {
+		return nil
+	}
+
+	fmt.Printf("GetBlock, hash: %x, data: %x\n", hash.Bytes(), data)
+
+	return &block
+}
+func GetBlockHashByNumber(db *db.DBService, number uint32) common.Hash {
+	hash, _ := db.Get(append(BlockNumberPrefix, common.NumberToBytes(number, 32)...))
+	if len(hash) == 0 {
+		return common.Hash{}
+	}
+	return common.BytesToHash(hash)
+}
+
+func GetLastBlock(db *db.DBService) *types.Block {
+	data, _ := db.Get(LastBlockKey)
+	if len(data) == 0 {
+		return nil
+	}
+
+	block := types.Block{}
+	if err := proto.Unmarshal(data, &block); err != nil {
+		return nil
+	}
+
+	return &block
+}
+
+func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
+	// TODO make block and write to db
+	header := &types.Header{
+		PrevBlockHash:  []byte{},
+		Number:         0,
+		Timestamp:      uint64(time.Now().Unix()),
+		MerkleRoot:     []byte{},
+		Producer:       []byte{},
+		ProducerChange: [][]byte{},
+		ProducerSign:   []byte{},
+	}
+
+	block := types.NewBlock(header, []*types.Transaction{})
+
+	if err := WriteBlock(blockDb, block); err != nil {
+		return nil, err
+	}
+
+	if err := writeHead(blockDb, block); err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
+func writeHead(db *db.DBService, block *types.Block) error {
+	key := append(BlockNumberPrefix, common.NumberToBytes(block.GetNumber(), 32)...)
+	err := db.Put(key, block.Hash().Bytes())
+	if err != nil {
+		return err
+	}
+
+	err = db.Put(LastBlockKey, block.Hash().Bytes())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WriteBlock(db *db.DBService, block *types.Block) error {
+	key := append(BlockHashPrefix, block.Hash().Bytes()...)
+	data, _ := proto.Marshal(block)
+
+	err := db.Put(key, data)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("WriteBlock, hash: %x, key: %x, value: %x\n", block.Hash().Bytes(), key, data)
+
+	return writeHead(db, block)
+}
