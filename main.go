@@ -1,11 +1,13 @@
 package main
 
-//	"fmt"
+import (
+	"fmt"
 //	"os"
-//	"path/filepath"
+	"path/filepath"
 //	"time"
 //	//"time"
-//	//	"github.com/bottos-project/core/account"
+	"github.com/bottos-project/core/db/platform/kvdb"
+	"github.com/bottos-project/core/chain"
 //	"github.com/bottos-project/core/account"
 //	"github.com/bottos-project/core/api"
 //	"github.com/bottos-project/core/common"
@@ -16,42 +18,26 @@ package main
 
 //	"github.com/micro/go-micro"
 //	log "github.com/sirupsen/logrus"
+)
 
 var (
 	DataDir = "./datadir/"
 )
 
-/*
-	// subscribe a NewMinedBlockEvent
-	sub := emux.Subscribe(common.NewMinedBlockEvent{})
-	go func (minedBlockSub event.Subscription) {
-		for obj := range minedBlockSub.Chan() {
-			switch ev := obj.(type) {
-			case common.NewMinedBlockEvent:
-				fmt.Printf("ProcessBlockLoop : recv new mined block, %d\n", ev.Block.Number())
-				fmt.Printf("\n")
-			}
-		}
-	}(sub)
-*/
-
 func main() {
 	//	fmt.Println("init db")
 
-	//	blockDb, err := db.NewKVDatabase(filepath.Join(DataDir, "blockchain"))
-	//	if err != nil {
-	//		fmt.Println("init kv database error")
-	//		return
-	//	}
-
-	//	fmt.Println("init eventmux")
-	//	var emux event.TypeMux
+	blockDb, err := kvdb.NewKVDatabase(filepath.Join(DataDir, "blockchain"))
+	if err != nil {
+		fmt.Println("init kv database error")
+		return
+	}
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
 
-	//	fmt.Println("init blockchain")
-	//	bc, _ := common.CreateBlockChain(blockDb, &emux)
+	fmt.Println("init blockchain")
+	chain.CreateBlockChain(blockDb)
 
 	//	fmt.Println("init txpool")
 	//	txpool, _ := tr.CreateTxPool(&emux, bc)
