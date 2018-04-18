@@ -98,9 +98,9 @@ func (b *Block) GetProducerSign() common.Hash {
 	return common.BytesToHash(bh)
 }
 
-//func (b *Block) GetTransactions() []*Transaction {
-//	return b.Transactions
-//} 
+func (b *Block) ValidateSign() bool {
+	return true
+} 
 
 func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 	for _, transaction := range b.Transactions {

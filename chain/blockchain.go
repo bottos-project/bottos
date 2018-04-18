@@ -32,6 +32,7 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/config"
 )
 
 type BlockChain struct {
@@ -180,7 +181,7 @@ func (bc *BlockChain) LoadBlockDb() error {
 	//bc.stateDb.SetDynamicGlobalPropertyObject(dpo)
 	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
-	// TODO
+	// TODO replay
 	if bc.HeadBlockNum() < lastBlock.GetNumber() {
 		// LoadAndExcuteBlocks()
 	}
@@ -239,25 +240,17 @@ func (bc *BlockChain) updateLastIrreversibleBlock(block *types.Block) {
 	*/
 }
 
-func (bc *BlockChain) ValidateBlockPrevHash(block *types.Block) error {
-	if block.GetPrevBlockHash() != bc.HeadBlockHash() {
-		return fmt.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), block.GetPrevBlockHash())
-	}
 
-	return nil
-}
-
-func (bc *BlockChain) ApplyBlock(block *types.Block) error {
-	/*
-		 err := bc.ValidateBlockHeader(block)
-		 if err != nil {
-			 fmt.Printf("ValidateBlockHeader error %v\n", err)
-			 return HeaderValidateErr
-		 }
-	*/
+func (bc *BlockChain) HandleBlock(block *types.Block) error {
 
 	// TODO excute block
-	fmt.Println("BlockChain : Applying block")
+	fmt.Println("BlockChain : Handling block")
+
+	// TODO
+	//for _, tx := range block.Transactions {
+		// ValidateTransaction(tx)
+		// HandleTransaction(tx)
+	//}
 
 	// update global property
 	bc.updateGlobalProperty(block)
@@ -267,13 +260,52 @@ func (bc *BlockChain) ApplyBlock(block *types.Block) error {
 	return nil
 }
 
+func (bc *BlockChain) ValidateBlock(block *types.Block) error {
+	prevBlockHash := block.GetPrevBlockHash()
+	if prevBlockHash != bc.HeadBlockHash() {
+		return fmt.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
+	}
+
+	if block.GetNumber() != bc.HeadBlockNum() {
+		return fmt.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
+	}
+
+	// block timestamp check
+	if block.GetTimestamp() <= bc.HeadBlockTime() {
+		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+	}
+
+	if block.GetTimestamp() > bc.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL) {
+		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+	}
+
+	// TODO producer_change check
+	// ...
+
+	// TODO producer signature check
+	//slot := store.GetSlotAtTime(block.Time())
+	//producerName := store.GetScheduledProducer(slot)
+	//scheduleProducerObj := bc.stateDb.GetProducerObject(producerName)
+	if ok := block.ValidateSign(/*producer*/); !ok {
+		return fmt.Errorf("Producer Sign Error")
+	}
+
+	// producer schedule check
+	//blockProducer := block.Producer()
+	//if string(blockProducer[:]) != scheduleProducerObj.Owner {
+	//	return fmt.Errorf("Producer Producer Error")
+	//}
+
+	return nil
+} 
+
 func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
-	err := bc.ValidateBlockPrevHash(block)
+	err := bc.ValidateBlock(block)
 	if err != nil {
-		fmt.Printf("ValidateBlockPrevHash error %v\n", err)
+		fmt.Printf("Validate Block error %v\n", err)
 		return err
 	}
 
@@ -285,7 +317,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 
 	// TODO record stateDb revision
-	err = bc.ApplyBlock(block)
+	err = bc.HandleBlock(block)
 	if err != nil {
 		// TODO restore stateDb revision
 		fmt.Printf("InsertBlock error %v", err)
@@ -295,3 +327,4 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	return nil
 }
+
