@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  block actor
+ * file description:  chain actor
  * @Author:
  * @Date:   2017-12-06
  * @Last Modified by:
@@ -35,6 +35,6 @@ type InsertBlockReq struct {
 }
 
 type InsertBlockRsp struct {
-	Hash 		common.Hash
-	Error		error
+	Hash  common.Hash
+	Error error
 }
