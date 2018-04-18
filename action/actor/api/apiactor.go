@@ -46,7 +46,8 @@ func NewApiActor() *actor.PID {
 
 	props := actor.FromProducer(func() actor.Actor { return ContructApiActor() })
 
-	ApiActorPid, err := actor.SpawnNamed(props, "ApiActor")
+	var err error
+	ApiActorPid, err = actor.SpawnNamed(props, "ApiActor")
 
 	if err == nil {
 		return ApiActorPid

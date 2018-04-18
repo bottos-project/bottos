@@ -30,8 +30,8 @@ import (
 	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/transaction"
 )
 
@@ -49,7 +49,8 @@ func NewTrxActor() *actor.PID {
 
 	props := actor.FromProducer(func() actor.Actor { return ContructTrxActor() })
 
-	TrxActorPid, err := actor.SpawnNamed(props, "TrxActor")
+	var err error
+	TrxActorPid, err = actor.SpawnNamed(props, "TrxActor")
 
 	if err == nil {
 		return TrxActorPid
@@ -58,7 +59,7 @@ func NewTrxActor() *actor.PID {
 	}
 }
 
-func (TrxActor *TrxActor) handleSystemMsg(context actor.Context)(bool) {
+func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 	switch msg := context.Message().(type) {
 
@@ -86,7 +87,7 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 	fmt.Println("trxactor received msg: ", context)
 
-	if (TrxActor.handleSystemMsg(context)) {
+	if TrxActor.handleSystemMsg(context) {
 		return
 	}
 
@@ -96,14 +97,12 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 		fmt.Println("transaction action is ", msg.Action)
 		context.Respond("trx rsp from trx actor")
 
-
-	case *message.PushTrxReq:	
+	case *message.PushTrxReq:
 
 		fmt.Println("trx actor Rcv trx, sendType: ", msg.TrxSender)
 
 		transaction.HandlePushTransactionReq(msg.TrxSender, msg.Trx)
 
-		
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
 		fmt.Println("trx actor: Unknown msg")

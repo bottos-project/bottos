@@ -46,7 +46,8 @@ func NewNetActor() *actor.PID {
 
 	props := actor.FromProducer(func() actor.Actor { return ContructNetActor() })
 
-	NetActorPid, err := actor.SpawnNamed(props, "NetActor")
+	var err error
+	NetActorPid, err = actor.SpawnNamed(props, "NetActor")
 
 	if err == nil {
 		return NetActorPid
