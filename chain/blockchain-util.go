@@ -80,12 +80,7 @@ func GetLastBlock(db *db.DBService) *types.Block {
 		return nil
 	}
 
-	block := types.Block{}
-	if err := proto.Unmarshal(data, &block); err != nil {
-		return nil
-	}
-
-	return &block
+	return GetBlock(db, common.BytesToHash(data))
 }
 
 func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
@@ -103,10 +98,6 @@ func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
 	block := types.NewBlock(header, []*types.Transaction{})
 
 	if err := WriteBlock(blockDb, block); err != nil {
-		return nil, err
-	}
-
-	if err := writeHead(blockDb, block); err != nil {
 		return nil, err
 	}
 
