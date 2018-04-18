@@ -32,9 +32,9 @@ import (
 )
 
 type DBService struct {
-	optDbRepo  optiondb.OptionDbRepo
-	kvRepo     kvdb.KvDBRepo
-	codeDbRepo codedb.CodeDbRepo
+	optDbRepo optiondb.OptionDbRepo
+	kvRepo    kvdb.KvDBRepo
+	codeRepo  codedb.CodeDbRepo
 }
 
 func NewDbService(path string, codedbPath string) *DBService {
@@ -43,9 +43,9 @@ func NewDbService(path string, codedbPath string) *DBService {
 		return nil
 	}
 	optiondb := optiondb.NewOptionDbRepository(path)
-	codedb, err := codedb.NewCodeDbRepository(codedbPath)
+	db, err := codedb.NewCodeDbRepository(codedbPath)
 
-	return &DBService{optDbRepo: optiondb, kvRepo: kv, codeDbRepo: codedb}
+	return &DBService{optDbRepo: optiondb, kvRepo: kv, codeRepo: db}
 }
 
 type DBApi interface {
@@ -56,7 +56,7 @@ type DBApi interface {
 	Close()
 	Flush() error
 	//code db interface can rollback
-	CreatObject(objectName string, objectValue interface{}) error
+	StartUndoSession(bool)
 	CreatObjectIndex(objectName string, indexName string) error
 	SetObject(objectName string, objectValue interface{}) error
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error

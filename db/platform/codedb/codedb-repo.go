@@ -26,16 +26,20 @@
 package codedb
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/tidwall/buntdb"
 )
 
 type CodeDbRepository struct {
 	fn string     // filename for reporting
 	db *buntdb.DB // LevelDB instance
+	tx *buntdb.Tx
 }
 
 func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
-	codedb, err := buntdb.Open("file")
+	codedb, err := buntdb.Open(file)
 	if err != nil {
 		return nil, err
 	}
@@ -44,28 +48,70 @@ func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 		db: codedb,
 	}, nil
 }
+func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
+	k.tx, _ = k.db.Begin(true)
+}
 
-func (k *CodeDbRepository) CallCreatObject(objectName string, objectValue interface{}) error {
-	return nil
+func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName string, indexJson string) error {
+	if k.tx == nil {
+		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+	}
+
+	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
-func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName string) error {
-	return nil
+func (k *CodeDbRepository) CallCreatObjectMultiIndexs(objectName string, indexName string, indexJson string) error {
+	if k.tx == nil {
+		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+	}
+
+	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
-func (k *CodeDbRepository) CallSetObject(objectName string, objectValue interface{}) error {
-	return nil
+func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectValue interface{}) error {
+	if k.tx == nil {
+		return k.db.Update(func(tx *buntdb.Tx) error {
+			_, _, err := tx.Set(objectName+key, objectValue.(string), nil)
+			return err
+		})
+	}
+	_, _, err := k.tx.Set(objectName+key, objectValue.(string), nil)
+	return err
 }
-func (k *CodeDbRepository) CallSetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error {
-	return nil
+
+func (k *CodeDbRepository) CallGetObject(objectName string, key string) (interface{}, error) {
+	var objectValue string
+	var err error
+	k.db.View(func(tx *buntdb.Tx) error {
+		objectValue, err = tx.Get(objectName + key)
+		return err
+	})
+	return objectValue, err
+
 }
-func (k *CodeDbRepository) CallSetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error {
-	return nil
-}
-func (k *CodeDbRepository) CallGetObject(objectName string) (interface{}, error) {
-	return nil, nil
-}
+
 func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error) {
-	return nil, nil
+	var objectValue string
+	var err error
+	k.db.View(func(tx *buntdb.Tx) error {
+		tx.AscendRange(indexName, `{`+indexName+":"+indexValue.(string)+`}`, `{`+indexName+":"+indexValue.(string)+`}`, func(key, value string) bool {
+			fmt.Printf("%s: %s\n", key, value)
+			return true
+		})
+		return err
+	})
+	return objectValue, err
+
 }
-func (k *CodeDbRepository) CallGetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error) {
-	return nil, nil
+func (k *CodeDbRepository) CallCommit() error {
+	if k.tx == nil {
+		fmt.Println("tx is not start undo session")
+		return errors.New("tx is not start undo session")
+	}
+	return k.tx.Commit()
+}
+func (k *CodeDbRepository) CallRollback() error {
+	if k.tx == nil {
+		fmt.Println("tx is not start undo session")
+		return errors.New("tx is not start undo session")
+	}
+	return k.tx.Rollback()
 }

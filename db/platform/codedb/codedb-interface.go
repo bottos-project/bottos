@@ -25,12 +25,11 @@
 package codedb
 
 type CodeDbRepo interface {
-	CallCreatObject(objectName string, objectValue interface{}) error
-	CallCreatObjectIndex(objectName string, indexName string) error
-	CallSetObject(objectName string, objectValue interface{}) error
-	CallSetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
-	CallSetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
-	CallGetObject(objectName string) (interface{}, error)
+	CallStartUndoSession(bool)
+	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error
+	CallSetObject(objectName string, key string, objectValue interface{}) error
+	CallGetObject(objectName string, key string) (interface{}, error)
 	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
-	CallGetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
+	CallCommit() error
+	CallRollback() error
 }

@@ -25,27 +25,25 @@
 
 package db
 
-func (d *DBService) CreatObject(objectName string, objectValue interface{}) error {
-	return d.codeDbRepo.CallCreatObject(objectName, objectValue)
+func (d *DBService) StartUndoSession(writable bool) {
+	d.codeRepo.CallStartUndoSession(writable)
 }
-func (d *DBService) CreatObjectIndex(objectName string, indexName string) error {
-	return d.codeDbRepo.CallCreatObjectIndex(objectName, indexName)
+
+func (d *DBService) CreatObjectIndex(objectName string, indexName string, indexJson string) error {
+	return d.codeRepo.CallCreatObjectIndex(objectName, indexName, indexJson)
 }
 func (d *DBService) SetObject(objectName string, objectValue interface{}) error {
 	return nil
 }
-func (d *DBService) SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error {
-	return nil
-}
-func (d *DBService) SetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error {
-	return nil
-}
-func (d *DBService) GetObject(objectName string) (interface{}, error) {
+func (d *DBService) GetObject(objectName string, key string) (interface{}, error) {
 	return nil, nil
 }
 func (d *DBService) GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error) {
 	return nil, nil
 }
-func (k *DBService) GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error) {
-	return nil, nil
+func (d *DBService) Commit() error {
+	return d.codeRepo.CallCommit()
+}
+func (d *DBService) Rollback() error {
+	return d.codeRepo.CallRollback()
 }
