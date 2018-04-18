@@ -23,10 +23,6 @@ import (
 	caapi "github.com/bottos-project/core/action/actor/api"
 )
 
-var (
-	DataDir = "./datadir/"
-)
-
 func main() {
 	//	fmt.Println("init db")
 
