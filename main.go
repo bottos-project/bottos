@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	//	"time"
+	"os/signal"
 	//	//"time"
 
 	"github.com/bottos-project/core/config"
@@ -39,6 +39,8 @@ func main() {
 
 	cactor.InitActors()
 	caapi.PushTransaction(2876568)
+
+	WaitSystemDown()
 
 	//console.ReadLine()
 	//	fmt.Println("init txpool")
@@ -83,4 +85,20 @@ func main() {
 	//	if err := svc.Run(); err != nil {
 	//		panic(err)
 	//	}
+}
+
+func WaitSystemDown() {
+	exit := make(chan bool, 0)
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt)
+	defer signal.Stop(sigc)
+
+	go func() {
+		<-sigc
+		fmt.Println("System shutdown")
+		close(exit)
+	}()
+	
+	<-exit
 }
