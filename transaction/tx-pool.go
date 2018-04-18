@@ -3,11 +3,19 @@
 package transaction
 
 import (
+	"time"
+
+	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/message"
 	
 )
 
+
+type TxPool struct {
+	pending     map[common.Hash]*types.Transaction       
+	expiration  map[common.Hash]*time.Time       
+}
 
 
 func CheckTransactionBaseConditionFromFront(){
