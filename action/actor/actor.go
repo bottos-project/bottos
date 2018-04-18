@@ -30,7 +30,7 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	apiactor "github.com/bottos-project/core/action/actor/api"
-	blockactor "github.com/bottos-project/core/action/actor/block"
+	chainactor "github.com/bottos-project/core/action/actor/chain"
 	netactor "github.com/bottos-project/core/action/actor/net"
 	produceractor "github.com/bottos-project/core/action/actor/producer"
 	trxactor "github.com/bottos-project/core/action/actor/transaction"
@@ -39,7 +39,7 @@ import (
 var apiActorPid *actor.PID
 var netActorPid *actor.PID
 var trxActorPid *actor.PID
-var blockActorPid *actor.PID
+var chainActorPid *actor.PID
 var producerActorPid *actor.PID
 
 func InitActors() {
@@ -52,7 +52,7 @@ func InitActors() {
 
 	trxActorPid = trxactor.NewTrxActor()
 
-	blockActorPid = blockactor.NewBlockActor()
+	chainActorPid = chainactor.NewChainActor()
 
 	producerActorPid = produceractor.NewProducerActor()
 

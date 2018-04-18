@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//	"os"
+	"os"
 	//	"time"
 	//	//"time"
 
@@ -24,15 +24,18 @@ import (
 )
 
 func main() {
-	//	fmt.Println("init db")
+	var err error
 
 	blockDb := db.NewDbService(config.Param.DataDir, config.Param.DataDir)
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
 
-	fmt.Println("init blockchain")
-	chain.CreateBlockChain(blockDb)
+	_, err = chain.CreateBlockChain(blockDb)
+	if err != nil {
+		fmt.Println("Create BlockChain error: ", err)
+		os.Exit(1)
+	}
 
 	cactor.InitActors()
 	caapi.PushTransaction(2876568)

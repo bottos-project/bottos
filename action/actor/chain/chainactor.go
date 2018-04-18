@@ -16,46 +16,48 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  block actor
+ * file description:  chain actor
  * @Author:
  * @Date:   2017-12-06
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package blockactor
+package chainactor
 
 import (
 	"fmt"
 	"log"
+	"github.com/bottos-project/core/chain"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
-var BlockActorPid *actor.PID
+var ChainActorPid *actor.PID
 
-type BlockActor struct {
+type ChainActor struct {
 	props *actor.Props
 }
 
-func ContructBlockActor() *BlockActor {
-	return &BlockActor{}
+func ContructChainActor() *ChainActor {
+	return &ChainActor{}
 }
 
-func NewBlockActor() *actor.PID {
+func NewChainActor() *actor.PID {
+	var err error
 
-	props := actor.FromProducer(func() actor.Actor { return ContructBlockActor() })
+	props := actor.FromProducer(func() actor.Actor { return ContructChainActor() })
 
-	BlockActorPid, err := actor.SpawnNamed(props, "BlockActor")
+	ChainActorPid, err = actor.SpawnNamed(props, "ChainActor")
 
 	if err == nil {
-		return BlockActorPid
+		return ChainActorPid
 	} else {
-		panic(fmt.Errorf("BlockActor SpawnNamed error: ", err))
+		panic(fmt.Errorf("ChainActor SpawnNamed error: ", err))
 	}
 }
 
-func (BlockActor *BlockActor) handleSystemMsg(context actor.Context) {
+func (self *ChainActor) handleSystemMsg(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 
@@ -74,13 +76,23 @@ func (BlockActor *BlockActor) handleSystemMsg(context actor.Context) {
 
 }
 
-func (BlockActor *BlockActor) Receive(context actor.Context) {
+func (self *ChainActor) Receive(context actor.Context) {
 
-	BlockActor.handleSystemMsg(context)
+	self.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
+	case *InsertBlockReq:
+		self.HandleBlockMessage(context, msg)
+	}
+}
 
-	//case *types.Transaction:
-
+func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *InsertBlockReq) {
+	err := chain.GetChain().InsertBlock(req.Block)
+	if ctx.Sender() != nil {
+		resp := &InsertBlockRsp{
+			Hash: req.Block.Hash(),
+			Error: err,
+		}
+		ctx.Sender().Request(resp, ctx.Self())
 	}
 }
