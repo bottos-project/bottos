@@ -6,6 +6,7 @@ import (
 	//	"time"
 	//	//"time"
 
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/db"
 	//	"github.com/bottos-project/core/account"
@@ -29,7 +30,7 @@ var (
 func main() {
 	//	fmt.Println("init db")
 
-	blockDb := db.NewDbService(DataDir, DataDir)
+	blockDb := db.NewDbService(config.Param.DataDir, config.Param.DataDir)
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
