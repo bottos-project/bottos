@@ -31,6 +31,8 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/transaction"
 )
 
 var TrxActorPid *actor.PID
@@ -56,7 +58,7 @@ func NewTrxActor() *actor.PID {
 	}
 }
 
-func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) {
+func (TrxActor *TrxActor) handleSystemMsg(context actor.Context)(bool) {
 
 	switch msg := context.Message().(type) {
 
@@ -71,7 +73,12 @@ func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) {
 
 	case *actor.Restarting:
 		log.Printf("TrxActor received restarting msg")
+
+	default:
+		return false
 	}
+
+	return true
 
 }
 
@@ -79,7 +86,9 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 	fmt.Println("trxactor received msg: ", context)
 
-	TrxActor.handleSystemMsg(context)
+	if (TrxActor.handleSystemMsg(context)) {
+		return
+	}
 
 	switch msg := context.Message().(type) {
 
@@ -87,8 +96,17 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 		fmt.Println("transaction action is ", msg.Action)
 		context.Respond("trx rsp from trx actor")
 
-		//default:
-		//fmt.Println("trx actor receive default msg ", msg)
+
+	case *message.PushTrxReq:	
+
+		fmt.Println("trx actor Rcv trx, sendType: ", msg.TrxSender)
+
+		transaction.HandlePushTransactionReq(msg.TrxSender, msg.Trx)
+
+		
+	default:
+		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
+		fmt.Println("trx actor: Unknown msg")
 
 	}
 }
