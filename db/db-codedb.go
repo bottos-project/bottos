@@ -32,14 +32,14 @@ func (d *DBService) StartUndoSession(writable bool) {
 func (d *DBService) CreatObjectIndex(objectName string, indexName string, indexJson string) error {
 	return d.codeRepo.CallCreatObjectIndex(objectName, indexName, indexJson)
 }
-func (d *DBService) SetObject(objectName string, objectValue interface{}) error {
-	return nil
+func (d *DBService) SetObject(objectName string, key string, objectValue interface{}) error {
+	return d.codeRepo.CallSetObject(objectName, key, objectValue)
 }
 func (d *DBService) GetObject(objectName string, key string) (interface{}, error) {
-	return nil, nil
+	return d.codeRepo.CallGetObject(objectName, key)
 }
 func (d *DBService) GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error) {
-	return nil, nil
+	return d.codeRepo.CallGetObjectByIndex(objectName, indexName, indexValue)
 }
 func (d *DBService) Commit() error {
 	return d.codeRepo.CallCommit()
