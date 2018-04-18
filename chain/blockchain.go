@@ -35,6 +35,8 @@ import (
 	"github.com/bottos-project/core/config"
 )
 
+var chainInstance *BlockChain
+
 type BlockChain struct {
 	blockDb    *db.DBService
 	blockCache *BlockChainCache
@@ -43,6 +45,10 @@ type BlockChain struct {
 	genesisBlock *types.Block
 
 	chainmu sync.RWMutex
+}
+
+func GetChain() *BlockChain {
+	return chainInstance
 }
 
 func CreateBlockChain(blockDb *db.DBService) (*BlockChain, error) {
@@ -73,6 +79,8 @@ func CreateBlockChain(blockDb *db.DBService) (*BlockChain, error) {
 
 	// init block cache
 	bc.initBlockCache()
+
+	chainInstance = bc
 
 	return bc, nil
 }
