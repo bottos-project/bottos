@@ -17,6 +17,12 @@ import fmt "fmt"
 import math "math"
 import types "github.com/bottos-project/core/common/types"
 
+import (
+	client "github.com/micro/go-micro/client"
+	server "github.com/micro/go-micro/server"
+	context "golang.org/x/net/context"
+)
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -54,6 +60,63 @@ func (m *PushResponse) GetTxHash() []byte {
 
 func init() {
 	proto.RegisterType((*PushResponse)(nil), "api.PushResponse")
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ client.Option
+var _ server.Option
+
+// Client API for Core service
+
+type CoreClient interface {
+	PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error)
+}
+
+type coreClient struct {
+	c           client.Client
+	serviceName string
+}
+
+func NewCoreClient(serviceName string, c client.Client) CoreClient {
+	if c == nil {
+		c = client.NewClient()
+	}
+	if len(serviceName) == 0 {
+		serviceName = "api"
+	}
+	return &coreClient{
+		c:           c,
+		serviceName: serviceName,
+	}
+}
+
+func (c *coreClient) PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Core.push_trx", in)
+	out := new(PushResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Core service
+
+type CoreHandler interface {
+	PushTrx(context.Context, *types.Transaction, *PushResponse) error
+}
+
+func RegisterCoreHandler(s server.Server, hdlr CoreHandler, opts ...server.HandlerOption) {
+	s.Handle(s.NewHandler(&Core{hdlr}, opts...))
+}
+
+type Core struct {
+	CoreHandler
+}
+
+func (h *Core) PushTrx(ctx context.Context, in *types.Transaction, out *PushResponse) error {
+	return h.CoreHandler.PushTrx(ctx, in, out)
 }
 
 func init() { proto.RegisterFile("github.com/bottos-project/core/api/core-api.proto", fileDescriptor0) }
