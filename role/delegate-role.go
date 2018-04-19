@@ -25,12 +25,56 @@
 
 package role
 
-type Delegate struct {
-	Id uint32
+import (
+	"encoding/json"
+	"fmt"
 
-	//owner AccountName
-	LastAslot uint64
-	//signing_key   PublicKeyType
-	TotalMissed           int64
-	LastConfirmedBlockNum uint32
+	"github.com/bottos-project/core/db"
+)
+
+//TODO type
+const DelegateObjectName string = "delegate"
+const DelegateObjectKeyName string = "account_name"
+const DelegateObjectIndexName string = "signing_key"
+
+type Delegate struct {
+	AccountName           string `json:"account_name"`
+	LastSlot              uint64 `json:"last_slot"`
+	SigningKey            string `json:"signing_key"`
+	TotalMissed           int64  `json:"total_missed"`
+	LastConfirmedBlockNum uint32 `json:"last_confirmed_block_num"`
+}
+
+func CreateDelegateRole(ldb *db.DBService) error {
+	err := ldb.CreatObjectIndex(DelegateObjectName, DelegateObjectKeyName, DelegateObjectKeyName)
+	if err != nil {
+		return err
+	}
+	err = ldb.CreatObjectIndex(DelegateObjectName, DelegateObjectIndexName, DelegateObjectIndexName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SetDelegateRole(ldb *db.DBService, key string, value *Delegate) error {
+	jsonvalue, _ := json.Marshal(value)
+	return ldb.SetObject(DelegateObjectName, key, string(jsonvalue))
+}
+
+func GetDelegateRoleByAccountName(ldb *db.DBService, key string) (*Delegate, error) {
+	value, err := ldb.GetObject(DelegateObjectName, key)
+	res := &Delegate{}
+	json.Unmarshal([]byte(value), res)
+	fmt.Println("Get", key, value)
+	return res, err
+
+}
+func GetDelegateRoleBySignKey(ldb *db.DBService, keyValue string) (*Delegate, error) {
+
+	value, err := ldb.GetObjectByIndex(DelegateObjectName, DelegateObjectIndexName, keyValue)
+	res := &Delegate{}
+	json.Unmarshal([]byte(value), res)
+	fmt.Println("Get", keyValue, value)
+	return res, err
 }
