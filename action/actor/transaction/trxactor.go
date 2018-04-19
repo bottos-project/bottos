@@ -39,7 +39,10 @@ var TrxActorPid *actor.PID
 
 type TrxActor struct {
 	props *actor.Props
+	pool *transaction.TrxPool
 }
+
+
 
 func ContructTrxActor() *TrxActor {
 	return &TrxActor{}
@@ -57,6 +60,12 @@ func NewTrxActor() *actor.PID {
 	} else {
 		panic(fmt.Errorf("TrxActor SpawnNamed error: ", err))
 	}
+}
+
+
+
+func (TrxActor *TrxActor) setTrxPool(trxPool *transaction.TrxPool) {
+	TrxActor.pool = trxPool
 }
 
 func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
@@ -101,7 +110,7 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 		fmt.Println("trx actor Rcv trx, sendType: ", msg.TrxSender)
 
-		transaction.HandlePushTransactionReq(msg.TrxSender, msg.Trx)
+		TrxActor.pool.HandlePushTransactionReq(msg.TrxSender, msg.Trx)
 
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
