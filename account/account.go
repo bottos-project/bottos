@@ -1,25 +1,17 @@
 package account
 
 import (
-	"fmt"
+	"crypto"
 )
 
-type AccountManager struct {
-	defAccount string
+type Account struct {
+	PrivateKey crypto.PrivateKey
+	PublicKey  crypto.PublicKey
+	Name       string
 }
 
-func CreateAccountManager() *AccountManager {
-	am := AccountManager{}
+func CreateAccount() *Account {
+	acc := Account{}
 
-	return &am
-}
-
-func getAccount() int {
-
-	return 0
-}
-
-func SetAccount(aaa string) (int, string) {
-	fmt.Println(aaa)
-	return 0, "good"
+	return &acc
 }
