@@ -14,13 +14,13 @@ func ApplyTransaction(trx *types.Transaction) {
 }
 
 
-func GetAllPendingTransaction() ([]*types.Transaction){
+func GetAllPendingTransactions() ([]*types.Transaction){
 
 	return nil;
 }
 
 
-func RemoveTransaction(trxs []*types.Transaction){
+func RemoveTransactions(trxs []*types.Transaction){
 
 }
 
