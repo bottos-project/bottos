@@ -25,6 +25,11 @@ func RemoveTransactions(trxs []*types.Transaction){
 }
 
 
+func RemoveSingleTransaction(*types.Transaction){
+
+}
+
+
 func GetPendingTransaction(trxHash common.Hash) *types.Transaction {	
 
 	return nil;
