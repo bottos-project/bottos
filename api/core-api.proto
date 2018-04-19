@@ -1,13 +1,17 @@
 syntax = "proto3";
 
-package core;
+import "github.com/bottos-project/core/common/types/transaction.proto";
+
+package api;
+
+option go_package = "github.com/bottos-project/core/api";
 
 service Core{
-	rpc send_trx(TxRequest)returns (TxResponse){}
+	rpc push_trx(types.Transaction)returns (PushResponse){}
 } 
-message TxRequest{
-	string account_name=1;
+
+message PushResponse{
+	types.Transaction TxRequest  = 1;
+	bytes txHash     = 2;
 }
-message TxResponse{
-	string id = 1;
-}
+
