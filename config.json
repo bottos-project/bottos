@@ -1,0 +1,15 @@
+{
+    "GenesisJson": "./genesis.json",
+    "DataDir": "./datadir/",
+    "Consensus":"dpos",
+    "APIPort": 6789,
+    "P2PPort": 6890,
+    "PeerList": [
+        "127.0.0.1:6890"
+    ],
+    "KeyPairs": [{
+            "PrivateKey": "5JM9TrUsohBmACHjYHmHtjTxpaDT8wg9tM1ehrp9WvmgaEh4Xr4",
+            "PublicKey": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+        }
+    ]
+}

@@ -1,0 +1,174 @@
+{
+  "InitialTimestamp": "2017-03-30T12:00:00",
+  "InitAccounts": [{
+    "Name": "inita",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initb",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initc",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initd",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "inite",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initf",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initg",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "inith",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initi",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initj",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initk",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initl",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initm",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initn",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "inito",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initp",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initq",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initr",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "inits",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initt",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  },{
+    "Name": "initu",
+    "OwnerKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "ActiveKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "InitialBalance": 100000
+  }],
+  "InitDelegates": [{
+    "OwnerName": "inita",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initb",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initc",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initd",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "inite",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initf",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initg",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "inith",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initi",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initj",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initk",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initl",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initm",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initn",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "inito",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initp",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initq",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initr",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "inits",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initt",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  },{
+    "OwnerName": "initu",
+    "BlockSigningKey": " 7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+  }],
+  "InitialChainId": "0000000000000000000000000000000000000000000000000000000000000000"
+}

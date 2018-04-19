@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	CONFIG_FILE_NAME = "./config/config.json"
+	CONFIG_FILE_NAME = "./config.json"
 )
 
 var Param *Parameter
@@ -47,6 +47,12 @@ type Parameter struct {
 	APIPort					int					`json:"APIPort"`
 	P2PPort					int					`json:"P2PPort"`
 	PeerList				[]string			`json:"PeerList"`
+	KeyPairs				[]KeyPair			`json:"KeyPairs"`
+}
+
+type KeyPair struct {
+	PrivateKey				string				`json:"PrivateKey"`
+	PublicKey				string				`json:"PublicKey"`
 }
 
 type GenesisConfig struct {
@@ -96,6 +102,9 @@ func init() {
 		os.Exit(1)
 	}
 	Genesis = &genesisConfig
+
+	fmt.Println(Param)
+	fmt.Println(Genesis)
 }
 
 func loadConfigJson(fn string) ([]byte, error) {
