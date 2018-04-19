@@ -15,24 +15,25 @@ import (
 
 
 var (
-	expirationCheckInterval    = time.Minute     // Time interval for check expiration pending transactions
+	trxExpirationCheckInterval    = time.Minute     // Time interval for check expiration pending transactions
+	trxExpirationTime             = time.Minute     // Pending Trx max time , to be delete
 )
 
 
 
-type TxPool struct {
+type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
-	expiration  map[common.Hash]time.Time    
+	expiration  map[common.Hash]time.Time    // to be delete
 	
 	mu           sync.RWMutex
 	quit chan struct{}
 }
 
 
-func InitTxPool() *TxPool {
+func InitTrxPool() *TrxPool {
 	
 	// Create the transaction pool
-	pool := &TxPool{
+	pool := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		expiration:   make(map[common.Hash]time.Time),
 		quit:         make(chan struct{}),
@@ -45,9 +46,8 @@ func InitTxPool() *TxPool {
 
 
 // expirationCheckLoop is periodically check exceed time transaction, then remove it
-func (pool *TxPool) expirationCheckLoop() {
-	
-	expire := time.NewTicker(expirationCheckInterval)
+func (pool *TrxPool) expirationCheckLoop() {	
+	expire := time.NewTicker(trxExpirationCheckInterval)
 	defer expire.Stop()
 
 	for {
@@ -73,14 +73,23 @@ func (pool *TxPool) expirationCheckLoop() {
 }
 
 
-func (pool *TxPool) Stop() {
+// expirationCheckLoop is periodically check exceed time transaction, then remove it
+func (pool *TrxPool) addTransaction(trx *types.Transaction) {	
+	trxHash := trx.Hash()
+	pool.pending[trxHash] = trx
+	//pool.expiration = time.Now()
+}
+
+
+
+func (pool *TrxPool) Stop() {
 	
 	close(pool.quit)
 
 	fmt.Println("Transaction pool stopped")
 }
 
-func CheckTransactionBaseConditionFromFront(){
+func (pool *TrxPool)CheckTransactionBaseConditionFromFront(){
 
 	/* check max pending trx num */
 	/* check account validate */
@@ -89,16 +98,16 @@ func CheckTransactionBaseConditionFromFront(){
 }
 
 
-func CheckTransactionBaseConditionFromP2P(){	
+func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){	
 
 }
 
 
 
 // HandlTransactionFromFront handles a transaction from front
-func HandleTransactionFromFront(trx *types.Transaction) {
+func (pool *TrxPool)HandleTransactionFromFront(trx *types.Transaction) {
 	
-    CheckTransactionBaseConditionFromFront()
+    pool.CheckTransactionBaseConditionFromFront()
 	//start db session
 	ApplyTransaction(trx)
 
@@ -110,24 +119,26 @@ func HandleTransactionFromFront(trx *types.Transaction) {
 }
 
 
-
 // HandlTransactionFromP2P handles a transaction from P2P
-func HandleTransactionFromP2P(trx *types.Transaction) {
+func (pool *TrxPool)HandleTransactionFromP2P(trx *types.Transaction) {
 
-	CheckTransactionBaseConditionFromP2P()
+	pool.CheckTransactionBaseConditionFromP2P()
 
 	// start db session
-	ApplyTransaction(trx)
+	ApplyTransaction(trx)	
+
+	pool.addTransaction(trx)
+
 	//revert db session	
 }
 
 
 
-func HandlePushTransactionReq(TrxSender message.TrxSenderType, trx *types.Transaction){
+func (pool *TrxPool)HandlePushTransactionReq(TrxSender message.TrxSenderType, trx *types.Transaction){
 
 	if (message.TrxSenderTypeFront == TrxSender){ 
-		HandleTransactionFromFront(trx)
+		pool.HandleTransactionFromFront(trx)
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
-		HandleTransactionFromP2P(trx)
+		pool.HandleTransactionFromP2P(trx)
 	}	
 }
