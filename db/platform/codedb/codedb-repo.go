@@ -54,6 +54,7 @@ func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
 
 func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName string, indexJson string) error {
 	if k.tx == nil {
+
 		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 	}
 
@@ -66,18 +67,20 @@ func (k *CodeDbRepository) CallCreatObjectMultiIndexs(objectName string, indexNa
 
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
-func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectValue interface{}) error {
+func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectValue string) error {
+	strValue := fmt.Sprintf("%v", objectValue)
 	if k.tx == nil {
 		return k.db.Update(func(tx *buntdb.Tx) error {
-			_, _, err := tx.Set(objectName+key, objectValue.(string), nil)
+
+			_, _, err := tx.Set(objectName+key, strValue, nil)
 			return err
 		})
 	}
-	_, _, err := k.tx.Set(objectName+key, objectValue.(string), nil)
+	_, _, err := k.tx.Set(objectName+key, strValue, nil)
 	return err
 }
 
-func (k *CodeDbRepository) CallGetObject(objectName string, key string) (interface{}, error) {
+func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string, error) {
 	var objectValue string
 	var err error
 	k.db.View(func(tx *buntdb.Tx) error {
@@ -88,16 +91,18 @@ func (k *CodeDbRepository) CallGetObject(objectName string, key string) (interfa
 
 }
 
-func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error) {
+func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error) {
 	var objectValue string
-	var err error
-	k.db.View(func(tx *buntdb.Tx) error {
-		tx.AscendRange(indexName, `{`+indexName+":"+indexValue.(string)+`}`, `{`+indexName+":"+indexValue.(string)+`}`, func(key, value string) bool {
-			fmt.Printf("%s: %s\n", key, value)
+
+	fmt.Println(`{` + indexName + ":" + indexValue.(string) + `}`)
+	err := k.db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendGreaterOrEqual(indexName, `{`+indexName+":"+indexValue.(string)+`}`, func(key, value string) bool {
+			objectValue = value
+			fmt.Printf(value)
 			return true
 		})
-		return err
 	})
+
 	return objectValue, err
 
 }

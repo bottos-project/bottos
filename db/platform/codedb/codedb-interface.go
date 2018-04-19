@@ -27,9 +27,9 @@ package codedb
 type CodeDbRepo interface {
 	CallStartUndoSession(bool)
 	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error
-	CallSetObject(objectName string, key string, objectValue interface{}) error
-	CallGetObject(objectName string, key string) (interface{}, error)
-	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
+	CallSetObject(objectName string, key string, objectValue string) error
+	CallGetObject(objectName string, key string) (string, error)
+	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error)
 	CallCommit() error
 	CallRollback() error
 }
