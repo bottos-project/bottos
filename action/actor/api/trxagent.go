@@ -82,20 +82,18 @@ func NewTrxActorAgent() *TrxActorAgent {
 }
 
 func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushResponse) error {
-	//if req == nil {
+	if req == nil {
+		fmt.Println("request is nil")
+		//rsp.retCode = ??
+		return nil
+	}
+	_, err := trxactorPid.RequestFuture(req, 500*time.Millisecond).Result() // await result
 
-	//	return errors.New("Missing storage request")
-	//}
-	//fmt.Println(req.AccountName)
-
-	//id, err := trx.CallSendTrx(req.AccountName, 111)
-	//if err != nil {
-	//	return errors.New("get PUTURL failed")
-	//}
-
-	//h.txp.Add(&types.Transaction{Id: "111", AccountName: req.AccountName})
-
-	//fmt.Println("success")
-	//rsp.Id = req.AccountName
+	if (nil != err) {
+		copy(rsp.TxHash, req.Hash().Bytes())
+		//rsp.TxHash = req.Hash()
+		rsp.TxRequest = req
+	}
+	
 	return nil
 }
