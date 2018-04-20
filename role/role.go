@@ -16,25 +16,26 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  define constants for this blockchain
- * @Author: May Luo
- * @Date:   2017-12-01
+ * file description:  account role
+ * @Author: Gong Zibin
+ * @Date:   2017-12-12
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package config
+package role
 
-const DEFAULT_BLOCK_INTERVAL uint32 = 3
-const BLOCKS_PER_ROUND uint32 = 21
-const VOTED_DELEGATES_PER_ROUND uint32 = 20
-const CONFIRMED_BLOCKS_PERCENT uint32 = 70
-const MAX_DELEGATE_VOTES uint32 = 30
-const DELEGATE_PATICIPATION uint32 = 33
-const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
+import (
+	"github.com/bottos-project/core/db"
+)
 
-
-const BTO_CONTRACT_NAME string = "bto"
-const BTO_INIT_SUPPLY uint64 = 1000000000
-
-const INIT_DELEGATE_NUM uint32 = 17
+func Init(ldb *db.DBService) {
+	CreateAccountRole(ldb)
+	CreateBalanceRole(ldb)
+	CreateStakedBalanceRole(ldb)
+	CreateBlockHistoryRole(ldb)
+	CreateChainStateObjectRole(ldb)
+	CreateCoreStateRole(ldb)
+	CreateDelegateRole(ldb)
+	CreateTransactionObjectRole(ldb)
+}

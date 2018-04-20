@@ -9,6 +9,8 @@ import (
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/db"
+	native "github.com/bottos-project/core/contract/native"
+	"github.com/bottos-project/core/role"
 	//	"github.com/bottos-project/core/account"
 	//	"github.com/bottos-project/core/api"
 	//	"github.com/bottos-project/core/common"
@@ -30,6 +32,9 @@ func main() {
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()
+
+	role.Init(blockDb)
+	native.InitNativeContract(blockDb)
 
 	_, err = chain.CreateBlockChain(blockDb)
 	if err != nil {
