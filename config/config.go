@@ -41,37 +41,31 @@ var Param *Parameter
 var Genesis *GenesisConfig
 
 type Parameter struct {
-	GenesisJson				string				`json:"GenesisJson"`
-	DataDir					string				`json:"DataDir"`
-	Consensus       		string				`json:"Consensus"`
-	APIPort					int					`json:"APIPort"`
-	P2PPort					int					`json:"P2PPort"`
-	PeerList				[]string			`json:"PeerList"`
-	KeyPairs				[]KeyPair			`json:"KeyPairs"`
+	GenesisJson				string				`json:"genesis_json"`
+	DataDir					string				`json:"data_dir"`
+	Consensus       		string				`json:"consensus"`
+	APIPort					int					`json:"api_port"`
+	P2PPort					int					`json:"p2p_port"`
+	PeerList				[]string			`json:"peer_list"`
+	KeyPairs				[]KeyPair			`json:"key_pairs"`
 }
 
 type KeyPair struct {
-	PrivateKey				string				`json:"PrivateKey"`
-	PublicKey				string				`json:"PublicKey"`
+	PrivateKey				string				`json:"private_key"`
+	PublicKey				string				`json:"public_key"`
 }
 
 type GenesisConfig struct {
-	InitialTimestamp		string				`json:"InitialTimestamp"`
-	InitAccounts			[]InitAccount		`json:"InitAccounts"`
-	InitDelegates			[]InitDelegate		`json:"InitDelegates"`
-	InitialChainId			string				`json:"InitialChainId"`
-}
-
-type InitAccount struct {
-	Name					string				`json:"Name"`
-	OwnerKey				string				`json:"OwnerKey"`
-	ActiveKey				string				`json:"ActiveKey"`
-	InitialBalance			uint32				`json:"InitialBalance"`
+	GenesisTime				string				`json:"genesis_time"`
+	ChainId					string				`json:"chain_id"`
+	InitDelegate			InitDelegate		`json:"init_delegate"`
+	
 }
 
 type InitDelegate struct {
-	OwnerName 		    	string				`json:"OwnerName"`
-	BlockSigningKey			string				`json:"BlockSigningKey"`
+	Name					string				`json:"name"`
+	PublicKey				string				`json:"public_key"`
+	Balance					uint32				`json:"balance"`
 }
 
 func init() {
@@ -103,8 +97,7 @@ func init() {
 	}
 	Genesis = &genesisConfig
 
-	fmt.Println(Param)
-	fmt.Println(Genesis)
+	fmt.Println(Param, Genesis)
 }
 
 func loadConfigJson(fn string) ([]byte, error) {

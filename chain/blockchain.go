@@ -33,14 +33,16 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/role"
 )
 
 var chainInstance *BlockChain
 
 type BlockChain struct {
-	blockDb    *db.DBService
-	blockCache *BlockChainCache
-	//stateDb		Database
+	blockDb		*db.DBService
+	stateDb		*db.DBService
+	blockCache	*BlockChainCache
+	
 
 	genesisBlock *types.Block
 
@@ -51,22 +53,22 @@ func GetChain() *BlockChain {
 	return chainInstance
 }
 
-func CreateBlockChain(blockDb *db.DBService) (*BlockChain, error) {
+func CreateBlockChain(dbInstance *db.DBService) (*BlockChain, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
 		return nil, err
 	}
 
 	bc := &BlockChain{
-		blockDb:    blockDb,
+		blockDb:    dbInstance,
 		blockCache: blockCache,
-		//stateDb:  stateDb,
+		stateDb:  dbInstance,
 	}
 
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
 		var err error
-		bc.genesisBlock, err = WriteGenesisBlock(blockDb)
+		bc.genesisBlock, err = WriteGenesisBlock(dbInstance)
 		if err != nil {
 			return nil, err
 		}
@@ -133,27 +135,28 @@ func (bc *BlockChain) WriteBlock(block *types.Block) error {
 }
 
 func (bc *BlockChain) HeadBlockTime() uint64 {
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//return dpo.Time
-	return 1
+	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
+	return dgp.LastBlockTime
 }
 
 func (bc *BlockChain) HeadBlockNum() uint32 {
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//return dpo.HeadBlockNum
-	return 1
+	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
+	return dgp.LastBlockNum
 }
 
 func (bc *BlockChain) HeadBlockHash() common.Hash {
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//return dpo.HeadBlockHash
-	return common.Hash{}
+	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
+	return dgp.LastBlockHash
 }
 
-func (bc *BlockChain) HeaderBlockProducer() []byte {
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//return dpo.CurrentProducer
-	return []byte{}
+func (bc *BlockChain) HeadBlockDelegate() string {
+	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
+	return dgp.CurrentDelegate
+}
+
+func (bc *BlockChain) GenesisTimestamp() uint64 {
+	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
+	return dgp.LastBlockTime
 }
 
 // internal
