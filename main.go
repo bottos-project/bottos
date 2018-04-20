@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	//	//"time"
+	"path/filepath"
 
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/chain"
@@ -26,7 +26,7 @@ import (
 func main() {
 	var err error
 
-	blockDb := db.NewDbService(config.Param.DataDir, config.Param.DataDir)
+	blockDb := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
 
 	//	fmt.Println("init account")
 	//	account.CreateAccountManager()

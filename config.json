@@ -1,15 +1,15 @@
 {
-    "GenesisJson": "./genesis.json",
-    "DataDir": "./datadir/",
-    "Consensus":"dpos",
-    "APIPort": 6789,
-    "P2PPort": 6890,
-    "PeerList": [
+    "genesis_json": "./genesis.json",
+    "data_dir": "./datadir/",
+    "consensus":"dpos",
+    "api_port": 6789,
+    "p2p_port": 6890,
+    "peer_list": [
         "127.0.0.1:6890"
     ],
-    "KeyPairs": [{
-            "PrivateKey": "5JM9TrUsohBmACHjYHmHtjTxpaDT8wg9tM1ehrp9WvmgaEh4Xr4",
-            "PublicKey": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
+    "key_pairs": [{
+            "private_key": "5JM9TrUsohBmACHjYHmHtjTxpaDT8wg9tM1ehrp9WvmgaEh4Xr4",
+            "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
         }
     ]
 }
