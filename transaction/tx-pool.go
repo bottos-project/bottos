@@ -10,6 +10,7 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/message"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	
 )
 
@@ -105,7 +106,7 @@ func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){
 
 
 // HandlTransactionFromFront handles a transaction from front
-func (pool *TrxPool)HandleTransactionFromFront(trx *types.Transaction) {
+func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 	
     pool.CheckTransactionBaseConditionFromFront()
 	//start db session
@@ -116,11 +117,13 @@ func (pool *TrxPool)HandleTransactionFromFront(trx *types.Transaction) {
 	//revert db session
 
 	//tell P2P actor to notify trx	
+
+	context.Respond(true)
 }
 
 
 // HandlTransactionFromP2P handles a transaction from P2P
-func (pool *TrxPool)HandleTransactionFromP2P(trx *types.Transaction) {
+func (pool *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
 
 	pool.CheckTransactionBaseConditionFromP2P()
 
@@ -134,11 +137,11 @@ func (pool *TrxPool)HandleTransactionFromP2P(trx *types.Transaction) {
 
 
 
-func (pool *TrxPool)HandlePushTransactionReq(TrxSender message.TrxSenderType, trx *types.Transaction){
+func (pool *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
 
 	if (message.TrxSenderTypeFront == TrxSender){ 
-		pool.HandleTransactionFromFront(trx)
+		pool.HandleTransactionFromFront(context, trx)
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
-		pool.HandleTransactionFromP2P(trx)
+		pool.HandleTransactionFromP2P(context, trx)
 	}	
 }
