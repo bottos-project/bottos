@@ -28,9 +28,11 @@ package apiactor
 import (
 	"fmt"
 	"time"
+	"context"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/api"
 )
 
 var trxactorPid *actor.PID
@@ -65,5 +67,35 @@ func PushTransaction(trx uint64) error {
 
 	fmt.Println("exec push transaction done !!!!!!", trx)
 
+	return nil
+}
+
+type TrxActorAgent struct {
+}
+
+//type txRepository interface {
+//	CallSendTrx(account_name string, balance uint64) (string, error)
+//}
+
+func NewTrxActorAgent() *TrxActorAgent {
+	return &TrxActorAgent{}
+}
+
+func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushResponse) error {
+	//if req == nil {
+
+	//	return errors.New("Missing storage request")
+	//}
+	//fmt.Println(req.AccountName)
+
+	//id, err := trx.CallSendTrx(req.AccountName, 111)
+	//if err != nil {
+	//	return errors.New("get PUTURL failed")
+	//}
+
+	//h.txp.Add(&types.Transaction{Id: "111", AccountName: req.AccountName})
+
+	//fmt.Println("success")
+	//rsp.Id = req.AccountName
 	return nil
 }
