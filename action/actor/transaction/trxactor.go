@@ -110,7 +110,7 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 		fmt.Println("trx actor Rcv trx, sendType: ", msg.TrxSender)
 
-		TrxActor.pool.HandlePushTransactionReq(msg.TrxSender, msg.Trx)
+		TrxActor.pool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
 
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
