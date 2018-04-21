@@ -28,6 +28,7 @@ package produceractor
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -61,6 +62,11 @@ func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
 
 	case *actor.Started:
 		log.Printf("ProducerActor received started msg", msg)
+		context.SetReceiveTimeout(500 * time.Millisecond)
+
+	case *actor.ReceiveTimeout:
+		fmt.Println("timed out")
+		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
 		log.Printf("ProducerActor received stopping msg")
