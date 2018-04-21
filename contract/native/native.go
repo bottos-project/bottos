@@ -1,7 +1,6 @@
 package nativecontract
 
 import (
-	"fmt"
 	"time"
 	"strconv"
 
@@ -31,8 +30,6 @@ func CreateNativeContractAccount(ldb *db.DBService) error {
 		AccountName: bto.AccountName,
 	}
 	role.SetStakedBalanceRole(ldb, bto.AccountName, staked_balance)
-
-	fmt.Println(bto, balance, staked_balance)
 
 	return nil
 }
@@ -81,8 +78,6 @@ func CreateInitialDelegates(ldb *db.DBService) error {
 		role.SetDelegateRole(ldb, delegateObj.AccountName, delegateObj)
 
 		// TODO votes object
-
-		fmt.Println(delegate, balance, staked_balance, delegateObj)
 	}
 	
 	return nil

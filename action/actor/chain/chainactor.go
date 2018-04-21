@@ -32,10 +32,11 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/chain"
 )
 
 var ChainActorPid *actor.PID
+var actorEnv *env.ActorEnv
+var trxactorPid *actor.PID
 
 type ChainActor struct {
 	props *actor.Props
@@ -45,12 +46,17 @@ func ContructChainActor() *ChainActor {
 	return &ChainActor{}
 }
 
+func SetTrxActorPid(tpid *actor.PID) {
+	trxactorPid = tpid
+}
+
 func NewChainActor(env *env.ActorEnv) *actor.PID {
 	var err error
 
 	props := actor.FromProducer(func() actor.Actor { return ContructChainActor() })
 
 	ChainActorPid, err = actor.SpawnNamed(props, "ChainActor")
+	actorEnv = env
 
 	if err == nil {
 		return ChainActorPid
@@ -89,12 +95,15 @@ func (self *ChainActor) Receive(context actor.Context) {
 }
 
 func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.InsertBlockReq) {
-	err := chain.GetChain().InsertBlock(req.Block)
+	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
-			Hash:  req.Block.Hash(),
+			Hash: req.Block.Hash(),
 			Error: err,
 		}
 		ctx.Sender().Request(resp, ctx.Self())
+	}
+	if err == nil {
+		//trxactorPid.Tell()
 	}
 }

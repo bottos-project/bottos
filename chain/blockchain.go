@@ -32,8 +32,9 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/config"
+	_"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
+	trx "github.com/bottos-project/core/transaction"
 )
 
 var chainInstance *BlockChain
@@ -165,8 +166,6 @@ func (bc *BlockChain) getBlockDbLastBlock() *types.Block {
 }
 
 func (bc *BlockChain) initBlockCache() error {
-
-	// TODO 鐤戦棶
 	block := bc.getBlockDbLastBlock()
 	if block != nil {
 		_, err := bc.blockCache.Insert(block)
@@ -183,13 +182,10 @@ func (bc *BlockChain) LoadBlockDb() error {
 		return fmt.Errorf("Loading block database fail, try recovering")
 	}
 
+	// TODO
 	bc.blockCache.Insert(lastBlock)
-
-	// TODO  for testing
-	//bc.updateGlobalDynamicProperty(lastBlock)
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//dpo.LastIrreversibleBlockNum = lastBlock.Number()
-	//bc.stateDb.SetDynamicGlobalPropertyObject(dpo)
+	bc.updateChainState(lastBlock)
+	
 	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
 	// TODO replay
@@ -201,21 +197,27 @@ func (bc *BlockChain) LoadBlockDb() error {
 }
 
 // TODO
-func (bc *BlockChain) updateGlobalProperty(block *types.Block) {
+func (bc *BlockChain) updateCoreState(block *types.Block) {
 }
 
 // TODO
-func (bc *BlockChain) updateGlobalDynamicProperty(block *types.Block) {
-	//dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-	//dpo.HeadBlockNum = block.Number()
-	//dpo.HeadBlockHash = block.Hash()
-	//dpo.Time = block.Time()
-	//dpo.CurrentProducer = block.Producer()
-	//bc.stateDb.SetDynamicGlobalPropertyObject(dpo)
+func (bc *BlockChain) updateChainState(block *types.Block) {
+	cs, err := role.GetChainStateObjectRole(bc.stateDb)
+	if err != nil {
+		fmt.Println("BlockChain : GetChainStateObjectRole error")
+		return
+	}
+	cs.LastBlockNum = block.GetNumber()
+	cs.LastBlockHash = block.Hash()
+	cs.LastBlockTime = block.GetTimestamp()
+	cs.CurrentDelegate = string(block.GetProducer())
+
+	role.SetChainStateObjectRole(bc.stateDb, cs)
+	
 }
 
 // TODO
-func (bc *BlockChain) updateLastIrreversibleBlock(block *types.Block) {
+func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
 	/*
 		 // TODO  compute new LIB
 		 dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
@@ -253,20 +255,21 @@ func (bc *BlockChain) updateLastIrreversibleBlock(block *types.Block) {
 
 
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
-
 	// TODO excute block
 	fmt.Println("BlockChain : Handling block")
 
 	// TODO
-	//for _, tx := range block.Transactions {
-		// ValidateTransaction(tx)
-		// HandleTransaction(tx)
-	//}
+	for _, tx := range block.Transactions {
+		trx.ApplyTransaction(tx)
+		fmt.Println("BlockChain : Applying transactions")
+	}
 
-	// update global property
-	bc.updateGlobalProperty(block)
-	bc.updateGlobalDynamicProperty(block)
-	bc.updateLastIrreversibleBlock(block)
+	// update consensus
+	bc.updateCoreState(block)
+	bc.updateChainState(block)
+	bc.updateConfirmedBlock(block)
+
+	// TODO notify TxPool
 
 	return nil
 }
@@ -277,11 +280,12 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 		return fmt.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
 	}
 
-	if block.GetNumber() != bc.HeadBlockNum() {
+	if block.GetNumber() != bc.HeadBlockNum() + 1 {
 		return fmt.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
 	}
 
 	// block timestamp check
+	/*
 	if block.GetTimestamp() <= bc.HeadBlockTime() {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
@@ -289,6 +293,7 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	if block.GetTimestamp() > bc.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL) {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
+	*/
 
 	// TODO producer_change check
 	// ...
@@ -314,27 +319,32 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
+	// TODO db lock
+
+	fmt.Println("InsertBlock: ", block)
+
 	err := bc.ValidateBlock(block)
 	if err != nil {
-		fmt.Printf("Validate Block error %v\n", err)
+		fmt.Println("Validate Block error: ", err)
 		return err
 	}
 
 	// push to cache, block must link now, TODO: fork process
 	_, err = bc.blockCache.Insert(block)
 	if err != nil {
-		fmt.Printf("blockCache insert error %v", err)
+		fmt.Println("blockCache insert error: ", err)
 		return err
 	}
 
-	// TODO record stateDb revision
+	// record stateDb revision
+	bc.stateDb.StartUndoSession(true)
 	err = bc.HandleBlock(block)
 	if err != nil {
-		// TODO restore stateDb revision
-		fmt.Printf("InsertBlock error %v", err)
+		bc.stateDb.Rollback()
+		fmt.Println("InsertBlock error: ", err)
 		return err
 	}
-	// TODO commit stateDb revision
+	bc.stateDb.Commit()
 
 	return nil
 }
