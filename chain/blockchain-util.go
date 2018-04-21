@@ -62,7 +62,7 @@ func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 		return nil
 	}
 
-	fmt.Printf("GetBlock, hash: %x, data: %x\n", hash.Bytes(), data)
+	//fmt.Printf("GetBlock, hash: %x, data: %x\n", hash.Bytes(), data)
 
 	return &block
 }
