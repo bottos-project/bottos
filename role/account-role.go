@@ -27,7 +27,7 @@ package role
 
 import (
 	"encoding/json"
-	"fmt"
+	_"fmt"
 
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/common"
@@ -67,7 +67,7 @@ func GetAccountRoleByName(ldb *db.DBService, accountName string) (*Account, erro
 	value, err := ldb.GetObject(AccountObjectName, key)
 	res := &Account{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", key, value)
+	//fmt.Println("Get", key, value)
 	return res, err
 }
  

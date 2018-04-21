@@ -1,7 +1,7 @@
 package role
 
 import (
-	"fmt"
+	_"fmt"
 	"encoding/json"
 	"time"
 
@@ -47,6 +47,6 @@ func GetChainStateObjectRole(ldb *db.DBService) (*ChainStateObject, error) {
 	value, err := ldb.GetObject(ChainStateObjectName, ChainStateObjectDefaultKey)
 	res := &ChainStateObject{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", ChainStateObjectDefaultKey, value)
+	//fmt.Println("Get", ChainStateObjectDefaultKey, value)
 	return res, err
 }

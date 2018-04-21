@@ -81,6 +81,6 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 	value, err := ldb.GetObject(StakedBalanceObjectName, key)
 	res := &StakedBalance{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", key, value)
+	//fmt.Println("Get", key, value)
 	return res, err
 }

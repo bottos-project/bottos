@@ -27,7 +27,7 @@ package role
 
 import (
 	"encoding/json"
-	"fmt"
+	_"fmt"
 	"strconv"
 
 	"github.com/bottos-project/core/db"
@@ -72,7 +72,7 @@ func GetBlockHistoryByNumber(ldb *db.DBService, blockNumber uint32) (*BlockHisto
 	value, err := ldb.GetObject(BlockHistoryObjectName, key)
 	res := &BlockHistory{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", key, value)
+	//fmt.Println("Get", key, value)
 	return res, err
 }
   

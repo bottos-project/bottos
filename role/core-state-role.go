@@ -27,7 +27,7 @@
 package role
 
 import (
-	"fmt"
+	_"fmt"
 	"encoding/json"
 
 	"github.com/bottos-project/core/db"
@@ -72,6 +72,6 @@ func GetGlobalPropertyRole(ldb *db.DBService) (*CoreState, error) {
 	value, err := ldb.GetObject(CoreStateObjectName, CoreStateObjectDefaultKey)
 	res := &CoreState{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", CoreStateObjectDefaultKey, value)
+	//fmt.Println("Get", CoreStateObjectDefaultKey, value)
 	return res, err
 }
