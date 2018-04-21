@@ -40,7 +40,6 @@ func SetChainActorPid(tpid *actor.PID) {
 }
 
 func ApplyBlock(block *types.Block) {
-	fmt.Println("block", block)
 
 	applyBlock := &message.InsertBlockReq{block}
 	chainActorPid.Tell(applyBlock)
