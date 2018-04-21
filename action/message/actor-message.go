@@ -29,3 +29,26 @@ type InsertBlockRsp struct {
 	Hash  common.Hash
 	Error error
 }
+
+
+type GetAllPendingTrxReq struct {
+
+}
+
+
+type GetAllPendingTrxRsp struct {
+	Trxs []*types.Transaction
+}
+
+
+
+type RemovePendingTrxsReq struct {
+    Trxs []*types.Transaction
+}
+
+
+type RemovePendingTrxsRsp struct {
+
+}
+
+	
