@@ -70,6 +70,8 @@ func RegisterActorMsgTbl() {
 
 	trxactor.SetApiActorPid(apiActorPid) // trx --> api
 
+	produceractor.SetChainActorPid(chainActorPid) // producer --> chain
+
 	//chainactor.SetTrxActorPid(trxActorPid)//chain --
 
 }

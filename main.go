@@ -6,10 +6,11 @@ import (
 	"os/signal"
 	"path/filepath"
 
-	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/chain"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/config"
 	native "github.com/bottos-project/core/contract/native"
+	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/producer"
 	"github.com/bottos-project/core/role"
 	//	"github.com/bottos-project/core/account"
 	//	"github.com/bottos-project/core/api"
@@ -22,8 +23,8 @@ import (
 	//	"github.com/micro/go-micro"
 	//	log "github.com/sirupsen/logrus"
 	cactor "github.com/bottos-project/core/action/actor"
-	actionenv "github.com/bottos-project/core/action/env"
 	caapi "github.com/bottos-project/core/action/actor/api"
+	actionenv "github.com/bottos-project/core/action/env"
 )
 
 func main() {
@@ -42,10 +43,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	actorenv := &actionenv.ActorEnv {Db: dbInst, Chain: bc}
+	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc}
 	cactor.InitActors(actorenv)
 	caapi.PushTransaction(2876568)
-
+	producer.Working()
 	WaitSystemDown()
 
 	//console.ReadLine()
@@ -105,6 +106,6 @@ func WaitSystemDown() {
 		fmt.Println("System shutdown")
 		close(exit)
 	}()
-	
+
 	<-exit
 }
