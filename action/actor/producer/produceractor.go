@@ -31,33 +31,34 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/producer"
 )
 
-var ProducerActorPid *actor.PID
-
 type ProducerActor struct {
-	props *actor.Props
+	myPid *actor.PID
+	ins   *producer.Producer
 }
 
-func ContructProducerActor() *ProducerActor {
+func contructProducerActor() *ProducerActor {
 	return &ProducerActor{}
 }
 
-func NewProducerActor() *actor.PID {
+func NewProducerActor(env *env.ActorEnv) *ProducerActor {
 
-	props := actor.FromProducer(func() actor.Actor { return ContructProducerActor() })
+	props := actor.FromProducer(func() actor.Actor { return contructProducerActor() })
 
-	ProducerActorPid, err := actor.SpawnNamed(props, "ProducerActor")
+	pid, err := actor.SpawnNamed(props, "ProducerActor")
 
-	if err == nil {
-		return ProducerActorPid
-	} else {
-		panic(fmt.Errorf("ProducerActor SpawnNamed error: ", err))
+	if err != nil {
+		return nil
 	}
+	ins := producer.New(env.Chain)
+
+	return &ProducerActor{pid, ins}
 }
 
-func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
+func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 
@@ -66,7 +67,7 @@ func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
-		block := producer.Woker()
+		block := p.ins.Woker()
 		if block != nil {
 			fmt.Println("apply block", block)
 			ApplyBlock(block)
@@ -86,9 +87,9 @@ func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
 
 }
 
-func (ProducerActor *ProducerActor) Receive(context actor.Context) {
+func (p *ProducerActor) Receive(context actor.Context) {
 
-	ProducerActor.handleSystemMsg(context)
+	p.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 

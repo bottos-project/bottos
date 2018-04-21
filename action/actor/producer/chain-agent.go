@@ -35,7 +35,7 @@ import (
 
 var chainActorPid *actor.PID
 
-func SetChainActorPid(tpid *actor.PID) {
+func (p *ProducerActor) SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 

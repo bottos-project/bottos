@@ -44,7 +44,8 @@ func main() {
 	}
 
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc}
-	cactor.InitActors(actorenv)
+	actor := cactor.InitActors(actorenv)
+	actor.RegisterActorMsgTbl()
 	caapi.PushTransaction(2876568)
 	WaitSystemDown()
 

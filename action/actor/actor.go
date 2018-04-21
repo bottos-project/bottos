@@ -42,9 +42,12 @@ var apiActorPid *actor.PID
 var netActorPid *actor.PID
 var trxActorPid *actor.PID
 var chainActorPid *actor.PID
-var producerActorPid *actor.PID
 
-func InitActors(env *env.ActorEnv) {
+type MultiActor struct {
+	producer *produceractor.ProducerActor
+}
+
+func InitActors(env *env.ActorEnv) *MultiActor {
 
 	fmt.Println("InitActors")
 
@@ -56,13 +59,13 @@ func InitActors(env *env.ActorEnv) {
 
 	chainActorPid = chainactor.NewChainActor(env)
 
-	producerActorPid = produceractor.NewProducerActor()
-
-	RegisterActorMsgTbl()
+	pActor := produceractor.NewProducerActor(env)
+	act := &MultiActor{pActor}
+	return act
 
 }
 
-func RegisterActorMsgTbl() {
+func (a *MultiActor) RegisterActorMsgTbl() {
 
 	fmt.Println("RegisterActorMsgTbl")
 
@@ -70,7 +73,7 @@ func RegisterActorMsgTbl() {
 
 	trxactor.SetApiActorPid(apiActorPid) // trx --> api
 
-	produceractor.SetChainActorPid(chainActorPid) // producer --> chain
+	a.producer.SetChainActorPid(chainActorPid) // producer --> chain
 
 	chainactor.SetTrxActorPid(trxActorPid) //chain --> trx
 

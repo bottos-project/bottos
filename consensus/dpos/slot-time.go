@@ -65,7 +65,8 @@ func GetSlotTime(slot_num uint32) int64 {
 	interval := config.DEFAULT_BLOCK_INTERVAL
 
 	if GetHeadBlockNum() == 0 {
-		return GetGenesisTime() + int64(slot_num*interval)
+		//TODO	return GenesisTimestamp() + int64(slot_num*interval)
+		return 1
 	}
 	GetHeadBlockTime()
 	head_block_abs_slot := GetHeadBlockTimeSinceEpoch() / int64(interval)
