@@ -10,7 +10,7 @@ import (
 	"github.com/bottos-project/core/config"
 	native "github.com/bottos-project/core/contract/native"
 	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/producer"
+
 	"github.com/bottos-project/core/role"
 	//	"github.com/bottos-project/core/account"
 	//	"github.com/bottos-project/core/api"
@@ -46,7 +46,6 @@ func main() {
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc}
 	cactor.InitActors(actorenv)
 	caapi.PushTransaction(2876568)
-	producer.Working()
 	WaitSystemDown()
 
 	//console.ReadLine()

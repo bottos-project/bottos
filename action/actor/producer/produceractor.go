@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/core/producer"
 )
 
 var ProducerActorPid *actor.PID
@@ -65,7 +66,12 @@ func (ProducerActor *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
-		fmt.Println("timed out")
+		block := producer.Woker()
+		if block != nil {
+			fmt.Println("apply block", block)
+			ApplyBlock(block)
+			//TODO brocast
+		}
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
