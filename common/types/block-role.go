@@ -40,12 +40,21 @@ func NewBlock(h *Header, txs []*Transaction) *Block {
 	b := Block{Header: copyHeader(h)}
 
 	if len(txs) == 0 {
+		// TODO
 	} else {
 		b.Transactions = make([]*Transaction, len(txs))
 		copy(b.Transactions, txs)
 	}
 
+	b.Header.MerkleRoot = b.ComputeMerkleRoot().Bytes()
+
 	return &b
+}
+
+func NewHeader() *Header {
+	h := &Header{}
+
+	return h
 }
 
 func (b *Block) Hash() common.Hash {
@@ -84,6 +93,16 @@ func (b *Block) GetMerkleRoot() common.Hash {
 	return common.BytesToHash(bh)
 }
 
+func (b *Block) ComputeMerkleRoot() common.Hash {
+	// TODO
+	return common.Hash{}
+}
+
+func (b *Block) Sign(signkey string) common.Hash {
+	// TODO
+	return common.Hash{}
+}
+
 // TODO AccountName Type
 func (b *Block) GetProducer() []byte {
 	return b.GetHeader().GetProducer()
@@ -111,3 +130,4 @@ func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 
 	return nil
 } 
+
