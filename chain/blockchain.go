@@ -34,7 +34,7 @@ import (
 	"github.com/bottos-project/core/db"
 	_"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
-	trx "github.com/bottos-project/core/transaction"
+	//trx "github.com/bottos-project/core/transaction"
 )
 
 var chainInstance *BlockChain
@@ -213,7 +213,6 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	cs.CurrentDelegate = string(block.GetProducer())
 
 	role.SetChainStateObjectRole(bc.stateDb, cs)
-	
 }
 
 // TODO
@@ -257,10 +256,10 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	fmt.Println("BlockChain : Handling block")
 
 	// TODO
-	for _, tx := range block.Transactions {
-		trx.ApplyTransaction(tx)
-		fmt.Println("BlockChain : Applying transactions")
-	}
+	//for _, tx := range block.Transactions {
+	//	trx.ApplyTransaction(tx)
+	//	fmt.Println("BlockChain : Applying transactions")
+	//}
 
 	// update consensus
 	bc.updateCoreState(block)
@@ -335,14 +334,16 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 
 	// record stateDb revision
-	bc.stateDb.StartUndoSession(true)
+	//bc.stateDb.StartUndoSession(true)
 	err = bc.HandleBlock(block)
 	if err != nil {
-		bc.stateDb.Rollback()
+		//bc.stateDb.Rollback()
 		fmt.Println("InsertBlock error: ", err)
 		return err
 	}
-	bc.stateDb.Commit()
+	//bc.stateDb.Commit()
+
+	fmt.Println("\n\n\n")
 
 	return nil
 }
