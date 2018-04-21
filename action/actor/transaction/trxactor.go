@@ -112,6 +112,13 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 		TrxActor.pool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
 
+
+	case *message.GetAllPendingTrxReq:
+
+		fmt.Println("trx actor Rcv get all trx req")
+		
+		TrxActor.pool.GetAllPendingTransactions(context)
+
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
 		fmt.Println("trx actor: Unknown msg")
