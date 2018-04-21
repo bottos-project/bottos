@@ -28,9 +28,11 @@ package chainactor
 import (
 	"fmt"
 	"log"
-	"github.com/bottos-project/core/chain"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/chain"
 )
 
 var ChainActorPid *actor.PID
@@ -43,7 +45,7 @@ func ContructChainActor() *ChainActor {
 	return &ChainActor{}
 }
 
-func NewChainActor() *actor.PID {
+func NewChainActor(env *env.ActorEnv) *actor.PID {
 	var err error
 
 	props := actor.FromProducer(func() actor.Actor { return ContructChainActor() })
@@ -81,16 +83,16 @@ func (self *ChainActor) Receive(context actor.Context) {
 	self.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
-	case *InsertBlockReq:
+	case *message.InsertBlockReq:
 		self.HandleBlockMessage(context, msg)
 	}
 }
 
-func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *InsertBlockReq) {
+func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.InsertBlockReq) {
 	err := chain.GetChain().InsertBlock(req.Block)
 	if ctx.Sender() != nil {
-		resp := &InsertBlockRsp{
-			Hash: req.Block.Hash(),
+		resp := &message.InsertBlockRsp{
+			Hash:  req.Block.Hash(),
 			Error: err,
 		}
 		ctx.Sender().Request(resp, ctx.Self())

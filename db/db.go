@@ -64,7 +64,8 @@ type DBApi interface {
 	GetObject(objectName string) (interface{}, error)
 	GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
-
+	Commit()
+	Rollback()
 	//mongodb interface
 	Set(string, string)
 }
