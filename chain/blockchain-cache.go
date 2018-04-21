@@ -90,16 +90,20 @@
 	 if self.startBlock == nil {
 		 return nil
 	 }
-	 
+
+	 trimmed := false
 	 for start := self.startBlock.GetNumber(); start < LIB; start++ {
 		 if hash, ok := self.cache.Get(start); ok {
 			 self.cache.Remove(hash.(common.Hash))
 			 self.cache.Remove(start)
-			 fmt.Printf("remove block num = %v, hash = %x\n", start, hash.(common.Hash))
+			 trimmed = true
+			 fmt.Printf("remove block form BlockCache, num = %v, hash = %x\n", start, hash.(common.Hash))
 		 }
 	 }
- 
-	 self.startBlock = self.GetBlockByNum(LIB)
+
+	 if (trimmed) {
+		self.startBlock = self.GetBlockByNum(LIB)
+	 }
  
 	 fmt.Printf("BlockCache Trim head block num = %v, LIB = %v, start = %v\n", headBlockNum, LIB, self.startBlock.GetNumber())
 	 return nil
