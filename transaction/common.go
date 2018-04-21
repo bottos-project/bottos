@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	//"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 )
 
