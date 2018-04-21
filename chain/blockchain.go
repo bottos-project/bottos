@@ -218,39 +218,37 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 
 // TODO
 func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
-	/*
-		 // TODO  compute new LIB
-		 dpo := bc.stateDb.GetDynamicGlobalPropertyObject()
-		 // for test
-		 if dpo.HeadBlockNum > dpo.LastIrreversibleBlockNum + 7 {
-			 dpo.LastIrreversibleBlockNum = dpo.HeadBlockNum - 7
-		 }
-		 bc.stateDb.SetDynamicGlobalPropertyObject(dpo)
+	// TODO  compute new LIB
+	cs, _ := role.GetChainStateObjectRole(bc.stateDb)
+	// for test
+	if cs.LastBlockNum > cs.LastConfirmedBlockNum + 7 {
+		cs.LastConfirmedBlockNum = cs.LastBlockNum - 7
+	}
+	role.SetChainStateObjectRole(bc.stateDb, cs)
 
-		 // write LIB to blockDb
-		 newLIB := dpo.LastIrreversibleBlockNum
-		 lastBlockNum := uint32(0)
-		 lastBlock := bc.getBlockDbLastBlock()
-		 if lastBlock != nil {
-			 lastBlockNum = lastBlock.Number()
-		 }
+	// write LIB to blockDb
+	newLIB := cs.LastConfirmedBlockNum
+	lastBlockNum := uint32(0)
+	lastBlock := bc.getBlockDbLastBlock()
+	if lastBlock != nil {
+		lastBlockNum = lastBlock.GetNumber()
+	}
 
-		 fmt.Printf("lastBlockNum = %v, newLIB = %v\n", lastBlockNum, newLIB)
+	fmt.Printf("lastBlockNum = %v, newLIB = %v\n", lastBlockNum, newLIB)
 
-		 if lastBlockNum < newLIB {
-			 for i := lastBlockNum + 1; i <= newLIB; i++ {
-				 block := bc.GetBlockByNumber(i)
-				 if block != nil {
-					 bc.WriteBlock(block)
-				 } else {
-					 fmt.Printf("block num = %v not found\n", i)
-				 }
-			 }
-		 }
+	if lastBlockNum < newLIB {
+		for i := lastBlockNum + 1; i <= newLIB; i++ {
+			block := bc.GetBlockByNumber(i)
+			if block != nil {
+				bc.WriteBlock(block)
+			} else {
+				fmt.Printf("block num = %v not found\n", i)
+			}
+		}
+	}
 
-		 // trim blockCache
-		 bc.blockCache.Trim(dpo.HeadBlockNum, newLIB)
-	*/
+	// trim blockCache
+	bc.blockCache.Trim(cs.LastBlockNum, newLIB)
 }
 
 
