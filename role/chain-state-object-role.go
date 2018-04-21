@@ -40,6 +40,7 @@ func CreateChainStateObjectRole(ldb *db.DBService) error {
 
 func SetChainStateObjectRole(ldb *db.DBService, value *ChainStateObject) error {
 	jsonvalue, _ := json.Marshal(value)
+	//mt.Println("Set", ChainStateObjectDefaultKey, value)
 	return ldb.SetObject(ChainStateObjectName, ChainStateObjectDefaultKey, string(jsonvalue))
 }
 
