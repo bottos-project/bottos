@@ -22,27 +22,28 @@ import (
 	//	"github.com/micro/go-micro"
 	//	log "github.com/sirupsen/logrus"
 	cactor "github.com/bottos-project/core/action/actor"
+	actionenv "github.com/bottos-project/core/action/env"
 	caapi "github.com/bottos-project/core/action/actor/api"
 )
 
 func main() {
-	var err error
+	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
+	if dbInst == nil {
+		fmt.Println("Create DB service fail")
+		os.Exit(1)
+	}
 
-	blockDb := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
+	role.Init(dbInst)
+	native.InitNativeContract(dbInst)
 
-	//	fmt.Println("init account")
-	//	account.CreateAccountManager()
-
-	role.Init(blockDb)
-	native.InitNativeContract(blockDb)
-
-	_, err = chain.CreateBlockChain(blockDb)
+	bc, err := chain.CreateBlockChain(dbInst)
 	if err != nil {
 		fmt.Println("Create BlockChain error: ", err)
 		os.Exit(1)
 	}
 
-	cactor.InitActors()
+	actorenv := &actionenv.ActorEnv {Db: dbInst, Chain: bc}
+	cactor.InitActors(actorenv)
 	caapi.PushTransaction(2876568)
 
 	WaitSystemDown()

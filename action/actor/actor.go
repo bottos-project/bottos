@@ -34,6 +34,8 @@ import (
 	netactor "github.com/bottos-project/core/action/actor/net"
 	produceractor "github.com/bottos-project/core/action/actor/producer"
 	trxactor "github.com/bottos-project/core/action/actor/transaction"
+
+	"github.com/bottos-project/core/action/env"
 )
 
 var apiActorPid *actor.PID
@@ -42,7 +44,7 @@ var trxActorPid *actor.PID
 var chainActorPid *actor.PID
 var producerActorPid *actor.PID
 
-func InitActors() {
+func InitActors(env *env.ActorEnv) {
 
 	fmt.Println("InitActors")
 
@@ -52,7 +54,7 @@ func InitActors() {
 
 	trxActorPid = trxactor.NewTrxActor()
 
-	chainActorPid = chainactor.NewChainActor()
+	chainActorPid = chainactor.NewChainActor(env)
 
 	producerActorPid = produceractor.NewProducerActor()
 
@@ -67,5 +69,7 @@ func RegisterActorMsgTbl() {
 	apiactor.SetTrxActorPid(trxActorPid) // api --> trx
 
 	trxactor.SetApiActorPid(apiActorPid) // trx --> api
+
+	chainactor.SetTrxActorPid(trxActorPid)
 
 }
