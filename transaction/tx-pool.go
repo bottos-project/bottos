@@ -76,9 +76,12 @@ func (pool *TrxPool) expirationCheckLoop() {
 
 // expirationCheckLoop is periodically check exceed time transaction, then remove it
 func (pool *TrxPool) addTransaction(trx *types.Transaction) {	
+	pool.mu.Lock()
 	trxHash := trx.Hash()
 	pool.pending[trxHash] = trx
 	//pool.expiration = time.Now()
+
+	pool.mu.Unlock()
 }
 
 
@@ -112,7 +115,7 @@ func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	//start db session
 	ApplyTransaction(trx)
 
-	//add to pending
+	pool.addTransaction(trx)
 
 	//revert db session
 
@@ -144,4 +147,40 @@ func (pool *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender me
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
 		pool.HandleTransactionFromP2P(context, trx)
 	}	
+}
+
+
+
+func (pool *TrxPool)GetAllPendingTransactions(context actor.Context) {
+
+	pool.mu.Lock()
+
+	rsp := &message.GetAllPendingTrxRsp{}
+
+
+	for txHash := range pool.pending {
+
+		rsp.Trxs = append(rsp.Trxs, pool.pending[txHash])		
+	}
+
+	context.Respond(rsp)
+
+	
+	pool.mu.Unlock()
+}
+
+
+func (pool *TrxPool)RemoveTransactions(trxs []*types.Transaction){
+
+}
+
+
+func (pool *TrxPool)RemoveSingleTransaction(*types.Transaction){
+
+}
+
+
+func (pool *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transaction {	
+
+	return nil;
 }
