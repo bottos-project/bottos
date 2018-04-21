@@ -44,7 +44,7 @@ func Working() {
 
 }
 func loop() {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(500 * time.Second / 1000)
 	quit := make(chan struct{})
 	go func() {
 		for {
@@ -62,6 +62,7 @@ func IsEligible() bool {
 	return true
 }
 func IsReady() bool {
+	return true
 	slotTime := dpos.GetSlotTime(1)
 	fmt.Println(slotTime)
 	if slotTime >= common.NowToSeconds() {
@@ -74,6 +75,7 @@ func IsMyTurn() bool {
 
 }
 func reportBlockLoop() {
+
 	if IsEligible() && IsReady() && IsMyTurn() {
 		now := time.Now()
 		slot := dpos.GetSlotAtTime(now)
