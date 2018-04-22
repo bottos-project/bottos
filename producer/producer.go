@@ -31,13 +31,21 @@ import (
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/consensus/dpos"
 )
 
-func IsEligible() bool {
+type Producer struct {
+	core *chain.BlockChain
+}
+
+func New(b *chain.BlockChain) *Producer {
+	return &Producer{b}
+}
+func (p *Producer) isEligible() bool {
 	return true
 }
-func IsReady() bool {
+func (p *Producer) isReady() bool {
 	return true
 	slotTime := dpos.GetSlotTime(1)
 	fmt.Println(slotTime)
@@ -46,18 +54,18 @@ func IsReady() bool {
 	}
 	return false
 }
-func IsMyTurn() bool {
+func (p *Producer) isMyTurn() bool {
 	return true
 
 }
-func Woker() *types.Block {
+func (p *Producer) Woker() *types.Block {
 
-	if IsEligible() && IsReady() && IsMyTurn() {
+	if p.isEligible() && p.isReady() && p.isMyTurn() {
 		now := time.Now()
 		slot := dpos.GetSlotAtTime(now)
 		scheduledTime := dpos.GetSlotTime(slot)
 		fmt.Println(scheduledTime)
-		block, err := reportBlock()
+		block, err := p.reportBlock()
 		if err != nil {
 			return nil // errors.New("report Block failed")
 		}
@@ -68,12 +76,12 @@ func Woker() *types.Block {
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func reportBlock() (*types.Block, error) {
+func (p *Producer) reportBlock() (*types.Block, error) {
 	chain := chain.GetChain()
 	head := types.NewHeader()
 	head.PrevBlockHash = chain.HeadBlockHash().Bytes()
 	head.Number = chain.HeadBlockNum() + 1
-	head.Timestamp = chain.HeadBlockTime() + 3
+	head.Timestamp = chain.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
 	head.Producer = []byte("my")
 	block := types.NewBlock(head, nil)
 	block.Header.ProducerSign = block.Sign("123").Bytes()
