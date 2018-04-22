@@ -75,3 +75,8 @@ func RegisterActorMsgTbl() {
 	chainactor.SetTrxActorPid(trxActorPid) //chain --> trx
 
 }
+
+
+func GetTrxActorPID() *actor.PID {
+	return trxActorPid
+}
