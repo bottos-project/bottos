@@ -172,11 +172,16 @@ func (pool *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 func (pool *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
+	for _, trx := range trxs {
+		delete(pool.pending, trx.Hash())
+	}
+
 }
 
 
-func (pool *TrxPool)RemoveSingleTransaction(*types.Transaction){
+func (pool *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
 
+	delete(pool.pending, trx.Hash())
 }
 
 
