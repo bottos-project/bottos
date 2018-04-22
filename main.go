@@ -25,6 +25,8 @@ import (
 	cactor "github.com/bottos-project/core/action/actor"
 	caapi "github.com/bottos-project/core/action/actor/api"
 	actionenv "github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/core/transaction"
+	"github.com/bottos-project/core/action/actor/transaction"
 )
 
 func main() {
@@ -46,6 +48,11 @@ func main() {
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc}
 	cactor.InitActors(actorenv)
 	caapi.PushTransaction(2876568)
+
+	
+	caapi.InitTrxActorAgent()
+	var trxPool = transaction.InitTrxPool()
+	trxactor.SetTrxPool(trxPool)
 	WaitSystemDown()
 
 	//console.ReadLine()
