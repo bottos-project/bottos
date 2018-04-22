@@ -37,9 +37,10 @@ import (
 
 var TrxActorPid *actor.PID
 
+var trxPool *transaction.TrxPool
+
 type TrxActor struct {
 	props *actor.Props
-	pool *transaction.TrxPool
 }
 
 
@@ -64,8 +65,8 @@ func NewTrxActor() *actor.PID {
 
 
 
-func (TrxActor *TrxActor) setTrxPool(trxPool *transaction.TrxPool) {
-	TrxActor.pool = trxPool
+func SetTrxPool(pool *transaction.TrxPool) {
+	trxPool = pool
 }
 
 func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
@@ -110,14 +111,14 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 
 		fmt.Println("trx actor Rcv trx, sendType: ", msg.TrxSender)
 
-		TrxActor.pool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
+		trxPool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
 
 
 	case *message.GetAllPendingTrxReq:
 
 		fmt.Println("trx actor Rcv get all trx req")
 		
-		TrxActor.pool.GetAllPendingTransactions(context)
+		trxPool.GetAllPendingTransactions(context)
 
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
