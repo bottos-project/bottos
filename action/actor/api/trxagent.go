@@ -77,6 +77,12 @@ type TrxActorAgent struct {
 //	CallSendTrx(account_name string, balance uint64) (string, error)
 //}
 
+var  trxActorAgent *TrxActorAgent
+
+func InitTrxActorAgent() {
+    trxActorAgent = NewTrxActorAgent()
+}
+
 func NewTrxActorAgent() *TrxActorAgent {
 	return &TrxActorAgent{}
 }
