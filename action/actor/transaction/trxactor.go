@@ -120,6 +120,12 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 		
 		trxPool.GetAllPendingTransactions(context)
 
+	case *message.RemovePendingTrxsReq:
+
+		fmt.Println("trx actor Rcv remove trxs req")
+		
+		trxPool.RemoveTransactions(msg.Trxs)
+
 	default:
 		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
 		fmt.Println("trx actor: Unknown msg")
