@@ -35,17 +35,20 @@ import (
 	"github.com/bottos-project/core/consensus/dpos"
 )
 
-type Producer struct {
+type Reporter struct {
 	core chain.BlockChainInterface
 }
-
-func New(b chain.BlockChainInterface) *Producer {
-	return &Producer{core:b}
+type ReporterRepo interface {
+	Woker() *types.Block
 }
-func (p *Producer) isEligible() bool {
+
+func New(b chain.BlockChainInterface) ReporterRepo {
+	return &Reporter{core: b}
+}
+func (p *Reporter) isEligible() bool {
 	return true
 }
-func (p *Producer) isReady() bool {
+func (p *Reporter) isReady() bool {
 	return true
 	slotTime := dpos.GetSlotTime(1)
 	fmt.Println(slotTime)
@@ -54,11 +57,11 @@ func (p *Producer) isReady() bool {
 	}
 	return false
 }
-func (p *Producer) isMyTurn() bool {
+func (p *Reporter) isMyTurn() bool {
 	return true
 
 }
-func (p *Producer) Woker() *types.Block {
+func (p *Reporter) Woker() *types.Block {
 
 	if p.isEligible() && p.isReady() && p.isMyTurn() {
 		now := time.Now()
@@ -76,7 +79,7 @@ func (p *Producer) Woker() *types.Block {
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func (p *Producer) reportBlock() (*types.Block, error) {
+func (p *Reporter) reportBlock() (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1

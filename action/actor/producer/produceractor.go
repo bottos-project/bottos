@@ -36,38 +36,52 @@ import (
 )
 
 type ProducerActor struct {
-	myPid *actor.PID
-	ins   *producer.Producer
+	ins producer.ReporterRepo
 }
 
 func contructProducerActor() *ProducerActor {
 	return &ProducerActor{}
 }
 
-func NewProducerActor(env *env.ActorEnv) *ProducerActor {
+func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
-	props := actor.FromProducer(func() actor.Actor { return contructProducerActor() })
+	ins := producer.New(env.Chain)
+	props := actor.FromProducer(func() actor.Actor {
+		return &ProducerActor{ins}
+	})
 
 	pid, err := actor.SpawnNamed(props, "ProducerActor")
 
 	if err != nil {
 		return nil
 	}
-	ins := producer.New(env.Chain)
 
-	return &ProducerActor{pid, ins}
+	return pid
 }
 
 func (p *ProducerActor) handleSystemMsg(context actor.Context) {
+	//var core
+	//var ins = &producer.Producer{}
+	if p.ins == nil {
+		fmt.Println("bbbbb\n\n\n")
+	}
 
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
 		log.Printf("ProducerActor received started msg", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
+		//ins = p.Ins
+		//		if p.ins == nil {
+		//			fmt.Println("good")
+		//		}
 
 	case *actor.ReceiveTimeout:
+		//		if ins == nil {
+		//			fmt.Println("bad....")
+		//		}
 		block := p.ins.Woker()
+
 		if block != nil {
 			fmt.Println("apply block", block)
 			ApplyBlock(block)

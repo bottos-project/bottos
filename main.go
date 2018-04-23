@@ -25,10 +25,9 @@ import (
 	//	log "github.com/sirupsen/logrus"
 	cactor "github.com/bottos-project/core/action/actor"
 	caapi "github.com/bottos-project/core/action/actor/api"
+	"github.com/bottos-project/core/action/actor/transaction"
 	actionenv "github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/transaction"
-	"github.com/bottos-project/core/action/actor/transaction"
-
 )
 
 func main() {
@@ -50,18 +49,14 @@ func main() {
 	txStore := txstore.NewTransactionStore(bc)
 
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
-	actor := cactor.InitActors(actorenv)
-	actor.RegisterActorMsgTbl()
+	cactor.InitActors(actorenv)
 	caapi.PushTransaction(2876568)
 
-	
 	caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool()
 	trxactor.SetTrxPool(trxPool)
 
 	//caapi.TrxActorAgentInst.PushTrxTest()
-	
-	
 
 	WaitSystemDown()
 
