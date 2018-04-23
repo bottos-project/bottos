@@ -15,8 +15,6 @@ import (
 
 var trxActorPid *actor.PID
 
-
-
 func TestPushTrxTest(t *testing.T) {
 
 	trxActorPid = trxactor.NewTrxActor()
@@ -50,5 +48,17 @@ func TestPushTrxTest(t *testing.T) {
 	} else 	{ 
 		t.Error("push trx failed, trx:", trxTest)
 	}
-	
+
+	getTrxsReq := &message.GetAllPendingTrxReq{
+	}
+
+	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
+
+	if (nil == err) {
+		fmt.Println("get all trx req exec result:")
+		fmt.Println("rusult is =======", getTrxsResult)
+		fmt.Println("error  is =======", getTrxsErr)
+	} else 	{ 
+		t.Error("get all trx req exec error")
+	}	
 }
