@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"crypto/sha256"
 	"fmt"
 )
 
@@ -38,6 +39,20 @@ const (
 type (
 	Hash [HashLength]byte
 )
+
+func Sha256(data []byte) Hash {
+	hash := sha256.Sum256(data)
+	return hash
+}
+
+func DualSha256(h1 Hash, h2 Hash) Hash {
+	var data []byte
+	data = append(data, h1.Bytes()...)
+	data = append(data, h2.Bytes()...)
+	t1 := Sha256(data)
+	t2 := Sha256(t1[:])
+	return t2
+}
 
 func BytesToHash(b []byte) Hash {
 	var h Hash

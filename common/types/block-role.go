@@ -94,7 +94,13 @@ func (b *Block) GetMerkleRoot() common.Hash {
 }
 
 func (b *Block) ComputeMerkleRoot() common.Hash {
-	// TODO
+	if (len(b.Transactions) > 0) {
+		var hs []common.Hash
+		for _, tx := range b.Transactions {
+			hs = append(hs, tx.Hash())
+		}
+		return common.ComputeMerkleRootHash(hs)
+	}
 	return common.Hash{}
 }
 
