@@ -7,6 +7,6 @@ import (
 
 type ActorEnv struct {
 	Db		*db.DBService
-	Chain	*chain.BlockChain
+	Chain	chain.BlockChainInterface
 }
 

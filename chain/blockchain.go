@@ -37,8 +37,6 @@ import (
 	//trx "github.com/bottos-project/core/transaction"
 )
 
-var chainInstance *BlockChain
-
 type BlockChain struct {
 	blockDb		*db.DBService
 	stateDb		*db.DBService
@@ -49,12 +47,7 @@ type BlockChain struct {
 
 	chainmu sync.RWMutex
 }
-
-func GetChain() *BlockChain {
-	return chainInstance
-}
-
-func CreateBlockChain(dbInstance *db.DBService) (*BlockChain, error) {
+func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
 		return nil, err
@@ -82,8 +75,6 @@ func CreateBlockChain(dbInstance *db.DBService) (*BlockChain, error) {
 
 	// init block cache
 	bc.initBlockCache()
-
-	chainInstance = bc
 
 	return bc, nil
 }
