@@ -33,6 +33,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/api"
+	//"github.com/bottos-project/core/action/message"
 )
 
 var trxactorPid *actor.PID
@@ -77,10 +78,10 @@ type TrxActorAgent struct {
 //	CallSendTrx(account_name string, balance uint64) (string, error)
 //}
 
-var  trxActorAgent *TrxActorAgent
+var  TrxActorAgentInst *TrxActorAgent
 
 func InitTrxActorAgent() {
-    trxActorAgent = NewTrxActorAgent()
+    TrxActorAgentInst = NewTrxActorAgent()
 }
 
 func NewTrxActorAgent() *TrxActorAgent {
@@ -103,3 +104,4 @@ func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp
 	
 	return nil
 }
+
