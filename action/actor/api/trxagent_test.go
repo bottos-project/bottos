@@ -4,13 +4,10 @@ package apiactor
 import (
 	"fmt"
 	"time"
-	//"context"
 	"testing"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
-	//"github.com/bottos-project/core/api"
-	//caapi "github.com/bottos-project/core/action/actor/api"
 	"github.com/bottos-project/core/action/actor/transaction"
 	"github.com/bottos-project/core/transaction"
 	"github.com/bottos-project/core/action/message"
@@ -23,9 +20,6 @@ var trxActorPid *actor.PID
 func TestPushTrxTest(t *testing.T) {
 
 	trxActorPid = trxactor.NewTrxActor()
-	
-	fmt.Println("*****trxactorPid is " ,trxactorPid)
-
 
 	InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool()
@@ -46,19 +40,15 @@ func TestPushTrxTest(t *testing.T) {
 		TrxSender : message.TrxSenderTypeFront,
 		
 	}
-
 	
-	result, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	result, err := trxActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result()
 
-	//_, err := trxactorPid.RequestFuture(req, 500*time.Millisecond).Result() // await result
-
-	if (nil != err) {
-		
+	if (nil == err) {
+		fmt.Println("push trx req exec result:")
+		fmt.Println("rusult is =======", result)
+		fmt.Println("error  is =======", err)
+	} else 	{ 
+		t.Error("push trx failed, trx:", trxTest)
 	}
 	
-	fmt.Println("rusult is =======", result, err)
-
-	fmt.Println("exec push transaction done !!!!!!,trx:", trxTest)
 }
-
-
