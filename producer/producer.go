@@ -40,7 +40,7 @@ type Reporter struct {
 	core        chain.BlockChainInterface
 }
 type ReporterRepo interface {
-	Woker() *types.Block
+	Woker(Trxs []*types.Transaction) *types.Block
 	VerifyTrxs(Trxs []*types.Transaction) error
 	IsReady() bool
 }
@@ -64,23 +64,23 @@ func (p *Reporter) isReady() bool {
 	return false
 }
 func (p *Reporter) isMyTurn() bool {
-	p.isReporting = false
 	return true
 
 }
 func (p *Reporter) IsReady() bool {
 	if p.isEligible() && p.isReady() && p.isMyTurn() {
+		p.isReporting = true
 		return true
 	}
 	return false
 }
-func (p *Reporter) Woker() *types.Block {
+func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := time.Now()
 	slot := dpos.GetSlotAtTime(now)
 	scheduledTime := dpos.GetSlotTime(slot)
 	fmt.Println(scheduledTime)
-	block, err := p.reportBlock()
+	block, err := p.reportBlock(trxs)
 	if err != nil {
 		return nil // errors.New("report Block failed")
 	}
@@ -88,21 +88,22 @@ func (p *Reporter) Woker() *types.Block {
 	fmt.Println("brocasting block", block)
 	return block
 }
-func (p *Reporter) VerifyTrxs(Trxs []*types.Transaction) error {
-	p.isReporting = true
+func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
+
 	return nil
 
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func (p *Reporter) reportBlock() (*types.Block, error) {
+func (p *Reporter) reportBlock(trxs []*types.Transaction) (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
 	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
 	head.Delegate = []byte("my")
-	block := types.NewBlock(head, nil)
+	block := types.NewBlock(head, trxs)
 	block.Header.DelegateSign = block.Sign("123").Bytes()
+	p.isReporting = false
 	return block, nil
 
 }
