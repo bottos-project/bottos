@@ -36,11 +36,11 @@ import (
 )
 
 type Producer struct {
-	core *chain.BlockChain
+	core chain.BlockChainInterface
 }
 
-func New(b *chain.BlockChain) *Producer {
-	return &Producer{b}
+func New(b chain.BlockChainInterface) *Producer {
+	return &Producer{core:b}
 }
 func (p *Producer) isEligible() bool {
 	return true
@@ -77,11 +77,10 @@ func (p *Producer) Woker() *types.Block {
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
 func (p *Producer) reportBlock() (*types.Block, error) {
-	chain := chain.GetChain()
 	head := types.NewHeader()
-	head.PrevBlockHash = chain.HeadBlockHash().Bytes()
-	head.Number = chain.HeadBlockNum() + 1
-	head.Timestamp = chain.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
+	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
+	head.Number = p.core.HeadBlockNum() + 1
+	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
 	head.Producer = []byte("my")
 	block := types.NewBlock(head, nil)
 	block.Header.ProducerSign = block.Sign("123").Bytes()

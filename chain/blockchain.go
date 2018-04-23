@@ -37,24 +37,18 @@ import (
 	//trx "github.com/bottos-project/core/transaction"
 )
 
-var chainInstance *BlockChain
-
 type BlockChain struct {
 	blockDb		*db.DBService
 	stateDb		*db.DBService
 	blockCache	*BlockChainCache
-	
+
+	handledBlockCB HandledBlockCallback
 
 	genesisBlock *types.Block
 
 	chainmu sync.RWMutex
 }
-
-func GetChain() *BlockChain {
-	return chainInstance
-}
-
-func CreateBlockChain(dbInstance *db.DBService) (*BlockChain, error) {
+func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
 		return nil, err
@@ -83,9 +77,11 @@ func CreateBlockChain(dbInstance *db.DBService) (*BlockChain, error) {
 	// init block cache
 	bc.initBlockCache()
 
-	chainInstance = bc
-
 	return bc, nil
+}
+
+func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
+	bc.handledBlockCB = cb
 }
 
 func (bc *BlockChain) GetGenesisBlock() *types.Block {
@@ -267,6 +263,9 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	bc.updateConfirmedBlock(block)
 
 	// TODO notify TxPool
+	if bc.handledBlockCB != nil {
+		bc.handledBlockCB(block)
+	}
 
 	return nil
 }
