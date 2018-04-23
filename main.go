@@ -54,6 +54,9 @@ func main() {
 	caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool()
 	trxactor.SetTrxPool(trxPool)
+
+    //caapi.TrxActorAgentInst.PushTrxTest()
+
 	WaitSystemDown()
 
 	//console.ReadLine()
