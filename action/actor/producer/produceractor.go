@@ -68,10 +68,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
-		if p.ins.IsReady() {
-			fmt.Println("Ready to generate block")
-			GetAllPendingTrx()
-		}
+		p.working()
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
@@ -93,16 +90,23 @@ func (p *ProducerActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *message.GetAllPendingTrxRsp:
-		fmt.Println("receive pending........")
-		p.ins.VerifyTrxs(msg.Trxs)
+		fmt.Println("receive pending........", msg)
 
-		block := p.ins.Woker()
+	}
+}
+func (p *ProducerActor) working() {
+	if p.ins.IsReady() {
+		fmt.Println("Ready to generate block")
+		trxs := GetAllPendingTrx()
+
+		p.ins.VerifyTrxs(trxs)
+
+		block := p.ins.Woker(trxs)
 
 		if block != nil {
 			fmt.Println("apply block", block)
 			ApplyBlock(block)
 			//TODO brocast
 		}
-
 	}
 }

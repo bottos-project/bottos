@@ -31,7 +31,7 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/message"
-	//	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/common/types"
 )
 
 var trxActorPid *actor.PID
@@ -40,7 +40,7 @@ func SetTrxActorPid(tpid *actor.PID) {
 	trxActorPid = tpid
 }
 
-func GetAllPendingTrx() {
+func GetAllPendingTrx() []*types.Transaction {
 	getTrxsReq := &message.GetAllPendingTrxReq{}
 	fmt.Println("trxActorPid", trxActorPid)
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
@@ -52,7 +52,22 @@ func GetAllPendingTrx() {
 	} else {
 		fmt.Println("get all trx req exec error")
 	}
-	//var trxs = []*types.Transaction{}
-	//for i=1; i< len(getTrxsResult)
-	//return getTrxsResult
+	switch msg := getTrxsResult.(type) {
+
+	case *message.GetAllPendingTrxRsp:
+		fmt.Println("receive pending........", msg)
+
+	}
+	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
+	fmt.Println("ggggg", len(mesg.Trxs))
+	var trxs = []*types.Transaction{}
+	for i := 0; i < len(mesg.Trxs); i++ {
+		dbtag := new(types.Transaction)
+		dbtag = mesg.Trxs[i]
+
+		trxs = append(trxs, dbtag)
+	}
+
+	fmt.Println("ggggg", trxs)
+	return trxs
 }
