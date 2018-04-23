@@ -27,14 +27,14 @@ package txstore
 
 import (
 	"fmt"
-	"time"
+	"path/filepath"
+	"sync"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/chain"
-
-	"github.com/golang/protobuf/proto"
+	"github.com/bottos-project/core/config"
 )
  
 var (
@@ -43,10 +43,12 @@ var (
 
 type TransactionStore struct {
 	db *db.DBService
-	bc *chain.BlockChain
+	bc chain.BlockChainInterface
+
+	mu sync.RWMutex
 }
 
-func NewTransactionStore(bc *BlockChain) *TransactionStore {
+func NewTransactionStore(bc chain.BlockChainInterface) *TransactionStore {
 	dbInst := db.NewDbService(filepath.Join(config.Param.DataDir, "extra"), filepath.Join(config.Param.DataDir, "extra/state.db"))
 	if dbInst == nil {
 		fmt.Println("Create extra DB fail")
@@ -54,24 +56,70 @@ func NewTransactionStore(bc *BlockChain) *TransactionStore {
 	}
 
 	ts := &TransactionStore {
-		db: dbIsnt,
+		db: dbInst,
 		bc: bc,
 	}
+	bc.RegisterHandledBlockCallback(ts.ReceiveHandledBlock)
 	return ts
 }
 
 func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction {
-	data, _ := t.db.Get(append(TrxBlockHashPrefix, hash[:]...))
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	
+	data, _ := t.db.Get(append(TrxBlockHashPrefix, txhash[:]...))
 	if len(data) == 0 {
 		return nil
 	}
 
 	blockHash := common.BytesToHash(data)
-	block := t.bc.GetBlock(blockHash)
+	block := t.bc.GetBlockByHash(blockHash)
 
 	if block == nil {
 		return nil
 	}
 
 	return block.GetTransactionByHash(txhash)
+}
+
+func (t *TransactionStore) addTx(txhash common.Hash, blockHash common.Hash) error {
+	key := append(TrxBlockHashPrefix, txhash.Bytes()...)
+	err := t.db.Put(key, blockHash.Bytes())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TransactionStore) delTx(txhash common.Hash) error {
+	key := append(TrxBlockHashPrefix, txhash.Bytes()...)
+	err := t.db.Delete(key)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TransactionStore) ReceiveHandledBlock(block *types.Block) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	blockHash := block.Hash()
+
+	for _, tx := range block.Transactions {
+		txHash := tx.Hash()
+		t.addTx(txHash, blockHash)
+	}
+}
+
+func (t *TransactionStore) RemoveBlock(block *types.Block) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	for _, tx := range block.Transactions {
+		txHash := tx.Hash()
+		t.delTx(txHash)
+	}
 }

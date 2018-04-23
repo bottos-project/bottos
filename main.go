@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/bottos-project/core/chain"
+	"github.com/bottos-project/core/chain/extra"
 	"github.com/bottos-project/core/config"
 	native "github.com/bottos-project/core/contract/native"
 	"github.com/bottos-project/core/db"
@@ -27,6 +28,7 @@ import (
 	actionenv "github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/transaction"
 	"github.com/bottos-project/core/action/actor/transaction"
+
 )
 
 func main() {
@@ -45,7 +47,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc}
+	txStore := txstore.NewTransactionStore(bc)
+
+	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
 	actor := cactor.InitActors(actorenv)
 	actor.RegisterActorMsgTbl()
 	caapi.PushTransaction(2876568)
@@ -55,7 +59,9 @@ func main() {
 	var trxPool = transaction.InitTrxPool()
 	trxactor.SetTrxPool(trxPool)
 
-    //caapi.TrxActorAgentInst.PushTrxTest()
+	//caapi.TrxActorAgentInst.PushTrxTest()
+	
+	
 
 	WaitSystemDown()
 

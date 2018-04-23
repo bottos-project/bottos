@@ -41,7 +41,8 @@ type BlockChain struct {
 	blockDb		*db.DBService
 	stateDb		*db.DBService
 	blockCache	*BlockChainCache
-	
+
+	handledBlockCB HandledBlockCallback
 
 	genesisBlock *types.Block
 
@@ -77,6 +78,10 @@ func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
 	bc.initBlockCache()
 
 	return bc, nil
+}
+
+func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
+	bc.handledBlockCB = cb
 }
 
 func (bc *BlockChain) GetGenesisBlock() *types.Block {
@@ -258,6 +263,9 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	bc.updateConfirmedBlock(block)
 
 	// TODO notify TxPool
+	if bc.handledBlockCB != nil {
+		bc.handledBlockCB(block)
+	}
 
 	return nil
 }

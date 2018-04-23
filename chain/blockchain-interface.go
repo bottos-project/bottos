@@ -31,6 +31,8 @@ import (
 	"github.com/bottos-project/core/common/types"
 )
 
+type HandledBlockCallback func(*types.Block)
+
 type BlockChainInterface interface {
 	HasBlock(hash common.Hash) bool
 	GetBlockByHash(hash common.Hash) *types.Block
@@ -43,4 +45,6 @@ type BlockChainInterface interface {
 	GenesisTimestamp() uint64
 
 	InsertBlock(block *types.Block) error 
+
+	RegisterHandledBlockCallback(cb HandledBlockCallback)
 }
