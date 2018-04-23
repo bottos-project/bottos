@@ -90,9 +90,8 @@ func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
 		Number:         0,
 		Timestamp:      uint64(time.Now().Unix()),
 		MerkleRoot:     []byte{},
-		Producer:       []byte{},
-		ProducerChange: [][]byte{},
-		ProducerSign:   []byte{},
+		Delegate:       []byte{},
+		DelegateSign:   []byte{},
 	}
 
 	block := types.NewBlock(header, []*types.Transaction{})

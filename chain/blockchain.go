@@ -206,7 +206,7 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	cs.LastBlockNum = block.GetNumber()
 	cs.LastBlockHash = block.Hash()
 	cs.LastBlockTime = block.GetTimestamp()
-	cs.CurrentDelegate = string(block.GetProducer())
+	cs.CurrentDelegate = string(block.GetDelegate())
 
 	role.SetChainStateObjectRole(bc.stateDb, cs)
 }

@@ -84,9 +84,9 @@ func (p *Reporter) reportBlock() (*types.Block, error) {
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
 	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
-	head.Producer = []byte("my")
+	head.Delegate = []byte("my")
 	block := types.NewBlock(head, nil)
-	block.Header.ProducerSign = block.Sign("123").Bytes()
+	block.Header.DelegateSign = block.Sign("123").Bytes()
 	return block, nil
 
 }
