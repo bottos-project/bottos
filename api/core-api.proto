@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "github.com/bottos-project/core/common/types/transaction.proto";
+import "github.com/bottos-project/core/common/types/block.proto";
 
 package api;
 
@@ -8,10 +9,29 @@ option go_package = "github.com/bottos-project/core/api";
 
 service Core{
 	rpc push_trx(types.Transaction)returns (PushResponse){}
+	rpc query_trx(QueryTrxRequest)returns (QueryTrxResponse){}
+	rpc query_block(QueryBlockRequest)returns (QueryBlockResponse){}
 } 
 
 message PushResponse{
 	types.Transaction TxRequest  = 1;
-	bytes txHash     = 2;
+	bytes txHash			= 2;
 }
 
+message QueryTrxRequest{
+	bytes txHash			= 1;
+}
+
+message QueryTrxResponse{
+	types.Transaction trx	= 1;
+	uint32 errcode			= 2;
+}
+
+message QueryBlockRequest{
+	bytes blockHash			= 1;
+}
+
+message QueryBlockResponse{
+	types.Block block		= 1;
+	uint32 errcode			= 2;
+}
