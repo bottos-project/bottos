@@ -101,10 +101,7 @@ func (pool *TrxPool) Stop() {
 
 func (pool *TrxPool)CheckTransactionBaseConditionFromFront(){
 
-	/* check max pending trx num */
-	/* check account validate */
-	/* check signature */
-
+	/* check max pending trx num */	
 }
 
 

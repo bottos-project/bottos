@@ -20,6 +20,8 @@ func CheckTransactionMatchChain(trx *types.Transaction) {
 
 func ApplyTransaction(trx *types.Transaction) {
 
+	/* check account validate,include contract account */
+	/* check signature */
 	CheckTransactionLifeTime(trx)
 	CheckTransactionUnique(trx)
 	CheckTransactionMatchChain(trx)
