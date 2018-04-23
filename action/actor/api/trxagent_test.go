@@ -61,4 +61,24 @@ func TestPushTrxTest(t *testing.T) {
 	} else 	{ 
 		t.Error("get all trx req exec error")
 	}	
+
+	var removeTrxs []*types.Transaction	
+
+	removeTrxs = append(removeTrxs, trxTest)	
+
+	removeTrxsReq := &message.RemovePendingTrxsReq{
+		Trxs:removeTrxs,		
+	}
+
+	trxActorPid.Tell(removeTrxsReq)
+
+	getTrxsAfterRemoveResult, getTrxsAfterRemoveErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
+
+	if (nil == err) {
+		fmt.Println("get all trx req after remove exec result:")
+		fmt.Println("rusult is =======", getTrxsAfterRemoveResult)
+		fmt.Println("error  is =======", getTrxsAfterRemoveErr)
+	} else 	{ 
+		t.Error("get all trx req after remove exec error")
+	}
 }
