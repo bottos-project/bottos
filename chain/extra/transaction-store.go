@@ -34,7 +34,6 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/chain"
-	"github.com/bottos-project/core/config"
 )
  
 var (
@@ -45,11 +44,11 @@ type TransactionStore struct {
 	db *db.DBService
 	bc chain.BlockChainInterface
 
-	mu sync.RWMutex
+	mu sync.Mutex
 }
 
-func NewTransactionStore(bc chain.BlockChainInterface) *TransactionStore {
-	dbInst := db.NewDbService(filepath.Join(config.Param.DataDir, "extra"), filepath.Join(config.Param.DataDir, "extra/state.db"))
+func NewTransactionStore(bc chain.BlockChainInterface, extraDbPath string) *TransactionStore {
+	dbInst := db.NewDbService(extraDbPath, filepath.Join(extraDbPath, "dummy.db"))
 	if dbInst == nil {
 		fmt.Println("Create extra DB fail")
 		return nil
@@ -66,7 +65,7 @@ func NewTransactionStore(bc chain.BlockChainInterface) *TransactionStore {
 func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	
+
 	data, _ := t.db.Get(append(TrxBlockHashPrefix, txhash[:]...))
 	if len(data) == 0 {
 		return nil
