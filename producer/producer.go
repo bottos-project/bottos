@@ -36,10 +36,13 @@ import (
 )
 
 type Reporter struct {
-	core chain.BlockChainInterface
+	isReporting bool
+	core        chain.BlockChainInterface
 }
 type ReporterRepo interface {
 	Woker() *types.Block
+	VerifyTrxs(Trxs []*types.Transaction) error
+	IsReady() bool
 }
 
 func New(b chain.BlockChainInterface) ReporterRepo {
@@ -49,6 +52,9 @@ func (p *Reporter) isEligible() bool {
 	return true
 }
 func (p *Reporter) isReady() bool {
+	if p.isReporting == true {
+		return false
+	}
 	return true
 	slotTime := dpos.GetSlotTime(1)
 	fmt.Println(slotTime)
@@ -58,24 +64,34 @@ func (p *Reporter) isReady() bool {
 	return false
 }
 func (p *Reporter) isMyTurn() bool {
+	p.isReporting = false
 	return true
 
 }
+func (p *Reporter) IsReady() bool {
+	if p.isEligible() && p.isReady() && p.isMyTurn() {
+		return true
+	}
+	return false
+}
 func (p *Reporter) Woker() *types.Block {
 
-	if p.isEligible() && p.isReady() && p.isMyTurn() {
-		now := time.Now()
-		slot := dpos.GetSlotAtTime(now)
-		scheduledTime := dpos.GetSlotTime(slot)
-		fmt.Println(scheduledTime)
-		block, err := p.reportBlock()
-		if err != nil {
-			return nil // errors.New("report Block failed")
-		}
-		return block
-		fmt.Println("brocasting block", block)
+	now := time.Now()
+	slot := dpos.GetSlotAtTime(now)
+	scheduledTime := dpos.GetSlotTime(slot)
+	fmt.Println(scheduledTime)
+	block, err := p.reportBlock()
+	if err != nil {
+		return nil // errors.New("report Block failed")
 	}
+
+	fmt.Println("brocasting block", block)
+	return block
+}
+func (p *Reporter) VerifyTrxs(Trxs []*types.Transaction) error {
+	p.isReporting = true
 	return nil
+
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {

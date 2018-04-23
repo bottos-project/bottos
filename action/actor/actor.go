@@ -68,13 +68,11 @@ func registerActorMsgTbl(m *MultiActor) {
 
 	fmt.Println("RegisterActorMsgTbl")
 
-	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
-
-	trxactor.SetApiActorPid(m.apiActorPid) // trx --> api
-
+	apiactor.SetTrxActorPid(m.trxActorPid)          // api --> trx
+	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
-
-	chainactor.SetTrxActorPid(m.trxActorPid) //chain --> trx
+	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> chain
+	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
 
 }
 
