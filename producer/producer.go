@@ -36,10 +36,13 @@ import (
 )
 
 type Reporter struct {
-	core chain.BlockChainInterface
+	isReporting bool
+	core        chain.BlockChainInterface
 }
 type ReporterRepo interface {
-	Woker() *types.Block
+	Woker(Trxs []*types.Transaction) *types.Block
+	VerifyTrxs(Trxs []*types.Transaction) error
+	IsReady() bool
 }
 
 func New(b chain.BlockChainInterface) ReporterRepo {
@@ -49,6 +52,9 @@ func (p *Reporter) isEligible() bool {
 	return true
 }
 func (p *Reporter) isReady() bool {
+	if p.isReporting == true {
+		return false
+	}
 	return true
 	slotTime := dpos.GetSlotTime(1)
 	fmt.Println(slotTime)
@@ -61,32 +67,43 @@ func (p *Reporter) isMyTurn() bool {
 	return true
 
 }
-func (p *Reporter) Woker() *types.Block {
-
+func (p *Reporter) IsReady() bool {
 	if p.isEligible() && p.isReady() && p.isMyTurn() {
-		now := time.Now()
-		slot := dpos.GetSlotAtTime(now)
-		scheduledTime := dpos.GetSlotTime(slot)
-		fmt.Println(scheduledTime)
-		block, err := p.reportBlock()
-		if err != nil {
-			return nil // errors.New("report Block failed")
-		}
-		return block
-		fmt.Println("brocasting block", block)
+		p.isReporting = true
+		return true
 	}
+	return false
+}
+func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
+
+	now := time.Now()
+	slot := dpos.GetSlotAtTime(now)
+	scheduledTime := dpos.GetSlotTime(slot)
+	fmt.Println(scheduledTime)
+	block, err := p.reportBlock(trxs)
+	if err != nil {
+		return nil // errors.New("report Block failed")
+	}
+
+	fmt.Println("brocasting block", block)
+	return block
+}
+func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
+
 	return nil
+
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func (p *Reporter) reportBlock() (*types.Block, error) {
+func (p *Reporter) reportBlock(trxs []*types.Transaction) (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
 	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
-	head.Producer = []byte("my")
-	block := types.NewBlock(head, nil)
-	block.Header.ProducerSign = block.Sign("123").Bytes()
+	head.Delegate = []byte("my")
+	block := types.NewBlock(head, trxs)
+	block.Header.DelegateSign = block.Sign("123").Bytes()
+	p.isReporting = false
 	return block, nil
 
 }

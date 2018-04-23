@@ -16,7 +16,7 @@ import (
 	//	"github.com/bottos-project/core/account"
 	//	"github.com/bottos-project/core/api"
 	//	"github.com/bottos-project/core/common"
-	//	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/common/types"
 
 	//	pro "github.com/bottos-project/core/producer"
 	//	//"github.com/bottos-project/core/p2p"
@@ -46,7 +46,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	txStore := txstore.NewTransactionStore(bc)
+	extraDbPath := filepath.Join(config.Param.DataDir, "extra/")
+	txStore := txstore.NewTransactionStore(bc, extraDbPath)
 
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
 	cactor.InitActors(actorenv)
@@ -57,6 +58,14 @@ func main() {
 	trxactor.SetTrxPool(trxPool)
 
 	//caapi.TrxActorAgentInst.PushTrxTest()
+
+	//for test:
+	trxTest := &types.Transaction{
+		RefBlockNum: 11,
+		Sender:      22,
+		Action:      1,
+	}
+	trxPool.AddTransaction(trxTest)
 
 	WaitSystemDown()
 

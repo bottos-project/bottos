@@ -110,16 +110,16 @@ func (b *Block) Sign(signkey string) common.Hash {
 }
 
 // TODO AccountName Type
-func (b *Block) GetProducer() []byte {
-	return b.GetHeader().GetProducer()
+func (b *Block) GetDelegate() []byte {
+	return b.GetHeader().GetDelegate()
 }
 
 //func (b *Block) GetProducerChange() AccountName {
 //	return b.header.Producer
 //}
 
-func (b *Block) GetProducerSign() common.Hash {
-	bh := b.GetHeader().GetProducerSign()
+func (b *Block) GetDelegateSign() common.Hash {
+	bh := b.GetHeader().GetDelegateSign()
 	return common.BytesToHash(bh)
 }
 

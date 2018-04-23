@@ -5,12 +5,12 @@ package types;
 option go_package = "github.com/bottos-project/core/common/types";
 
 message Transaction {
-	uint32 RefBlockNum              = 1;
-	uint32 RefBlockHashPrefix       = 2;
-	uint64 Expiration               = 3;
-	uint64 Sender                   = 4;
-	uint64 Contract                 = 5;
-	uint64 Action                   = 6;
-	bytes Param                     = 7;
-	bytes Signature                 = 8;
+	uint32 ref_block_num              	= 1;
+	uint32 ref_block_hash_prefix      	= 2;
+	uint64 expiration               	= 3;
+	uint64 sender                   	= 4;
+	uint64 contract                 	= 5;
+	uint64 action                   	= 6;
+	bytes param                     	= 7;
+	bytes signature                 	= 8;
 }

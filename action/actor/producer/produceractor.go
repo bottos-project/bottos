@@ -32,6 +32,7 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/core/action/message"
 	"github.com/bottos-project/core/producer"
 )
 
@@ -60,33 +61,14 @@ func NewProducerActor(env *env.ActorEnv) *actor.PID {
 }
 
 func (p *ProducerActor) handleSystemMsg(context actor.Context) {
-	//var core
-	//var ins = &producer.Producer{}
-	if p.ins == nil {
-		fmt.Println("bbbbb\n\n\n")
-	}
-
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
 		log.Printf("ProducerActor received started msg", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
-		//ins = p.Ins
-		//		if p.ins == nil {
-		//			fmt.Println("good")
-		//		}
 
 	case *actor.ReceiveTimeout:
-		//		if ins == nil {
-		//			fmt.Println("bad....")
-		//		}
-		block := p.ins.Woker()
-
-		if block != nil {
-			fmt.Println("apply block", block)
-			ApplyBlock(block)
-			//TODO brocast
-		}
+		p.working()
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
@@ -107,7 +89,24 @@ func (p *ProducerActor) Receive(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 
-	//case *types.Transaction:
+	case *message.GetAllPendingTrxRsp:
+		fmt.Println("receive pending........", msg)
 
+	}
+}
+func (p *ProducerActor) working() {
+	if p.ins.IsReady() {
+		fmt.Println("Ready to generate block")
+		trxs := GetAllPendingTrx()
+
+		p.ins.VerifyTrxs(trxs)
+
+		block := p.ins.Woker(trxs)
+
+		if block != nil {
+			fmt.Println("apply block", block)
+			ApplyBlock(block)
+			//TODO brocast
+		}
 	}
 }
