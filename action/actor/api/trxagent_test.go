@@ -17,12 +17,12 @@ var trxActorPid *actor.PID
 
 func TestPushTrxTest(t *testing.T) {
 
+	// init testing
 	trxActorPid = trxactor.NewTrxActor()
 
 	InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool()
 	trxactor.SetTrxPool(trxPool)
-
 
 
 	fmt.Println("Test PushTrxTest will called")
@@ -38,7 +38,8 @@ func TestPushTrxTest(t *testing.T) {
 		TrxSender : message.TrxSenderTypeFront,
 		
 	}
-	
+
+	// push trx	
 	result, err := trxActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result()
 
 	if (nil == err) {
@@ -52,6 +53,8 @@ func TestPushTrxTest(t *testing.T) {
 	getTrxsReq := &message.GetAllPendingTrxReq{
 	}
 
+
+	// get all trx
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if (nil == err) {
@@ -70,8 +73,10 @@ func TestPushTrxTest(t *testing.T) {
 		Trxs:removeTrxs,		
 	}
 
+	// remove trx
 	trxActorPid.Tell(removeTrxsReq)
 
+	// get all trxs after remove ,should be empty
 	getTrxsAfterRemoveResult, getTrxsAfterRemoveErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if (nil == err) {
