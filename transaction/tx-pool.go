@@ -85,6 +85,12 @@ func (pool *TrxPool) addTransaction(trx *types.Transaction) {
 }
 
 
+// expirationCheckLoop is periodically check exceed time transaction, then remove it
+func (pool *TrxPool) AddTransaction(trx *types.Transaction) {
+	pool.addTransaction(trx)
+}
+
+
 
 func (pool *TrxPool) Stop() {
 	
