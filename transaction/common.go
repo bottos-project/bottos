@@ -18,7 +18,7 @@ func CheckTransactionMatchChain(trx *types.Transaction) {
 
 }
 
-func ApplyTransaction(trx *types.Transaction) {
+func ApplyTransaction(trx *types.Transaction) error {
 
 	/* check account validate,include contract account */
 	/* check signature */
@@ -28,6 +28,8 @@ func ApplyTransaction(trx *types.Transaction) {
 	/* save to db */
 
 	/* call evm... */
+
+	return nil
 }
 
 
