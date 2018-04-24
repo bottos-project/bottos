@@ -47,9 +47,20 @@ func NewApiService() api.CoreApiHandler {
 }
 
 func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *api.PushResponse) error {
+	if trx == nil {
+		//rsp.retCode = ??
+		return nil
+	}
+	_, err := trxactorPid.RequestFuture(trx, 500*time.Millisecond).Result() // await result
+
+	if (nil != err) {
+		copy(resp.TxHash, trx.Hash().Bytes())
+		//rsp.TxHash = req.Hash()
+		resp.TxRequest = trx
+	}
+	
 	return nil
 }
-
 func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
 	msgReq := message.QueryTrxReq{
 		TxHash: common.BytesToHash(req.TxHash),
