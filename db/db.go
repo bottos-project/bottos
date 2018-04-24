@@ -56,7 +56,7 @@ type DBApi interface {
 	Close()
 	Flush() error
 	//code db interface can rollback
-	StartUndoSession(bool)
+	StartUndoSession()
 	CreatObjectIndex(objectName string, indexName string) error
 	SetObject(objectName string, objectValue interface{}) error
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
@@ -66,6 +66,7 @@ type DBApi interface {
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
 	Commit()
 	Rollback()
+	Reset()
 	//mongodb interface
 	Set(string, string)
 }

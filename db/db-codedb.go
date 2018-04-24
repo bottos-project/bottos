@@ -47,3 +47,6 @@ func (d *DBService) Commit() error {
 func (d *DBService) Rollback() error {
 	return d.codeRepo.CallRollback()
 }
+func (d *DBService) Reset() {
+	d.codeRepo.CallStartUndoSession(false)
+}

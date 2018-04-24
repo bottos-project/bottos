@@ -101,7 +101,7 @@ func (p *ProducerActor) working() {
 		p.ins.VerifyTrxs(trxs)
 
 		block := p.ins.Woker(trxs)
-
+		p.myDB.Reset()
 		if block != nil {
 			fmt.Println("apply block", block)
 			ApplyBlock(block)
