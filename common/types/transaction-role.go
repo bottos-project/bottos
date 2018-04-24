@@ -8,7 +8,8 @@ import (
 
 func (trx *Transaction) Hash() common.Hash {
 	data, _ := proto.Marshal(trx)
-	hash := sha256.Sum256(data)
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
 	return hash
 }
 

@@ -63,7 +63,8 @@ func (b *Block) Hash() common.Hash {
 
 func (h *Header) Hash() common.Hash {
 	data, _ := proto.Marshal(h)
-	hash := sha256.Sum256(data)
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
 	return hash
 }
 
