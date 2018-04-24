@@ -25,8 +25,8 @@
 
 package db
 
-func (d *DBService) StartUndoSession(writable bool) {
-	d.codeRepo.CallStartUndoSession(writable)
+func (d *DBService) StartUndoSession() {
+	d.codeRepo.CallStartUndoSession(true)
 }
 
 func (d *DBService) CreatObjectIndex(objectName string, indexName string, indexJson string) error {

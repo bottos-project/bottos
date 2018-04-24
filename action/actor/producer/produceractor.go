@@ -96,7 +96,7 @@ func (p *ProducerActor) working() {
 	if p.ins.IsReady() {
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
-		p.myDB.StartUndoSession(true)
+		p.myDB.StartUndoSession()
 
 		p.ins.VerifyTrxs(trxs)
 
