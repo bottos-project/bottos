@@ -46,8 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	extraDbPath := filepath.Join(config.Param.DataDir, "extra/")
-	txStore := txstore.NewTransactionStore(bc, extraDbPath)
+	txStore := txstore.NewTransactionStore(bc, dbInst)
 
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
 	cactor.InitActors(actorenv)

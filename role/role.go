@@ -37,5 +37,5 @@ func Init(ldb *db.DBService) {
 	CreateChainStateObjectRole(ldb)
 	CreateCoreStateRole(ldb)
 	CreateDelegateRole(ldb)
-	CreateTransactionObjectRole(ldb)
+	CreateTransactionExpirationObjectRole(ldb)
 }

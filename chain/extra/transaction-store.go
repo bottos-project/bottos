@@ -26,14 +26,11 @@
 package txstore
 
 import (
-	"fmt"
-	"path/filepath"
-	"sync"
-
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/chain"
+	"github.com/bottos-project/core/role"
 )
  
 var (
@@ -43,19 +40,11 @@ var (
 type TransactionStore struct {
 	db *db.DBService
 	bc chain.BlockChainInterface
-
-	mu sync.Mutex
 }
 
-func NewTransactionStore(bc chain.BlockChainInterface, extraDbPath string) *TransactionStore {
-	dbInst := db.NewDbService(extraDbPath, filepath.Join(extraDbPath, "dummy.db"))
-	if dbInst == nil {
-		fmt.Println("Create extra DB fail")
-		return nil
-	}
-
+func NewTransactionStore(bc chain.BlockChainInterface, db *db.DBService) *TransactionStore {
 	ts := &TransactionStore {
-		db: dbInst,
+		db: db,
 		bc: bc,
 	}
 	bc.RegisterHandledBlockCallback(ts.ReceiveHandledBlock)
@@ -63,17 +52,12 @@ func NewTransactionStore(bc chain.BlockChainInterface, extraDbPath string) *Tran
 }
 
 func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
-	data, _ := t.db.Get(append(TrxBlockHashPrefix, txhash[:]...))
-	if len(data) == 0 {
+	blockHash, err := role.GetBlockHashByTxHash(t.db, txhash)
+	if err != nil {
 		return nil
 	}
 
-	blockHash := common.BytesToHash(data)
 	block := t.bc.GetBlockByHash(blockHash)
-
 	if block == nil {
 		return nil
 	}
@@ -81,14 +65,8 @@ func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction
 	return block.GetTransactionByHash(txhash)
 }
 
-func (t *TransactionStore) addTx(txhash common.Hash, blockHash common.Hash) error {
-	key := append(TrxBlockHashPrefix, txhash.Bytes()...)
-	err := t.db.Put(key, blockHash.Bytes())
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (t *TransactionStore) addTx(txhash common.Hash, blockhash common.Hash) error {
+	return role.AddTransactionHistory(t.db, txhash, blockhash)
 }
 
 func (t *TransactionStore) delTx(txhash common.Hash) error {
@@ -102,9 +80,6 @@ func (t *TransactionStore) delTx(txhash common.Hash) error {
 }
 
 func (t *TransactionStore) ReceiveHandledBlock(block *types.Block) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
 	blockHash := block.Hash()
 
 	for _, tx := range block.Transactions {
@@ -114,9 +89,6 @@ func (t *TransactionStore) ReceiveHandledBlock(block *types.Block) {
 }
 
 func (t *TransactionStore) RemoveBlock(block *types.Block) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
 	for _, tx := range block.Transactions {
 		txHash := tx.Hash()
 		t.delTx(txHash)

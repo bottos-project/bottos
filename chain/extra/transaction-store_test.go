@@ -33,6 +33,7 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/chain"
+	"github.com/bottos-project/core/db"
 )
 
 type MockBlockChain struct {
@@ -75,7 +76,12 @@ func (bc *MockBlockChain) GenesisTimestamp() uint64  {return 0}
 
 func TestTxStore(t *testing.T) {
 	bc := NewMockBlockChain()
-	txStore := NewTransactionStore(bc, "./datadir/extra/")
+	dbInst := db.NewDbService("./datadir", "./datadir/db.db")
+	if dbInst == nil {
+		fmt.Println("Create DB service fail")
+		os.Exit(1)
+	}
+	txStore := NewTransactionStore(bc, dbInst)
 
 	var txs []*types.Transaction
 	tx1 := &types.Transaction{RefBlockNum:1}

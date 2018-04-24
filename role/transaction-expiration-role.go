@@ -33,14 +33,14 @@ import (
 	"github.com/bottos-project/core/common"
 )
 
-const TransactionHistoryObjectName string = "transaction_history"
+const TransactionExpirationObjectName string = "transaction_expiration"
  
-type TransactionHistory struct {
+type TransactionExpiration struct {
 	TrxHash			common.Hash		`json:"trx_hash"`
 	Expiration		uint64			`json:"expiration"`
 }
   
-func CreateTransactionObjectRole(ldb *db.DBService) error {
+func CreateTransactionExpirationObjectRole(ldb *db.DBService) error {
 	return nil
 }
 
@@ -48,16 +48,16 @@ func hashToKey(hash common.Hash) string {
 	return hash.ToString()
 }
 
-func SetTransactionHistoryObjectRole(ldb *db.DBService, hash common.Hash, value *TransactionHistory) error {
+func SetTransactionExpirationObjectRole(ldb *db.DBService, hash common.Hash, value *TransactionExpiration) error {
 	key := hashToKey(hash)
 	jsonvalue, _ := json.Marshal(value)
-	return ldb.SetObject(TransactionHistoryObjectName, key, string(jsonvalue))
+	return ldb.SetObject(TransactionExpirationObjectName, key, string(jsonvalue))
 }
 
-func GetTransactionHistoryObjectByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
+func GetTransactionExpirationObjectByHash(ldb *db.DBService, hash common.Hash) (*TransactionExpiration, error) {
 	key := hashToKey(hash)
-	value, err := ldb.GetObject(TransactionHistoryObjectName, key)
-	res := &TransactionHistory{}
+	value, err := ldb.GetObject(TransactionExpirationObjectName, key)
+	res := &TransactionExpiration{}
 	json.Unmarshal([]byte(value), res)
 	//fmt.Println("Get", key, value)
 	return res, err
