@@ -44,34 +44,34 @@ var _ context.Context
 var _ client.Option
 var _ server.Option
 
-// Client API for Core service
+// Client API for CoreApi service
 
-type CoreClient interface {
+type CoreApiClient interface {
 	PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error)
 	QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error)
 	QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error)
 }
 
-type coreClient struct {
+type coreApiClient struct {
 	c           client.Client
 	serviceName string
 }
 
-func NewCoreClient(serviceName string, c client.Client) CoreClient {
+func NewCoreApiClient(serviceName string, c client.Client) CoreApiClient {
 	if c == nil {
 		c = client.NewClient()
 	}
 	if len(serviceName) == 0 {
 		serviceName = "api"
 	}
-	return &coreClient{
+	return &coreApiClient{
 		c:           c,
 		serviceName: serviceName,
 	}
 }
 
-func (c *coreClient) PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "Core.push_trx", in)
+func (c *coreApiClient) PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.push_trx", in)
 	out := new(PushResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -80,8 +80,8 @@ func (c *coreClient) PushTrx(ctx context.Context, in *types.Transaction, opts ..
 	return out, nil
 }
 
-func (c *coreClient) QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "Core.query_trx", in)
+func (c *coreApiClient) QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.query_trx", in)
 	out := new(QueryTrxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -90,8 +90,8 @@ func (c *coreClient) QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...
 	return out, nil
 }
 
-func (c *coreClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "Core.query_block", in)
+func (c *coreApiClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.query_block", in)
 	out := new(QueryBlockResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -100,30 +100,30 @@ func (c *coreClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, opts
 	return out, nil
 }
 
-// Server API for Core service
+// Server API for CoreApi service
 
-type CoreHandler interface {
+type CoreApiHandler interface {
 	PushTrx(context.Context, *types.Transaction, *PushResponse) error
 	QueryTrx(context.Context, *QueryTrxRequest, *QueryTrxResponse) error
 	QueryBlock(context.Context, *QueryBlockRequest, *QueryBlockResponse) error
 }
 
-func RegisterCoreHandler(s server.Server, hdlr CoreHandler, opts ...server.HandlerOption) {
-	s.Handle(s.NewHandler(&Core{hdlr}, opts...))
+func RegisterCoreApiHandler(s server.Server, hdlr CoreApiHandler, opts ...server.HandlerOption) {
+	s.Handle(s.NewHandler(&CoreApi{hdlr}, opts...))
 }
 
-type Core struct {
-	CoreHandler
+type CoreApi struct {
+	CoreApiHandler
 }
 
-func (h *Core) PushTrx(ctx context.Context, in *types.Transaction, out *PushResponse) error {
-	return h.CoreHandler.PushTrx(ctx, in, out)
+func (h *CoreApi) PushTrx(ctx context.Context, in *types.Transaction, out *PushResponse) error {
+	return h.CoreApiHandler.PushTrx(ctx, in, out)
 }
 
-func (h *Core) QueryTrx(ctx context.Context, in *QueryTrxRequest, out *QueryTrxResponse) error {
-	return h.CoreHandler.QueryTrx(ctx, in, out)
+func (h *CoreApi) QueryTrx(ctx context.Context, in *QueryTrxRequest, out *QueryTrxResponse) error {
+	return h.CoreApiHandler.QueryTrx(ctx, in, out)
 }
 
-func (h *Core) QueryBlock(ctx context.Context, in *QueryBlockRequest, out *QueryBlockResponse) error {
-	return h.CoreHandler.QueryBlock(ctx, in, out)
+func (h *CoreApi) QueryBlock(ctx context.Context, in *QueryBlockRequest, out *QueryBlockResponse) error {
+	return h.CoreApiHandler.QueryBlock(ctx, in, out)
 }

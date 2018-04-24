@@ -7,7 +7,7 @@ package api;
 
 option go_package = "github.com/bottos-project/core/api";
 
-service Core{
+service CoreApi{
 	rpc push_trx(types.Transaction)returns (PushResponse){}
 	rpc query_trx(QueryTrxRequest)returns (QueryTrxResponse){}
 	rpc query_block(QueryBlockRequest)returns (QueryBlockResponse){}

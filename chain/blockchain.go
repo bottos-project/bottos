@@ -263,6 +263,8 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	bc.updateConfirmedBlock(block)
 
 	// TODO notify TxPool
+
+	// block handled callback
 	if bc.handledBlockCB != nil {
 		bc.handledBlockCB(block)
 	}

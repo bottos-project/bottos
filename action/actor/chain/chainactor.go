@@ -91,6 +91,10 @@ func (self *ChainActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *message.InsertBlockReq:
 		self.HandleBlockMessage(context, msg)
+	case *message.QueryTrxReq:
+		self.HandleQueryTrxReq(context, msg)
+	case *message.QueryBlockReq:
+		self.HandleQueryBlockReq(context, msg)
 	}
 }
 
@@ -105,5 +109,31 @@ func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.Inser
 	}
 	if err == nil {
 		//trxactorPid.Tell()
+	}
+}
+
+func (self *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
+	tx := actorEnv.TxStore.GetTransaction(req.TxHash)
+	if ctx.Sender() != nil {
+		resp := &message.QueryTrxResp{}
+		if tx == nil {
+			resp.Error = fmt.Errorf("Transaction not found")
+		} else {
+			resp.Tx = tx
+		}
+		ctx.Sender().Request(resp, ctx.Self())
+	}
+}
+
+func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBlockReq) {
+	block := actorEnv.Chain.GetBlockByHash(req.BlockHash)
+	if ctx.Sender() != nil {
+		resp := &message.QueryBlockResp{}
+		if block == nil {
+			resp.Error = fmt.Errorf("Block not found")		
+		} else {
+			resp.Block = block
+		}
+		ctx.Sender().Request(resp, ctx.Self())
 	}
 }

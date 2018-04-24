@@ -21,6 +21,24 @@ type PushTrxReq struct {
 	TrxSender TrxSenderType
 }
 
+type QueryTrxReq struct {
+	TxHash common.Hash
+}
+
+type QueryTrxResp struct {
+	Tx *types.Transaction
+	Error error
+}
+
+type QueryBlockReq struct {
+	BlockHash common.Hash
+}
+
+type QueryBlockResp struct {
+	Block *types.Block
+	Error error
+}
+
 type InsertBlockReq struct {
 	Block *types.Block
 }
