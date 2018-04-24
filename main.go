@@ -53,7 +53,7 @@ func main() {
 	caapi.PushTransaction(2876568)
 
 	caapi.InitTrxActorAgent()
-	var trxPool = transaction.InitTrxPool()
+	var trxPool = transaction.InitTrxPool(dbInst)
 	trxactor.SetTrxPool(trxPool)
 
 	//caapi.TrxActorAgentInst.PushTrxTest()

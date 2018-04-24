@@ -11,6 +11,7 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/core/db"
 	
 )
 
@@ -20,29 +21,35 @@ var (
 	trxExpirationTime             = time.Minute     // Pending Trx max time , to be delete
 )
 
+var TrxPoolInst *TrxPool
 
 
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
 	expiration  map[common.Hash]time.Time    // to be delete
+	stateDb		*db.DBService
 	
 	mu           sync.RWMutex
 	quit chan struct{}
 }
 
 
-func InitTrxPool() *TrxPool {
+func InitTrxPool(dbInstance *db.DBService) *TrxPool {
 	
 	// Create the transaction pool
-	pool := &TrxPool{
+	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		expiration:   make(map[common.Hash]time.Time),
-		quit:         make(chan struct{}),
+		stateDb:  dbInstance,
+		
+		quit:         make(chan struct{}),		
 	}
 
-	go pool.expirationCheckLoop()
+	CreateTrxApplyService(dbInstance)
 
-	return pool
+	go TrxPoolInst.expirationCheckLoop()
+
+	return TrxPoolInst
 }
 
 
@@ -116,7 +123,7 @@ func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	
     pool.CheckTransactionBaseConditionFromFront()
 	//start db session
-	ApplyTransaction(trx)
+	trxApplyServiceInst.ApplyTransaction(trx)
 
 	pool.addTransaction(trx)
 
@@ -134,7 +141,7 @@ func (pool *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.T
 	pool.CheckTransactionBaseConditionFromP2P()
 
 	// start db session
-	ApplyTransaction(trx)	
+	trxApplyServiceInst.ApplyTransaction(trx)	
 
 	pool.addTransaction(trx)
 
