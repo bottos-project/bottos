@@ -45,13 +45,10 @@ func Sha256(data []byte) Hash {
 	return hash
 }
 
-func DualSha256(h1 Hash, h2 Hash) Hash {
-	var data []byte
-	data = append(data, h1.Bytes()...)
-	data = append(data, h2.Bytes()...)
-	t1 := Sha256(data)
-	t2 := Sha256(t1[:])
-	return t2
+func DoubleSha256(data []byte) Hash {
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
+	return hash
 }
 
 func BytesToHash(b []byte) Hash {

@@ -36,6 +36,15 @@ type MTNode struct {
 	Hash  Hash
 }
 
+func dSha256(h1 Hash, h2 Hash) Hash {
+	var data []byte
+	data = append(data, h1.Bytes()...)
+	data = append(data, h2.Bytes()...)
+	t1 := Sha256(data)
+	t2 := Sha256(t1[:])
+	return t2
+}
+
 func CreateMerkleTree(hs []Hash) *MerkleHashTree {
 	if len(hs) == 0 {
 		return nil
@@ -71,12 +80,12 @@ func createLeafNodes(hs []Hash) []*MTNode {
 func createNextLevel(nodes []*MTNode) []*MTNode {
 	var nlNodes []*MTNode
 	for i := 0; i < len(nodes)/2; i++ {
-		hash := DualSha256(nodes[i*2].Hash, nodes[i*2+1].Hash)
+		hash := dSha256(nodes[i*2].Hash, nodes[i*2+1].Hash)
 		node := &MTNode{Hash:  hash}
 		nlNodes = append(nlNodes, node)
 	}
 	if (len(nodes) % 2 == 1) {
-		hash := DualSha256(nodes[len(nodes)-1].Hash, nodes[len(nodes)-1].Hash)
+		hash := dSha256(nodes[len(nodes)-1].Hash, nodes[len(nodes)-1].Hash)
 		node := &MTNode{Hash:  hash}
 		nlNodes = append(nlNodes, node)
 	}
@@ -87,6 +96,10 @@ func ComputeMerkleRootHash(hs []Hash) Hash {
 	if len(hs) == 0 {
 		return Hash{}
 	}
+	if len(hs) == 1 {
+		return hs[0]
+	}
+
 	tree := CreateMerkleTree(hs)
 	if tree != nil {
 		return tree.Root.Hash
