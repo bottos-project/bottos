@@ -158,6 +158,8 @@ func (pool *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 	pool.mu.Lock()
 
+	defer pool.mu.Unlock()
+
 	rsp := &message.GetAllPendingTrxRsp{}
 
 
@@ -167,9 +169,6 @@ func (pool *TrxPool)GetAllPendingTransactions(context actor.Context) {
 	}
 
 	context.Respond(rsp)
-
-	
-	pool.mu.Unlock()
 }
 
 
