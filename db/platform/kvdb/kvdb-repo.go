@@ -72,6 +72,7 @@ func (k *KVDatabase) CallNewIterator() iterator.Iterator {
 }
 
 func (k *KVDatabase) CallFlush() error {
+
 	return nil
 }
 

@@ -33,22 +33,20 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/producer"
 )
 
 type ProducerActor struct {
-	ins producer.ReporterRepo
-}
-
-func contructProducerActor() *ProducerActor {
-	return &ProducerActor{}
+	myDB *db.DBService
+	ins  producer.ReporterRepo
 }
 
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
 	ins := producer.New(env.Chain)
 	props := actor.FromProducer(func() actor.Actor {
-		return &ProducerActor{ins}
+		return &ProducerActor{env.Db, ins}
 	})
 
 	pid, err := actor.SpawnNamed(props, "ProducerActor")
@@ -98,6 +96,7 @@ func (p *ProducerActor) working() {
 	if p.ins.IsReady() {
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
+		p.myDB.StartUndoSession(true)
 
 		p.ins.VerifyTrxs(trxs)
 

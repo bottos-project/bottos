@@ -88,6 +88,13 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 	fmt.Println("brocasting block", block)
 	return block
 }
+
+func (p *Reporter) StartTag() error {
+	//p.core.
+
+	return nil
+
+}
 func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
 
 	return nil
