@@ -104,19 +104,22 @@ func (p *ProducerActor) working() {
 		start := common.NowToSeconds()
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
-
+		fmt.Println("GetAllPendingTrx", trxs)
 		if len(trxs) == 0 {
 			fmt.Println("trxs is null")
 			return
 		}
-		p.myDB.StartUndoSession()
+		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
+
+		fmt.Println("StartUndoSession")
 		block := &types.Block{}
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
-		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
+		fmt.Println("GetGlobalPropertyRole")
 		if err != nil {
 			fmt.Println("GetGlobalPropertyRole failed")
 			return
 		}
+		fmt.Println("begin apply transation")
 		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
 		trxApply := transaction.NewTrxApplyService()
@@ -129,7 +132,7 @@ func (p *ProducerActor) working() {
 				fmt.Println("max size")
 				continue
 			}
-
+			fmt.Println("start apply transation", "trx")
 			p.myDB.StartUndoSession()
 			pass, _ := trxApply.ApplyTransaction(trx)
 			if pass == false {
@@ -144,7 +147,8 @@ func (p *ProducerActor) working() {
 				continue
 			}
 
-			p.myDB.Reset()
+			p.myDB.Commit()
+			fmt.Println("start apply transation dddd")
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
 

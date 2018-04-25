@@ -23,40 +23,39 @@
  * @Last Modified time:
  */
 
-
 package role
 
 import (
-	_"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/bottos-project/core/db"
 )
 
 type CoreState struct {
-	Config						ChainConfig				`json:"chain_config"`
-	CurrentDelegates			[]string				`json:"current_delegates"`
+	Config           ChainConfig `json:"chain_config"`
+	CurrentDelegates []string    `json:"current_delegates"`
 }
 
 type ChainConfig struct {
-	MaxBlockSize				uint32				`json:"max_block_size"`
-	MaxTrxLifetime				uint32				`json:"max_trx_lifetime"`
-	MaxTrxRuntime				uint32				`json:"max_trx_runtime"`
-	InDepthLeimit		        uint32				`json:"in_depth_limit"`
+	MaxBlockSize   uint32 `json:"max_block_size"`
+	MaxTrxLifetime uint32 `json:"max_trx_lifetime"`
+	MaxTrxRuntime  uint32 `json:"max_trx_runtime"`
+	InDepthLeimit  uint32 `json:"in_depth_limit"`
 }
 
 const (
-	CoreStateObjectName string = "core_state"
+	CoreStateObjectName       string = "core_state"
 	CoreStateObjectDefaultKey string = "core_state_defkey"
 )
 
 func CreateCoreStateRole(ldb *db.DBService) error {
-	dgp := &CoreState {
-		Config: ChainConfig {
-			MaxBlockSize: 5242880,
+	dgp := &CoreState{
+		Config: ChainConfig{
+			MaxBlockSize:   5242880,
 			MaxTrxLifetime: 3600,
-			MaxTrxRuntime: 10000,
-			InDepthLeimit: 4,
+			MaxTrxRuntime:  10000,
+			InDepthLeimit:  4,
 		},
 		CurrentDelegates: []string{},
 	}
@@ -69,9 +68,13 @@ func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {
 }
 
 func GetGlobalPropertyRole(ldb *db.DBService) (*CoreState, error) {
+	fmt.Println("GetGlobalPropertyRole")
 	value, err := ldb.GetObject(CoreStateObjectName, CoreStateObjectDefaultKey)
+	if err != nil {
+		fmt.Println("failed")
+	}
 	res := &CoreState{}
 	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", CoreStateObjectDefaultKey, value)
+	fmt.Println("Get", CoreStateObjectDefaultKey, value)
 	return res, err
 }

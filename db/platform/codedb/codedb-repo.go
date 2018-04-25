@@ -81,12 +81,16 @@ func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectVa
 }
 
 func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string, error) {
+	fmt.Println("CallGetObject")
 	var objectValue string
 	var err error
-	k.db.View(func(tx *buntdb.Tx) error {
-		objectValue, err = tx.Get(objectName + key)
-		return err
-	})
+	if k.tx == nil {
+		k.db.View(func(tx *buntdb.Tx) error {
+			fmt.Println("objectName", key)
+			objectValue, err = tx.Get(objectName + key)
+			return err
+		})
+	}
 	return objectValue, err
 
 }
