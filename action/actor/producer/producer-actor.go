@@ -109,17 +109,14 @@ func (p *ProducerActor) working() {
 			fmt.Println("trxs is null")
 			return
 		}
-		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
-
-		fmt.Println("StartUndoSession")
 		block := &types.Block{}
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
-		fmt.Println("GetGlobalPropertyRole")
+		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
 		if err != nil {
 			fmt.Println("GetGlobalPropertyRole failed")
 			return
 		}
-		fmt.Println("begin apply transation")
+		fmt.Println("GetGlobalPropertyRole", coreStat)
 		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
 		trxApply := transaction.NewTrxApplyService()
@@ -153,7 +150,6 @@ func (p *ProducerActor) working() {
 		}
 
 		block = p.ins.Woker(trxs)
-		p.myDB.Reset()
 		if block != nil {
 			fmt.Println("apply block", block)
 			ApplyBlock(block)
