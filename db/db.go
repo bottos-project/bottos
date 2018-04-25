@@ -61,7 +61,7 @@ type DBApi interface {
 	SetObject(objectName string, objectValue interface{}) error
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
 	SetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
-	GetObject(objectName string) (interface{}, error)
+	GetObject(objectName string, key string) (interface{}, error)
 	GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
 	Commit()

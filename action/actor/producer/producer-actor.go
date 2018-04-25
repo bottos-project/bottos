@@ -33,7 +33,7 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
-	"github.com/bottos-project/core/action/message"
+	//	"github.com/bottos-project/core/action/message"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
@@ -91,20 +91,22 @@ func (p *ProducerActor) Receive(context actor.Context) {
 
 	p.handleSystemMsg(context)
 
-	switch msg := context.Message().(type) {
+	//	switch msg := context.Message().(type) {
 
-	case *message.GetAllPendingTrxRsp:
-		fmt.Println("receive pending........", msg)
+	//	case *message.GetAllPendingTrxRsp:
+	//		fmt.Println("receive pending........", msg)
 
-	}
+	//	}
 }
 func (p *ProducerActor) working() {
+	fmt.Println("begin to working")
 	if p.ins.IsReady() {
 		start := common.NowToSeconds()
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
 
 		if len(trxs) == 0 {
+			fmt.Println("trxs is null")
 			return
 		}
 		p.myDB.StartUndoSession()
@@ -112,6 +114,7 @@ func (p *ProducerActor) working() {
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
 		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
 		if err != nil {
+			fmt.Println("GetGlobalPropertyRole failed")
 			return
 		}
 		var pendingTrx = []*types.Transaction{}
@@ -123,18 +126,20 @@ func (p *ProducerActor) working() {
 			if (common.NowToSeconds()-start) > config.DEFAULT_BLOCK_TIME_LIMIT ||
 				pendingBlockSize > coreStat.Config.MaxBlockSize {
 				pendingTrx = append(pendingTrx, dtag)
+				fmt.Println("max size")
 				continue
 			}
 
 			p.myDB.StartUndoSession()
 			pass, _ := trxApply.ApplyTransaction(trx)
 			if pass == false {
+				fmt.Println("ApplyTransaction failed")
 				continue
 			}
 			pendingBlockSize += uint32(20) //unsafe.Sizeof(trx)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
-
+				fmt.Println("greater MaxBlockSize")
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
