@@ -29,8 +29,8 @@ import (
 	"time"
 )
 
-func NowToSeconds() int64 {
-	return time.Now().Unix()
+func NowToSeconds() uint64 {
+	return uint64(time.Now().Unix())
 }
 
 func millseconds(s int64) int64 {

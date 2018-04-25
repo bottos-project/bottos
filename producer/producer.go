@@ -65,7 +65,6 @@ func (p *Reporter) isReady() bool {
 }
 func (p *Reporter) isMyTurn() bool {
 	return true
-
 }
 func (p *Reporter) IsReady() bool {
 	if p.isEligible() && p.isReady() && p.isMyTurn() {
@@ -98,7 +97,6 @@ func (p *Reporter) StartTag() error {
 func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
 
 	return nil
-
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {

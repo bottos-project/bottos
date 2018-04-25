@@ -33,10 +33,10 @@ import (
 func GetSlotAtTime(current time.Time) uint32 {
 	firstSlotTime := GetSlotTime(1)
 
-	if current.Unix() < firstSlotTime {
+	if uint64(current.Unix()) < firstSlotTime {
 		return 0
 	}
-	return uint32(current.Unix()-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
+	return uint32(uint64(current.Unix())-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
 }
 
 /**/
@@ -54,13 +54,13 @@ func GetGenesisTime() int64 {
 func GetHeadBlockTime() int64 {
 	return 1
 }
-func GetHeadBlockTimeSinceEpoch() int64 {
+func GetHeadBlockTimeSinceEpoch() uint64 {
 	return 1
 }
 
-func GetSlotTime(slot_num uint32) int64 {
+func GetSlotTime(slot_num uint32) uint64 {
 	if slot_num == 0 {
-		return GetLastBlockTimeStamp()
+		return uint64(GetLastBlockTimeStamp())
 	}
 	interval := config.DEFAULT_BLOCK_INTERVAL
 
@@ -69,8 +69,8 @@ func GetSlotTime(slot_num uint32) int64 {
 		return 1
 	}
 	GetHeadBlockTime()
-	head_block_abs_slot := GetHeadBlockTimeSinceEpoch() / int64(interval)
-	head_slot_time := head_block_abs_slot * int64(interval)
-	return head_slot_time + int64(slot_num*interval)
+	head_block_abs_slot := GetHeadBlockTimeSinceEpoch() / uint64(interval)
+	head_slot_time := head_block_abs_slot * uint64(interval)
+	return head_slot_time + uint64(slot_num*interval)
 
 }

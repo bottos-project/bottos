@@ -17,7 +17,7 @@
 
 /*
  * file description:  producer actor
- * @Author:
+ * @Author: may luo
  * @Date:   2017-12-06
  * @Last Modified by:
  * @Last Modified time:
@@ -29,12 +29,18 @@ import (
 	"fmt"
 	"log"
 	"time"
+	//	"unsafe"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/producer"
+	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/transaction"
 )
 
 type ProducerActor struct {
@@ -94,13 +100,50 @@ func (p *ProducerActor) Receive(context actor.Context) {
 }
 func (p *ProducerActor) working() {
 	if p.ins.IsReady() {
+		start := common.NowToSeconds()
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
+
+		if len(trxs) == 0 {
+			return
+		}
 		p.myDB.StartUndoSession()
+		block := &types.Block{}
+		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
+		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
+		if err != nil {
+			return
+		}
+		var pendingTrx = []*types.Transaction{}
+		var pendingBlockTrx = []*types.Transaction{}
+		trxApply := transaction.NewTrxApplyService()
+		for _, trx := range trxs {
+			dtag := new(types.Transaction)
+			dtag = trx
+			if (common.NowToSeconds()-start) > config.DEFAULT_BLOCK_TIME_LIMIT ||
+				pendingBlockSize > coreStat.Config.MaxBlockSize {
+				pendingTrx = append(pendingTrx, dtag)
+				continue
+			}
 
-		p.ins.VerifyTrxs(trxs)
+			p.myDB.StartUndoSession()
+			pass, _ := trxApply.ApplyTransaction(trx)
+			if pass == false {
+				continue
+			}
+			pendingBlockSize += uint32(20) //unsafe.Sizeof(trx)
 
-		block := p.ins.Woker(trxs)
+			if pendingBlockSize > coreStat.Config.MaxBlockSize {
+
+				pendingTrx = append(pendingTrx, dtag)
+				continue
+			}
+
+			p.myDB.Reset()
+			pendingBlockTrx = append(pendingBlockTrx, dtag)
+		}
+
+		block = p.ins.Woker(trxs)
 		p.myDB.Reset()
 		if block != nil {
 			fmt.Println("apply block", block)

@@ -37,3 +37,4 @@ const BTO_CONTRACT_NAME string = "bto"
 const BTO_INIT_SUPPLY uint64 = 1000000000
 
 const INIT_DELEGATE_NUM uint32 = 17
+const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
