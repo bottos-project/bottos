@@ -48,6 +48,8 @@ type Parameter struct {
 	P2PPort					int					`json:"p2p_port"`
 	PeerList				[]string			`json:"peer_list"`
 	KeyPairs				[]KeyPair			`json:"key_pairs"`
+	ApiServiceEnable		bool				`json:"api_service_enable"`
+				
 }
 
 type KeyPair struct {

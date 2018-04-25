@@ -11,5 +11,6 @@
             "private_key": "5JM9TrUsohBmACHjYHmHtjTxpaDT8wg9tM1ehrp9WvmgaEh4Xr4",
             "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"
         }
-    ]
+    ],
+    "api_service_enable": false
 }
