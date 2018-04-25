@@ -106,7 +106,7 @@ func (c *coreApiClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, o
 }
 
 func (c *coreApiClient) QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryChain_info", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryChainInfo", in)
 	out := new(QueryChainInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {

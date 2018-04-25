@@ -11,7 +11,7 @@ service CoreApi{
 	rpc PushTx(types.Transaction)returns (PushTxResponse){}
 	rpc QueryTx(QueryTxRequest)returns (QueryTxResponse){}
 	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
-	rpc QueryChain_info(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
+	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
 
 	//rpc query_table_rows()returns (){}
