@@ -130,7 +130,7 @@ func (p *ProducerActor) working() {
 				continue
 			}
 			fmt.Println("start apply transation", "trx")
-			p.myDB.StartUndoSession()
+			//p.myDB.StartUndoSession()
 			pass, _ := trxApply.ApplyTransaction(trx)
 			if pass == false {
 				fmt.Println("ApplyTransaction failed")
@@ -144,7 +144,7 @@ func (p *ProducerActor) working() {
 				continue
 			}
 
-			p.myDB.Commit()
+			//	p.myDB.Commit()
 			fmt.Println("start apply transation dddd")
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}

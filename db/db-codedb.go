@@ -48,5 +48,6 @@ func (d *DBService) Rollback() error {
 	return d.codeRepo.CallRollback()
 }
 func (d *DBService) Reset() {
+	//TODO
 	d.codeRepo.CallStartUndoSession(false)
 }

@@ -85,11 +85,9 @@ func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string,
 	var err error
 
 	k.db.View(func(tx *buntdb.Tx) error {
-		fmt.Println("objectName", key)
 		objectValue, err = tx.Get(objectName + key)
 		return err
 	})
-	fmt.Println("Call View")
 
 	return objectValue, err
 

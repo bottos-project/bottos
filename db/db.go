@@ -49,6 +49,8 @@ func NewDbService(path string, codedbPath string) *DBService {
 }
 
 type DBApi interface {
+	Lock()
+	UnLock()
 	//kv database interface
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
@@ -66,7 +68,7 @@ type DBApi interface {
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
 	Commit()
 	Rollback()
-	Reset()
+	Reset() //TODO
 	//mongodb interface
 	Set(string, string)
 }
