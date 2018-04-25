@@ -51,14 +51,6 @@ func PushTransaction(trx uint64) error {
 		Sender:      22,
 		Action:      trx,
 	}
-	/*
-		trxactorPid.Tell(pushTrxReq)
-
-		f := trxactorPid.RequestFuture(pushTrxReq, 5000*time.Millisecond)
-		es, err := f.Result() // waits for pid to reply
-
-		fmt.Println("this is es err", es, err)
-	*/
 
 	result, err := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
 
@@ -88,7 +80,7 @@ func NewTrxActorAgent() *TrxActorAgent {
 	return &TrxActorAgent{}
 }
 
-func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushResponse) error {
+func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushTxResponse) error {
 	if req == nil {
 		fmt.Println("request is nil")
 		//rsp.retCode = ??
@@ -97,9 +89,9 @@ func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp
 	_, err := trxactorPid.RequestFuture(req, 500*time.Millisecond).Result() // await result
 
 	if (nil != err) {
-		copy(rsp.TxHash, req.Hash().Bytes())
+		//copy(rsp.TxHash, req.Hash().Bytes())
 		//rsp.TxHash = req.Hash()
-		rsp.TxRequest = req
+		rsp.Tx = req
 	}
 	
 	return nil

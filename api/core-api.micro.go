@@ -8,11 +8,15 @@ It is generated from these files:
 	github.com/bottos-project/core/api/core-api.proto
 
 It has these top-level messages:
-	PushResponse
-	QueryTrxRequest
-	QueryTrxResponse
+	PushTxResponse
+	QueryTxRequest
+	QueryTxResponse
 	QueryBlockRequest
 	QueryBlockResponse
+	QueryChainInfoRequest
+	QueryChainInfoResponse
+	QueryAccountRequest
+	QueryAccountResponse
 */
 package api
 
@@ -20,7 +24,6 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import types "github.com/bottos-project/core/common/types"
-import _ "github.com/bottos-project/core/common/types"
 
 import (
 	client "github.com/micro/go-micro/client"
@@ -47,9 +50,11 @@ var _ server.Option
 // Client API for CoreApi service
 
 type CoreApiClient interface {
-	PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error)
-	QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error)
+	PushTx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTxResponse, error)
+	QueryTx(ctx context.Context, in *QueryTxRequest, opts ...client.CallOption) (*QueryTxResponse, error)
 	QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error)
+	QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error)
+	QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error)
 }
 
 type coreApiClient struct {
@@ -70,9 +75,9 @@ func NewCoreApiClient(serviceName string, c client.Client) CoreApiClient {
 	}
 }
 
-func (c *coreApiClient) PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.push_trx", in)
-	out := new(PushResponse)
+func (c *coreApiClient) PushTx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTxResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.push_tx", in)
+	out := new(PushTxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -80,9 +85,9 @@ func (c *coreApiClient) PushTrx(ctx context.Context, in *types.Transaction, opts
 	return out, nil
 }
 
-func (c *coreApiClient) QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.query_trx", in)
-	out := new(QueryTrxResponse)
+func (c *coreApiClient) QueryTx(ctx context.Context, in *QueryTxRequest, opts ...client.CallOption) (*QueryTxResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.query_tx", in)
+	out := new(QueryTxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,12 +105,34 @@ func (c *coreApiClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, o
 	return out, nil
 }
 
+func (c *coreApiClient) QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.query_chain_info", in)
+	out := new(QueryChainInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coreApiClient) QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.query_account", in)
+	out := new(QueryAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for CoreApi service
 
 type CoreApiHandler interface {
-	PushTrx(context.Context, *types.Transaction, *PushResponse) error
-	QueryTrx(context.Context, *QueryTrxRequest, *QueryTrxResponse) error
+	PushTx(context.Context, *types.Transaction, *PushTxResponse) error
+	QueryTx(context.Context, *QueryTxRequest, *QueryTxResponse) error
 	QueryBlock(context.Context, *QueryBlockRequest, *QueryBlockResponse) error
+	QueryChainInfo(context.Context, *QueryChainInfoRequest, *QueryChainInfoResponse) error
+	QueryAccount(context.Context, *QueryAccountRequest, *QueryAccountResponse) error
 }
 
 func RegisterCoreApiHandler(s server.Server, hdlr CoreApiHandler, opts ...server.HandlerOption) {
@@ -116,14 +143,22 @@ type CoreApi struct {
 	CoreApiHandler
 }
 
-func (h *CoreApi) PushTrx(ctx context.Context, in *types.Transaction, out *PushResponse) error {
-	return h.CoreApiHandler.PushTrx(ctx, in, out)
+func (h *CoreApi) PushTx(ctx context.Context, in *types.Transaction, out *PushTxResponse) error {
+	return h.CoreApiHandler.PushTx(ctx, in, out)
 }
 
-func (h *CoreApi) QueryTrx(ctx context.Context, in *QueryTrxRequest, out *QueryTrxResponse) error {
-	return h.CoreApiHandler.QueryTrx(ctx, in, out)
+func (h *CoreApi) QueryTx(ctx context.Context, in *QueryTxRequest, out *QueryTxResponse) error {
+	return h.CoreApiHandler.QueryTx(ctx, in, out)
 }
 
 func (h *CoreApi) QueryBlock(ctx context.Context, in *QueryBlockRequest, out *QueryBlockResponse) error {
 	return h.CoreApiHandler.QueryBlock(ctx, in, out)
+}
+
+func (h *CoreApi) QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, out *QueryChainInfoResponse) error {
+	return h.CoreApiHandler.QueryChainInfo(ctx, in, out)
+}
+
+func (h *CoreApi) QueryAccount(ctx context.Context, in *QueryAccountRequest, out *QueryAccountResponse) error {
+	return h.CoreApiHandler.QueryAccount(ctx, in, out)
 }

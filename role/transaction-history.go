@@ -27,7 +27,7 @@
 
  import (
 	 "encoding/json"
-	 _"fmt"
+	 //"fmt"
  
 	 "github.com/bottos-project/core/db"
 	 "github.com/bottos-project/core/common"
@@ -66,11 +66,15 @@
 	 return history.BlockHash, nil
  }
  
- func GetTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
-	 key := hashToKey(hash)
-	 value, err := ldb.GetObject(TransactionHistoryObjectName, key)
-	 res := &TransactionHistory{}
-	 json.Unmarshal([]byte(value), res)
-	 return res, err
- }
+func GetTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
+	key := hash.ToHexString()
+	//fmt.Println("GetTransactionHistoryByHash key: ", key)
+	value, err := ldb.GetObject(TransactionHistoryObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+	res := &TransactionHistory{}
+	json.Unmarshal([]byte(value), res)
+	return res, err
+}
    

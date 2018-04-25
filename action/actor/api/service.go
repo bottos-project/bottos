@@ -34,19 +34,24 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/api"
 	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/action/env"
 )
 
 type ApiService struct {
-	trxActorPid *actor.PID
-	chainActorPid *actor.PID
+	env *env.ActorEnv
 }
 
-func NewApiService() api.CoreApiHandler {
-	apiService := &ApiService{}
+func NewApiService(env *env.ActorEnv) api.CoreApiHandler {
+	apiService := &ApiService{env:env}
 	return apiService
 }
 
-func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *api.PushResponse) error {
+var 	chainActorPid *actor.PID
+func SetChainActorPid(tpid *actor.PID) {
+	chainActorPid = tpid
+}
+
+func (a *ApiService) PushTx(ctx context.Context, trx *types.Transaction, resp *api.PushTxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
@@ -56,42 +61,61 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 	if (nil != err) {
 		copy(resp.TxHash, trx.Hash().Bytes())
 		//rsp.TxHash = req.Hash()
-		resp.TxRequest = trx
+		resp.Tx = trx
 	}
 	
 	return nil
 }
-func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
-	msgReq := message.QueryTrxReq{
-		TxHash: common.BytesToHash(req.TxHash),
+func (a *ApiService) QueryTx(ctx context.Context, req *api.QueryTxRequest, resp *api.QueryTxResponse) error {
+	msgReq := &message.QueryTrxReq{
+		TxHash: common.HexToHash(req.TxHash),
 	}
-	res, err := a.chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
-		resp.Trx = nil
-		resp.Errcode = 0 // TODO
-		return err
+		resp.Tx = nil
+		resp.Errcode = 0
+		return nil
 	}
 
 	response := res.(*message.QueryTrxResp)
-	resp.Trx = response.Tx
+	if response.Tx == nil {
+		resp.Errcode = 2
+		resp.Msg = "Transaction not Found"
+		return nil
+	}
+
+	resp.Tx = response.Tx
 	resp.Errcode = 0
 	return nil
-
 }
 
 func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
-	msgReq := message.QueryBlockReq{
-		BlockHash: common.BytesToHash(req.BlockHash),
+	msgReq := &message.QueryBlockReq{
+		BlockHash: common.HexToHash(req.BlockHash),
 	}
-	res, err := a.chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
-		resp.Block = nil
-		resp.Errcode = 0 // TODO
-		return err
+		resp.Errcode = 1
+		return nil
 	}
 
 	response := res.(*message.QueryBlockResp)
-	resp.Block = response.Block
+	if response.Block == nil {
+		resp.Errcode = 2
+		resp.Msg = "Block not Found"
+		return nil
+	}
+
+	resp.BlockHash = response.Block.Hash().ToHexString()
+	resp.BlockNumber = response.Block.GetNumber()
 	resp.Errcode = 0
+	return nil
+}
+
+func (h *ApiService) QueryChainInfo(ctx context.Context, in *api.QueryChainInfoRequest, out *api.QueryChainInfoResponse) error {
+	return nil
+}
+
+func (h *ApiService) QueryAccount(ctx context.Context, in *api.QueryAccountRequest, out *api.QueryAccountResponse) error {
 	return nil
 }
