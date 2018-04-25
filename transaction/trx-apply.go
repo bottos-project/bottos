@@ -66,6 +66,7 @@ func (trxApplyService *TrxApplyService)ApplyTransaction(trx *types.Transaction) 
 	if (!trxApplyService.CheckTransactionMatchChain(trx)) {
 		return false, nil
 	}
+	
 	trxApplyService.SaveTransactionExpiration(trx)
 
 	/* call evm... */
