@@ -8,11 +8,11 @@ package api;
 option go_package = "github.com/bottos-project/core/api";
 
 service CoreApi{
-	rpc push_tx(types.Transaction)returns (PushTxResponse){}
-	rpc query_tx(QueryTxRequest)returns (QueryTxResponse){}
-	rpc query_block(QueryBlockRequest)returns (QueryBlockResponse){}
-	rpc query_chain_info(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
-	rpc query_account(QueryAccountRequest)returns (QueryAccountResponse){}
+	rpc PushTx(types.Transaction)returns (PushTxResponse){}
+	rpc QueryTx(QueryTxRequest)returns (QueryTxResponse){}
+	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
+	rpc QueryChain_info(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
+	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
 
 	//rpc query_table_rows()returns (){}
 	//rpc query_table_row_by_string_key()returns (){}

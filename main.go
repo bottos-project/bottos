@@ -68,17 +68,16 @@ func main() {
 	trxPool.AddTransaction(trxTest)
 
 	if config.Param.ApiServiceEnable {
-		svc := micro.NewService(
-			micro.Name("core"),
-			micro.RegisterTTL(30),
-			micro.RegisterInterval(1000),
-			micro.Version(""),
-		)
-		svc.Init()
 		repo := caapi.NewApiService(actorenv)
-		api.RegisterCoreApiHandler(svc.Server(), repo)
-		fmt.Println("fmt")
-		if err := svc.Run(); err != nil {
+
+		service := micro.NewService(
+			micro.Name("core"),
+			micro.Version("2.0.0"),
+		)
+
+		service.Init()
+		api.RegisterCoreApiHandler(service.Server(), repo)
+		if err := service.Run(); err != nil {
 			panic(err)
 		}
 	}

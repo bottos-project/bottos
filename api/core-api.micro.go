@@ -76,7 +76,7 @@ func NewCoreApiClient(serviceName string, c client.Client) CoreApiClient {
 }
 
 func (c *coreApiClient) PushTx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.push_tx", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.PushTx", in)
 	out := new(PushTxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -86,7 +86,7 @@ func (c *coreApiClient) PushTx(ctx context.Context, in *types.Transaction, opts 
 }
 
 func (c *coreApiClient) QueryTx(ctx context.Context, in *QueryTxRequest, opts ...client.CallOption) (*QueryTxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.query_tx", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryTx", in)
 	out := new(QueryTxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -96,7 +96,7 @@ func (c *coreApiClient) QueryTx(ctx context.Context, in *QueryTxRequest, opts ..
 }
 
 func (c *coreApiClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.query_block", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryBlock", in)
 	out := new(QueryBlockResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -106,7 +106,7 @@ func (c *coreApiClient) QueryBlock(ctx context.Context, in *QueryBlockRequest, o
 }
 
 func (c *coreApiClient) QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.query_chain_info", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryChain_info", in)
 	out := new(QueryChainInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -116,7 +116,7 @@ func (c *coreApiClient) QueryChainInfo(ctx context.Context, in *QueryChainInfoRe
 }
 
 func (c *coreApiClient) QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.query_account", in)
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryAccount", in)
 	out := new(QueryAccountResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
