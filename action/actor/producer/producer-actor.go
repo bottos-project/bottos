@@ -143,7 +143,7 @@ func (p *ProducerActor) working() {
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
-
+			fmt.Println("start apply transation dddd")
 			//	p.myDB.Commit()
 			fmt.Println("start apply transation dddd")
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
