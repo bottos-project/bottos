@@ -63,6 +63,7 @@ func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
 		var err error
+		fmt.Println("Write genesis block")
 		bc.genesisBlock, err = WriteGenesisBlock(dbInstance)
 		if err != nil {
 			return nil, err
@@ -179,7 +180,6 @@ func (bc *BlockChain) LoadBlockDb() error {
 	}
 
 	// TODO
-	bc.blockCache.Insert(lastBlock)
 	bc.updateChainState(lastBlock)
 	
 	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
@@ -240,10 +240,10 @@ func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
 				fmt.Printf("block num = %v not found\n", i)
 			}
 		}
-	}
 
-	// trim blockCache
-	bc.blockCache.Trim(cs.LastBlockNum, newLIB)
+		// trim blockCache
+		bc.blockCache.Trim(cs.LastBlockNum, newLIB)
+	}
 }
 
 
@@ -319,7 +319,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	// TODO db lock
 
-	fmt.Println("InsertBlock: ", block)
+	fmt.Printf("InsertBlock: hash: %x, number:%v\n", block.Hash(), block.GetNumber())
 
 	err := bc.ValidateBlock(block)
 	if err != nil {
