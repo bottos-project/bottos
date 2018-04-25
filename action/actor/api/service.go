@@ -51,21 +51,33 @@ func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
+
 func (a *ApiService) PushTx(ctx context.Context, trx *types.Transaction, resp *api.PushTxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
 	}
-	_, err := trxactorPid.RequestFuture(trx, 500*time.Millisecond).Result() // await result
-
-	if (nil != err) {
-		copy(resp.TxHash, trx.Hash().Bytes())
-		//rsp.TxHash = req.Hash()
-		resp.Tx = trx
-	}
 	
+	reqMsg := &message.PushTrxReq{
+		Trx: trx,
+		TrxSender : message.TrxSenderTypeFront,
+	}
+	_, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	
+	resp.Tx = trx
+
+	if (nil == err) {
+		//copy(resp.TxHash, trx.Hash().Bytes())
+		resp.TxHash = trx.Hash().Bytes()		
+		resp.Errcode = 0
+	} else {
+		resp.Errcode = 100
+	}
+
 	return nil
 }
+
+
 func (a *ApiService) QueryTx(ctx context.Context, req *api.QueryTxRequest, resp *api.QueryTxResponse) error {
 	msgReq := &message.QueryTrxReq{
 		TxHash: common.HexToHash(req.TxHash),
