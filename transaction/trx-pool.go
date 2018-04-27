@@ -120,6 +120,8 @@ func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){
 
 // HandlTransactionFromFront handles a transaction from front
 func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
+
+	fmt.Println("receive trx: ", trx.Hash())
 	
     pool.CheckTransactionBaseConditionFromFront()
 	//start db session
