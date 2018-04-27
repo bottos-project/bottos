@@ -22,32 +22,23 @@
  * @Last Modified by:
  * @Last Modified time:
  */
-
 package common
 
 import (
+	"fmt"
+	"testing"
 	"time"
 )
 
-func NowToSeconds(current time.Time) uint64 {
-	return uint64(current.Unix())
+func Test_NowToSeconds(t *testing.T) {
+	now := time.Now()
+	fmt.Println(now)
+	sec := NowToSeconds(now)
+	fmt.Println(sec)
 }
-func NowToMicroseconds(current time.Time) uint64 {
-	now := current.Unix()
-	microSec := now * 1000000
-	return uint64(microSec)
-}
-
-func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
-	addNew := src + des
-	return uint64(addNew / 1000000)
-}
-
-func NowToSlotSec(current time.Time, loopMicroSec uint64) uint64 {
-	cur := NowToMicroseconds(current)
-	value := MicrosecondsAddToSec(cur, loopMicroSec)
-	return value
-}
-func GetSecondSincEpoch(current uint64, epochTime uint64) uint64 {
-	return current - epochTime
+func Test_NowToMicroseconds(t *testing.T) {
+	now := time.Now()
+	fmt.Println(now)
+	sec := NowToMicroseconds(now)
+	fmt.Println(sec)
 }
