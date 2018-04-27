@@ -58,7 +58,7 @@ type KeyPair struct {
 }
 
 type GenesisConfig struct {
-	GenesisTime				string				`json:"genesis_time"`
+	GenesisTime				uint64				`json:"genesis_time"`
 	ChainId					string				`json:"chain_id"`
 	InitDelegate			InitDelegate		`json:"init_delegate"`
 	
