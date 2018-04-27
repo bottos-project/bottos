@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"sync"
+	"fmt"
 
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
@@ -50,24 +51,28 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 }
 
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
-	return true, nil
 	/* check account validate,include contract account */
 	/* check signature */
 	if !trxApplyService.CheckTransactionLifeTime(trx) {
+		fmt.Println("check lift time error, trx: ", trx.Hash())
 		return false, nil
 	}
 
 	if !trxApplyService.CheckTransactionUnique(trx) {
+		fmt.Println("check trx unique error, trx: ", trx.Hash())
 		return false, nil
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
+		fmt.Println("check chain match error, trx: ", trx.Hash())
 		return false, nil
 	}
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
 	/* call evm... */
+
+	fmt.Println("trx : ", trx.Hash(),trx,"apply success")
 
 	return true, nil
 }
