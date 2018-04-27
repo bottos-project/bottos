@@ -25,12 +25,3 @@
 
 package apiactor
 
-import (
-	"github.com/AsynkronIT/protoactor-go/actor"
-)
-
-var trxactorPid *actor.PID
-
-func SetTrxActorPid(tpid *actor.PID) {
-	trxactorPid = tpid
-}

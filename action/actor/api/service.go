@@ -52,6 +52,13 @@ func SetChainActorPid(tpid *actor.PID) {
 }
 
 
+var   trxactorPid *actor.PID
+
+func SetTrxActorPid(tpid *actor.PID) {
+	trxactorPid = tpid
+}
+
+
 func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *api.PushTrxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
