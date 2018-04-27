@@ -106,8 +106,7 @@ func (p *ProducerActor) working() {
 		trxs := GetAllPendingTrx()
 		fmt.Println("GetAllPendingTrx", trxs)
 		if len(trxs) == 0 {
-			fmt.Println("trxs is null")
-			return
+			fmt.Println("trxs is null,continue produce block")
 		}
 		block := &types.Block{}
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
