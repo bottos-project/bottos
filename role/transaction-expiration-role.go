@@ -17,7 +17,7 @@
 
 /*
  * file description:  transaction history role
- * @Author: Gong Zibin 
+ * @Author: Gong Zibin
  * @Date:   2017-12-12
  * @Last Modified by:
  * @Last Modified time:
@@ -27,19 +27,19 @@ package role
 
 import (
 	"encoding/json"
-	_"fmt"
+	_ "fmt"
 
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/db"
 )
 
 const TransactionExpirationObjectName string = "transaction_expiration"
- 
+
 type TransactionExpiration struct {
-	TrxHash			common.Hash		`json:"trx_hash"`
-	Expiration		uint64			`json:"expiration"`
+	TrxHash    common.Hash `json:"trx_hash"`
+	Expiration uint64      `json:"expiration"`
 }
-  
+
 func CreateTransactionExpirationObjectRole(ldb *db.DBService) error {
 	return nil
 }
@@ -57,9 +57,11 @@ func SetTransactionExpirationObjectRole(ldb *db.DBService, hash common.Hash, val
 func GetTransactionExpirationObjectByHash(ldb *db.DBService, hash common.Hash) (*TransactionExpiration, error) {
 	key := hashToKey(hash)
 	value, err := ldb.GetObject(TransactionExpirationObjectName, key)
+	if err != nil {
+		return nil, err
+	}
 	res := &TransactionExpiration{}
 	json.Unmarshal([]byte(value), res)
 	//fmt.Println("Get", key, value)
 	return res, err
 }
-  
