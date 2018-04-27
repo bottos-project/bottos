@@ -29,25 +29,10 @@ import (
 	"time"
 )
 
-func NowToSeconds() uint64 {
-	return uint64(time.Now().Unix())
+func NowToSeconds(current time.Time) uint64 {
+	return uint64(current.Unix())
 }
 
-func millseconds(s int64) int64 {
-	return s * 1000
-}
-func seconds(s int64) int64 {
-	return s * 1000000
-}
-
-func getEpochTime() int64 {
-	now := time.Now() // get current time
-	epoch := time.Since(now)
-	epochTime := int64(1000) * epoch.Nanoseconds()
-
-	return epochTime // microseconds
-}
-
-func GetSecondSincEpoch(when time.Time) int64 {
-	return when.Unix() - getEpochTime()
+func GetSecondSincEpoch(current uint64, epochTime uint64) uint64 {
+	return current - epochTime
 }

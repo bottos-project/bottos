@@ -32,12 +32,14 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/consensus/dpos"
+	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/role"
 )
 
 type Reporter struct {
 	isReporting bool
 	core        chain.BlockChainInterface
+	db          *db.DBService
 }
 type ReporterRepo interface {
 	Woker(Trxs []*types.Transaction) *types.Block
@@ -45,8 +47,37 @@ type ReporterRepo interface {
 	IsReady() bool
 }
 
-func New(b chain.BlockChainInterface) ReporterRepo {
-	return &Reporter{core: b}
+func (p *Reporter) GetSlotAtTime(current time.Time) uint32 {
+	firstSlotTime := p.GetSlotTime(1)
+
+	if common.NowToSeconds(current) < firstSlotTime {
+		return 0
+	}
+	return uint32(common.NowToSeconds(current)-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
+}
+
+func (p *Reporter) GetSlotTime(slotNum uint32) uint64 {
+
+	if slotNum == 0 {
+		return 0
+	}
+	interval := config.DEFAULT_BLOCK_INTERVAL
+
+	object, err := role.GetChainStateObjectRole(p.db)
+	if err != nil {
+		return 0
+	}
+	genesisTime := p.core.GenesisTimestamp()
+	if object.LastBlockNum == 0 {
+
+		return genesisTime + uint64(slotNum*interval)
+	}
+	headBlockAbsSlot := common.GetSecondSincEpoch(object.LastBlockTime, genesisTime) / uint64(interval)
+	headSlotTime := headBlockAbsSlot * uint64(interval)
+	return headSlotTime + uint64(slotNum*interval)
+}
+func New(b chain.BlockChainInterface, db *db.DBService) ReporterRepo {
+	return &Reporter{core: b, db: db}
 }
 func (p *Reporter) isEligible() bool {
 	return true
@@ -56,9 +87,9 @@ func (p *Reporter) isReady() bool {
 		return false
 	}
 	return true
-	slotTime := dpos.GetSlotTime(1)
+	slotTime := p.GetSlotTime(1)
 	fmt.Println(slotTime)
-	if slotTime >= common.NowToSeconds() {
+	if slotTime >= common.NowToSeconds(time.Now()) {
 		return true
 	}
 	return false
@@ -76,10 +107,15 @@ func (p *Reporter) IsReady() bool {
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := time.Now()
-	slot := dpos.GetSlotAtTime(now)
-	scheduledTime := dpos.GetSlotTime(slot)
-	fmt.Println(scheduledTime)
-	block, err := p.reportBlock(trxs)
+	slot := p.GetSlotAtTime(now)
+	scheduledTime := p.GetSlotTime(slot)
+	fmt.Println("Woker", scheduledTime, slot)
+	accountName, err1 := role.GetScheduleDelegateRole(p.db, slot)
+	if err1 != nil {
+		return nil // errors.New("report Block failed")
+	}
+
+	block, err := p.reportBlock(accountName, trxs)
 	if err != nil {
 		return nil // errors.New("report Block failed")
 	}
@@ -100,7 +136,7 @@ func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func (p *Reporter) reportBlock(trxs []*types.Transaction) (*types.Block, error) {
+func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
