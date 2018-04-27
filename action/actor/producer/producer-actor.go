@@ -101,7 +101,7 @@ func (p *ProducerActor) Receive(context actor.Context) {
 func (p *ProducerActor) working() {
 	fmt.Println("begin to working")
 	if p.ins.IsReady() {
-		start := common.NowToSeconds(time.Now())
+		start := common.NowToSeconds()
 		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
 		fmt.Println("GetAllPendingTrx", trxs)
@@ -123,7 +123,7 @@ func (p *ProducerActor) working() {
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
-			if (common.NowToSeconds(time.Now())-start) > config.DEFAULT_BLOCK_TIME_LIMIT ||
+			if (common.NowToSeconds()-start) > config.DEFAULT_BLOCK_TIME_LIMIT ||
 				pendingBlockSize > coreStat.Config.MaxBlockSize {
 				pendingTrx = append(pendingTrx, dtag)
 				fmt.Println("max size")
