@@ -12,10 +12,11 @@ message Block {
 }
 
 message Header {
-	bytes prev_block_hash           = 1;
-	uint32 number                   = 2;
-	uint64 timestamp                = 3;
-	bytes merkle_root				= 4;
-	bytes delegate                  = 5;
+	uint32 version					= 1; 
+	bytes prev_block_hash           = 2;
+	uint32 number                   = 3;
+	uint64 timestamp                = 4;
+	bytes merkle_root				= 5;
+	bytes delegate                  = 6;
 	bytes delegate_sign				= 7;
 }

@@ -104,7 +104,7 @@ func (TrxActor *TrxActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *types.Transaction:
-		fmt.Println("transaction action is ", msg.Action)
+		fmt.Println("transaction action is ", msg.Method.Name)
 		context.Respond("trx rsp from trx actor")
 
 	case *message.PushTrxReq:

@@ -113,13 +113,13 @@ func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.Inser
 }
 
 func (self *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
-	tx := actorEnv.TxStore.GetTransaction(req.TxHash)
+	tx := actorEnv.TxStore.GetTransaction(req.TrxHash)
 	if ctx.Sender() != nil {
 		resp := &message.QueryTrxResp{}
 		if tx == nil {
 			resp.Error = fmt.Errorf("Transaction not found")
 		} else {
-			resp.Tx = tx
+			resp.Trx = tx
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
@@ -127,6 +127,9 @@ func (self *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryT
 
 func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBlockReq) {
 	block := actorEnv.Chain.GetBlockByHash(req.BlockHash)
+	if block == nil {
+		block = actorEnv.Chain.GetBlockByNumber(req.BlockNumber)
+	}
 	if ctx.Sender() != nil {
 		resp := &message.QueryBlockResp{}
 		if block == nil {

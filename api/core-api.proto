@@ -8,8 +8,8 @@ package api;
 option go_package = "github.com/bottos-project/core/api";
 
 service CoreApi{
-	rpc PushTx(types.Transaction)returns (PushTxResponse){}
-	rpc QueryTx(QueryTxRequest)returns (QueryTxResponse){}
+	rpc PushTrx(types.Transaction)returns (PushTrxResponse){}
+	rpc QueryTrx(QueryTrxRequest)returns (QueryTrxResponse){}
 	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
 	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
@@ -20,48 +20,57 @@ service CoreApi{
 } 
 
 
-message PushTxResponse{
-	types.Transaction 	tx					= 1;
-	bytes 				tx_hash				= 2;
-	uint32 				errcode				= 3;
-	string 				msg					= 4;
+message PushTrxResponse{
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	Result				result 				= 3;
+	message Result{
+		types.Transaction 	trx				= 1;
+		bytes 				trx_hash		= 2;
+	}
 }
 
-
-message QueryTxRequest{
-	string 				tx_hash				= 1; 
+message QueryTrxRequest{
+	string 				trx_hash			= 1; 
 }
 
-message QueryTxResponse{
-	types.Transaction 	tx					= 1;
-	uint32 				errcode				= 2;
-	string 				msg					= 3;
+message QueryTrxResponse{
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	types.Transaction	result 				= 3;
 }
 
 
 message QueryBlockRequest{
 	string 				block_hash			= 1;
+	uint32				block_number		= 2;
 }
 
 message QueryBlockResponse{
-	string				block_hash      	= 1;
-	uint32				block_number		= 2;
-	uint32				ref_block_prefix	= 3;
-	uint32 				errcode				= 4;
-	string 				msg					= 5;
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	Result				result 				= 3;
+	message Result{
+		string			block_hash      	= 1;
+		uint32			block_number		= 2;
+		uint32			block_label			= 3;
+	}
 }
 
 message QueryChainInfoRequest{
 }
 
 message QueryChainInfoResponse{
-	uint32 				head_block_num					= 1;
-	uint32 				last_confirmed_block_num		= 2;
-	bytes 				head_block_hash					= 3;
-	uint64 				head_block_time					= 4;
-	string 				head_lock_delegate				= 5;
-	uint32 				errcode							= 6;
-	string 				msg								= 7;
+	uint32 				errcode							= 1;
+	string 				msg								= 2;
+	Result 				result							= 3;
+	message Result {
+		uint32 			head_block_num					= 1;
+		uint32 			last_confirmed_block_num		= 2;
+		bytes 			head_block_hash					= 3;
+		uint64 			head_block_time					= 4;
+		string 			head_lock_delegate				= 5;
+	}
 }
 
 
@@ -70,9 +79,12 @@ message QueryAccountRequest{
 }
 
 message QueryAccountResponse{
-	string 				account_name		= 1;
-	uint64 				balance				= 2;
-	uint64 				staked_balance		= 3;
-	uint32 				errcode				= 4;
-	string 				msg					= 5;
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	Result 				result				= 3;
+	message Result {
+		string 			account_name		= 1;
+		uint64 			balance				= 2;
+		uint64 			staked_balance		= 3;
+	}
 }

@@ -28,11 +28,11 @@ package apiactor
 import (
 	"fmt"
 	"time"
-	"context"
+	//"context"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/api"
+	//"github.com/bottos-project/core/api"
 	//"github.com/bottos-project/core/action/message"
 )
 
@@ -47,9 +47,8 @@ func PushTransaction(trx uint64) error {
 	fmt.Println("exec push transaction: ", trx)
 
 	pushTrxReq := &types.Transaction{
-		RefBlockNum: 11,
-		Sender:      22,
-		Action:      trx,
+		Cursor: 11,
+		Sender: &types.AccountName{Name:"22"},
 	}
 
 	result, err := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
@@ -80,7 +79,8 @@ func NewTrxActorAgent() *TrxActorAgent {
 	return &TrxActorAgent{}
 }
 
-func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushTxResponse) error {
+/*
+func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushTrxResponse) error {
 	if req == nil {
 		fmt.Println("request is nil")
 		//rsp.retCode = ??
@@ -96,4 +96,4 @@ func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp
 	
 	return nil
 }
-
+*/

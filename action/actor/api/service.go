@@ -52,7 +52,7 @@ func SetChainActorPid(tpid *actor.PID) {
 }
 
 
-func (a *ApiService) PushTx(ctx context.Context, trx *types.Transaction, resp *api.PushTxResponse) error {
+func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *api.PushTrxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
@@ -64,11 +64,11 @@ func (a *ApiService) PushTx(ctx context.Context, trx *types.Transaction, resp *a
 	}
 	_, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 	
-	resp.Tx = trx
-
 	if (nil == err) {
+		resp.Result = &api.PushTrxResponse_Result{}
 		//copy(resp.TxHash, trx.Hash().Bytes())
-		resp.TxHash = trx.Hash().Bytes()		
+		resp.Result.TrxHash = trx.Hash().Bytes()
+		resp.Result.Trx = trx
 		resp.Errcode = 0
 	} else {
 		resp.Errcode = 100
@@ -78,25 +78,24 @@ func (a *ApiService) PushTx(ctx context.Context, trx *types.Transaction, resp *a
 }
 
 
-func (a *ApiService) QueryTx(ctx context.Context, req *api.QueryTxRequest, resp *api.QueryTxResponse) error {
+func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
 	msgReq := &message.QueryTrxReq{
-		TxHash: common.HexToHash(req.TxHash),
+		TrxHash: common.HexToHash(req.TrxHash),
 	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
-		resp.Tx = nil
-		resp.Errcode = 0
+		resp.Errcode = 1
 		return nil
 	}
 
 	response := res.(*message.QueryTrxResp)
-	if response.Tx == nil {
+	if response.Trx == nil {
 		resp.Errcode = 2
 		resp.Msg = "Transaction not Found"
 		return nil
 	}
 
-	resp.Tx = response.Tx
+	resp.Result = response.Trx
 	resp.Errcode = 0
 	return nil
 }
@@ -104,6 +103,7 @@ func (a *ApiService) QueryTx(ctx context.Context, req *api.QueryTxRequest, resp 
 func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
 	msgReq := &message.QueryBlockReq{
 		BlockHash: common.HexToHash(req.BlockHash),
+		BlockNumber: req.BlockNumber,
 	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
@@ -118,8 +118,12 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 		return nil
 	}
 
-	resp.BlockHash = response.Block.Hash().ToHexString()
-	resp.BlockNumber = response.Block.GetNumber()
+	resp.Result = &api.QueryBlockResponse_Result{}
+	resp.Result.BlockHash = response.Block.Hash().ToHexString()
+	resp.Result.BlockNumber = response.Block.GetNumber()
+	resp.Result.BlockLabel = 1234567
+	//resp.BlockHash = response.Block.Hash().ToHexString()
+	//resp.BlockNumber = response.Block.GetNumber()
 	resp.Errcode = 0
 	return nil
 }

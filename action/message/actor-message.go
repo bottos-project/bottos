@@ -22,16 +22,17 @@ type PushTrxReq struct {
 }
 
 type QueryTrxReq struct {
-	TxHash common.Hash
+	TrxHash common.Hash
 }
 
 type QueryTrxResp struct {
-	Tx *types.Transaction
+	Trx *types.Transaction
 	Error error
 }
 
 type QueryBlockReq struct {
 	BlockHash common.Hash
+	BlockNumber uint32
 }
 
 type QueryBlockResp struct {

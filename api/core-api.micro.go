@@ -8,9 +8,9 @@ It is generated from these files:
 	github.com/bottos-project/core/api/core-api.proto
 
 It has these top-level messages:
-	PushTxResponse
-	QueryTxRequest
-	QueryTxResponse
+	PushTrxResponse
+	QueryTrxRequest
+	QueryTrxResponse
 	QueryBlockRequest
 	QueryBlockResponse
 	QueryChainInfoRequest
@@ -50,8 +50,8 @@ var _ server.Option
 // Client API for CoreApi service
 
 type CoreApiClient interface {
-	PushTx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTxResponse, error)
-	QueryTx(ctx context.Context, in *QueryTxRequest, opts ...client.CallOption) (*QueryTxResponse, error)
+	PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTrxResponse, error)
+	QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error)
 	QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error)
 	QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error)
 	QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error)
@@ -75,9 +75,9 @@ func NewCoreApiClient(serviceName string, c client.Client) CoreApiClient {
 	}
 }
 
-func (c *coreApiClient) PushTx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.PushTx", in)
-	out := new(PushTxResponse)
+func (c *coreApiClient) PushTrx(ctx context.Context, in *types.Transaction, opts ...client.CallOption) (*PushTrxResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.PushTrx", in)
+	out := new(PushTrxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -85,9 +85,9 @@ func (c *coreApiClient) PushTx(ctx context.Context, in *types.Transaction, opts 
 	return out, nil
 }
 
-func (c *coreApiClient) QueryTx(ctx context.Context, in *QueryTxRequest, opts ...client.CallOption) (*QueryTxResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryTx", in)
-	out := new(QueryTxResponse)
+func (c *coreApiClient) QueryTrx(ctx context.Context, in *QueryTrxRequest, opts ...client.CallOption) (*QueryTrxResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryTrx", in)
+	out := new(QueryTrxResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -128,8 +128,8 @@ func (c *coreApiClient) QueryAccount(ctx context.Context, in *QueryAccountReques
 // Server API for CoreApi service
 
 type CoreApiHandler interface {
-	PushTx(context.Context, *types.Transaction, *PushTxResponse) error
-	QueryTx(context.Context, *QueryTxRequest, *QueryTxResponse) error
+	PushTrx(context.Context, *types.Transaction, *PushTrxResponse) error
+	QueryTrx(context.Context, *QueryTrxRequest, *QueryTrxResponse) error
 	QueryBlock(context.Context, *QueryBlockRequest, *QueryBlockResponse) error
 	QueryChainInfo(context.Context, *QueryChainInfoRequest, *QueryChainInfoResponse) error
 	QueryAccount(context.Context, *QueryAccountRequest, *QueryAccountResponse) error
@@ -143,12 +143,12 @@ type CoreApi struct {
 	CoreApiHandler
 }
 
-func (h *CoreApi) PushTx(ctx context.Context, in *types.Transaction, out *PushTxResponse) error {
-	return h.CoreApiHandler.PushTx(ctx, in, out)
+func (h *CoreApi) PushTrx(ctx context.Context, in *types.Transaction, out *PushTrxResponse) error {
+	return h.CoreApiHandler.PushTrx(ctx, in, out)
 }
 
-func (h *CoreApi) QueryTx(ctx context.Context, in *QueryTxRequest, out *QueryTxResponse) error {
-	return h.CoreApiHandler.QueryTx(ctx, in, out)
+func (h *CoreApi) QueryTrx(ctx context.Context, in *QueryTrxRequest, out *QueryTrxResponse) error {
+	return h.CoreApiHandler.QueryTrx(ctx, in, out)
 }
 
 func (h *CoreApi) QueryBlock(ctx context.Context, in *QueryBlockRequest, out *QueryBlockResponse) error {
