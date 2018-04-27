@@ -9,7 +9,7 @@ import (
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/chain/extra"
 	"github.com/bottos-project/core/config"
-	native "github.com/bottos-project/core/contract/native"
+	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/db"
 
 	"github.com/bottos-project/core/role"
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	role.Init(dbInst)
-	native.InitNativeContract(dbInst)
+	contract.InitNativeContract(dbInst)
 
 	bc, err := chain.CreateBlockChain(dbInst)
 	if err != nil {

@@ -25,37 +25,45 @@
 package producer
 
 import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/db"
 )
 
-func (p *Reporter) GetSlotAtTime(current uint64) uint32 {
-	firstSlotTime := p.GetSlotTime(1)
-
-	if current < firstSlotTime {
-		return 0
+func startup() *Reporter {
+	dbInst := db.NewDbService("./temp/db", "./temp/codedb")
+	if dbInst == nil {
+		fmt.Println("Create DB service fail")
 	}
-	return uint32(current-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
-}
-
-func (p *Reporter) GetSlotTime(slotNum uint32) uint64 {
-
-	if slotNum == 0 {
-		return 0
-	}
-	interval := config.DEFAULT_BLOCK_INTERVAL
-
-	object, err := role.GetChainStateObjectRole(p.db)
+	bc, err := chain.CreateBlockChain(dbInst)
 	if err != nil {
-		return 0
+		fmt.Println("Create DB service fail")
 	}
-	genesisTime := p.core.GenesisTimestamp()
-	if object.LastBlockNum == 0 {
+	reportIns := &Reporter{false, bc, dbInst}
+	return reportIns
+}
+func tearDown(r *Reporter) {
+	r.db.Close()
+}
+func TestReporter_GetSlotAtTime(t *testing.T) {
+	ins := startup()
+	cbegin := time.Time{}
+	slot := ins.GetSlotAtTime(cbegin)
+	fmt.Println(slot)
+	cUnix := cbegin.Unix()
+	fmt.Println(cUnix)
+	//	slot = ins.GetSlotAtTime(cUnix)
+	//	fmt.Println(slot)
+	now := common.NowToSeconds(time.Now().Unix())
+	slot = ins.GetSlotAtTime(now)
+	fmt.Println(slot)
 
-		return genesisTime + uint64(slotNum*interval)
-	}
-	headBlockAbsSlot := common.GetSecondSincEpoch(object.LastBlockTime, genesisTime) / uint64(interval)
-	headSlotTime := headBlockAbsSlot * uint64(interval)
-	return headSlotTime + uint64(slotNum*interval)
+	nowMicroSec := common.NowToSlotSec(time.Now(), 500000)
+	slot = ins.GetSlotAtTime(nowMicroSec)
+	fmt.Println(slot)
+
 }

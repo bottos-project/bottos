@@ -16,10 +16,27 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: producer
+ * file description:  provide a interface such as time to seconds and epoch time etc.
  * @Author: May Luo
- * @Date:   2017-12-11
+ * @Date:   2017-12-01
  * @Last Modified by:
  * @Last Modified time:
  */
-package producer
+package common
+
+import (
+	"fmt"
+	"testing"
+	"time"
+)
+
+func Test_NowToSeconds(t *testing.T) {
+	sec := NowToSeconds()
+	fmt.Println(sec)
+}
+func Test_NowToMicroseconds(t *testing.T) {
+	now := time.Now()
+	fmt.Println(now)
+	sec := TimeToMicroseconds(now)
+	fmt.Println(sec)
+}
