@@ -66,7 +66,6 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 	
 	if (nil == err) {
 		resp.Result = &api.PushTrxResponse_Result{}
-		//copy(resp.TxHash, trx.Hash().Bytes())
 		resp.Result.TrxHash = trx.Hash().Bytes()
 		resp.Result.Trx = trx
 		resp.Errcode = 0
