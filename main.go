@@ -61,9 +61,8 @@ func main() {
 
 	//for test:
 	trxTest := &types.Transaction{
-		RefBlockNum: 11,
-		Sender:      22,
-		Action:      1,
+		Cursor: 11,
+		Sender: &types.AccountName{Name:"22"},
 	}
 	trxPool.AddTransaction(trxTest)
 

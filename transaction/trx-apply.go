@@ -45,7 +45,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 }
 
 func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Transaction) {
-	var transactionExpiration = &role.TransactionExpiration{TrxHash: trx.Hash(), Expiration: trx.Expiration}
+	var transactionExpiration = &role.TransactionExpiration{TrxHash: trx.Hash(), Expiration: trx.Lifetime}
 	role.SetTransactionExpirationObjectRole(trxApplyService.stateDb, trx.Hash(), transactionExpiration)
 }
 
