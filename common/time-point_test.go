@@ -31,14 +31,12 @@ import (
 )
 
 func Test_NowToSeconds(t *testing.T) {
-	now := time.Now()
-	fmt.Println(now)
-	sec := NowToSeconds(now)
+	sec := NowToSeconds()
 	fmt.Println(sec)
 }
 func Test_NowToMicroseconds(t *testing.T) {
 	now := time.Now()
 	fmt.Println(now)
-	sec := NowToMicroseconds(now)
+	sec := TimeToMicroseconds(now)
 	fmt.Println(sec)
 }
