@@ -27,11 +27,11 @@ package chain
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/config"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -88,7 +88,7 @@ func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
 	header := &types.Header{
 		PrevBlockHash:  []byte{},
 		Number:         0,
-		Timestamp:      uint64(time.Now().Unix()),
+		Timestamp:      config.Genesis.GenesisTime,
 		MerkleRoot:     []byte{},
 		Delegate:       []byte{},
 		DelegateSign:   []byte{},

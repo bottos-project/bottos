@@ -32,7 +32,7 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
-	_"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
 	//trx "github.com/bottos-project/core/transaction"
 )
@@ -153,8 +153,7 @@ func (bc *BlockChain) HeadBlockDelegate() string {
 }
 
 func (bc *BlockChain) GenesisTimestamp() uint64 {
-	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
-	return dgp.LastBlockTime
+	return config.Genesis.GenesisTime
 }
 
 // internal
@@ -194,6 +193,8 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 // TODO
 func (bc *BlockChain) updateCoreState(block *types.Block) {
+
+	//
 }
 
 // TODO

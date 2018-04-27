@@ -3,7 +3,7 @@ package role
 import (
 	_"fmt"
 	"encoding/json"
-	"time"
+	//"time"
 
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/common"
@@ -26,9 +26,9 @@ const (
 )
 
 func getGenesisTime() uint64 {
-	t := time.Now().Unix()
-	genesisTime := (uint32(t) / config.DEFAULT_BLOCK_INTERVAL) * config.DEFAULT_BLOCK_INTERVAL
-	return uint64(genesisTime)
+	t := config.Genesis.GenesisTime
+	//genesisTime := (uint32(t) / config.DEFAULT_BLOCK_INTERVAL) * config.DEFAULT_BLOCK_INTERVAL
+	return uint64(t)
 }
 
 func CreateChainStateObjectRole(ldb *db.DBService) error {
