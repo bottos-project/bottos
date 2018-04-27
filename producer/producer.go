@@ -26,7 +26,6 @@ package producer
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
@@ -47,35 +46,6 @@ type ReporterRepo interface {
 	IsReady() bool
 }
 
-func (p *Reporter) GetSlotAtTime(current time.Time) uint32 {
-	firstSlotTime := p.GetSlotTime(1)
-
-	if common.NowToSeconds(current) < firstSlotTime {
-		return 0
-	}
-	return uint32(common.NowToSeconds(current)-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
-}
-
-func (p *Reporter) GetSlotTime(slotNum uint32) uint64 {
-
-	if slotNum == 0 {
-		return 0
-	}
-	interval := config.DEFAULT_BLOCK_INTERVAL
-
-	object, err := role.GetChainStateObjectRole(p.db)
-	if err != nil {
-		return 0
-	}
-	genesisTime := p.core.GenesisTimestamp()
-	if object.LastBlockNum == 0 {
-
-		return genesisTime + uint64(slotNum*interval)
-	}
-	headBlockAbsSlot := common.GetSecondSincEpoch(object.LastBlockTime, genesisTime) / uint64(interval)
-	headSlotTime := headBlockAbsSlot * uint64(interval)
-	return headSlotTime + uint64(slotNum*interval)
-}
 func New(b chain.BlockChainInterface, db *db.DBService) ReporterRepo {
 	return &Reporter{core: b, db: db}
 }
@@ -89,7 +59,7 @@ func (p *Reporter) isReady() bool {
 	return true
 	slotTime := p.GetSlotTime(1)
 	fmt.Println(slotTime)
-	if slotTime >= common.NowToSeconds(time.Now()) {
+	if slotTime >= common.NowToSeconds() {
 		return true
 	}
 	return false
@@ -106,7 +76,7 @@ func (p *Reporter) IsReady() bool {
 }
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
-	now := time.Now()
+	now := common.NowToSeconds()
 	slot := p.GetSlotAtTime(now)
 	scheduledTime := p.GetSlotTime(slot)
 	fmt.Println("Woker", scheduledTime, slot)
@@ -146,5 +116,4 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	block.Header.DelegateSign = block.Sign("123").Bytes()
 	p.isReporting = false
 	return block, nil
-
 }
