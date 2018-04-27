@@ -13,16 +13,9 @@ import (
 	"github.com/bottos-project/core/db"
 
 	"github.com/bottos-project/core/role"
-	//	"github.com/bottos-project/core/account"
 	"github.com/bottos-project/core/api"
-	//	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-
-	//	pro "github.com/bottos-project/core/producer"
-	//	//"github.com/bottos-project/core/p2p"
 
 	"github.com/micro/go-micro"
-	//	log "github.com/sirupsen/logrus"
 	cactor "github.com/bottos-project/core/action/actor"
 	caapi "github.com/bottos-project/core/action/actor/api"
 	"github.com/bottos-project/core/action/actor/transaction"
@@ -50,21 +43,12 @@ func main() {
 
 	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
 	cactor.InitActors(actorenv)
-	caapi.PushTransaction(2876568)
+	//caapi.PushTransaction(2876568)
 
 
-	caapi.InitTrxActorAgent()
+	//caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool(dbInst)
 	trxactor.SetTrxPool(trxPool)
-
-	//caapi.TrxActorAgentInst.PushTrxTest()
-
-	//for test:
-	trxTest := &types.Transaction{
-		Cursor: 11,
-		Sender: &types.AccountName{Name:"22"},
-	}
-	trxPool.AddTransaction(trxTest)
 
 	if config.Param.ApiServiceEnable {
 		repo := caapi.NewApiService(actorenv)

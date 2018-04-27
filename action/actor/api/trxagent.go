@@ -26,12 +26,12 @@
 package apiactor
 
 import (
-	"fmt"
-	"time"
+	//"fmt"
+	//"time"
 	//"context"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common/types"
+	//"github.com/bottos-project/core/common/types"
 	//"github.com/bottos-project/core/api"
 	//"github.com/bottos-project/core/action/message"
 )
@@ -40,41 +40,4 @@ var trxactorPid *actor.PID
 
 func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
-}
-
-func PushTransaction(trx uint64) error {
-
-	fmt.Println("exec push transaction: ", trx)
-
-	pushTrxReq := &types.Transaction{
-		Cursor: 11,
-		Sender: &types.AccountName{Name:"22"},
-	}
-
-	result, err := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
-
-	fmt.Println("rusult is =======", result, err)
-
-	//trxactorPid.Tell(pushTrxReq)
-
-	fmt.Println("exec push transaction done !!!!!!", trx)
-
-	return nil
-}
-
-type TrxActorAgent struct {
-}
-
-//type txRepository interface {
-//	CallSendTrx(account_name string, balance uint64) (string, error)
-//}
-
-var  TrxActorAgentInst *TrxActorAgent
-
-func InitTrxActorAgent() {
-    TrxActorAgentInst = NewTrxActorAgent()
-}
-
-func NewTrxActorAgent() *TrxActorAgent {
-	return &TrxActorAgent{}
 }
