@@ -26,14 +26,7 @@
 package apiactor
 
 import (
-	//"fmt"
-	//"time"
-	//"context"
-
 	"github.com/AsynkronIT/protoactor-go/actor"
-	//"github.com/bottos-project/core/common/types"
-	//"github.com/bottos-project/core/api"
-	//"github.com/bottos-project/core/action/message"
 )
 
 var trxactorPid *actor.PID
