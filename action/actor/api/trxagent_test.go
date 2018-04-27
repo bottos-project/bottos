@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"time"
 	"testing"
+	"path/filepath"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/actor/transaction"
 	"github.com/bottos-project/core/transaction"
 	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/core/db"
+	//"github.com/bottos-project/core/config"
 )
 
 var trxActorPid *actor.PID
@@ -18,19 +21,23 @@ var trxActorPid *actor.PID
 func TestPushTrxTest(t *testing.T) {
 
 	// init testing
+	dbInst := db.NewDbService("./datadir/", filepath.Join("./datadir/", "blockchain"))
+	if dbInst == nil {
+		fmt.Println("Create DB service fail")
+		//os.Exit(1)
+	}
 	trxActorPid = trxactor.NewTrxActor()
 
-	InitTrxActorAgent()
-	var trxPool = transaction.InitTrxPool()
+	//InitTrxActorAgent()
+	var trxPool = transaction.InitTrxPool(dbInst)
 	trxactor.SetTrxPool(trxPool)
 
 
 	fmt.Println("Test PushTrxTest will called")
 	
 	trxTest := &types.Transaction{
-		RefBlockNum: 11,
-		Sender:      22,
-		Action:      1,
+		Cursor: 11,
+		CursorLabel:      22,
 	}
 	
 	reqMsg := &message.PushTrxReq{
