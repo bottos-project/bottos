@@ -111,7 +111,7 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
 	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
-	head.Delegate = []byte("my")
+	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
 	block.Header.DelegateSign = block.Sign("123").Bytes()
 	p.isReporting = false
