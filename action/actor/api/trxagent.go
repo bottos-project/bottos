@@ -78,22 +78,3 @@ func InitTrxActorAgent() {
 func NewTrxActorAgent() *TrxActorAgent {
 	return &TrxActorAgent{}
 }
-
-/*
-func (h *TrxActorAgent) PushTrx(ctx context.Context, req *types.Transaction, rsp *api.PushTrxResponse) error {
-	if req == nil {
-		fmt.Println("request is nil")
-		//rsp.retCode = ??
-		return nil
-	}
-	_, err := trxactorPid.RequestFuture(req, 500*time.Millisecond).Result() // await result
-
-	if (nil != err) {
-		//copy(rsp.TxHash, req.Hash().Bytes())
-		//rsp.TxHash = req.Hash()
-		rsp.Tx = req
-	}
-	
-	return nil
-}
-*/
