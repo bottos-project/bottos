@@ -12,6 +12,7 @@ import (
 	"github.com/bottos-project/core/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/action/env"
 )
 
 
@@ -33,18 +34,18 @@ type TrxPool struct {
 }
 
 
-func InitTrxPool(roleIntf role.RoleInterface) *TrxPool {
+func InitTrxPool(env *env.ActorEnv) *TrxPool {
 	
 	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		expiration:   make(map[common.Hash]time.Time),
-		roleIntf:     roleIntf,
+		roleIntf:     env.RoleIntf,
 		
 		quit:         make(chan struct{}),		
 	}
 
-	CreateTrxApplyService(roleIntf)
+	CreateTrxApplyService(env)
 
 	go TrxPoolInst.expirationCheckLoop()
 
@@ -85,8 +86,6 @@ func (pool *TrxPool) addTransaction(trx *types.Transaction) {
 	pool.mu.Lock()
 	trxHash := trx.Hash()
 	pool.pending[trxHash] = trx
-	//pool.expiration = time.Now()
-
 	pool.mu.Unlock()
 }
 
@@ -95,8 +94,6 @@ func (pool *TrxPool) addTransaction(trx *types.Transaction) {
 func (pool *TrxPool) AddTransaction(trx *types.Transaction) {
 	pool.addTransaction(trx)
 }
-
-
 
 func (pool *TrxPool) Stop() {
 	
@@ -119,16 +116,14 @@ func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){
 
 // HandlTransactionFromFront handles a transaction from front
 func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-
 	fmt.Println("receive trx: ", trx.Hash())
-	
-    pool.CheckTransactionBaseConditionFromFront()
-	//start db session
+	pool.CheckTransactionBaseConditionFromFront()
+	//pool.stateDb.StartUndoSession()
+
 	trxApplyServiceInst.ApplyTransaction(trx)
 
 	pool.addTransaction(trx)
-
-	//revert db session
+	//pool.stateDb.Rollback()
 
 	//tell P2P actor to notify trx	
 
