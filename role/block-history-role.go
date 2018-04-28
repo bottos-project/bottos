@@ -67,7 +67,7 @@ func SetBlockHistoryRole(ldb *db.DBService, blockNumber uint32, blockHash common
 	return ldb.SetObject(BlockHistoryObjectName, key, string(jsonvalue))
 }
 
-func GetBlockHistoryByNumber(ldb *db.DBService, blockNumber uint32) (*BlockHistory, error) {
+func GetBlockHistoryRole(ldb *db.DBService, blockNumber uint32) (*BlockHistory, error) {
 	key := blockNumberToKey(blockNumber)
 	value, err := ldb.GetObject(BlockHistoryObjectName, key)
 	res := &BlockHistory{}

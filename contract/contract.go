@@ -6,47 +6,45 @@ import (
 	"fmt"
 
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/common/types"
 )
 
 type Context struct {
-	db 	*db.DBService
+	roleIntf role.RoleInterface
 	trx *types.Transaction
 }
 
 
-func CreateNativeContractAccount(ldb *db.DBService) error {
+func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
 	bto := &role.Account {
 		AccountName: config.BTO_CONTRACT_NAME,
 		CreateTime: uint64(time.Now().Unix()),
-		// Abi
 	}
-	role.SetAccountRole(ldb, bto.AccountName, bto)
+	roleIntf.SetAccount(bto.AccountName, bto)
 
 	// balance
 	balance := &role.Balance{
 		AccountName: bto.AccountName,
 		Balance: config.BTO_INIT_SUPPLY,
 	}
-	role.SetBalanceRole(ldb, bto.AccountName, balance)
+	roleIntf.SetBalance(bto.AccountName, balance)
 
 	// staked_balance
 	staked_balance := &role.StakedBalance{
 		AccountName: bto.AccountName,
 	}
-	role.SetStakedBalanceRole(ldb, bto.AccountName, staked_balance)
+	roleIntf.SetStakedBalance(bto.AccountName, staked_balance)
 
 	return nil
 }
 
 
-func CreateInitialDelegates(ldb *db.DBService) error {
+func CreateInitialDelegates(roleIntf role.RoleInterface) error {
 	initAmount := 1
 
-	coreState, _ := role.GetGlobalPropertyRole(ldb)
+	coreState, _ := roleIntf.GetCoreState()
 
 	var i uint32
 	for i = 1; i <= config.INIT_DELEGATE_NUM; i++ {
@@ -58,50 +56,50 @@ func CreateInitialDelegates(ldb *db.DBService) error {
 			AccountName: name,
 			CreateTime: uint64(time.Now().Unix()),
 		}
-		role.SetAccountRole(ldb, delegate.AccountName, delegate)
+		roleIntf.SetAccount(delegate.AccountName, delegate)
 
 		// 2, transfer
-		btoBalance, _ := role.GetBalanceRoleByAccountName(ldb, config.BTO_CONTRACT_NAME)
+		btoBalance, _ := roleIntf.GetBalance(config.BTO_CONTRACT_NAME)
 		btoBalance.Balance -= uint64(config.Genesis.InitDelegate.Balance)
 		btoBalance.Balance -= uint64(initAmount)
-		role.SetBalanceRole(ldb, btoBalance.AccountName, btoBalance)
+		roleIntf.SetBalance(btoBalance.AccountName, btoBalance)
 
 		// balance
 		balance := &role.Balance{
 			AccountName: delegate.AccountName,
 			Balance: uint64(config.Genesis.InitDelegate.Balance),
 		}
-		role.SetBalanceRole(ldb, delegate.AccountName, balance)
+		roleIntf.SetBalance(delegate.AccountName, balance)
 
 		// staked_balance
 		staked_balance := &role.StakedBalance{
 			AccountName: delegate.AccountName,
 			StakedBalance: uint64(initAmount),
 		}
-		role.SetStakedBalanceRole(ldb, delegate.AccountName, staked_balance)
+		roleIntf.SetStakedBalance(delegate.AccountName, staked_balance)
 
 		// 3, set delegate
 		delegateObj := &role.Delegate{
 			AccountName: delegate.AccountName,
 			SigningKey: config.Genesis.InitDelegate.PublicKey,
 		}
-		role.SetDelegateRole(ldb, delegateObj.AccountName, delegateObj)
+		roleIntf.SetDelegate(delegateObj.AccountName, delegateObj)
 
 		// TODO votes object
 
 		coreState.CurrentDelegates = append(coreState.CurrentDelegates, delegate.AccountName)
 	}
 
-	role.SetCoreStateRole(ldb, coreState)
+	roleIntf.SetCoreState(coreState)
 
 	fmt.Println(coreState)
 	
 	return nil
 }
 
-func InitNativeContract(ldb *db.DBService) error {
-	CreateNativeContractAccount(ldb)
-	CreateInitialDelegates(ldb)
+func InitNativeContract(roleIntf role.RoleInterface) error {
+	CreateNativeContractAccount(roleIntf)
+	CreateInitialDelegates(roleIntf)
 
 	return nil
 }

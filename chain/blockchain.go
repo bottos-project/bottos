@@ -40,6 +40,7 @@ import (
 type BlockChain struct {
 	blockDb		*db.DBService
 	stateDb		*db.DBService
+	roleIntf	role.RoleInterface
 	blockCache	*BlockChainCache
 
 	handledBlockCB HandledBlockCallback
@@ -48,7 +49,7 @@ type BlockChain struct {
 
 	chainmu sync.RWMutex
 }
-func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
+func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
 		return nil, err
@@ -58,6 +59,7 @@ func CreateBlockChain(dbInstance *db.DBService) (BlockChainInterface, error) {
 		blockDb:    dbInstance,
 		blockCache: blockCache,
 		stateDb:  dbInstance,
+		roleIntf: roleIntf,
 	}
 
 	bc.genesisBlock = bc.GetBlockByNumber(0)
@@ -133,23 +135,23 @@ func (bc *BlockChain) WriteBlock(block *types.Block) error {
 }
 
 func (bc *BlockChain) HeadBlockTime() uint64 {
-	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
-	return dgp.LastBlockTime
+	coreState, _ := bc.roleIntf.GetChainState()
+	return coreState.LastBlockTime
 }
 
 func (bc *BlockChain) HeadBlockNum() uint32 {
-	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
-	return dgp.LastBlockNum
+	coreState, _ := bc.roleIntf.GetChainState()
+	return coreState.LastBlockNum
 }
 
 func (bc *BlockChain) HeadBlockHash() common.Hash {
-	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
-	return dgp.LastBlockHash
+	coreState, _ := bc.roleIntf.GetChainState()
+	return coreState.LastBlockHash
 }
 
 func (bc *BlockChain) HeadBlockDelegate() string {
-	dgp, _ := role.GetChainStateObjectRole(bc.stateDb)
-	return dgp.CurrentDelegate
+	coreState, _ := bc.roleIntf.GetChainState()
+	return coreState.CurrentDelegate
 }
 
 func (bc *BlockChain) GenesisTimestamp() uint64 {
@@ -199,31 +201,31 @@ func (bc *BlockChain) updateCoreState(block *types.Block) {
 
 // TODO
 func (bc *BlockChain) updateChainState(block *types.Block) {
-	cs, err := role.GetChainStateObjectRole(bc.stateDb)
+	chainSate, err := bc.roleIntf.GetChainState()
 	if err != nil {
 		fmt.Println("BlockChain : GetChainStateObjectRole error")
 		return
 	}
-	cs.LastBlockNum = block.GetNumber()
-	cs.LastBlockHash = block.Hash()
-	cs.LastBlockTime = block.GetTimestamp()
-	cs.CurrentDelegate = string(block.GetDelegate())
+	chainSate.LastBlockNum = block.GetNumber()
+	chainSate.LastBlockHash = block.Hash()
+	chainSate.LastBlockTime = block.GetTimestamp()
+	chainSate.CurrentDelegate = string(block.GetDelegate())
 
-	role.SetChainStateObjectRole(bc.stateDb, cs)
+	bc.roleIntf.SetChainState(chainSate)
 }
 
 // TODO
 func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
 	// TODO  compute new LIB
-	cs, _ := role.GetChainStateObjectRole(bc.stateDb)
+	chainSate, _ := bc.roleIntf.GetChainState()
 	// for test
-	if cs.LastBlockNum > cs.LastConfirmedBlockNum + 7 {
-		cs.LastConfirmedBlockNum = cs.LastBlockNum - 7
+	if chainSate.LastBlockNum > chainSate.LastConfirmedBlockNum + 7 {
+		chainSate.LastConfirmedBlockNum = chainSate.LastBlockNum - 7
 	}
-	role.SetChainStateObjectRole(bc.stateDb, cs)
+	bc.roleIntf.SetChainState(chainSate)
 
 	// write LIB to blockDb
-	newLIB := cs.LastConfirmedBlockNum
+	newLIB := chainSate.LastConfirmedBlockNum
 	lastBlockNum := uint32(0)
 	lastBlock := bc.getBlockDbLastBlock()
 	if lastBlock != nil {
@@ -243,7 +245,7 @@ func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
 		}
 
 		// trim blockCache
-		bc.blockCache.Trim(cs.LastBlockNum, newLIB)
+		bc.blockCache.Trim(chainSate.LastBlockNum, newLIB)
 	}
 }
 

@@ -33,14 +33,14 @@ import (
 	"github.com/bottos-project/core/db"
 )
 
-const TransactionExpirationObjectName string = "transaction_expiration"
+const transactionExpirationName string = "transaction_expiration"
 
 type TransactionExpiration struct {
 	TrxHash    common.Hash `json:"trx_hash"`
 	Expiration uint64      `json:"expiration"`
 }
 
-func CreateTransactionExpirationObjectRole(ldb *db.DBService) error {
+func CreateTransactionExpirationRole(ldb *db.DBService) error {
 	return nil
 }
 
@@ -48,15 +48,15 @@ func hashToKey(hash common.Hash) string {
 	return hash.ToString()
 }
 
-func SetTransactionExpirationObjectRole(ldb *db.DBService, hash common.Hash, value *TransactionExpiration) error {
+func SetTransactionExpirationRole(ldb *db.DBService, hash common.Hash, value *TransactionExpiration) error {
 	key := hashToKey(hash)
 	jsonvalue, _ := json.Marshal(value)
-	return ldb.SetObject(TransactionExpirationObjectName, key, string(jsonvalue))
+	return ldb.SetObject(transactionExpirationName, key, string(jsonvalue))
 }
 
-func GetTransactionExpirationObjectByHash(ldb *db.DBService, hash common.Hash) (*TransactionExpiration, error) {
+func GetTransactionExpirationRoleByHash(ldb *db.DBService, hash common.Hash) (*TransactionExpiration, error) {
 	key := hashToKey(hash)
-	value, err := ldb.GetObject(TransactionExpirationObjectName, key)
+	value, err := ldb.GetObject(transactionExpirationName, key)
 	if err != nil {
 		return nil, err
 	}

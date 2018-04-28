@@ -11,8 +11,7 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/db"
-	
+	"github.com/bottos-project/core/role"
 )
 
 
@@ -27,25 +26,25 @@ var TrxPoolInst *TrxPool
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
 	expiration  map[common.Hash]time.Time    // to be delete
-	stateDb		*db.DBService
+	roleIntf	role.RoleInterface
 	
 	mu           sync.RWMutex
 	quit chan struct{}
 }
 
 
-func InitTrxPool(dbInstance *db.DBService) *TrxPool {
+func InitTrxPool(roleIntf role.RoleInterface) *TrxPool {
 	
 	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		expiration:   make(map[common.Hash]time.Time),
-		stateDb:  dbInstance,
+		roleIntf:     roleIntf,
 		
 		quit:         make(chan struct{}),		
 	}
 
-	CreateTrxApplyService(dbInstance)
+	CreateTrxApplyService(roleIntf)
 
 	go TrxPoolInst.expirationCheckLoop()
 

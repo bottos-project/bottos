@@ -37,22 +37,21 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/producer"
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/transaction"
 )
 
 type ProducerActor struct {
-	myDB *db.DBService
+	roleIntf role.RoleInterface
 	ins  producer.ReporterRepo
 }
 
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
-	ins := producer.New(env.Chain, env.Db)
+	ins := producer.New(env.Chain, env.RoleIntf)
 	props := actor.FromProducer(func() actor.Actor {
-		return &ProducerActor{env.Db, ins}
+		return &ProducerActor{env.RoleIntf, ins}
 	})
 
 	pid, err := actor.SpawnNamed(props, "ProducerActor")
@@ -110,7 +109,7 @@ func (p *ProducerActor) working() {
 		}
 		block := &types.Block{}
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
-		coreStat, err := role.GetGlobalPropertyRole(p.myDB)
+		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			fmt.Println("GetGlobalPropertyRole failed")
 			return

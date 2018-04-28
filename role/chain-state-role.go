@@ -10,7 +10,7 @@ import (
 	"github.com/bottos-project/core/config"
 )
 
-type ChainStateObject struct {
+type ChainState struct {
 	LastBlockNum				uint32				`json:"last_block_num"`
 	LastBlockHash				common.Hash			`json:"last_block_hash"`
 	LastBlockTime	       		uint64				`json:"last_block_time"`
@@ -21,8 +21,8 @@ type ChainStateObject struct {
 }
 
 const (
-	ChainStateObjectName string = "chain_state_object"
-	ChainStateObjectDefaultKey string = "chain_state_object_defkey"
+	ChainStateName string = "chain_state"
+	ChainStateDefaultKey string = "chain_state_defkey"
 )
 
 func getGenesisTime() uint64 {
@@ -31,22 +31,22 @@ func getGenesisTime() uint64 {
 	return uint64(t)
 }
 
-func CreateChainStateObjectRole(ldb *db.DBService) error {
-	object := &ChainStateObject{
+func CreateChainStateRole(ldb *db.DBService) error {
+	object := &ChainState{
 		LastBlockTime: getGenesisTime(),
 	}
-	return SetChainStateObjectRole(ldb, object)
+	return SetChainStateRole(ldb, object)
 }
 
-func SetChainStateObjectRole(ldb *db.DBService, value *ChainStateObject) error {
+func SetChainStateRole(ldb *db.DBService, value *ChainState) error {
 	jsonvalue, _ := json.Marshal(value)
 	//mt.Println("Set", ChainStateObjectDefaultKey, value)
-	return ldb.SetObject(ChainStateObjectName, ChainStateObjectDefaultKey, string(jsonvalue))
+	return ldb.SetObject(ChainStateName, ChainStateDefaultKey, string(jsonvalue))
 }
 
-func GetChainStateObjectRole(ldb *db.DBService) (*ChainStateObject, error) {
-	value, err := ldb.GetObject(ChainStateObjectName, ChainStateObjectDefaultKey)
-	res := &ChainStateObject{}
+func GetChainStateRole(ldb *db.DBService) (*ChainState, error) {
+	value, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
+	res := &ChainState{}
 	json.Unmarshal([]byte(value), res)
 	//fmt.Println("Get", ChainStateObjectDefaultKey, value)
 	return res, err

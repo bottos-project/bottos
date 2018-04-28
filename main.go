@@ -30,24 +30,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	role.Init(dbInst)
-	contract.InitNativeContract(dbInst)
+	roleIntf := role.NewRole(dbInst)
 
-	bc, err := chain.CreateBlockChain(dbInst)
+	contract.InitNativeContract(roleIntf)
+
+	bc, err := chain.CreateBlockChain(dbInst, roleIntf)
 	if err != nil {
 		fmt.Println("Create BlockChain error: ", err)
 		os.Exit(1)
 	}
 
-	txStore := txstore.NewTransactionStore(bc, dbInst)
+	txStore := txstore.NewTransactionStore(bc, roleIntf)
 
-	actorenv := &actionenv.ActorEnv{Db: dbInst, Chain: bc, TxStore: txStore}
+	actorenv := &actionenv.ActorEnv{RoleIntf: roleIntf, Chain: bc, TxStore: txStore}
 	cactor.InitActors(actorenv)
 	//caapi.PushTransaction(2876568)
 
 
 	//caapi.InitTrxActorAgent()
-	var trxPool = transaction.InitTrxPool(dbInst)
+	var trxPool = transaction.InitTrxPool(roleIntf)
 	trxactor.SetTrxPool(trxPool)
 
 	if config.Param.ApiServiceEnable {

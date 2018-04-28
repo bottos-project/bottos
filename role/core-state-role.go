@@ -45,8 +45,8 @@ type ChainConfig struct {
 }
 
 const (
-	CoreStateObjectName       string = "core_state"
-	CoreStateObjectDefaultKey string = "core_state_defkey"
+	CoreStateName       string = "core_state"
+	CoreStateDefaultKey string = "core_state_defkey"
 )
 
 func CreateCoreStateRole(ldb *db.DBService) error {
@@ -64,17 +64,16 @@ func CreateCoreStateRole(ldb *db.DBService) error {
 
 func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {
 	jsonvalue, _ := json.Marshal(value)
-	return ldb.SetObject(CoreStateObjectName, CoreStateObjectDefaultKey, string(jsonvalue))
+	return ldb.SetObject(CoreStateName, CoreStateDefaultKey, string(jsonvalue))
 }
 
-func GetGlobalPropertyRole(ldb *db.DBService) (*CoreState, error) {
-	fmt.Println("GetGlobalPropertyRole")
-	value, err := ldb.GetObject(CoreStateObjectName, CoreStateObjectDefaultKey)
+func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
+	value, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
 	if err != nil {
 		fmt.Println("failed")
 	}
 	res := &CoreState{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", CoreStateObjectDefaultKey, value)
+	fmt.Println("Get", CoreStateDefaultKey, value)
 	return res, err
 }

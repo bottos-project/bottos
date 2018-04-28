@@ -57,8 +57,8 @@ func SetBalanceRole(ldb *db.DBService, accountName string, value *Balance) error
 	return ldb.SetObject(BalanceObjectName, key, string(jsonvalue))
 }
 
-func GetBalanceRoleByAccountName(ldb *db.DBService, name string) (*Balance, error) {
-	key := name
+func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
+	key := accountName
 	value, err := ldb.GetObject(BalanceObjectName, key)
 	res := &Balance{}
 	json.Unmarshal([]byte(value), res)

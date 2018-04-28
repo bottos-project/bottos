@@ -28,7 +28,6 @@ package txstore
 import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/role"
 )
@@ -38,13 +37,13 @@ var (
 )
 
 type TransactionStore struct {
-	db *db.DBService
+	roleIntf role.RoleInterface
 	bc chain.BlockChainInterface
 }
 
-func NewTransactionStore(bc chain.BlockChainInterface, db *db.DBService) *TransactionStore {
+func NewTransactionStore(bc chain.BlockChainInterface, roleIntf role.RoleInterface) *TransactionStore {
 	ts := &TransactionStore {
-		db: db,
+		roleIntf: roleIntf,
 		bc: bc,
 	}
 	bc.RegisterHandledBlockCallback(ts.ReceiveHandledBlock)
@@ -52,7 +51,7 @@ func NewTransactionStore(bc chain.BlockChainInterface, db *db.DBService) *Transa
 }
 
 func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction {
-	blockHash, err := role.GetBlockHashByTxHash(t.db, txhash)
+	blockHash, err := t.roleIntf.GetTransactionHistory(txhash)
 	if err != nil {
 		return nil
 	}
@@ -66,15 +65,11 @@ func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction
 }
 
 func (t *TransactionStore) addTx(txhash common.Hash, blockhash common.Hash) error {
-	return role.AddTransactionHistory(t.db, txhash, blockhash)
+	return t.roleIntf.AddTransactionHistory(txhash, blockhash)
 }
 
 func (t *TransactionStore) delTx(txhash common.Hash) error {
-	key := append(TrxBlockHashPrefix, txhash.Bytes()...)
-	err := t.db.Delete(key)
-	if err != nil {
-		return err
-	}
+	// TODO
 
 	return nil
 }

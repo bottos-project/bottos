@@ -8,14 +8,14 @@ import (
 )
 
 func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) {
-	chainObject, err := GetChainStateObjectRole(ldb)
+	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		fmt.Println("err")
 		return "", err
 	}
 	fmt.Println("currentSlotNum", chainObject.CurrentAbsoluteSlot, slotNum)
 	currentSlotNum := chainObject.CurrentAbsoluteSlot + uint64(slotNum)
-	currentCoreState, err := GetGlobalPropertyRole(ldb)
+	currentCoreState, err := GetCoreStateRole(ldb)
 	fmt.Println("currentSlotNum", currentSlotNum)
 	if err != nil {
 		fmt.Println("err")

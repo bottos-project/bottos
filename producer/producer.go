@@ -31,14 +31,13 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
 )
 
 type Reporter struct {
 	isReporting bool
 	core        chain.BlockChainInterface
-	db          *db.DBService
+	roleIntf    role.RoleInterface
 }
 type ReporterRepo interface {
 	Woker(Trxs []*types.Transaction) *types.Block
@@ -46,8 +45,8 @@ type ReporterRepo interface {
 	IsReady() bool
 }
 
-func New(b chain.BlockChainInterface, db *db.DBService) ReporterRepo {
-	return &Reporter{core: b, db: db}
+func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo {
+	return &Reporter{core: b, roleIntf: roleIntf}
 }
 func (p *Reporter) isEligible() bool {
 	return true
@@ -80,7 +79,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 	slot := p.GetSlotAtTime(now)
 	scheduledTime := p.GetSlotTime(slot)
 	fmt.Println("Woker", scheduledTime, slot)
-	accountName, err1 := role.GetScheduleDelegateRole(p.db, slot)
+	accountName, err1 := p.roleIntf.GetScheduleDelegateRole(slot)
 	if err1 != nil {
 		return nil // errors.New("report Block failed")
 	}

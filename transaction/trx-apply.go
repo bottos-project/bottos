@@ -5,20 +5,19 @@ import (
 	"fmt"
 
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
 )
 
 type TrxApplyService struct {
-	stateDb *db.DBService
+	roleIntf role.RoleInterface
 }
 
 var trxApplyServiceInst *TrxApplyService
 var once sync.Once
 
-func CreateTrxApplyService(dbInstance *db.DBService) *TrxApplyService {
+func CreateTrxApplyService(roleIntf role.RoleInterface) *TrxApplyService {
 	once.Do(func() {
-		trxApplyServiceInst = &TrxApplyService{stateDb: dbInstance}
+		trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf}
 	})
 
 	return trxApplyServiceInst
@@ -33,7 +32,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transaction) bool {
-	transactionExpiration, _ := role.GetTransactionExpirationObjectByHash(trxApplyService.stateDb, trx.Hash())
+	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
 		return false
 	}
@@ -47,7 +46,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 
 func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Transaction) {
 	var transactionExpiration = &role.TransactionExpiration{TrxHash: trx.Hash(), Expiration: trx.Lifetime}
-	role.SetTransactionExpirationObjectRole(trxApplyService.stateDb, trx.Hash(), transactionExpiration)
+	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
 
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {

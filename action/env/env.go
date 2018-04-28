@@ -3,11 +3,11 @@ package env
 import (
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/chain/extra"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/role"
 )
 
 type ActorEnv struct {
-	Db      *db.DBService
-	Chain   chain.BlockChainInterface
-	TxStore *txstore.TransactionStore
+	RoleIntf	role.RoleInterface
+	Chain   	chain.BlockChainInterface
+	TxStore 	*txstore.TransactionStore
 }

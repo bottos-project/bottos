@@ -27,7 +27,6 @@ package producer
 import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/role"
 )
 
 func (p *Reporter) GetSlotAtTime(current uint64) uint32 {
@@ -46,7 +45,7 @@ func (p *Reporter) GetSlotTime(slotNum uint32) uint64 {
 	}
 	interval := config.DEFAULT_BLOCK_INTERVAL
 
-	object, err := role.GetChainStateObjectRole(p.db)
+	object, err := p.roleIntf.GetChainState()
 	if err != nil {
 		return 0
 	}

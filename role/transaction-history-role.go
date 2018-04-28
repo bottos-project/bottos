@@ -44,29 +44,29 @@
 	 return nil
  }
 
- func AddTransactionHistory(ldb *db.DBService, txhash common.Hash, blockhash common.Hash) error {
+ func AddTransactionHistoryRole(ldb *db.DBService, txhash common.Hash, blockhash common.Hash) error {
 	value := &TransactionHistory{
 		TxHash: txhash,
 		BlockHash: blockhash,
 	}
-	return SetTransactionHistoryObjectRole(ldb, txhash, value)
+	return setTransactionHistoryObjectRole(ldb, txhash, value)
  }
  
- func SetTransactionHistoryObjectRole(ldb *db.DBService, txhash common.Hash, value *TransactionHistory) error {
+ func setTransactionHistoryObjectRole(ldb *db.DBService, txhash common.Hash, value *TransactionHistory) error {
 	 key := hashToKey(txhash)
 	 jsonvalue, _ := json.Marshal(value)
 	 return ldb.SetObject(TransactionHistoryObjectName, key, string(jsonvalue))
  }
 
- func GetBlockHashByTxHash(ldb *db.DBService, txhash common.Hash) (common.Hash, error) {
-	 history, err := GetTransactionHistoryByHash(ldb, txhash)
+ func GetTransactionHistoryRole(ldb *db.DBService, txhash common.Hash) (common.Hash, error) {
+	 history, err := getTransactionHistoryByHash(ldb, txhash)
 	 if err != nil {
 		 return common.Hash{}, err
 	 }
 	 return history.BlockHash, nil
  }
  
-func GetTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
+func getTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
 	key := hash.ToHexString()
 	//fmt.Println("GetTransactionHistoryByHash key: ", key)
 	value, err := ldb.GetObject(TransactionHistoryObjectName, key)

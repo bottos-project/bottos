@@ -62,7 +62,7 @@ func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error
 	return ldb.SetObject(AccountObjectName, key, string(jsonvalue))
 }
 
-func GetAccountRoleByName(ldb *db.DBService, accountName string) (*Account, error) {
+func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	key := accountNameToKey(accountName)
 	value, err := ldb.GetObject(AccountObjectName, key)
 	res := &Account{}
