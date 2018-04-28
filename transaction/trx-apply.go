@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/chain"
