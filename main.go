@@ -32,7 +32,7 @@ func main() {
 
 	roleIntf := role.NewRole(dbInst)
 
-	contract.InitNativeContract(roleIntf)
+	contract.NewNativeContract(roleIntf)
 
 	bc, err := chain.CreateBlockChain(dbInst, roleIntf)
 	if err != nil {
