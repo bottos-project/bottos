@@ -39,7 +39,6 @@ import (
 
 type BlockChain struct {
 	blockDb		*db.DBService
-	stateDb		*db.DBService
 	roleIntf	role.RoleInterface
 	blockCache	*BlockChainCache
 
@@ -58,7 +57,6 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (Bl
 	bc := &BlockChain{
 		blockDb:    dbInstance,
 		blockCache: blockCache,
-		stateDb:  dbInstance,
 		roleIntf: roleIntf,
 	}
 
@@ -322,7 +320,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	// TODO db lock
 
-	fmt.Printf("InsertBlock: hash: %x, number:%v\n", block.Hash(), block.GetNumber())
+	fmt.Printf("InsertBlock: hash: %x, number:%v, trxn:%v\n", block.Hash(), block.GetNumber(), len(block.Transactions))
 
 	err := bc.ValidateBlock(block)
 	if err != nil {
