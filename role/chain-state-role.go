@@ -39,15 +39,25 @@ func CreateChainStateRole(ldb *db.DBService) error {
 }
 
 func SetChainStateRole(ldb *db.DBService, value *ChainState) error {
-	jsonvalue, _ := json.Marshal(value)
-	//mt.Println("Set", ChainStateObjectDefaultKey, value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
 	return ldb.SetObject(ChainStateName, ChainStateDefaultKey, string(jsonvalue))
 }
 
 func GetChainStateRole(ldb *db.DBService) (*ChainState, error) {
 	value, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &ChainState{}
 	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", ChainStateObjectDefaultKey, value)
-	return res, err
+	if err != nil {
+		return nil, err
+	}
+	
+	return res, nil
 }

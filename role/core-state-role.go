@@ -27,7 +27,6 @@ package role
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/bottos-project/core/db"
 )
@@ -63,17 +62,25 @@ func CreateCoreStateRole(ldb *db.DBService) error {
 }
 
 func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
 	return ldb.SetObject(CoreStateName, CoreStateDefaultKey, string(jsonvalue))
 }
 
 func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
 	value, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
 	if err != nil {
-		fmt.Println("failed")
+		return nil, err
 	}
+
 	res := &CoreState{}
-	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", CoreStateDefaultKey, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

@@ -27,7 +27,7 @@ package role
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/core/db"
 )
@@ -58,25 +58,43 @@ func CreateDelegateRole(ldb *db.DBService) error {
 }
 
 func SetDelegateRole(ldb *db.DBService, key string, value *Delegate) error {
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
 	return ldb.SetObject(DelegateObjectName, key, string(jsonvalue))
 }
 
 func GetDelegateRoleByAccountName(ldb *db.DBService, key string) (*Delegate, error) {
 	value, err := ldb.GetObject(DelegateObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &Delegate{}
-	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 
 }
 func GetDelegateRoleBySignKey(ldb *db.DBService, keyValue string) (*Delegate, error) {
 
 	value, err := ldb.GetObjectByIndex(DelegateObjectName, DelegateObjectIndexName, keyValue)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &Delegate{}
 	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", keyValue, value)
-	return res, err
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 //func GetDelegates(ldb *db.DBService) []*Delegate {

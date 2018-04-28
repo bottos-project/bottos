@@ -50,8 +50,15 @@ func blockNumberToKey(blockNumber uint32) string {
 func CreateBlockHistoryRole(ldb *db.DBService) error {
 	for i := 0; i < 65536; i++ {
 		value := &BlockHistory{}
-		jsonvalue, _ := json.Marshal(value)
-		ldb.SetObject(BlockHistoryObjectName, blockNumberToKey(uint32(i)), string(jsonvalue))
+		jsonvalue, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+
+		err = ldb.SetObject(BlockHistoryObjectName, blockNumberToKey(uint32(i)), string(jsonvalue))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -63,16 +70,25 @@ func SetBlockHistoryRole(ldb *db.DBService, blockNumber uint32, blockHash common
 		BlockNumber: blockNumber,
 		BlockHash: blockHash,
 	}
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
 	return ldb.SetObject(BlockHistoryObjectName, key, string(jsonvalue))
 }
 
 func GetBlockHistoryRole(ldb *db.DBService, blockNumber uint32) (*BlockHistory, error) {
 	key := blockNumberToKey(blockNumber)
 	value, err := ldb.GetObject(BlockHistoryObjectName, key)
+	if err != nil {
+		return nil, err
+	}
 	res := &BlockHistory{}
-	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
   

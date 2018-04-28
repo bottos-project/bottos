@@ -27,7 +27,6 @@ package role
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/bottos-project/core/db"
 )
@@ -53,17 +52,27 @@ func CreateBalanceRole(ldb *db.DBService) error {
 
 func SetBalanceRole(ldb *db.DBService, accountName string, value *Balance) error {
 	key := accountName
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
 	return ldb.SetObject(BalanceObjectName, key, string(jsonvalue))
 }
 
 func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 	key := accountName
 	value, err := ldb.GetObject(BalanceObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &Balance{}
-	json.Unmarshal([]byte(value), res)
-	fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func CreateStakedBalanceRole(ldb *db.DBService) error {
@@ -72,15 +81,26 @@ func CreateStakedBalanceRole(ldb *db.DBService) error {
 
 func SetStakedBalanceRole(ldb *db.DBService, accountName string, value *StakedBalance) error {
 	key := accountName
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
 	return ldb.SetObject(StakedBalanceObjectName, key, string(jsonvalue))
 }
 
 func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance, error) {
 	key := name
 	value, err := ldb.GetObject(StakedBalanceObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &StakedBalance{}
-	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
