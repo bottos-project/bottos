@@ -152,6 +152,11 @@ func (bc *BlockChain) HeadBlockDelegate() string {
 	return coreState.CurrentDelegate
 }
 
+func (bc *BlockChain) LastConfirmedBlockNum() uint32 {
+	coreState, _ := bc.roleIntf.GetChainState()
+	return coreState.LastConfirmedBlockNum
+}
+
 func (bc *BlockChain) GenesisTimestamp() uint64 {
 	return config.Genesis.GenesisTime
 }

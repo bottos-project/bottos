@@ -125,19 +125,69 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 	}
 
 	resp.Result = &api.QueryBlockResponse_Result{}
-	resp.Result.BlockHash = response.Block.Hash().ToHexString()
+	hash := response.Block.Hash()
+	resp.Result.BlockHash = hash.ToHexString()
 	resp.Result.BlockNumber = response.Block.GetNumber()
-	resp.Result.BlockLabel = 1234567
+	resp.Result.BlockLabel = hash.Label()
 	//resp.BlockHash = response.Block.Hash().ToHexString()
 	//resp.BlockNumber = response.Block.GetNumber()
 	resp.Errcode = 0
 	return nil
 }
 
-func (h *ApiService) QueryChainInfo(ctx context.Context, in *api.QueryChainInfoRequest, out *api.QueryChainInfoResponse) error {
+func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfoRequest, resp *api.QueryChainInfoResponse) error {
+	msgReq := &message.QueryChainInfoReq{}
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	if err != nil {
+		resp.Errcode = 1
+		return nil
+	}
+
+	response := res.(*message.QueryChainInfoResp)
+	if response.Error != nil {
+		resp.Errcode = 2
+		return nil
+	}
+
+	resp.Result = &api.QueryChainInfoResponse_Result{}
+	resp.Result.HeadBlockNum = response.HeadBlockNum
+	resp.Result.LastConfirmedBlockNum = response.LastConfirmedBlockNum
+	resp.Result.HeadBlockHash = response.HeadBlockHash.Bytes()
+	resp.Result.HeadBlockTime = response.HeadBlockTime
+	resp.Result.HeadBlockDelegate = response.HeadBlockDelegate
+	resp.Errcode = 0
 	return nil
 }
 
-func (h *ApiService) QueryAccount(ctx context.Context, in *api.QueryAccountRequest, out *api.QueryAccountResponse) error {
+func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequest, resp *api.QueryAccountResponse) error {
+	name := req.AccountName
+	_, err := h.env.RoleIntf.GetAccount(name)
+	if err != nil {
+		resp.Errcode = 1
+		resp.Msg = "Account Not Found"
+		return nil
+	}
+
+	balance, err := h.env.RoleIntf.GetBalance(name)
+	if err != nil {
+		resp.Errcode = 1
+		resp.Msg = "Balance Not Found"
+		return nil
+	}
+
+	stakedBalance, err := h.env.RoleIntf.GetStakedBalance(name)
+	if err != nil {
+		resp.Errcode = 1
+		resp.Msg = "Staked Balance Not Found"
+		return nil
+	}
+
+	resp.Result = &api.QueryAccountResponse_Result{}
+	resp.Result.AccountName = name
+	resp.Result.Balance = balance.Balance
+	resp.Result.StakedBalance = stakedBalance.StakedBalance
+	resp.Errcode = 0
+	return nil
+
 	return nil
 }

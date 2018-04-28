@@ -93,6 +93,13 @@ func (h *Hash) SetBytes(b []byte) {
 	copy(h[HashLength-len(b):], b)
 }
 
+func (h *Hash) Label() uint32 {
+	var  chainCursorLabel uint32
+	chainCursorLabel  = (uint32)(h[HashLength-1]) + (uint32)(h[HashLength-2])<<8 + (uint32)(h[HashLength-3])<<16 + (uint32)(h[HashLength-4])<<24
+
+	return chainCursorLabel
+}
+
 func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
 }

@@ -40,6 +40,29 @@ type QueryBlockResp struct {
 	Error error
 }
 
+type QueryChainInfoReq struct {
+}
+
+type QueryChainInfoResp struct {
+	HeadBlockNum          uint32
+	LastConfirmedBlockNum uint32
+	HeadBlockHash         common.Hash
+	HeadBlockTime         uint64
+	HeadBlockDelegate     string
+	Error error
+}
+
+type QueryAccountReq struct {
+	AccountName	string
+}
+
+type QueryAccountResp struct {
+	AccountName   string
+	Balance       uint64
+	StakedBalance uint64
+	Error error
+}
+
 type InsertBlockReq struct {
 	Block *types.Block
 }
