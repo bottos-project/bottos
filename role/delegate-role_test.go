@@ -33,7 +33,7 @@ import (
 )
 
 func TestDelegate_writedb(t *testing.T) {
-	ins := db.NewDbService("./file", "./file/db.db")
+	ins := db.NewDbService("./file1", "./file1/db.db")
 	err := CreateDelegateRole(ins)
 	if err != nil {
 		fmt.Println(err)
@@ -63,7 +63,7 @@ func TestDelegate_writedb(t *testing.T) {
 }
 
 func TestDelegate_WritedbTheSameKey(t *testing.T) {
-	ins := db.NewDbService("./file1", "./file/db2.db")
+	ins := db.NewDbService("./file2", "./file2/db2.db")
 	err := CreateDelegateRole(ins)
 	if err != nil {
 		fmt.Println(err)

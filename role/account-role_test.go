@@ -46,9 +46,9 @@ func TestAccount_writedb(t *testing.T) {
 		VMType:              	0,
 		VMVersion:            	1,
 		CodeVersion:           	common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
-		CreateDate:           	uint64(time.Now().Unix()),
-		Code:					[]byte{},
-		Abi:					[]byte{},
+		CreateTime:           	uint64(time.Now().Unix()),
+		ContractCode:			[]byte{},
+		ContractAbi:			[]byte{},
 	}
 	value2 := &Account{
 		AccountName:           	"account2",
@@ -56,9 +56,9 @@ func TestAccount_writedb(t *testing.T) {
 		VMType:              	0,
 		VMVersion:            	1,
 		CodeVersion:           	common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
-		CreateDate:           	uint64(time.Now().Unix() + 1000),
-		Code:					[]byte{},
-		Abi:					[]byte{},
+		CreateTime:           	uint64(time.Now().Unix() + 1000),
+		ContractCode:			[]byte{},
+		ContractAbi:			[]byte{},
 	}
 	err = SetAccountRole(ins, value1.AccountName, value1)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestAccount_writedb(t *testing.T) {
 	}
 
 	var value *Account
-	value, err = GetAccountRoleByName(ins, value1.AccountName)
+	value, err = GetAccountRole(ins, value1.AccountName)
 	if err != nil {
 		t.Fatal("GetAccountRoleByName", err)
 	}
