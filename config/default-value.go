@@ -38,3 +38,5 @@ const BTO_INIT_SUPPLY uint64 = 1000000000
 
 const INIT_DELEGATE_NUM uint32 = 19
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
+
+const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
