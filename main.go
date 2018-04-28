@@ -48,7 +48,7 @@ func main() {
 
 
 	//caapi.InitTrxActorAgent()
-	var trxPool = transaction.InitTrxPool(roleIntf)
+	var trxPool = transaction.InitTrxPool(actorenv)
 	trxactor.SetTrxPool(trxPool)
 
 	if config.Param.ApiServiceEnable {
