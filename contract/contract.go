@@ -78,7 +78,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 	// execute trxs
 	for _, trx := range trxs {
-		ctx := &Context{roleIntf: roleIntf, Trx: trx}
+		ctx := &Context{RoleIntf: roleIntf, Trx: trx}
 		err := ncIntf.ExecuteNativeContract(ctx)
 		if err != nil {
 			fmt.Printf("NativeContractInitChain Error: ", trx, err)

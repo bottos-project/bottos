@@ -6,6 +6,6 @@ import (
 )
 
 type Context struct {
-	roleIntf role.RoleInterface
+	RoleIntf role.RoleInterface
 	Trx *types.Transaction
 }
