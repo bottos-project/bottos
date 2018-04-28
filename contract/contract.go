@@ -103,6 +103,11 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
+	_, err := roleIntf.GetAccount(config.BOTTOS_CONTRACT_NAME)
+	if err == nil {
+		return nil
+	}
+
 	bto := &role.Account {
 		AccountName: config.BOTTOS_CONTRACT_NAME,
 		CreateTime: uint64(time.Now().Unix()),

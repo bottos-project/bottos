@@ -55,13 +55,9 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
 
 
 func check_account(RoleIntf role.RoleInterface, name string) bool {
-	ac, _ := RoleIntf.GetAccount(name)
-	if ac == nil {
-		return false
-	}
-
-	balance, _ := RoleIntf.GetBalance(name)
-	if balance == nil {
+	_, err := RoleIntf.GetAccount(name)
+	if err != nil {
+		// not exist
 		return false
 	}
 
@@ -134,8 +130,12 @@ func transfer(ctx *Context) error {
 	fmt.Println("transfer param: ", transfer)
 
 	// check account name
-	if !check_account(ctx.RoleIntf, transfer.From) || !check_account(ctx.RoleIntf, transfer.To) {
-		return fmt.Errorf("Account Not Exist")
+	if !check_account(ctx.RoleIntf, transfer.From) {
+		return fmt.Errorf("From Account Not Exist")
+	}
+
+	if !check_account(ctx.RoleIntf, transfer.To) {
+		return fmt.Errorf("To Account Not Exist")
 	}
 
 	// TODO: check from auth
