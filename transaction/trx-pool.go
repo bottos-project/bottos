@@ -127,10 +127,16 @@ func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	
 	if (!pool.CheckTransactionBaseConditionFromFront()) {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
+
+		return
 	}
 	//pool.stateDb.StartUndoSession()
 
-	trxApplyServiceInst.ApplyTransaction(trx)
+	result , _ := trxApplyServiceInst.ApplyTransaction(trx)
+	if (!result) {
+		fmt.Println("apply trx  error, trx: ", trx.Hash())
+		return
+	}
 
 	pool.addTransaction(trx)
 	//pool.stateDb.Rollback()
