@@ -56,7 +56,7 @@ func (p *Reporter) isReady() bool {
 		return false
 	}
 	return true
-	slotTime := p.GetSlotTime(1)
+	slotTime := p.roleIntf.GetSlotTime(1)
 	fmt.Println(slotTime)
 	if slotTime >= common.NowToSeconds() {
 		return true
@@ -76,8 +76,8 @@ func (p *Reporter) IsReady() bool {
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := common.NowToSeconds()
-	slot := p.GetSlotAtTime(now)
-	scheduledTime := p.GetSlotTime(slot)
+	slot := p.roleIntf.GetSlotAtTime(now)
+	scheduledTime := p.roleIntf.GetSlotTime(slot)
 	fmt.Println("Woker", scheduledTime, slot)
 	accountName, err1 := p.roleIntf.GetScheduleDelegateRole(slot)
 	if err1 != nil {

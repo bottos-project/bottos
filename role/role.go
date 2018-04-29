@@ -58,10 +58,13 @@ type RoleInterface interface {
 	GetTransactionHistory(txHash common.Hash) (common.Hash, error)
 	SetTransactionExpiration(txHash common.Hash, value *TransactionExpiration) error
 	GetTransactionExpiration(txHash common.Hash) (*TransactionExpiration, error)
+
+	GetSlotAtTime(current uint64) uint32
+	GetSlotTime(slotNum uint32) uint64
 }
 
 func NewRole(db *db.DBService) RoleInterface {
-	r := &Role{Db:db}
+	r := &Role{Db: db}
 
 	r.initRole()
 
@@ -148,8 +151,7 @@ func (r *Role) GetTransactionExpiration(txHash common.Hash) (*TransactionExpirat
 	return GetTransactionExpirationRoleByHash(r.Db, txHash)
 }
 
-
-func (r *Role)initRole() {
+func (r *Role) initRole() {
 	CreateChainStateRole(r.Db)
 	CreateCoreStateRole(r.Db)
 

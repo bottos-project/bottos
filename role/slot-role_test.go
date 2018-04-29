@@ -22,7 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
-package producer
+package role
 
 import (
 	"fmt"
@@ -31,34 +31,36 @@ import (
 
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/core/role"
 )
 
 func startup() *Reporter {
+	config.LoadConfig()
 	dbInst := db.NewDbService("./temp/db", "./temp/codedb")
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
 	}
-	bc, err := chain.CreateBlockChain(dbInst)
+	roleIntf := role.NewRole(dbInst)
+	bc, err := chain.CreateBlockChain(dbInst, roleIntf)
 	if err != nil {
 		fmt.Println("Create DB service fail")
 	}
-	reportIns := &Reporter{false, bc, dbInst}
+	reportIns := &Reporter{false, bc, roleIntf}
 	return reportIns
 }
-func tearDown(r *Reporter) {
-	r.db.Close()
-}
+
 func TestReporter_GetSlotAtTime(t *testing.T) {
 	ins := startup()
 	cbegin := time.Time{}
-	slot := ins.GetSlotAtTime(cbegin)
+	slot := ins.GetSlotAtTime(uint64(cbegin.Unix()))
 	fmt.Println(slot)
 	cUnix := cbegin.Unix()
 	fmt.Println(cUnix)
 	//	slot = ins.GetSlotAtTime(cUnix)
 	//	fmt.Println(slot)
-	now := common.NowToSeconds(time.Now().Unix())
+	now := common.NowToSeconds()
 	slot = ins.GetSlotAtTime(now)
 	fmt.Println(slot)
 
