@@ -13,6 +13,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/core/config"
 )
 
 
@@ -103,9 +104,12 @@ func (pool *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-func (pool *TrxPool)CheckTransactionBaseConditionFromFront(){
+func (pool *TrxPool)CheckTransactionBaseConditionFromFront() bool {
 
-	/* check max pending trx num */	
+	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(pool.pending))) {
+		return false
+	}
+	return true
 }
 
 
@@ -117,8 +121,13 @@ func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){
 
 // HandlTransactionFromFront handles a transaction from front
 func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	fmt.Println("receive trx: ", trx.Hash())
-	pool.CheckTransactionBaseConditionFromFront()
+	fmt.Println("receive trx: ",trx, "hash: ", trx.Hash())
+
+	fmt.Printf("%s",trx.Param)
+	
+	if (!pool.CheckTransactionBaseConditionFromFront()) {
+		fmt.Println("check base condition  error, trx: ", trx.Hash())
+	}
 	//pool.stateDb.StartUndoSession()
 
 	trxApplyServiceInst.ApplyTransaction(trx)

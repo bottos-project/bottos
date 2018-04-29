@@ -40,3 +40,6 @@ const INIT_DELEGATE_NUM uint32 = 19
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
 
 const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
+
+
+const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
