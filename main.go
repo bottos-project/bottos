@@ -24,6 +24,12 @@ import (
 )
 
 func main() {
+	err := config.LoadConfig()
+	if err != nil {
+		fmt.Println("Load config fail")
+		os.Exit(1)
+	}
+
 	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
