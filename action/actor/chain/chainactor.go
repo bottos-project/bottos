@@ -110,7 +110,8 @@ func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.Inser
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 	if err == nil {
-		//trxactorPid.Tell()
+		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+		trxactorPid.Tell(req)
 	}
 }
 
