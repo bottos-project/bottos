@@ -27,7 +27,6 @@ package role
 
 import (
 	"encoding/json"
-	_ "fmt"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/db"
@@ -50,7 +49,11 @@ func hashToKey(hash common.Hash) string {
 
 func SetTransactionExpirationRole(ldb *db.DBService, hash common.Hash, value *TransactionExpiration) error {
 	key := hashToKey(hash)
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
 	return ldb.SetObject(transactionExpirationName, key, string(jsonvalue))
 }
 
@@ -60,8 +63,12 @@ func GetTransactionExpirationRoleByHash(ldb *db.DBService, hash common.Hash) (*T
 	if err != nil {
 		return nil, err
 	}
+
 	res := &TransactionExpiration{}
-	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

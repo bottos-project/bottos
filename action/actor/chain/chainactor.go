@@ -95,6 +95,8 @@ func (self *ChainActor) Receive(context actor.Context) {
 		self.HandleQueryTrxReq(context, msg)
 	case *message.QueryBlockReq:
 		self.HandleQueryBlockReq(context, msg)
+	case *message.QueryChainInfoReq:
+		self.HandleQueryChainInfoReq(context, msg)
 	}
 }
 
@@ -137,6 +139,18 @@ func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.Quer
 		} else {
 			resp.Block = block
 		}
+		ctx.Sender().Request(resp, ctx.Self())
+	}
+}
+
+func (self *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.QueryChainInfoReq) {
+	if ctx.Sender() != nil {
+		resp := &message.QueryChainInfoResp{}
+		resp.HeadBlockNum = actorEnv.Chain.HeadBlockNum()
+		resp.HeadBlockHash = actorEnv.Chain.HeadBlockHash()
+		resp.HeadBlockTime = actorEnv.Chain.HeadBlockTime()
+		resp.HeadBlockDelegate = actorEnv.Chain.HeadBlockDelegate()
+		resp.LastConfirmedBlockNum = actorEnv.Chain.LastConfirmedBlockNum()
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 }

@@ -30,7 +30,6 @@ import (
 	"encoding/json"
 	"bytes"
 	"io/ioutil"
-	"os"
 )
 
 const (
@@ -70,36 +69,37 @@ type InitDelegate struct {
 	Balance					uint32				`json:"balance"`
 }
 
-func init() {
+func LoadConfig() error {
 	file, e := loadConfigJson(CONFIG_FILE_NAME)
 	if e != nil {
 		fmt.Println("Read config file error: ", e)
-		os.Exit(1)
+		return e
 	}
 
 	param := Parameter{}
 	e = json.Unmarshal(file, &param)
 	if e != nil {
 		fmt.Println("Unmarshal config file error: ", e)
-		os.Exit(1)
+		return e
 	}
 	Param = &param
 
 	file, e = loadConfigJson(param.GenesisJson)
 	if e != nil {
 		fmt.Println("Read genesis file error: ", e)
-		os.Exit(1)
+		return e
 	}
 
 	genesisConfig := GenesisConfig{}
 	e = json.Unmarshal(file, &genesisConfig)
 	if e != nil {
 		fmt.Println("Unmarshal genesis file error: ", e)
-		os.Exit(1)
+		return e
 	}
 	Genesis = &genesisConfig
 
 	fmt.Println(Param, Genesis)
+	return nil
 }
 
 func loadConfigJson(fn string) ([]byte, error) {

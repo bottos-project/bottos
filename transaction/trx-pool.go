@@ -84,9 +84,10 @@ func (pool *TrxPool) expirationCheckLoop() {
 // expirationCheckLoop is periodically check exceed time transaction, then remove it
 func (pool *TrxPool) addTransaction(trx *types.Transaction) {	
 	pool.mu.Lock()
+	defer pool.mu.Unlock()
+
 	trxHash := trx.Hash()
 	pool.pending[trxHash] = trx
-	pool.mu.Unlock()
 }
 
 

@@ -24,6 +24,12 @@ import (
 )
 
 func main() {
+	err := config.LoadConfig()
+	if err != nil {
+		fmt.Println("Load config fail")
+		os.Exit(1)
+	}
+
 	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
@@ -31,21 +37,28 @@ func main() {
 	}
 
 	roleIntf := role.NewRole(dbInst)
+	nc, err := contract.NewNativeContract(roleIntf)
+	if err != nil {
+		fmt.Println("Create Native Contract error: ", err)
+		os.Exit(1)
+	}
 
-	contract.NewNativeContract(roleIntf)
-
-	bc, err := chain.CreateBlockChain(dbInst, roleIntf)
+	chain, err := chain.CreateBlockChain(dbInst, roleIntf)
 	if err != nil {
 		fmt.Println("Create BlockChain error: ", err)
 		os.Exit(1)
 	}
 
-	txStore := txstore.NewTransactionStore(bc, roleIntf)
+	txStore := txstore.NewTransactionStore(chain, roleIntf)
 
-	actorenv := &actionenv.ActorEnv{RoleIntf: roleIntf, Chain: bc, TxStore: txStore}
+	actorenv := &actionenv.ActorEnv{
+		RoleIntf:	roleIntf, 
+		Chain:		chain, 
+		TxStore:	txStore,
+		NcIntf:		nc,
+	}
 	cactor.InitActors(actorenv)
 	//caapi.PushTransaction(2876568)
-
 
 	//caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool(actorenv)

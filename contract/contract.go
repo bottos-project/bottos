@@ -78,10 +78,10 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 	// execute trxs
 	for _, trx := range trxs {
-		ctx := &Context{roleIntf: roleIntf, Trx: trx}
+		ctx := &Context{RoleIntf: roleIntf, Trx: trx}
 		err := ncIntf.ExecuteNativeContract(ctx)
 		if err != nil {
-			fmt.Printf("NativeContractInitChain Error: ", trx, err)
+			fmt.Println("NativeContractInitChain Error: ", trx, err)
 			//return err
 			break
 		}
@@ -103,6 +103,11 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
+	_, err := roleIntf.GetAccount(config.BOTTOS_CONTRACT_NAME)
+	if err == nil {
+		return nil
+	}
+
 	bto := &role.Account {
 		AccountName: config.BOTTOS_CONTRACT_NAME,
 		CreateTime: uint64(time.Now().Unix()),

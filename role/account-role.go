@@ -27,7 +27,6 @@ package role
 
 import (
 	"encoding/json"
-	_"fmt"
 
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/common"
@@ -58,16 +57,26 @@ func accountNameToKey(name string) string {
 
 func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error {
 	key := accountNameToKey(accountName)
-	jsonvalue, _ := json.Marshal(value)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
 	return ldb.SetObject(AccountObjectName, key, string(jsonvalue))
 }
 
 func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	key := accountNameToKey(accountName)
 	value, err := ldb.GetObject(AccountObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &Account{}
-	json.Unmarshal([]byte(value), res)
-	//fmt.Println("Get", key, value)
-	return res, err
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
  

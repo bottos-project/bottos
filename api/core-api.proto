@@ -69,7 +69,7 @@ message QueryChainInfoResponse{
 		uint32 			last_confirmed_block_num		= 2;
 		bytes 			head_block_hash					= 3;
 		uint64 			head_block_time					= 4;
-		string 			head_lock_delegate				= 5;
+		string 			head_block_delegate				= 5;
 	}
 }
 

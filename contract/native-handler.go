@@ -54,33 +54,10 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
 }
 
 
-type NewAccountParam struct {
-	Creator		string		`json:"creator"`
-	Name		string		`json:"name"`
-	Pubkey		string 		`json:"pubkey"`
-	Deposit		uint64		`json:"deposit"`
-}
-
-type TransferParam struct {
-	From		string		`json:"from"`
-	To			string		`json:"to"`
-	Value		uint64		`json:"value"`
-}
-
-type SetDelegateParam struct {
-	Name		string		`json:"name"`
-	Pubkey		string 		`json:"pubkey"`
-	// TODO CONFIG
-}
-
-func check_account(roleIntf role.RoleInterface, name string) bool {
-	ac, _ := roleIntf.GetAccount(name)
-	if ac == nil {
-		return false
-	}
-
-	balance, _ := roleIntf.GetBalance(name)
-	if balance == nil {
+func check_account(RoleIntf role.RoleInterface, name string) bool {
+	_, err := RoleIntf.GetAccount(name)
+	if err != nil {
+		// not exist
 		return false
 	}
 
@@ -99,16 +76,16 @@ func newaccount(ctx *Context) error {
 	// TODO: check from auth
 
 	// check creator
-	if !check_account(ctx.roleIntf, newaccount.Creator) {
+	if !check_account(ctx.RoleIntf, newaccount.Creator) {
 		return fmt.Errorf("Creator Account Not Exist")
 	}
 
 	//check name
-	if check_account(ctx.roleIntf, newaccount.Name) {
+	if check_account(ctx.RoleIntf, newaccount.Name) {
 		return fmt.Errorf("Account Exist")
 	}
 
-	chainState, _ := ctx.roleIntf.GetChainState()
+	chainState, _ := ctx.RoleIntf.GetChainState()
 
 	// 1, create account
 	account := &role.Account {
@@ -116,26 +93,26 @@ func newaccount(ctx *Context) error {
 		PublicKey: []byte(newaccount.Pubkey),
 		CreateTime: chainState.LastBlockTime,
 	}
-	ctx.roleIntf.SetAccount(account.AccountName, account)
+	ctx.RoleIntf.SetAccount(account.AccountName, account)
 
 	// 2, transfer
-	creatorBalance, _ := ctx.roleIntf.GetBalance(newaccount.Creator)
+	creatorBalance, _ := ctx.RoleIntf.GetBalance(newaccount.Creator)
 	creatorBalance.Balance -= uint64(newaccount.Deposit)
-	ctx.roleIntf.SetBalance(newaccount.Creator, creatorBalance)
+	ctx.RoleIntf.SetBalance(newaccount.Creator, creatorBalance)
 
 	// balance
 	balance := &role.Balance{
 		AccountName: newaccount.Name,
 		Balance: 0,
 	}
-	ctx.roleIntf.SetBalance(newaccount.Name, balance)
+	ctx.RoleIntf.SetBalance(newaccount.Name, balance)
 
 	// staked_balance
 	staked_balance := &role.StakedBalance{
 		AccountName: newaccount.Name,
 		StakedBalance: uint64(newaccount.Deposit),
 	}
-	ctx.roleIntf.SetStakedBalance(newaccount.Name, staked_balance)
+	ctx.RoleIntf.SetStakedBalance(newaccount.Name, staked_balance)
 
 	fmt.Println(account, balance, staked_balance)
 
@@ -153,27 +130,31 @@ func transfer(ctx *Context) error {
 	fmt.Println("transfer param: ", transfer)
 
 	// check account name
-	if !check_account(ctx.roleIntf, transfer.From) || !check_account(ctx.roleIntf, transfer.To) {
-		return fmt.Errorf("Account Not Exist")
+	if !check_account(ctx.RoleIntf, transfer.From) {
+		return fmt.Errorf("From Account Not Exist")
+	}
+
+	if !check_account(ctx.RoleIntf, transfer.To) {
+		return fmt.Errorf("To Account Not Exist")
 	}
 
 	// TODO: check from auth
 
 	// check funds
-	from, _ := ctx.roleIntf.GetBalance(transfer.From)
+	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
 	if from.Balance < transfer.Value {
 		return fmt.Errorf("Insufficient Funds")
 	}
-	to, _ := ctx.roleIntf.GetBalance(transfer.To)
+	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
 	
 	from.Balance -= transfer.Value
 	to.Balance += transfer.Value
 
-	err = ctx.roleIntf.SetBalance(from.AccountName, from)
+	err = ctx.RoleIntf.SetBalance(from.AccountName, from)
 	if err != nil {
 		return fmt.Errorf("Transfer Error")
 	}
-	err = ctx.roleIntf.SetBalance(to.AccountName, to)
+	err = ctx.RoleIntf.SetBalance(to.AccountName, to)
 	if err != nil {
 		return fmt.Errorf("Transfer Error")
 	}
@@ -200,11 +181,11 @@ func setdelegate(ctx *Context) error {
 	// TODO: check from auth
 
 	// check account name
-	if !check_account(ctx.roleIntf, param.Name) {
+	if !check_account(ctx.RoleIntf, param.Name) {
 		return fmt.Errorf("Account Not Exist")
 	}
 
-	_, err = ctx.roleIntf.GetDelegateByAccountName(param.Name)
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
 
 	if err != nil {
 		// new delegate
@@ -212,7 +193,7 @@ func setdelegate(ctx *Context) error {
 			AccountName: param.Name,
 			SigningKey: param.Pubkey,
 		}
-		ctx.roleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
+		ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
 		fmt.Println(newdelegate)
 		// TODO votes object
 	} else {
