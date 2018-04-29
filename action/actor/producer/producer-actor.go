@@ -44,7 +44,7 @@ import (
 
 type ProducerActor struct {
 	roleIntf role.RoleInterface
-	ins  producer.ReporterRepo
+	ins      producer.ReporterRepo
 }
 
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
@@ -89,13 +89,6 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 func (p *ProducerActor) Receive(context actor.Context) {
 
 	p.handleSystemMsg(context)
-
-	//	switch msg := context.Message().(type) {
-
-	//	case *message.GetAllPendingTrxRsp:
-	//		fmt.Println("receive pending........", msg)
-
-	//	}
 }
 func (p *ProducerActor) working() {
 	fmt.Println("begin to working")

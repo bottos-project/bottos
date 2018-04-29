@@ -42,6 +42,7 @@ type RoleInterface interface {
 
 	SetAccount(name string, value *Account) error
 	GetAccount(name string) (*Account, error)
+	IsAccountExist(name string) bool
 	SetBalance(accountName string, value *Balance) error
 	GetBalance(accountName string) (*Balance, error)
 	SetStakedBalance(accountName string, value *StakedBalance) error
@@ -94,7 +95,13 @@ func (r *Role) SetAccount(name string, value *Account) error {
 func (r *Role) GetAccount(name string) (*Account, error) {
 	return GetAccountRole(r.Db, name)
 }
-
+func (r *Role) IsAccountExist(name string) bool {
+	_, err := GetAccountRole(r.Db, name)
+	if err != nil {
+		return false
+	}
+	return true
+}
 func (r *Role) SetBalance(accountName string, value *Balance) error {
 	return SetBalanceRole(r.Db, accountName, value)
 }

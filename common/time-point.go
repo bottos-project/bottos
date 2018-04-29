@@ -36,6 +36,12 @@ import (
 func Now() uint64 {
 	return uint64(time.Now().Unix())
 }
+func NowToSeconds() uint64 {
+	return uint64(time.Now().Unix())
+}
+func NowToMicroseconds() uint64 {
+	return uint64(time.Now().UnixNano() / 1000)
+}
 func ToNanoseconds(current time.Time) uint64 {
 	cur := current.UnixNano()
 	fmt.Println(cur)
@@ -48,10 +54,6 @@ func MeasureStart() uint64 {
 }
 func Elapsed(t uint64) time.Duration {
 	return time.Duration(MeasureStart() - t)
-}
-
-func NowToSeconds() uint64 {
-	return uint64(time.Now().Unix())
 }
 
 func MicrosecondsAddToSec(src uint64, des uint64) uint64 {

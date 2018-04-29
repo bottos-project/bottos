@@ -28,25 +28,25 @@ package role
 import (
 	"encoding/json"
 
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/db"
 )
- 
+
 const (
 	AccountObjectName string = "account"
 )
 
 type Account struct {
-	AccountName			string			`json:"account_name"`
-	PublicKey			[]byte			`json:"public_key"`
-	VMType				byte			`json:"vm_type"`
-	VMVersion           byte			`json:"vm_version"`
-	CodeVersion			common.Hash		`json:"code_version"`
-	CreateTime 			uint64			`json:"create_date"`
-	ContractCode		[]byte			`json:"contract_code"`
-	ContractAbi			[]byte			`json:"abi"`
+	AccountName  string      `json:"account_name"`
+	PublicKey    []byte      `json:"public_key"`
+	VMType       byte        `json:"vm_type"`
+	VMVersion    byte        `json:"vm_version"`
+	CodeVersion  common.Hash `json:"code_version"`
+	CreateTime   uint64      `json:"create_date"`
+	ContractCode []byte      `json:"contract_code"`
+	ContractAbi  []byte      `json:"abi"`
 }
- 
+
 func CreateAccountRole(ldb *db.DBService) error {
 	return nil
 }
@@ -79,4 +79,3 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 
 	return res, nil
 }
- 

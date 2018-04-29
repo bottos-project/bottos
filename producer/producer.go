@@ -35,9 +35,9 @@ import (
 )
 
 type Reporter struct {
-	isReporting bool
-	core        chain.BlockChainInterface
-	roleIntf    role.RoleInterface
+	core     chain.BlockChainInterface
+	roleIntf role.RoleInterface
+	state    ReportState
 }
 type ReporterRepo interface {
 	Woker(Trxs []*types.Transaction) *types.Block
@@ -46,15 +46,16 @@ type ReporterRepo interface {
 }
 
 func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo {
-	return &Reporter{core: b, roleIntf: roleIntf}
+	stat := ReportState{false, 0, false}
+	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 func (p *Reporter) isEligible() bool {
 	return true
 }
 func (p *Reporter) isReady() bool {
-	if p.isReporting == true {
-		return false
-	}
+	//	TODO if p.isReporting == true {
+	//		return false
+	//	}
 	return true
 	slotTime := p.roleIntf.GetSlotTime(1)
 	fmt.Println(slotTime)
@@ -68,7 +69,7 @@ func (p *Reporter) isMyTurn() bool {
 }
 func (p *Reporter) IsReady() bool {
 	if p.isEligible() && p.isReady() && p.isMyTurn() {
-		p.isReporting = true
+		//TODO	p.isReporting = true
 		return true
 	}
 	return false
@@ -113,6 +114,6 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
 	block.Header.DelegateSign = block.Sign("123").Bytes()
-	p.isReporting = false
+
 	return block, nil
 }
