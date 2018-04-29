@@ -26,17 +26,39 @@ package common
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 	"time"
 )
 
-func Test_NowToSeconds(t *testing.T) {
-	sec := NowToSeconds()
-	fmt.Println(sec)
+func Test_Now(t *testing.T) {
+
+	ab := Now()
+	fmt.Println(ab)
+
 }
-func Test_NowToMicroseconds(t *testing.T) {
-	now := time.Now()
+func Test_MeasureStart(t *testing.T) {
+	now := time.Now().Unix()
 	fmt.Println(now)
-	sec := TimeToMicroseconds(now)
-	fmt.Println(sec)
+	m := MeasureStart()
+	fmt.Println(m)
+}
+
+// bigpow returns a ** b as a big integer.
+func bigpow(a, b int64) *big.Int {
+	r := big.NewInt(a)
+	return r.Exp(r, big.NewInt(b), nil)
+}
+func Test_NanoSeconds(t *testing.T) {
+	m := MeasureStart()
+	an := big.NewInt(0)
+	mb := an.SetUint64(m)
+	fmt.Println("ddd", mb)
+	bp := bigpow(10, 9)
+	fmt.Println(bp)
+	value := mb.Div(mb, bp)
+
+	fmt.Println(value)
+	b := ToNanoseconds(time.Now())
+	fmt.Println(b)
 }

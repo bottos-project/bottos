@@ -26,16 +26,32 @@
 package common
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/aristanetworks/goarista/monotime"
 )
+
+//current system time seconds
+func Now() uint64 {
+	return uint64(time.Now().Unix())
+}
+func ToNanoseconds(current time.Time) uint64 {
+	cur := current.UnixNano()
+	fmt.Println(cur)
+	return 0
+}
+
+//current monotonic clock time use to measure time
+func MeasureStart() uint64 {
+	return monotime.Now()
+}
+func Elapsed(t uint64) time.Duration {
+	return time.Duration(MeasureStart() - t)
+}
 
 func NowToSeconds() uint64 {
 	return uint64(time.Now().Unix())
-}
-func TimeToMicroseconds(current time.Time) uint64 {
-	now := time.Now().Unix()
-	microSec := now * 1000000
-	return uint64(microSec)
 }
 
 func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
@@ -44,10 +60,8 @@ func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
 }
 
 func NowToSlotSec(current time.Time, loopMicroSec uint64) uint64 {
-	cur := TimeToMicroseconds(current)
+	cur := ToMicroseconds(current)
 	value := MicrosecondsAddToSec(cur, loopMicroSec)
+	fmt.Println(cur)
 	return value
-}
-func GetSecondSincEpoch(current uint64, epochTime uint64) uint64 {
-	return current - epochTime
 }

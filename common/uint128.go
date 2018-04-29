@@ -34,7 +34,7 @@ func MaxUint128() *big.Int {
 }
 
 // bigpow returns a ** b as a big integer.
-func bigpow(a, b int64) *big.Int {
+func bigpow(a int64, b int64) *big.Int {
 	r := big.NewInt(a)
 	return r.Exp(r, big.NewInt(b), nil)
 }

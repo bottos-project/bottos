@@ -16,44 +16,39 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: producer
+ * file description:  provide a interface such as time to seconds and epoch time etc.
  * @Author: May Luo
- * @Date:   2017-12-11
+ * @Date:   2017-12-01
  * @Last Modified by:
  * @Last Modified time:
  */
-package producer
+package common
 
 import (
-	"github.com/bottos-project/core/config"
+	"time"
 )
 
-func (p *Reporter) GetSlotAtTime(current uint64) uint32 {
-	firstSlotTime := p.GetSlotTime(1)
-
-	if current < firstSlotTime {
-		return 0
-	}
-	return uint32(current-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
+type Microsecond struct {
+	count uint64
 }
 
-func (p *Reporter) GetSlotTime(slotNum uint32) uint64 {
+func maximum() Microsecond {
+	return Microsecond{count: 0x7fffffffffffffff}
+}
 
-	if slotNum == 0 {
-		return 0
-	}
-	interval := config.DEFAULT_BLOCK_INTERVAL
-
-	object, err := p.roleIntf.GetChainState()
-	if err != nil {
-		return 0
-	}
-	genesisTime := p.core.GenesisTimestamp()
-	if object.LastBlockNum == 0 {
-
-		return genesisTime + uint64(slotNum*interval)
-	}
-	headBlockAbsSlot := object.LastBlockTime / uint64(interval)
-	headSlotTime := headBlockAbsSlot * uint64(interval)
-	return headSlotTime + uint64(slotNum*interval)
+func ToMicroseconds(current time.Time) uint64 {
+	cur := current.Unix()
+	return uint64(cur * 1000)
+}
+func ToSeconds(m Microsecond) uint64 {
+	return m.count / 1000000
+}
+func ToMilliseconds(m Microsecond) uint64 {
+	return m.count / 1000
+}
+func SecondsToMicro(s uint64) Microsecond {
+	return Microsecond{s * 1000000}
+}
+func MilliSecToMicro(m uint64) Microsecond {
+	return Microsecond{m * 1000}
 }
