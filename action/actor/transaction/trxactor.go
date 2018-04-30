@@ -103,7 +103,6 @@ func (self *TrxActor) Receive(context actor.Context) {
 	// 	context.Respond("trx rsp from trx actor")
 
 	case *message.PushTrxReq:
-		
 
 		fmt.Println("==========")
 		fmt.Println(">>>>>>>>>>trx actor Rcv trx, sendType: ", msg.TrxSender, "<<<<<<<<<<<")

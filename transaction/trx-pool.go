@@ -24,7 +24,6 @@ var (
 
 var TrxPoolInst *TrxPool
 
-
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
 	expiration  map[common.Hash]time.Time    // to be delete
@@ -34,9 +33,7 @@ type TrxPool struct {
 	quit chan struct{}
 }
 
-
-func InitTrxPool(env *env.ActorEnv) *TrxPool {
-	
+func InitTrxPool(env *env.ActorEnv) *TrxPool {	
 	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
@@ -52,7 +49,6 @@ func InitTrxPool(env *env.ActorEnv) *TrxPool {
 
 	return TrxPoolInst
 }
-
 
 // expirationCheckLoop is periodically check exceed time transaction, then remove it
 func (self *TrxPool) expirationCheckLoop() {	
@@ -81,7 +77,8 @@ func (self *TrxPool) expirationCheckLoop() {
 	}
 }
 
-func (self *TrxPool) addTransaction(trx *types.Transaction) {	
+func (self *TrxPool) addTransaction(trx *types.Transaction) {		
+	
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -89,8 +86,8 @@ func (self *TrxPool) addTransaction(trx *types.Transaction) {
 	self.pending[trxHash] = trx
 }
 
-func (self *TrxPool) Stop() {
-	
+func (self *TrxPool) Stop() {	
+
 	close(self.quit)
 
 	fmt.Println("Transaction pool stopped")
@@ -104,15 +101,13 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront() bool {
 	return true
 }
 
-
 func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){	
 
 }
 
-
-
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
+
 	fmt.Println("receive trx: ",trx, "hash: ", trx.Hash())
 
 	fmt.Printf("%s",trx.Param)
@@ -138,12 +133,10 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	context.Respond(true)
 }
 
-
 // HandlTransactionFromP2P handles a transaction from P2P
 func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
 
 	self.CheckTransactionBaseConditionFromP2P()
-
 	// start db session
 	trxApplyServiceInst.ApplyTransaction(trx)	
 
@@ -151,8 +144,6 @@ func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.T
 
 	//revert db session	
 }
-
-
 
 func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
 
@@ -163,17 +154,12 @@ func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender me
 	}	
 }
 
-
-
 func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 	self.mu.Lock()
-
 	defer self.mu.Unlock()
 
 	rsp := &message.GetAllPendingTrxRsp{}
-
-
 	for txHash := range self.pending {
 
 		rsp.Trxs = append(rsp.Trxs, self.pending[txHash])		
@@ -182,21 +168,17 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 	context.Respond(rsp)
 }
 
-
 func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
 	for _, trx := range trxs {
 		delete(self.pending, trx.Hash())
 	}
-
 }
-
 
 func (self *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
 
 	delete(self.pending, trx.Hash())
 }
-
 
 func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transaction {	
 
