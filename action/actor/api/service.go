@@ -75,9 +75,11 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 		resp.Result = &api.PushTrxResponse_Result{}
 		resp.Result.TrxHash = trx.Hash().Bytes()
 		resp.Result.Trx = trx
+		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
 		resp.Errcode = 100
+		resp.Msg = "trx process failed"
 	}
 
 	return nil
