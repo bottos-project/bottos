@@ -81,8 +81,6 @@ func (self *TrxPool) expirationCheckLoop() {
 	}
 }
 
-
-// expirationCheckLoop is periodically check exceed time transaction, then remove it
 func (self *TrxPool) addTransaction(trx *types.Transaction) {	
 	self.mu.Lock()
 	defer self.mu.Unlock()
