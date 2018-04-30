@@ -65,7 +65,7 @@ func SetTrxPool(pool *transaction.TrxPool) {
 	trxPool = pool
 }
 
-func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
+func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 	switch msg := context.Message().(type) {
 
@@ -89,11 +89,11 @@ func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 }
 
-func (TrxActor *TrxActor) Receive(context actor.Context) {
+func (self *TrxActor) Receive(context actor.Context) {
 
 	fmt.Println("trxactor received msg: ", context)
 
-	if TrxActor.handleSystemMsg(context) {
+	if self.handleSystemMsg(context) {
 		return
 	}
 
