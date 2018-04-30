@@ -31,7 +31,6 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/transaction"
 )
 
