@@ -91,12 +91,6 @@ func (self *TrxPool) addTransaction(trx *types.Transaction) {
 	self.pending[trxHash] = trx
 }
 
-
-// expirationCheckLoop is periodically check exceed time transaction, then remove it
-func (self *TrxPool) AddTransaction(trx *types.Transaction) {
-	self.addTransaction(trx)
-}
-
 func (self *TrxPool) Stop() {
 	
 	close(self.quit)
