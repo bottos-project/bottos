@@ -9,9 +9,12 @@ import (
 )
 
 type ReportState struct {
-	IsReporting  bool
-	CheckFlag    uint32 //TODO
-	ReportEnable bool
+	ScheduledTime     uint64
+	ScheduledReporter string //TODO
+	PrivateKey        string //TODO
+	IsReporting       bool
+	CheckFlag         uint32 //TODO
+	ReportEnable      bool
 }
 
 func (r *Reporter) IsReady() bool {
@@ -77,6 +80,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
 	}
 
 	scheduledTime := r.roleIntf.GetSlotTime(slot)
+
 	delegate, err := r.roleIntf.GetDelegateByAccountName(accountName)
 	if err != nil {
 		fmt.Println("find delegate by account failed", accountName)
@@ -97,6 +101,9 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
 		fmt.Println("delegate  is too slow")
 		return false
 	}
+	r.state.ScheduledTime = scheduledTime
+	r.state.ScheduledReporter = accountName
+	r.state.PrivateKey = delegate.SigningKey
 
 	return true
 }

@@ -46,7 +46,7 @@ type ReporterRepo interface {
 }
 
 func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo {
-	stat := ReportState{false, 0, false}
+	stat := ReportState{0, "", "", false, 0, false}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 
