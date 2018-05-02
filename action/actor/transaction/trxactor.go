@@ -31,7 +31,6 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/transaction"
 )
 
@@ -65,7 +64,7 @@ func SetTrxPool(pool *transaction.TrxPool) {
 	trxPool = pool
 }
 
-func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
+func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 	switch msg := context.Message().(type) {
 
@@ -89,22 +88,21 @@ func (TrxActor *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 }
 
-func (TrxActor *TrxActor) Receive(context actor.Context) {
+func (self *TrxActor) Receive(context actor.Context) {
 
 	fmt.Println("trxactor received msg: ", context)
 
-	if TrxActor.handleSystemMsg(context) {
+	if self.handleSystemMsg(context) {
 		return
 	}
 
 	switch msg := context.Message().(type) {
 
-	case *types.Transaction:
-		//	fmt.Println("transaction action is ", msg.Method.Name)
-		context.Respond("trx rsp from trx actor")
+	// case *types.Transaction:
+	// 	fmt.Println("transaction action is ", msg.Method.Name)
+	// 	context.Respond("trx rsp from trx actor")
 
 	case *message.PushTrxReq:
-		
 
 		fmt.Println("==========")
 		fmt.Println(">>>>>>>>>>trx actor Rcv trx, sendType: ", msg.TrxSender, "<<<<<<<<<<<")

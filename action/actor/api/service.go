@@ -28,6 +28,7 @@ package apiactor
 import (
 	"time"
 	"context"
+	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/common"
@@ -69,14 +70,30 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 		Trx: trx,
 		TrxSender : message.TrxSenderTypeFront,
 	}
-	_, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 	
-	if (nil == err) {
+	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+
+	if (nil != err) {
+		resp.Errcode = 100
+		resp.Msg = "message handle failed"    
+
+		return nil
+	}
+
+	fmt.Println("handle result is ",handlerErr)
+
+	if (nil == handlerErr) {
 		resp.Result = &api.PushTrxResponse_Result{}
 		resp.Result.TrxHash = trx.Hash().Bytes()
 		resp.Result.Trx = trx
+		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
+		resp.Result = &api.PushTrxResponse_Result{}
+		resp.Result.TrxHash = trx.Hash().Bytes()
+		resp.Result.Trx = trx
+		//resp.Msg = handlerErr.(string)
+		resp.Msg = "to be add detail error describtion"
 		resp.Errcode = 100
 	}
 

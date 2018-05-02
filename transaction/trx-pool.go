@@ -24,7 +24,6 @@ var (
 
 var TrxPoolInst *TrxPool
 
-
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
 	expiration  map[common.Hash]time.Time    // to be delete
@@ -34,9 +33,7 @@ type TrxPool struct {
 	quit chan struct{}
 }
 
-
-func InitTrxPool(env *env.ActorEnv) *TrxPool {
-	
+func InitTrxPool(env *env.ActorEnv) *TrxPool {	
 	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
@@ -53,160 +50,139 @@ func InitTrxPool(env *env.ActorEnv) *TrxPool {
 	return TrxPoolInst
 }
 
-
 // expirationCheckLoop is periodically check exceed time transaction, then remove it
-func (pool *TrxPool) expirationCheckLoop() {	
+func (self *TrxPool) expirationCheckLoop() {	
 	expire := time.NewTicker(trxExpirationCheckInterval)
 	defer expire.Stop()
 
 	for {
 		select {
 		case <-expire.C:
-			pool.mu.Lock()
+			self.mu.Lock()
 
 			var currentTime = time.Now()
-			for txHash := range pool.expiration {
+			for txHash := range self.expiration {
 
-				if (currentTime.After(pool.expiration[txHash])) {
-					delete(pool.expiration, txHash)
-					delete(pool.pending, txHash)					
+				if (currentTime.After(self.expiration[txHash])) {
+					delete(self.expiration, txHash)
+					delete(self.pending, txHash)					
 				}
 				
 			}
-			pool.mu.Unlock()
+			self.mu.Unlock()
 
-		case <-pool.quit:
+		case <-self.quit:
 			return
 		}
 	}
 }
 
+func (self *TrxPool) addTransaction(trx *types.Transaction) {		
 
-// expirationCheckLoop is periodically check exceed time transaction, then remove it
-func (pool *TrxPool) addTransaction(trx *types.Transaction) {	
-	pool.mu.Lock()
-	defer pool.mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	trxHash := trx.Hash()
-	pool.pending[trxHash] = trx
+	self.pending[trxHash] = trx
 }
 
+func (self *TrxPool) Stop() {	
 
-// expirationCheckLoop is periodically check exceed time transaction, then remove it
-func (pool *TrxPool) AddTransaction(trx *types.Transaction) {
-	pool.addTransaction(trx)
-}
-
-func (pool *TrxPool) Stop() {
-	
-	close(pool.quit)
+	close(self.quit)
 
 	fmt.Println("Transaction pool stopped")
 }
 
-func (pool *TrxPool)CheckTransactionBaseConditionFromFront() bool {
+func (self *TrxPool)CheckTransactionBaseConditionFromFront() (bool, error){
 
-	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(pool.pending))) {
-		return false
+	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
+		return false, fmt.Errorf("check max pending trx num error")
 	}
-	return true
+	return true, nil
 }
 
-
-func (pool *TrxPool)CheckTransactionBaseConditionFromP2P(){	
+func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){	
 
 }
-
-
 
 // HandlTransactionFromFront handles a transaction from front
-func (pool *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	fmt.Println("receive trx: ",trx, "hash: ", trx.Hash())
+func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Printf("%s",trx.Param)
+	fmt.Println("receive trx, detail: ",trx, "hash: ", trx.Hash())
+
+	fmt.Printf("trx param is %s\n",trx.Param)
 	
-	if (!pool.CheckTransactionBaseConditionFromFront()) {
-		fmt.Println("check base condition  error, trx: ", trx.Hash())
-
+	if checkResult, err := self.CheckTransactionBaseConditionFromFront(); true != checkResult {
+		fmt.Println("check base condition  error, trx: ", trx.Hash()) 
+		context.Respond(err)		
 		return
 	}
 	//pool.stateDb.StartUndoSession()
 
-	result , _ := trxApplyServiceInst.ApplyTransaction(trx)
+	result , err := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
 		fmt.Println("apply trx  error, trx: ", trx.Hash())
+		context.Respond(err)	
 		return
 	}
 
-	pool.addTransaction(trx)
+	self.addTransaction(trx)
 	//pool.stateDb.Rollback()
 
 	//tell P2P actor to notify trx	
 
-	context.Respond(true)
+	context.Respond(nil)
 }
 
-
 // HandlTransactionFromP2P handles a transaction from P2P
-func (pool *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
+func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
 
-	pool.CheckTransactionBaseConditionFromP2P()
-
+	self.CheckTransactionBaseConditionFromP2P()
 	// start db session
 	trxApplyServiceInst.ApplyTransaction(trx)	
 
-	pool.addTransaction(trx)
+	self.addTransaction(trx)
 
 	//revert db session	
 }
 
-
-
-func (pool *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
-
+func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
+	
+	
 	if (message.TrxSenderTypeFront == TrxSender){ 
-		pool.HandleTransactionFromFront(context, trx)
+		self.HandleTransactionFromFront(context, trx)
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
-		pool.HandleTransactionFromP2P(context, trx)
+		self.HandleTransactionFromP2P(context, trx)
 	}	
 }
 
+func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
-
-func (pool *TrxPool)GetAllPendingTransactions(context actor.Context) {
-
-	pool.mu.Lock()
-
-	defer pool.mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	rsp := &message.GetAllPendingTrxRsp{}
+	for txHash := range self.pending {
 
-
-	for txHash := range pool.pending {
-
-		rsp.Trxs = append(rsp.Trxs, pool.pending[txHash])		
+		rsp.Trxs = append(rsp.Trxs, self.pending[txHash])		
 	}
 
 	context.Respond(rsp)
 }
 
-
-func (pool *TrxPool)RemoveTransactions(trxs []*types.Transaction){
+func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
 	for _, trx := range trxs {
-		delete(pool.pending, trx.Hash())
+		delete(self.pending, trx.Hash())
 	}
-
 }
 
+func (self *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
 
-func (pool *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
-
-	delete(pool.pending, trx.Hash())
+	delete(self.pending, trx.Hash())
 }
 
-
-func (pool *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transaction {	
+func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transaction {	
 
 	return nil;
 }
