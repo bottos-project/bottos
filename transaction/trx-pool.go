@@ -18,15 +18,13 @@ import (
 
 
 var (
-	trxExpirationCheckInterval    = time.Minute     // Time interval for check expiration pending transactions
-	trxExpirationTime             = time.Minute     // Pending Trx max time , to be delete
+	trxExpirationCheckInterval    = 2*time.Second     // Time interval for check expiration pending transactions
 )
 
 var TrxPoolInst *TrxPool
 
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
-	expiration  map[common.Hash]time.Time    // to be delete
 	roleIntf	role.RoleInterface
 	
 	mu           sync.RWMutex
@@ -37,7 +35,6 @@ func InitTrxPool(env *env.ActorEnv) *TrxPool {
 	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
-		expiration:   make(map[common.Hash]time.Time),
 		roleIntf:     env.RoleIntf,
 		
 		quit:         make(chan struct{}),		
@@ -60,15 +57,13 @@ func (self *TrxPool) expirationCheckLoop() {
 		case <-expire.C:
 			self.mu.Lock()
 
-			var currentTime = time.Now()
-			for txHash := range self.expiration {
-
-				if (currentTime.After(self.expiration[txHash])) {
-					delete(self.expiration, txHash)
-					delete(self.pending, txHash)					
-				}
-				
+			var currentTime = common.Now()
+			for trxHash := range self.pending {				
+				if (currentTime >= (self.pending[trxHash].Lifetime)) {					
+					delete(self.pending, trxHash)					
+				}				
 			}
+			
 			self.mu.Unlock()
 
 		case <-self.quit:
@@ -113,11 +108,16 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	fmt.Printf("trx param is %s\n",trx.Param)
 	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(); true != checkResult {
-		fmt.Println("check base condition  error, trx: ", trx.Hash()) 
+		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)		
 		return
 	}
 	//pool.stateDb.StartUndoSession()
+	
+
+	//for test
+	curTime := common.Now()
+	trx.Lifetime = curTime  + 10   
 
 	result , err := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
@@ -162,9 +162,9 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 	defer self.mu.Unlock()
 
 	rsp := &message.GetAllPendingTrxRsp{}
-	for txHash := range self.pending {
+	for trxHash := range self.pending {
 
-		rsp.Trxs = append(rsp.Trxs, self.pending[txHash])		
+		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])		
 	}
 
 	context.Respond(rsp)
