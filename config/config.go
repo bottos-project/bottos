@@ -26,9 +26,9 @@
 package config
 
 import (
-	"fmt"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -40,33 +40,32 @@ var Param *Parameter
 var Genesis *GenesisConfig
 
 type Parameter struct {
-	GenesisJson				string				`json:"genesis_json"`
-	DataDir					string				`json:"data_dir"`
-	Consensus       		string				`json:"consensus"`
-	APIPort					int					`json:"api_port"`
-	P2PPort					int					`json:"p2p_port"`
-	PeerList				[]string			`json:"peer_list"`
-	KeyPairs				[]KeyPair			`json:"key_pairs"`
-	ApiServiceEnable		bool				`json:"api_service_enable"`
-				
+	GenesisJson       string    `json:"genesis_json"`
+	DataDir           string    `json:"data_dir"`
+	Consensus         string    `json:"consensus"`
+	APIPort           int       `json:"api_port"`
+	P2PPort           int       `json:"p2p_port"`
+	PeerList          []string  `json:"peer_list"`
+	KeyPairs          []KeyPair `json:"key_pairs"`
+	ApiServiceEnable  bool      `json:"api_service_enable"`
+	EnableStaleReport bool      `json:"enable_stale_report"`
 }
 
 type KeyPair struct {
-	PrivateKey				string				`json:"private_key"`
-	PublicKey				string				`json:"public_key"`
+	PrivateKey string `json:"private_key"`
+	PublicKey  string `json:"public_key"`
 }
 
 type GenesisConfig struct {
-	GenesisTime				uint64				`json:"genesis_time"`
-	ChainId					string				`json:"chain_id"`
-	InitDelegate			InitDelegate		`json:"init_delegate"`
-	
+	GenesisTime  uint64       `json:"genesis_time"`
+	ChainId      string       `json:"chain_id"`
+	InitDelegate InitDelegate `json:"init_delegate"`
 }
 
 type InitDelegate struct {
-	Name					string				`json:"name"`
-	PublicKey				string				`json:"public_key"`
-	Balance					uint32				`json:"balance"`
+	Name      string `json:"name"`
+	PublicKey string `json:"public_key"`
+	Balance   uint32 `json:"balance"`
 }
 
 func LoadConfig() error {

@@ -29,11 +29,11 @@ import (
 )
 
 type Microsecond struct {
-	count uint64
+	Count uint64
 }
 
 func maximum() Microsecond {
-	return Microsecond{count: 0x7fffffffffffffff}
+	return Microsecond{Count: 0x7fffffffffffffff}
 }
 
 func ToMicroseconds(current time.Time) uint64 {
@@ -41,10 +41,10 @@ func ToMicroseconds(current time.Time) uint64 {
 	return uint64(cur * 1000)
 }
 func ToSeconds(m Microsecond) uint64 {
-	return m.count / 1000000
+	return m.Count / 1000000
 }
 func ToMilliseconds(m Microsecond) uint64 {
-	return m.count / 1000
+	return m.Count / 1000
 }
 func SecondsToMicro(s uint64) Microsecond {
 	return Microsecond{s * 1000000}

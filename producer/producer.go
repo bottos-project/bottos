@@ -49,31 +49,7 @@ func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo 
 	stat := ReportState{false, 0, false}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
-func (p *Reporter) isEligible() bool {
-	return true
-}
-func (p *Reporter) isReady() bool {
-	//	TODO if p.isReporting == true {
-	//		return false
-	//	}
-	return true
-	slotTime := p.roleIntf.GetSlotTime(1)
-	fmt.Println(slotTime)
-	if slotTime >= common.NowToSeconds() {
-		return true
-	}
-	return false
-}
-func (p *Reporter) isMyTurn() bool {
-	return true
-}
-func (p *Reporter) IsReady() bool {
-	if p.isEligible() && p.isReady() && p.isMyTurn() {
-		//TODO	p.isReporting = true
-		return true
-	}
-	return false
-}
+
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := common.NowToSeconds()
