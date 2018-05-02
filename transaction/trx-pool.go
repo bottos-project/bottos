@@ -58,9 +58,9 @@ func (self *TrxPool) expirationCheckLoop() {
 			self.mu.Lock()
 
 			var currentTime = common.Now()
-			for txHash := range self.pending {				
-				if (currentTime >= (self.pending[txHash].Lifetime)) {					
-					delete(self.pending, txHash)					
+			for trxHash := range self.pending {				
+				if (currentTime >= (self.pending[trxHash].Lifetime)) {					
+					delete(self.pending, trxHash)					
 				}				
 			}
 			
@@ -162,9 +162,9 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 	defer self.mu.Unlock()
 
 	rsp := &message.GetAllPendingTrxRsp{}
-	for txHash := range self.pending {
+	for trxHash := range self.pending {
 
-		rsp.Trxs = append(rsp.Trxs, self.pending[txHash])		
+		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])		
 	}
 
 	context.Respond(rsp)
