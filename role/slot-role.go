@@ -25,6 +25,8 @@
 package role
 
 import (
+	"fmt"
+
 	"github.com/bottos-project/core/config"
 )
 
@@ -51,6 +53,7 @@ func (r *Role) GetSlotTime(slotNum uint32) uint64 {
 
 	if object.LastBlockNum == 0 {
 		genesisTime := config.Genesis.GenesisTime
+		fmt.Println("LastBlockNum  ======0", genesisTime)
 		return genesisTime + uint64(slotNum*interval)
 	}
 	headBlockAbsSlot := object.LastBlockTime / uint64(interval)
