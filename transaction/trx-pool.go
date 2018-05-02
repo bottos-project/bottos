@@ -78,7 +78,7 @@ func (self *TrxPool) expirationCheckLoop() {
 }
 
 func (self *TrxPool) addTransaction(trx *types.Transaction) {		
-	
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -93,12 +93,12 @@ func (self *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-func (self *TrxPool)CheckTransactionBaseConditionFromFront() bool {
+func (self *TrxPool)CheckTransactionBaseConditionFromFront() (bool, error){
 
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
-		return false
+		return false, fmt.Errorf("check max pending trx num error")
 	}
-	return true
+	return true, nil
 }
 
 func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){	
@@ -108,20 +108,21 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Println("receive trx: ",trx, "hash: ", trx.Hash())
+	fmt.Println("receive trx, detail: ",trx, "hash: ", trx.Hash())
 
-	fmt.Printf("%s",trx.Param)
+	fmt.Printf("trx param is %s\n",trx.Param)
 	
-	if (!self.CheckTransactionBaseConditionFromFront()) {
-		fmt.Println("check base condition  error, trx: ", trx.Hash())
-
+	if checkResult, err := self.CheckTransactionBaseConditionFromFront(); true != checkResult {
+		fmt.Println("check base condition  error, trx: ", trx.Hash()) 
+		context.Respond(err)		
 		return
 	}
 	//pool.stateDb.StartUndoSession()
 
-	result , _ := trxApplyServiceInst.ApplyTransaction(trx)
+	result , err := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
 		fmt.Println("apply trx  error, trx: ", trx.Hash())
+		context.Respond(err)	
 		return
 	}
 
@@ -130,7 +131,7 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 	//tell P2P actor to notify trx	
 
-	context.Respond(true)
+	context.Respond(nil)
 }
 
 // HandlTransactionFromP2P handles a transaction from P2P
@@ -146,7 +147,8 @@ func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.T
 }
 
 func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
-
+	
+	
 	if (message.TrxSenderTypeFront == TrxSender){ 
 		self.HandleTransactionFromFront(context, trx)
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
