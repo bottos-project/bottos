@@ -93,6 +93,10 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront() (bool, error){
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
 		return false, fmt.Errorf("check max pending trx num error")
 	}
+
+	/* check account validate,include contract account */
+	/* check signature */
+
 	return true, nil
 }
 
