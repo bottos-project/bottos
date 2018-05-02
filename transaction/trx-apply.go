@@ -91,10 +91,9 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
 	/* check account validate,include contract account */
-	/* check signature */
+	/* check signature */	
 	
-	
-	//return true, nil
+	return true, nil
 
 	account, error := trxApplyService.roleIntf.GetAccount(trx.Sender.Name)
 	if(nil != error || nil == account) {
