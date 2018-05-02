@@ -37,10 +37,9 @@ func GetTrxApplyService() *TrxApplyService {
 
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
 	
-	curTime := trxApplyService.core.HeadBlockTime()
-
+	//curTime := trxApplyService.core.HeadBlockTime()
 	//for test:
-	trx.Lifetime = curTime  + 600
+	curTime := common.Now()
 
 	if (curTime >= trx.Lifetime) {
 		fmt.Println("lifetime ", time.Unix((int64)(trx.Lifetime), 0),"have past, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
@@ -92,7 +91,7 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
 	/* check account validate,include contract account */
 	/* check signature */	
-	
+
 	return true, nil
 
 	account, error := trxApplyService.roleIntf.GetAccount(trx.Sender.Name)
