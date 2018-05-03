@@ -28,6 +28,7 @@ package chain
 import (
 	"fmt"
 	"sync"
+	"sort"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
@@ -152,9 +153,9 @@ func (bc *BlockChain) HeadBlockDelegate() string {
 	return coreState.CurrentDelegate
 }
 
-func (bc *BlockChain) LastConfirmedBlockNum() uint32 {
+func (bc *BlockChain) LastConsensusBlockNum() uint32 {
 	coreState, _ := bc.roleIntf.GetChainState()
-	return coreState.LastConfirmedBlockNum
+	return coreState.LastConsensusBlockNum
 }
 
 func (bc *BlockChain) GenesisTimestamp() uint64 {
@@ -179,11 +180,9 @@ func (bc *BlockChain) initBlockCache() error {
 func (bc *BlockChain) LoadBlockDb() error {
 	lastBlock := GetLastBlock(bc.blockDb)
 	if lastBlock == nil {
-		// TODO blockDb Recover()
 		return fmt.Errorf("Loading block database fail, try recovering")
 	}
 
-	// TODO
 	bc.updateChainState(lastBlock)
 	
 	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
@@ -198,47 +197,71 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 // TODO
 func (bc *BlockChain) updateCoreState(block *types.Block) {
-
-	//
 }
 
 // TODO
 func (bc *BlockChain) updateChainState(block *types.Block) {
-	chainSate, err := bc.roleIntf.GetChainState()
-	if err != nil {
-		fmt.Println("BlockChain : GetChainStateObjectRole error")
-		return
-	}
+	chainSate, _ := bc.roleIntf.GetChainState()
+
 	chainSate.LastBlockNum = block.GetNumber()
 	chainSate.LastBlockHash = block.Hash()
 	chainSate.LastBlockTime = block.GetTimestamp()
 	chainSate.CurrentDelegate = string(block.GetDelegate())
 
+	// TODO current_absolute_slot
+	// TODO missed_block
+
 	bc.roleIntf.SetChainState(chainSate)
 }
 
-// TODO
-func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
-	// TODO  compute new LIB
+func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block) {
 	chainSate, _ := bc.roleIntf.GetChainState()
-	// for test
-	if chainSate.LastBlockNum > chainSate.LastConfirmedBlockNum + 7 {
-		chainSate.LastConfirmedBlockNum = chainSate.LastBlockNum - 7
+
+	blockTime := block.GetTimestamp()
+	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime));
+
+	fmt.Println(delegate.AccountName, delegate.LastConfirmedBlockNum)
+	
+	delegate.LastSlot = newSlot
+	delegate.LastConfirmedBlockNum = block.GetNumber()
+	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
+
+	fmt.Println(delegate.AccountName, delegate.LastConfirmedBlockNum)
+}
+
+// TODO
+func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
+	chainSate, _ := bc.roleIntf.GetChainState()
+	coreState, _ := bc.roleIntf.GetCoreState()
+
+	delegates := make([]*role.Delegate, len(coreState.CurrentDelegates))
+	lastConfirmedNums := make(ConfirmedNum, len(coreState.CurrentDelegates))
+	for i, name := range coreState.CurrentDelegates {
+		delegate, _ := bc.roleIntf.GetDelegateByAccountName(name)
+		delegates[i] = delegate
+		lastConfirmedNums[i] = delegates[i].LastConfirmedBlockNum
+	}
+	fmt.Println(lastConfirmedNums)
+
+	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(delegates) / 100
+	sort.Sort(lastConfirmedNums)
+	fmt.Println(lastConfirmedNums, consensusIndex)
+	newLastConsensusBlockNum := lastConfirmedNums[consensusIndex]
+	if newLastConsensusBlockNum > chainSate.LastConsensusBlockNum {
+		chainSate.LastConsensusBlockNum = newLastConsensusBlockNum
 	}
 	bc.roleIntf.SetChainState(chainSate)
 
-	// write LIB to blockDb
-	newLIB := chainSate.LastConfirmedBlockNum
+	// write LCB to blockDb
 	lastBlockNum := uint32(0)
 	lastBlock := bc.getBlockDbLastBlock()
 	if lastBlock != nil {
 		lastBlockNum = lastBlock.GetNumber()
 	}
+	fmt.Printf("lastBlockNum = %v, newLastConsensusBlockNum = %v\n", lastBlockNum, newLastConsensusBlockNum)
 
-	fmt.Printf("lastBlockNum = %v, newLIB = %v\n", lastBlockNum, newLIB)
-
-	if lastBlockNum < newLIB {
-		for i := lastBlockNum + 1; i <= newLIB; i++ {
+	if lastBlockNum < newLastConsensusBlockNum {
+		for i := lastBlockNum + 1; i <= newLastConsensusBlockNum; i++ {
 			block := bc.GetBlockByNumber(i)
 			if block != nil {
 				bc.WriteBlock(block)
@@ -248,14 +271,19 @@ func (bc *BlockChain) updateConfirmedBlock(block *types.Block) {
 		}
 
 		// trim blockCache
-		bc.blockCache.Trim(chainSate.LastBlockNum, newLIB)
+		bc.blockCache.Trim(chainSate.LastBlockNum, newLastConsensusBlockNum)
 	}
 }
 
+func (bc *BlockChain) clearTransactionExpiration(block *types.Block) error {
+	// TODO
+	return nil
+}
 
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
-	// TODO excute block
 	fmt.Println("BlockChain : Handling block")
+
+	delegate, _ := bc.roleIntf.GetDelegateByAccountName(string(block.GetDelegate()))
 
 	// TODO
 	//for _, tx := range block.Transactions {
@@ -266,9 +294,11 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	// update consensus
 	bc.updateCoreState(block)
 	bc.updateChainState(block)
-	bc.updateConfirmedBlock(block)
+	bc.updateDelegate(delegate, block)
+	bc.updateConsensusBlock(block)
 
-	// TODO notify TxPool
+	// clear transaction expiration
+	bc.clearTransactionExpiration(block)
 
 	// block handled callback
 	if bc.handledBlockCB != nil {
@@ -289,7 +319,6 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	}
 
 	// block timestamp check
-	/*
 	if block.GetTimestamp() <= bc.HeadBlockTime() {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
@@ -297,24 +326,22 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	if block.GetTimestamp() > bc.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL) {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
-	*/
-
-	// TODO producer_change check
-	// ...
-
-	// TODO producer signature check
-	//slot := store.GetSlotAtTime(block.Time())
-	//producerName := store.GetScheduledProducer(slot)
-	//scheduleProducerObj := bc.stateDb.GetProducerObject(producerName)
+	
+	//slot := bc.roleIntf.GetSlotAtTime(block.GetTimestamp())
+	//scheduleDelegateName, _ := bc.roleIntf.GetScheduleDelegateRole(slot)
+	//scheduleDelegate, _ := bc.roleIntf.GetDelegateByAccountName(scheduleDelegateName)
+	// TODO delegate signature check
 	if ok := block.ValidateSign(/*producer*/); !ok {
 		return fmt.Errorf("Producer Sign Error")
 	}
 
-	// producer schedule check
-	//blockProducer := block.Producer()
-	//if string(blockProducer[:]) != scheduleProducerObj.Owner {
-	//	return fmt.Errorf("Producer Producer Error")
-	//}
+	// delegate schedule check
+	/*
+	blockDelegate := string(block.GetDelegate())
+	if blockDelegate != scheduleDelegate.AccountName {
+		return fmt.Errorf("Schedule Delegate Error: schedule delegate %v, block delegate %v", scheduleDelegate.AccountName, blockDelegate)
+	}
+	*/
 
 	return nil
 } 
@@ -350,7 +377,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 	//bc.stateDb.Commit()
 
-	fmt.Println("\n\n\n")
+	//fmt.Println("\n\n\n")
 
 	return nil
 }
