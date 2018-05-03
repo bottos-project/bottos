@@ -26,9 +26,9 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 
 func newTransaction(contract string, method string, param []byte) *types.Transaction {
 	trx := &types.Transaction {
-		Sender: &types.AccountName{Name:contract},
-		Contract: &types.ContractName{Name:contract},
-		Method: &types.MethodName{Name:method},
+		Sender: contract,
+		Contract: contract,
+		Method: method,
 		Param: param,
 	}
 

@@ -84,13 +84,13 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 
 	if (nil == handlerErr) {
 		resp.Result = &api.PushTrxResponse_Result{}
-		resp.Result.TrxHash = trx.Hash().Bytes()
+		resp.Result.TrxHash = trx.Hash().ToHexString()
 		resp.Result.Trx = trx
 		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
 		resp.Result = &api.PushTrxResponse_Result{}
-		resp.Result.TrxHash = trx.Hash().Bytes()
+		resp.Result.TrxHash = trx.Hash().ToHexString()
 		resp.Result.Trx = trx
 		//resp.Msg = handlerErr.(string)
 		resp.Msg = "to be add detail error describtion"
@@ -126,7 +126,7 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
 	msgReq := &message.QueryBlockReq{
 		BlockHash: common.HexToHash(req.BlockHash),
-		BlockNumber: req.BlockNumber,
+		BlockNumber: req.BlockNum,
 	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
@@ -143,11 +143,15 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 
 	resp.Result = &api.QueryBlockResponse_Result{}
 	hash := response.Block.Hash()
+	resp.Result.PrevBlockHash = response.Block.GetPrevBlockHash().ToHexString()
+	resp.Result.BlockNum = response.Block.GetNumber()
 	resp.Result.BlockHash = hash.ToHexString()
-	resp.Result.BlockNumber = response.Block.GetNumber()
-	resp.Result.BlockLabel = hash.Label()
-	//resp.BlockHash = response.Block.Hash().ToHexString()
-	//resp.BlockNumber = response.Block.GetNumber()
+	resp.Result.CursorBlockLabel = hash.Label()
+	resp.Result.BlockTime = response.Block.GetTimestamp()
+	resp.Result.TrxMerkleRoot = response.Block.ComputeMerkleRoot().ToHexString()
+	resp.Result.Delegate = string(response.Block.GetDelegate())
+	resp.Result.DelegateSign = response.Block.GetDelegateSign().ToHexString()
+
 	resp.Errcode = 0
 	return nil
 }
@@ -168,10 +172,11 @@ func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 
 	resp.Result = &api.QueryChainInfoResponse_Result{}
 	resp.Result.HeadBlockNum = response.HeadBlockNum
-	resp.Result.LastConfirmedBlockNum = response.LastConsensusBlockNum
-	resp.Result.HeadBlockHash = response.HeadBlockHash.Bytes()
+	resp.Result.LastConsensusBlockNum = response.LastConsensusBlockNum
+	resp.Result.HeadBlockHash = response.HeadBlockHash.ToHexString()
 	resp.Result.HeadBlockTime = response.HeadBlockTime
 	resp.Result.HeadBlockDelegate = response.HeadBlockDelegate
+	resp.Result.CursorLabel = response.HeadBlockHash.Label()
 	resp.Errcode = 0
 	return nil
 }
