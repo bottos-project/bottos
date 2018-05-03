@@ -52,8 +52,12 @@ func ToNanoseconds(current time.Time) uint64 {
 func MeasureStart() uint64 {
 	return monotime.Now()
 }
-func Elapsed(t uint64) time.Duration {
-	return time.Duration(MeasureStart() - t)
+func Elapsed(t uint64) uint64 {
+
+	elapse := MeasureStart() - t
+	fmt.Println(elapse)
+	return elapse
+
 }
 
 func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
