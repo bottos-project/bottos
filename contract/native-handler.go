@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/role"
 	//"github.com/bottos-project/core/common/types"
 )
 
@@ -16,7 +16,7 @@ type NativeContract struct {
 }
 
 func NewNativeContractHandler() (NativeContractInterface, error) {
-	nc := &NativeContract {
+	nc := &NativeContract{
 		Handler: make(map[string]NativeContractMethod),
 	}
 
@@ -53,7 +53,6 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
 	return fmt.Errorf("No Native Contract Method")
 }
 
-
 func check_account(RoleIntf role.RoleInterface, name string) bool {
 	_, err := RoleIntf.GetAccount(name)
 	if err != nil {
@@ -88,10 +87,10 @@ func newaccount(ctx *Context) error {
 	chainState, _ := ctx.RoleIntf.GetChainState()
 
 	// 1, create account
-	account := &role.Account {
+	account := &role.Account{
 		AccountName: newaccount.Name,
-		PublicKey: []byte(newaccount.Pubkey),
-		CreateTime: chainState.LastBlockTime,
+		PublicKey:   []byte(newaccount.Pubkey),
+		CreateTime:  chainState.LastBlockTime,
 	}
 	ctx.RoleIntf.SetAccount(account.AccountName, account)
 
@@ -103,13 +102,13 @@ func newaccount(ctx *Context) error {
 	// balance
 	balance := &role.Balance{
 		AccountName: newaccount.Name,
-		Balance: 0,
+		Balance:     0,
 	}
 	ctx.RoleIntf.SetBalance(newaccount.Name, balance)
 
 	// staked_balance
 	staked_balance := &role.StakedBalance{
-		AccountName: newaccount.Name,
+		AccountName:   newaccount.Name,
 		StakedBalance: uint64(newaccount.Deposit),
 	}
 	ctx.RoleIntf.SetStakedBalance(newaccount.Name, staked_balance)
@@ -146,7 +145,7 @@ func transfer(ctx *Context) error {
 		return fmt.Errorf("Insufficient Funds")
 	}
 	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
-	
+
 	from.Balance -= transfer.Value
 	to.Balance += transfer.Value
 
@@ -191,7 +190,7 @@ func setdelegate(ctx *Context) error {
 		// new delegate
 		newdelegate := &role.Delegate{
 			AccountName: param.Name,
-			SigningKey: param.Pubkey,
+			ReportKey:   param.Pubkey,
 		}
 		ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
 		fmt.Println(newdelegate)
