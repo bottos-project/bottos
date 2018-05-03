@@ -40,7 +40,7 @@ const DelegateObjectIndexName string = "signing_key"
 type Delegate struct {
 	AccountName           string `json:"account_name"`
 	LastSlot              uint64 `json:"last_slot"`
-	SigningKey            string `json:"signing_key"`
+	ReportKey             string `json:"report_key"`
 	TotalMissed           int64  `json:"total_missed"`
 	LastConfirmedBlockNum uint32 `json:"last_confirmed_block_num"`
 }
