@@ -68,8 +68,25 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	fmt.Println("brocasting block", block)
 	return block
-}
+} /*TODO
+func (p *Reporter) IsValid(block *blockchain.BlockData, receivedAt int64) (valid bool, err error) {
+	slot := p.getSlotAt(receivedAt)
+	requiredTS := p.GetCurrentSlotStart(receivedAt)
 
+	position := p.GetPosition(block.Signer)
+	if position != slot {
+		return false, fmt.Errorf("not in required slot: %d, producer position = %d", slot, position)
+	}
+	diff := requiredTS - block.GetTimestamp()
+	if diff < 0 {
+		diff = -diff
+	}
+	valid = diff < Epsilon
+	if !valid {
+		err = fmt.Errorf("incorrect timestamp: %d. Required: %d ± %v", block.GetTimestamp(), requiredTS, Epsilon)
+	}
+	return
+}*/
 func (p *Reporter) StartTag() error {
 	//p.core.
 
@@ -90,6 +107,11 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
 	block.Header.DelegateSign = block.Sign("123").Bytes()
+	// If this block is last in a round, calculate the schedule for the new round
+	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
+		// TODO     auto new_schedule = _admin->get_next_round(_db);
+		//      pending_block.producer_changes = get_global_properties().active_producers - new_schedule;
+	}
 
 	return block, nil
 }

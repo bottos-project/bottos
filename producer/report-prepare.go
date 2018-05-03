@@ -87,7 +87,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
 		return false
 	}
 	// TODO check   delegate.SigningKey
-	fmt.Println(delegate.SigningKey)
+	fmt.Println(delegate.ReportKey)
 
 	prate := r.roleIntf.GetDelegateParticipationRate()
 	fmt.Println(prate)
@@ -103,7 +103,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
 	}
 	r.state.ScheduledTime = scheduledTime
 	r.state.ScheduledReporter = accountName
-	r.state.PrivateKey = delegate.SigningKey
+	r.state.PrivateKey = delegate.ReportKey
 
 	return true
 }
