@@ -168,7 +168,7 @@ func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 
 	resp.Result = &api.QueryChainInfoResponse_Result{}
 	resp.Result.HeadBlockNum = response.HeadBlockNum
-	resp.Result.LastConfirmedBlockNum = response.LastConfirmedBlockNum
+	resp.Result.LastConfirmedBlockNum = response.LastConsensusBlockNum
 	resp.Result.HeadBlockHash = response.HeadBlockHash.Bytes()
 	resp.Result.HeadBlockTime = response.HeadBlockTime
 	resp.Result.HeadBlockDelegate = response.HeadBlockDelegate

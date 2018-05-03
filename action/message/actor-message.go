@@ -45,7 +45,7 @@ type QueryChainInfoReq struct {
 
 type QueryChainInfoResp struct {
 	HeadBlockNum          uint32
-	LastConfirmedBlockNum uint32
+	LastConsensusBlockNum uint32
 	HeadBlockHash         common.Hash
 	HeadBlockTime         uint64
 	HeadBlockDelegate     string
