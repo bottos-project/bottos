@@ -26,7 +26,7 @@ message PushTrxResponse{
 	Result				result 				= 3;
 	message Result{
 		types.Transaction 	trx				= 1;
-		bytes 				trx_hash		= 2;
+		string 				trx_hash		= 2;
 	}
 }
 
@@ -42,8 +42,8 @@ message QueryTrxResponse{
 
 
 message QueryBlockRequest{
-	string 				block_hash			= 1;
-	uint32				block_number		= 2;
+	uint32				block_num			= 1;
+	string 				block_hash			= 2;
 }
 
 message QueryBlockResponse{
@@ -51,9 +51,15 @@ message QueryBlockResponse{
 	string 				msg					= 2;
 	Result				result 				= 3;
 	message Result{
-		string			block_hash      	= 1;
-		uint32			block_number		= 2;
-		uint32			block_label			= 3;
+		string          prev_block_hash     = 1;
+        uint32			block_num			= 2;
+		string			block_hash      	= 3;
+		uint32			cursor_block_label	= 4;
+        uint64          block_time          = 5;
+        string          trx_merkle_root     = 6;
+        string          delegate            = 7;
+        string          delegate_sign       = 8;
+        repeated types.Transaction trxs     = 9;
 	}
 }
 
@@ -66,10 +72,11 @@ message QueryChainInfoResponse{
 	Result 				result							= 3;
 	message Result {
 		uint32 			head_block_num					= 1;
-		uint32 			last_confirmed_block_num		= 2;
-		bytes 			head_block_hash					= 3;
-		uint64 			head_block_time					= 4;
-		string 			head_block_delegate				= 5;
+		string 			head_block_hash					= 2;
+		uint64 			head_block_time					= 3;
+		string 			head_block_delegate				= 4;
+		uint32			cursor_label					= 5;
+		uint32 			last_consensus_block_num		= 6;
 	}
 }
 

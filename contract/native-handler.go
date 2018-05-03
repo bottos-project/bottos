@@ -38,8 +38,8 @@ func (nc *NativeContract) IsNativeContract(contract string, method string) bool 
 }
 
 func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
-	contract := ctx.Trx.Contract.Name
-	method := ctx.Trx.Method.Name
+	contract := ctx.Trx.Contract
+	method := ctx.Trx.Method
 	if !nc.IsNativeContract(contract, method) {
 		return fmt.Errorf("No Native Contract Method")
 	}

@@ -68,7 +68,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 
 func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Transaction) bool {
 
-	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.Cursor)
+	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
 	if (nil != err || nil == blockHistory) {
 		return false
 	} 
@@ -89,12 +89,11 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 }
 
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
-	/* check account validate,include contract account */
-	/* check signature */	
+	
 
 	return true, nil
 
-	account, error := trxApplyService.roleIntf.GetAccount(trx.Sender.Name)
+	account, error := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if(nil != error || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
 		return false, fmt.Errorf("check account error")
@@ -117,7 +116,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
-	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract.Name, trx.Method.Name) ) {
+	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 
 		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, Trx: trx}
 		trxApplyService.ncIntf.ExecuteNativeContract(applyContext)

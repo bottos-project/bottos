@@ -16,30 +16,33 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  define constants for this blockchain
- * @Author: May Luo
- * @Date:   2017-12-01
+ * file description: account role test
+ * @Author: Gong Zibin
+ * @Date:   2017-12-13
  * @Last Modified by:
  * @Last Modified time:
  */
+ package chain
 
-package config
+ import (
+	 "fmt"
+	 "sort"
+	 "testing"
+ 
+ )
 
-const DEFAULT_BLOCK_INTERVAL uint32 = 3
-const BLOCKS_PER_ROUND uint32 = 19
-const VOTED_DELEGATES_PER_ROUND uint32 = 18
-const CONSENSUS_BLOCKS_PERCENT uint32 = 80
-const MAX_DELEGATE_VOTES uint32 = 40
-const DELEGATE_PATICIPATION uint64 = 33
-const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
-const DEFALT_SLOT_CHECK_INTERVAL = 500000
+func TestBlockChain_ConfirmedSort(t *testing.T) {
+	lastConfirmedNums := make(ConfirmedNum, 19)
+	for i := 0; i < 19; i++  {
+		lastConfirmedNums[i] = uint32(19-i)
+	}
 
-const BOTTOS_CONTRACT_NAME string = "bottos"
-const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 
-const INIT_DELEGATE_NUM uint32 = 19
-const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
+	fmt.Println(lastConfirmedNums)
 
-const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
-
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
+	consensusIndex := 8
+	sort.Sort(lastConfirmedNums)
+	fmt.Println(lastConfirmedNums)
+	fmt.Println(lastConfirmedNums[consensusIndex])
+}
+ 

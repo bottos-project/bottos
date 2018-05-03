@@ -6,29 +6,13 @@ option go_package = "github.com/bottos-project/core/common/types";
 
 message Transaction {
 	uint32 			version						= 1; //ambiguous
-	uint32 			cursor		              	= 2;
+	uint32 			cursor_num	              	= 2;
 	uint32 			cursor_label		      	= 3;
 	uint64 			lifetime	               	= 4;
-	AccountName 	sender                  	= 5; // max length: 21
-	ContractName 	contract               		= 6; // example: assetmanager@bottoscon, max length: 43
-	MethodName 		method                   	= 7; // max length: 21
+	string		 	sender                  	= 5; // max length: 21
+	string		 	contract               		= 6; // example: assetmanager@bottoscon, max length: 43
+	string	 		method                   	= 7; // max length: 21
 	bytes 			param                     	= 8; 
-	Signature   	signature 					= 9;
-	
-	message Signature {
-		bytes 		signature               	= 1;
-		uint32 		sig_alg						= 2;
-	}
-}
-
-message MethodName {
-	string 			name						= 1;
-}
-
-message AccountName {
-	string 			name						= 1;
-}
-
-message ContractName {
-	string 			name						= 1;
+	uint32 		    sig_alg						= 9;
+	bytes   	    signature 					= 10;
 }

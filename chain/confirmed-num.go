@@ -1,3 +1,4 @@
+
 // Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
@@ -16,30 +17,20 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  define constants for this blockchain
- * @Author: May Luo
- * @Date:   2017-12-01
+ * file description:  blockchain general interface and logic
+ * @Author: Gong Zibin
+ * @Date:   2017-12-07
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package config
+ package chain
 
-const DEFAULT_BLOCK_INTERVAL uint32 = 3
-const BLOCKS_PER_ROUND uint32 = 19
-const VOTED_DELEGATES_PER_ROUND uint32 = 18
-const CONSENSUS_BLOCKS_PERCENT uint32 = 80
-const MAX_DELEGATE_VOTES uint32 = 40
-const DELEGATE_PATICIPATION uint64 = 33
-const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
-const DEFALT_SLOT_CHECK_INTERVAL = 500000
+ import (
+ )
 
-const BOTTOS_CONTRACT_NAME string = "bottos"
-const BOTTOS_INIT_SUPPLY uint64 = 1000000000
+type ConfirmedNum []uint32
 
-const INIT_DELEGATE_NUM uint32 = 19
-const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
-
-const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
-
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
+func (c ConfirmedNum) Len() int           { return len(c) }
+func (c ConfirmedNum) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c ConfirmedNum) Less(i, j int) bool { return c[i] < c[j] }

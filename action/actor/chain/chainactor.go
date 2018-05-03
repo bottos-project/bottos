@@ -151,7 +151,7 @@ func (self *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.
 		resp.HeadBlockHash = actorEnv.Chain.HeadBlockHash()
 		resp.HeadBlockTime = actorEnv.Chain.HeadBlockTime()
 		resp.HeadBlockDelegate = actorEnv.Chain.HeadBlockDelegate()
-		resp.LastConfirmedBlockNum = actorEnv.Chain.LastConfirmedBlockNum()
+		resp.LastConsensusBlockNum = actorEnv.Chain.LastConsensusBlockNum()
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 }

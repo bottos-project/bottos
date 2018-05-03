@@ -42,7 +42,7 @@ type BlockChainInterface interface {
 	HeadBlockNum() uint32
 	HeadBlockHash() common.Hash
 	HeadBlockDelegate() string
-	LastConfirmedBlockNum() uint32
+	LastConsensusBlockNum() uint32
 	GenesisTimestamp() uint64
 
 	InsertBlock(block *types.Block) error 
