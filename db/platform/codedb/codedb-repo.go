@@ -80,66 +80,6 @@ func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectVa
 	return err
 }
 
-func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string, error) {
-	var objectValue string
-	var err error
-
-	k.db.View(func(tx *buntdb.Tx) error {
-		objectValue, err = tx.Get(objectName + key)
-		return err
-	})
-
-	return objectValue, err
-
-}
-
-func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, error) {
-	var objectValue []string
-	var err error
-
-	k.db.View(func(tx *buntdb.Tx) error {
-		err = tx.Ascend(objectName, func(key, value string) bool {
-			objectValue = append(objectValue, key)
-			return true
-		})
-		return err
-	})
-
-	return objectValue, err
-
-}
-func (k *CodeDbRepository) CallGetAllObjects(objectName string) ([]string, error) {
-	var objectValue []string
-	var err error
-
-	k.db.View(func(tx *buntdb.Tx) error {
-		err = tx.Ascend(objectName, func(key, value string) bool {
-			objectValue = append(objectValue, value)
-			return true
-		})
-		return err
-	})
-
-	return objectValue, err
-
-}
-
-func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error) {
-	var objectValue string
-
-	fmt.Println(`{` + indexName + ":" + indexValue.(string) + `}`)
-	err := k.db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendGreaterOrEqual(indexName, `{`+indexName+":"+indexValue.(string)+`}`, func(key, value string) bool {
-			objectValue = value
-			fmt.Printf(value)
-			return true
-		})
-	})
-
-	return objectValue, err
-
-}
-
 func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (string, error) {
 	var objectValue string
 	var err error

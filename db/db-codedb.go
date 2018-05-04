@@ -47,6 +47,9 @@ func (d *DBService) GetAllObjectKeys(objectName string) ([]string, error) {
 func (d *DBService) GetAllObjects(objectName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjects(objectName)
 }
+func (d *DBService) GetAllObjectsSortByIndex(objectName string, indexName string, indexValue interface{}) ([]string, error) {
+	return d.codeRepo.CallGetAllObjectsSortByIndex(objectName, indexName, indexValue)
+}
 func (d *DBService) DeleteObject(objectName string, key string) (string, error) {
 	return d.codeRepo.CallDeleteObject(objectName, key)
 }

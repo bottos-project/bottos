@@ -33,6 +33,7 @@ type CodeDbRepo interface {
 	CallDeleteObject(objectName string, key string) (string, error)
 	CallGetAllObjectKeys(objectName string) ([]string, error)
 	CallGetAllObjects(objectName string) ([]string, error)
+	CallGetAllObjectsSortByIndex(objectName string, indexName string, indexValue interface{}) ([]string, error)
 	CallCommit() error
 	CallRollback() error
 }
