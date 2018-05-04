@@ -114,6 +114,27 @@ func GetAllDelegates(ldb *db.DBService) []*Delegate {
 
 }
 
+func FilterOutgoingDelegate(ldb *db.DBService) []string {
+	objects, err := ldb.GetAllObjects(DelegateObjectName)
+	if err != nil {
+		return nil
+	}
+	var accounts = []string{}
+	for _, object := range objects {
+		res := &Delegate{}
+		err = json.Unmarshal([]byte(object), res)
+		if err != nil {
+			return nil
+		}
+		if res.ReportKey == "xxxxxx" { //TODO
+			continue
+		}
+		accounts = append(accounts, res.AccountName)
+	}
+	return accounts
+
+}
+
 //func GetDelegates(ldb *db.DBService) []*Delegate {
 //	var listDelegate []*Delegate
 //	bc.db.View(func(tx *bolt.Tx) error {
