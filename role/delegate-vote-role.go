@@ -17,15 +17,16 @@ const DelegateVotesObjectKeyName string = "account_name"
 const DelegateVotesObjectIndexVote string = "votes"
 const DelegateVotesObjectIndexFinishTime string = "finish_time"
 
+type Serve struct {
+	Votes          uint64
+	Position       *big.Int //uint128
+	TermUpdateTime *big.Int //uint128
+	TermFinishTime *big.Int //uint128
+
+}
 type DelegateVotes struct {
 	OwnerAccount string
-	Serve        struct {
-		Votes          uint64
-		Position       *big.Int //uint128
-		TermUpdateTime *big.Int //uint128
-		TermFinishTime *big.Int //uint128
-
-	}
+	Serve
 }
 
 func CreateDelegateVotesRole(ldb *db.DBService) error {
@@ -125,8 +126,23 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	d.Serve.TermFinishTime = termFinishTime
 }
 
-func (d *DelegateVotes) startNewLap(currentTermTime *big.Int) {
+//TODO
+func (d *DelegateVotes) ResetAllDelegateNewTerm(currentTermTime *big.Int) {
+
+}
+
+func (d *DelegateVotes) startNewTerm(currentTermTime *big.Int) *DelegateVotes {
 	d.update(d.Serve.Votes, big.NewInt(0), currentTermTime)
+	return &DelegateVotes{
+		OwnerAccount: d.OwnerAccount,
+		Serve: Serve{
+			Votes:          d.Serve.Votes,
+			Position:       d.Serve.Position,
+			TermUpdateTime: d.Serve.TermUpdateTime,
+			TermFinishTime: d.Serve.TermFinishTime,
+		},
+	}
+
 }
 
 func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
