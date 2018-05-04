@@ -12,10 +12,12 @@ import (
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/contract"
+	"github.com/bottos-project/core/contract/contractdb"
 )
 
 type TrxApplyService struct {
 	roleIntf role.RoleInterface
+	ContractDB *contractdb.ContractDB
 	core        chain.BlockChainInterface
 	ncIntf		contract.NativeContractInterface
 }
@@ -25,7 +27,7 @@ var once sync.Once
 
 func CreateTrxApplyService(env *env.ActorEnv) *TrxApplyService {
 	once.Do(func() {
-		trxApplyServiceInst = &TrxApplyService{roleIntf: env.RoleIntf, core: env.Chain, ncIntf:env.NcIntf}
+		trxApplyServiceInst = &TrxApplyService{roleIntf: env.RoleIntf, ContractDB: env.ContractDB, core: env.Chain, ncIntf:env.NcIntf}
 	})
 
 	return trxApplyServiceInst
@@ -118,10 +120,10 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 
-		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, Trx: trx}
+		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 		trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 	} else {
-        /* call evm... */
+		/* call evm... */
 	}
 
 	fmt.Println("trx : ", trx.Hash(),trx,"apply success")

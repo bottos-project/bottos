@@ -14,6 +14,7 @@ import (
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/contract/contractdb"
 )
 
 
@@ -26,7 +27,8 @@ var TrxPoolInst *TrxPool
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction       
 	roleIntf	role.RoleInterface
-	
+	contractDB  *contractdb.ContractDB
+
 	mu           sync.RWMutex
 	quit chan struct{}
 }
@@ -36,6 +38,7 @@ func InitTrxPool(env *env.ActorEnv) *TrxPool {
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		roleIntf:     env.RoleIntf,
+		contractDB:   env.ContractDB,
 		
 		quit:         make(chan struct{}),		
 	}

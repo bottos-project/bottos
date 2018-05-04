@@ -9,11 +9,12 @@ import (
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/chain/extra"
 	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/db"
-
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/api"
+
+	"github.com/bottos-project/core/contract"
+	"github.com/bottos-project/core/contract/contractdb"
 
 	"github.com/micro/go-micro"
 	cactor "github.com/bottos-project/core/action/actor"
@@ -37,6 +38,8 @@ func main() {
 	}
 
 	roleIntf := role.NewRole(dbInst)
+	contractDB := contractdb.NewContractDB(dbInst)
+
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
 		fmt.Println("Create Native Contract error: ", err)
@@ -53,6 +56,7 @@ func main() {
 
 	actorenv := &actionenv.ActorEnv{
 		RoleIntf:	roleIntf, 
+		ContractDB: contractDB,
 		Chain:		chain, 
 		TxStore:	txStore,
 		NcIntf:		nc,
