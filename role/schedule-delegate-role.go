@@ -37,6 +37,7 @@ func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) 
 }
 
 func ResetProducerRace(ldb *db.DBService) {
+	//	ldb.SetDelegateVotesRole
 	//	auto ResetRace = [&db](const producer_votes_object& pvo) {
 	//	      db.modify(pvo, [](producer_votes_object& pvo) {
 	//	         pvo.start_new_race_lap(0);

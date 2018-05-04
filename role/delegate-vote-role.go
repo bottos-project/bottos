@@ -127,8 +127,18 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 }
 
 //TODO
-func (d *DelegateVotes) ResetAllDelegateNewTerm(currentTermTime *big.Int) {
+func (d *DelegateVotes) ResetAllDelegateNewTerm(ldb *db.DBService, currentTermTime *big.Int) {
+	dvotes := d.startNewTerm(currentTermTime)
 
+	keys, err := ldb.GetAllObjectKeys(DelegateVotesObjectName)
+	if err != nil {
+		return
+	}
+	for i, key := range keys {
+		dvotes.OwnerAccount = key
+		SetDelegateVotesRole(ldb, key, dvotes)
+		fmt.Println("key", i, key)
+	}
 }
 
 func (d *DelegateVotes) startNewTerm(currentTermTime *big.Int) *DelegateVotes {
