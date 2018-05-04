@@ -108,6 +108,20 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 	return objectValue, err
 
 }
+
+func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (string, error) {
+	var objectValue string
+	var err error
+
+	k.db.Update(func(tx *buntdb.Tx) error {
+		objectValue, err = tx.Delete(objectName + key)
+		return err
+	})
+
+	return objectValue, err
+
+}
+
 func (k *CodeDbRepository) CallCommit() error {
 	if k.tx == nil {
 		fmt.Println("tx is not start undo session")

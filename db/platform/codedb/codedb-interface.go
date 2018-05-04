@@ -30,6 +30,7 @@ type CodeDbRepo interface {
 	CallSetObject(objectName string, key string, objectValue string) error
 	CallGetObject(objectName string, key string) (string, error)
 	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error)
+	CallDeleteObject(objectName string, key string) (string, error)
 	CallCommit() error
 	CallRollback() error
 }
