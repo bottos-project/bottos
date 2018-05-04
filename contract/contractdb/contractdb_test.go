@@ -38,7 +38,7 @@
 	Value		uint64		`json:"value"`
 }
 
-func TestStrValue(t *testing.T) {
+func TestCreateAndUpdateStrValue(t *testing.T) {
 	ins := db.NewDbService("./file", "./file/db.db")
 	cdb := NewContractDB(ins)
 	
@@ -50,14 +50,15 @@ func TestStrValue(t *testing.T) {
 		To: "bcd",
 		Value: 9999,
 	}
-	str, err := json.Marshal(tp)
-	if err != nil {
-		return
-	}
-
+	str, _ := json.Marshal(tp)
 	cdb.SetStrValue(contract, object, account, string(str))
-	getStr, err := cdb.GetStrValue(contract, object, account)
+	getStr, _ := cdb.GetStrValue(contract, object, account)
+	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
 
+	tp.Value = 1234
+	str, _ = json.Marshal(tp)
+	cdb.SetStrValue(contract, object, account, string(str))
+	getStr, _ = cdb.GetStrValue(contract, object, account)
 	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
 }
 
@@ -91,4 +92,30 @@ func TestDifferentStrValue(t *testing.T) {
 	fmt.Printf("str1=%v, getStr1=%v\n", string(str1), getStr1)
 	fmt.Printf("str2=%v, getStr2=%v\n", string(str2), getStr2)
 }
- 
+
+func TestRemoveStrValue(t *testing.T) {
+	ins := db.NewDbService("./file2", "./file2/db.db")
+	cdb := NewContractDB(ins)
+	
+	var contract string = "testcontract"
+	var object string = "testobject"
+	var account string = "abc"
+	tp := &TestParam{
+		From: "abc",
+		To: "bcd",
+		Value: 9999,
+	}
+	str, err := json.Marshal(tp)
+	if err != nil {
+		return
+	}
+
+	cdb.SetStrValue(contract, object, account, string(str))
+	getStr, err := cdb.GetStrValue(contract, object, account)
+	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
+
+	fmt.Println("remove string")
+	err = cdb.RemoveStrValue(contract, object, account)
+	getStr, err = cdb.GetStrValue(contract, object, account)
+	fmt.Println("get string error: ", err)
+}

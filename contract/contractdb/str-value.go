@@ -42,7 +42,7 @@ func (cdb *ContractDB) setStrValue(objectName string, key string, value string) 
 }
 
 func (cdb *ContractDB) removeStrValue(objectName string, key string) error {
-	// TODO
-	return nil
+	_, err := cdb.Db.DeleteObject(objectName, key)
+	return err
 }
-  
+
