@@ -108,6 +108,21 @@ func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, er
 	return objectValue, err
 
 }
+func (k *CodeDbRepository) CallGetAllObjects(objectName string) ([]string, error) {
+	var objectValue []string
+	var err error
+
+	k.db.View(func(tx *buntdb.Tx) error {
+		err = tx.Ascend(objectName, func(key, value string) bool {
+			objectValue = append(objectValue, value)
+			return true
+		})
+		return err
+	})
+
+	return objectValue, err
+
+}
 
 func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error) {
 	var objectValue string

@@ -67,6 +67,7 @@ type DBApi interface {
 	GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
 	GetAllObjectKeys(objectName string) ([]string, error)
+	GetAllObjects(objectName string) ([]string, error)
 	DeleteObject(objectName string, key string) (string, error)
 	Commit()
 	Rollback()
