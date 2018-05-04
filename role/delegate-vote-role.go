@@ -164,8 +164,8 @@ func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 	d.update(newSpeed, newPosition, currentTermTime)
 }
 
-func GetAllVotesDelegates(ldb *db.DBService) []string {
-	objects, err := ldb.GetAllObjects(DelegateVotesObjectName)
+func GetAllSortVotesDelegates(ldb *db.DBService) []string {
+	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote)
 	if err != nil {
 		return nil
 	}
