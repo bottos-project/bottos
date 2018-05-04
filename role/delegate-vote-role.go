@@ -163,3 +163,7 @@ func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 
 	d.update(newSpeed, newPosition, currentTermTime)
 }
+
+func (d *DelegateVotes) GetActiveDelegates(ldb *db.DBService) {
+
+}

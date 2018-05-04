@@ -41,3 +41,7 @@ func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
 	s.CurrentTermTime = big.NewInt(0)
 	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
+
+func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) {
+
+}

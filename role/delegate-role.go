@@ -96,6 +96,23 @@ func GetDelegateRoleBySignKey(ldb *db.DBService, keyValue string) (*Delegate, er
 
 	return res, nil
 }
+func GetAllDelegates(ldb *db.DBService) []*Delegate {
+	objects, err := ldb.GetAllObjects(DelegateObjectName)
+	if err != nil {
+		return nil
+	}
+	var dgates = []*Delegate{}
+	for _, object := range objects {
+		res := &Delegate{}
+		err = json.Unmarshal([]byte(object), res)
+		if err != nil {
+			return nil
+		}
+		dgates = append(dgates, res)
+	}
+	return dgates
+
+}
 
 //func GetDelegates(ldb *db.DBService) []*Delegate {
 //	var listDelegate []*Delegate
