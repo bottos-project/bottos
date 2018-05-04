@@ -9,7 +9,8 @@ import (
 )
 
 type ScheduleDelegate struct {
-	CurrentRaceTime big.Int
+	CurrentTermTime *big.Int
+	DelegateVotes
 }
 
 func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) {
@@ -36,21 +37,7 @@ func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) 
 
 }
 
-func ResetProducerRace(ldb *db.DBService) {
-	//	ldb.SetDelegateVotesRole
-	//	auto ResetRace = [&db](const producer_votes_object& pvo) {
-	//	      db.modify(pvo, [](producer_votes_object& pvo) {
-	//	         pvo.start_new_race_lap(0);
-	//	      });
-	//	   };
-	//	   const auto& AllProducers = db.get_index<producer_votes_multi_index, by_votes>();
-
-	//	   boost::for_each(AllProducers, ResetRace);
-	//	   db.modify(*this, [](producer_schedule_object& pso) {
-	//	      pso.currentRaceTime = 0;
-	//	   });
-	//	}
-
-	//	} } // namespace eosio::chain
-
+func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
+	s.CurrentTermTime = big.NewInt(0)
+	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
