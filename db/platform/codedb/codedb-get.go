@@ -90,12 +90,12 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 	return objectValue, err
 
 }
-func (k *CodeDbRepository) CallGetAllObjectsSortByIndex(objectName string, indexName string, indexValue interface{}) ([]string, error) {
+func (k *CodeDbRepository) CallGetAllObjectsSortByIndex(objectName string, indexName string) ([]string, error) {
 	var objectValue []string
 	var err error
 
 	err = k.db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendGreaterOrEqual(indexName, `{`+indexName+":"+indexValue.(string)+`}`, func(key, value string) bool {
+		return tx.Ascend(indexName, func(key, value string) bool {
 			objectValue = append(objectValue, value)
 			return true
 		})
