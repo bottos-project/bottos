@@ -180,3 +180,20 @@ func GetAllSortVotesDelegates(ldb *db.DBService) []string {
 	}
 	return accounts
 }
+
+func GetAllSortFinishTimeDelegates(ldb *db.DBService) []string {
+	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime)
+	if err != nil {
+		return nil
+	}
+	var accounts = []string{}
+	for _, object := range objects {
+		res := &DelegateVotes{}
+		err = json.Unmarshal([]byte(object), res)
+		if err != nil {
+			return nil
+		}
+		accounts = append(accounts, res.OwnerAccount)
+	}
+	return accounts
+}

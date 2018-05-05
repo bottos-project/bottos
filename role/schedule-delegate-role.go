@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
 )
 
@@ -42,6 +44,52 @@ func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
 	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
 
-func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) {
+func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
+	var tmpList []string
+	dgates := GetAllSortVotesDelegates(ldb)
+	fDgates := FilterOutgoingDelegate(ldb)
+	for _, dgate := range dgates {
+		for _, fdgate := range fDgates {
+			if dgate == fdgate {
+				continue
+			}
+			tmpList = append(tmpList, dgate)
+		}
+	}
+	if uint32(len(tmpList)) <= config.BLOCKS_PER_ROUND {
+		return nil
+	}
+	candidates := tmpList[0:17]
+	sort.Strings(candidates)
+
+	//TODO Check exist ownername
+	var eligibleList []string
+	ftdelegates := GetAllSortFinishTimeDelegates(ldb)
+	for _, ft := range ftdelegates {
+		for _, fdgate := range fDgates {
+			if ft == fdgate {
+				continue
+			}
+			eligibleList = append(eligibleList, ft)
+		}
+	}
+
+	//filter votesList
+	var eligibles []string
+
+	for _, list := range eligibleList {
+		for _, votes := range tmpList {
+			if list == votes {
+				continue
+			}
+			eligibles = append(eligibles, list)
+		}
+	}
+	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND
+	lastTermUp := eligibles[0 : count-1]
+	//get final reporter lists
+	reporterList := append(candidates, lastTermUp...)
+
+	return reporterList
 
 }
