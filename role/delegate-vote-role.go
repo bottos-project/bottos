@@ -5,6 +5,7 @@ import (
 
 	"encoding/json"
 
+	"errors"
 	"fmt"
 
 	"github.com/bottos-project/core/common"
@@ -125,33 +126,48 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	d.Serve.TermUpdateTime = currentTermTime
 	d.Serve.TermFinishTime = termFinishTime
 }
+func GetAllDelegateVotes(ldb *db.DBService) ([]*DelegateVotes, error) {
+	objects, err := ldb.GetAllObjects(DelegateVotesObjectName)
+	if err != nil {
+		return nil, err
+	}
+	var dgates = []*DelegateVotes{}
+	for _, object := range objects {
+		res := &DelegateVotes{}
+		err = json.Unmarshal([]byte(object), res)
+		if err != nil {
+			return nil, errors.New("invalid object to Unmarshal" + object)
+		}
+		dgates = append(dgates, res)
+	}
+	return dgates, nil
+
+}
 
 //TODO
-func (d *DelegateVotes) ResetAllDelegateNewTerm(ldb *db.DBService) {
-	dvotes := d.startNewTerm(big.NewInt(0))
+func ResetAllDelegateNewTerm(ldb *db.DBService) {
 
-	keys, err := ldb.GetAllObjectKeys(DelegateVotesObjectName)
+	voteDelegates, err := GetAllDelegateVotes(ldb)
 	if err != nil {
 		return
 	}
-	for i, key := range keys {
-		dvotes.OwnerAccount = key
-		SetDelegateVotesRole(ldb, key, dvotes)
-		fmt.Println("key", i, key)
+	for _, object := range voteDelegates {
+		dvotes := object.startNewTerm(big.NewInt(0))
+		dvotes.OwnerAccount = object.OwnerAccount
+		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
+		fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
 	}
 }
 
-func (d *DelegateVotes) SetDelegateNewTerm(ldb *db.DBService, termTime *big.Int, lists []string) {
-	dvotes := d.startNewTerm(termTime)
-
-	for _, delegate := range lists {
-		_, err := GetDelegateVotesRoleByAccountName(ldb, delegate)
+func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string) {
+	for _, accountName := range lists {
+		delegate, err := GetDelegateVotesRoleByAccountName(ldb, accountName)
 		if err != nil {
 			return
 		}
-		dvotes.OwnerAccount = delegate
-		SetDelegateVotesRole(ldb, delegate, dvotes)
-		fmt.Println("key", delegate)
+		dvotes := delegate.startNewTerm(termTime)
+		SetDelegateVotesRole(ldb, accountName, dvotes)
+		fmt.Println("key", accountName, dvotes)
 
 	}
 }
