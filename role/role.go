@@ -63,6 +63,8 @@ type RoleInterface interface {
 
 	GetSlotAtTime(current uint64) uint32
 	GetSlotTime(slotNum uint32) uint64
+
+	ElectNextTermDelegates() []string
 }
 
 func NewRole(db *db.DBService) RoleInterface {
@@ -166,6 +168,10 @@ func (r *Role) SetTransactionExpiration(txHash common.Hash, value *TransactionEx
 
 func (r *Role) GetTransactionExpiration(txHash common.Hash) (*TransactionExpiration, error) {
 	return GetTransactionExpirationRoleByHash(r.Db, txHash)
+}
+
+func (r *Role) ElectNextTermDelegates() []string {
+	return ElectNextTermDelegates(r.Db)
 }
 
 func (r *Role) initRole() {
