@@ -9,13 +9,12 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/validate"
-	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/contract"
 )
 
-var account_name uint64
+
 const (
 	INVOKE_FUNCTION = "invoke"
 	CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\vm_bak\\testcase\\test_data2\\contract.wasm"
@@ -35,21 +34,6 @@ type Rtn struct {
 	Val  string
 }
 
-type Apply_context struct {
-	Msg         Message
-}
-
-type Authorization struct {
-	Accout        string
-	CodeVersion	  common.Hash
-}
-
-type Message struct {
-	Wasm_name    string           //crx name
-	Method_name  string           //method name
-	Auth         Authorization
-	Method_param []byte           //parameter
-}
 
 type FuncInfo struct {
 	func_index int64
@@ -73,7 +57,7 @@ type wasm_interface interface {
 
 	Init() error
 	//　a wrap for VM_Call
-	Apply( ctx Apply_context ,execution_time uint32, received_block bool ) interface{}
+	Apply( ctx *contract.Context ,execution_time uint32, received_block bool ) interface{}
 
 	GetFuncInfo(module wasm.Module , entry wasm.ExportEntry) error
 }
@@ -136,7 +120,7 @@ func importer(name string) (*wasm.Module, error) {
 
 
 //Search the CTX infor at the database according to apply_context
-func NewWASM ( ctx *Apply_context ) *VM {
+func NewWASM ( ctx *contract.Context ) *VM {
 
 	fmt.Println("NewWASM")
 
@@ -147,19 +131,22 @@ func NewWASM ( ctx *Apply_context ) *VM {
 	//if non-Test condition , get wasm_code from Accout
 	if !TST {
 		//db handler will be invoked from Msg struct
-		account_name, err := role.GetAccountRole(nil,  ctx.Msg.Auth.Accout)
+		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 		if err != nil {
 			fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
 			return nil
 		}
 
+		/*
+		// TODO
 		if ctx.Msg.Auth.CodeVersion !=  account_name.CodeVersion{
 			//check wasm file's hash
 			//err = errors.New("*ERROR* Fail to match account's information !!!")
 
 			return nil
 		}
-		wasm_code = account_name.ContractCode
+		*/
+		wasm_code = accountObj.ContractCode
 	} else {
 		wasm_code, err = ioutil.ReadFile(CTX_WASM_FILE)
 		if err != nil {
@@ -195,14 +182,14 @@ func (engine *WASM_ENGINE) Init() error {
 }
 
 
-func (engine *WASM_ENGINE) Apply ( ctx *Apply_context ,execution_time uint32, received_block bool ) (interface{} , error){
+func (engine *WASM_ENGINE) Apply ( ctx *contract.Context, execution_time uint32, received_block bool ) (interface{} , error){
 	fmt.Println("Apply")
 
 	//search matched VM struct according to CTX
-	vm , ok := engine.vm_map[ctx.Msg.Wasm_name];
+	vm , ok := engine.vm_map[ctx.Trx.Contract];
 	if !ok {
 		vm = NewWASM(ctx)
-		engine.vm_map[ctx.Msg.Wasm_name] = vm
+		engine.vm_map[ctx.Trx.Contract] = vm
 	}
 
 	vm.funcInfo.func_entry , ok = vm.module.Export.Entries[INVOKE_FUNCTION]
@@ -210,7 +197,7 @@ func (engine *WASM_ENGINE) Apply ( ctx *Apply_context ,execution_time uint32, re
 		return nil , errors.New("*ERROR* Failed to find invoke method from wasm module !!!")
 	}
 
-	if err := vm.GetFuncInfo(ctx.Msg.Method_name,ctx.Msg.Method_param); err != nil {
+	if err := vm.GetFuncInfo(ctx.Trx.Method, ctx.Trx.Param); err != nil {
 		return nil , err
 	}
 

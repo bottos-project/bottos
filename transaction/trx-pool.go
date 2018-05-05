@@ -15,6 +15,13 @@ import (
 	"github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/contract/contractdb"
+
+	proto "github.com/golang/protobuf/proto"
+    "github.com/bottos-project/crypto-go/crypto"
+    "crypto/sha256"
+    "encoding/hex"
+    //"log"
+    //"github.com/golang/protobuf/ptypes/wrappers"
 )
 
 
@@ -91,7 +98,7 @@ func (self *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-func (self *TrxPool)CheckTransactionBaseConditionFromFront() (bool, error){
+func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, error){
 
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
 		return false, fmt.Errorf("check max pending trx num error")
@@ -114,7 +121,7 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 	fmt.Printf("trx param is %s\n",trx.Param)
 	
-	if checkResult, err := self.CheckTransactionBaseConditionFromFront(); true != checkResult {
+	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)		
 		return
@@ -193,3 +200,47 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 
 	return nil;
 }
+
+
+func getPubKey(account string) ([]byte) {
+
+       return nil
+}
+
+func VerifySignature(trx *types.Transaction) bool {
+       trxToVerify := &types.Transaction {
+               Version    :trx.Version    , 
+        CursorNum  :trx.CursorNum  ,
+        CursorLabel:trx.CursorLabel,
+        Lifetime   :trx.Lifetime   ,
+        Sender     :trx.Sender     ,
+        Contract   :trx.Contract   ,
+        Method     :trx.Method     ,
+        Param      :trx.Param      ,
+        SigAlg     :trx.SigAlg     ,
+        Signature  :[] byte{},
+       }
+
+       serializeData, err := proto.Marshal(trxToVerify)
+       if nil != err {
+               return false
+       }
+
+       //fmt.Println("proto code and hex:")
+       fmt.Println(serializeData)
+    //log.Println(hex.EncodeToString(serializeData))
+
+
+       senderPubKey := getPubKey(trx.Sender)
+
+       h := sha256.New()
+       h.Write([]byte(hex.EncodeToString(serializeData)))
+       hashData := h.Sum(nil)
+
+       is_bool := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
+       //log.Println(is_bool)
+
+       return is_bool
+       
+}
+	
