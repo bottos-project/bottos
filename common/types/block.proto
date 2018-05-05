@@ -19,4 +19,5 @@ message Header {
 	bytes merkle_root				= 5;
 	bytes delegate                  = 6;
 	bytes delegate_sign				= 7;
+	repeated bytes delegate_changes = 8;
 }
