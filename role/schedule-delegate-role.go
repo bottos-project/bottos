@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"sort"
 
+	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
 )
@@ -41,6 +42,10 @@ func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) 
 
 func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
 	s.CurrentTermTime = big.NewInt(0)
+	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
+}
+func (s *ScheduleDelegate) SetDelegateTerm(ldb *db.DBService, termTime *big.Int) {
+	s.CurrentTermTime = termTime
 	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
 
@@ -89,6 +94,17 @@ func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
 	lastTermUp := eligibles[0 : count-1]
 	//get final reporter lists
 	reporterList := append(candidates, lastTermUp...)
+
+	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp[count-1])
+	if err != nil {
+		return nil
+	}
+
+	if (config.BLOCKS_PER_ROUND >= uint32(len(ftdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
+		s.ResetDelegateTerm(ldb)
+	} else {
+		s.SetDelegateTerm(ldb, newCandidates.TermFinishTime)
+	}
 
 	return reporterList
 
