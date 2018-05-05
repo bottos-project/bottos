@@ -91,7 +91,7 @@ func (self *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-func (self *TrxPool)CheckTransactionBaseConditionFromFront() (bool, error){
+func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, error){
 
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
 		return false, fmt.Errorf("check max pending trx num error")
@@ -114,7 +114,7 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 	fmt.Printf("trx param is %s\n",trx.Param)
 	
-	if checkResult, err := self.CheckTransactionBaseConditionFromFront(); true != checkResult {
+	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)		
 		return
