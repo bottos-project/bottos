@@ -69,7 +69,7 @@ func (r *Reporter) IsSynced(when uint64) bool {
 }
 
 func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
-	accountName, err := r.roleIntf.GetScheduleDelegateRole(slot)
+	accountName, err := r.roleIntf.GetCandidateBySlot(slot)
 	if err != nil {
 		fmt.Println("cannot get delegate by slot", slot)
 		return false
