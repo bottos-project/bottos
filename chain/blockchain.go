@@ -27,21 +27,21 @@ package chain
 
 import (
 	"fmt"
-	"sync"
 	"sort"
+	"sync"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
 	//trx "github.com/bottos-project/core/transaction"
 )
 
 type BlockChain struct {
-	blockDb		*db.DBService
-	roleIntf	role.RoleInterface
-	blockCache	*BlockChainCache
+	blockDb    *db.DBService
+	roleIntf   role.RoleInterface
+	blockCache *BlockChainCache
 
 	handledBlockCB HandledBlockCallback
 
@@ -49,6 +49,7 @@ type BlockChain struct {
 
 	chainmu sync.RWMutex
 }
+
 func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
@@ -58,7 +59,7 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (Bl
 	bc := &BlockChain{
 		blockDb:    dbInstance,
 		blockCache: blockCache,
-		roleIntf: roleIntf,
+		roleIntf:   roleIntf,
 	}
 
 	bc.genesisBlock = bc.GetBlockByNumber(0)
@@ -184,7 +185,7 @@ func (bc *BlockChain) LoadBlockDb() error {
 	}
 
 	bc.updateChainState(lastBlock)
-	
+
 	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
 	// TODO replay
@@ -218,10 +219,10 @@ func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block
 	chainSate, _ := bc.roleIntf.GetChainState()
 
 	blockTime := block.GetTimestamp()
-	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime));
+	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime))
 
 	fmt.Println(delegate.AccountName, delegate.LastConfirmedBlockNum)
-	
+
 	delegate.LastSlot = newSlot
 	delegate.LastConfirmedBlockNum = block.GetNumber()
 	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
@@ -314,7 +315,7 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 		return fmt.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
 	}
 
-	if block.GetNumber() != bc.HeadBlockNum() + 1 {
+	if block.GetNumber() != bc.HeadBlockNum()+1 {
 		return fmt.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
 	}
 
@@ -323,28 +324,28 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
-	if block.GetTimestamp() > bc.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL) {
+	if block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL) {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
-	
+
 	//slot := bc.roleIntf.GetSlotAtTime(block.GetTimestamp())
 	//scheduleDelegateName, _ := bc.roleIntf.GetScheduleDelegateRole(slot)
 	//scheduleDelegate, _ := bc.roleIntf.GetDelegateByAccountName(scheduleDelegateName)
 	// TODO delegate signature check
-	if ok := block.ValidateSign(/*producer*/); !ok {
+	if ok := block.ValidateSign( /*producer*/ ); !ok {
 		return fmt.Errorf("Producer Sign Error")
 	}
 
 	// delegate schedule check
 	/*
-	blockDelegate := string(block.GetDelegate())
-	if blockDelegate != scheduleDelegate.AccountName {
-		return fmt.Errorf("Schedule Delegate Error: schedule delegate %v, block delegate %v", scheduleDelegate.AccountName, blockDelegate)
-	}
+		blockDelegate := string(block.GetDelegate())
+		if blockDelegate != scheduleDelegate.AccountName {
+			return fmt.Errorf("Schedule Delegate Error: schedule delegate %v, block delegate %v", scheduleDelegate.AccountName, blockDelegate)
+		}
 	*/
 
 	return nil
-} 
+}
 
 func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	bc.chainmu.Lock()
@@ -381,4 +382,3 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	return nil
 }
-
