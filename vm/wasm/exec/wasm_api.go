@@ -9,10 +9,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/validate"
-
 	"github.com/bottos-project/core/contract"
 )
 
