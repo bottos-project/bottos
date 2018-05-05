@@ -51,7 +51,7 @@ type RoleInterface interface {
 	SetDelegate(accountName string, value *Delegate) error
 	GetDelegateByAccountName(name string) (*Delegate, error)
 	GetDelegateBySignKey(key string) (*Delegate, error)
-	GetScheduleDelegateRole(slotNum uint32) (string, error)
+	GetCandidateBySlot(slotNum uint32) (string, error)
 	GetDelegateParticipationRate() uint64
 
 	SetBlockHistory(blockNumber uint32, blockHash common.Hash) error
@@ -140,8 +140,8 @@ func (r *Role) GetDelegateParticipationRate() uint64 {
 	return 10000 * rate.RecentSlotFilled / 64
 }
 
-func (r *Role) GetScheduleDelegateRole(slotNum uint32) (string, error) {
-	return GetScheduleDelegateRole(r.Db, slotNum)
+func (r *Role) GetCandidateBySlot(slotNum uint32) (string, error) {
+	return GetCandidateBySlot(r.Db, slotNum)
 }
 
 func (r *Role) SetBlockHistory(blockNumber uint32, blockHash common.Hash) error {

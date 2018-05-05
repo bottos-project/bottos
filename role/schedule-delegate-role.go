@@ -1,6 +1,7 @@
 package role
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -11,12 +12,38 @@ import (
 	"github.com/bottos-project/core/db"
 )
 
+const ScheduleDelegateObjectName string = "scheduledelegate"
+
+//singleton role
 type ScheduleDelegate struct {
 	CurrentTermTime *big.Int
-	//	DelegateVotes
 }
 
-func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) {
+func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	return ldb.SetObject(ScheduleDelegateObjectName, "my", string(jsonvalue))
+}
+
+func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
+	value, err := ldb.GetObject(ScheduleDelegateObjectName, "my")
+	if err != nil {
+		return nil, err
+	}
+
+	res := &ScheduleDelegate{}
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+
+}
+func GetCandidateBySlot(ldb *db.DBService, slotNum uint32) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		fmt.Println("err")
@@ -40,16 +67,18 @@ func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) 
 
 }
 
-func (s *ScheduleDelegate) ResetCandidatesTerm(ldb *db.DBService) {
-	s.CurrentTermTime = big.NewInt(0)
+func ResetCandidatesTerm(ldb *db.DBService) {
+	sch := &ScheduleDelegate{big.NewInt(0)}
+	SetScheduleDelegateRole(ldb, sch)
 	ResetAllDelegateNewTerm(ldb)
 }
-func (s *ScheduleDelegate) SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
-	s.CurrentTermTime = termTime
+func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
+	sch := &ScheduleDelegate{termTime}
+	SetScheduleDelegateRole(ldb, sch)
 	SetDelegateListNewTerm(ldb, termTime, list)
 }
 
-func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
+func ElectNextTermDelegates(ldb *db.DBService) []string {
 	var tmpList []string
 	dgates := GetAllSortVotesDelegates(ldb)
 	fDgates := FilterOutgoingDelegate(ldb)
@@ -101,9 +130,9 @@ func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
 	}
 
 	if (config.BLOCKS_PER_ROUND >= uint32(len(ftdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
-		s.ResetCandidatesTerm(ldb)
+		ResetCandidatesTerm(ldb)
 	} else {
-		s.SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
+		SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
 
 	return reporterList
