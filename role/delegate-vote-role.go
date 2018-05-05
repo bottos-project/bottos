@@ -141,6 +141,21 @@ func (d *DelegateVotes) ResetAllDelegateNewTerm(ldb *db.DBService) {
 	}
 }
 
+func (d *DelegateVotes) SetDelegateNewTerm(ldb *db.DBService, termTime *big.Int, lists []string) {
+	dvotes := d.startNewTerm(termTime)
+
+	for _, delegate := range lists {
+		_, err := GetDelegateVotesRoleByAccountName(ldb, delegate)
+		if err != nil {
+			return
+		}
+		dvotes.OwnerAccount = delegate
+		SetDelegateVotesRole(ldb, delegate, dvotes)
+		fmt.Println("key", delegate)
+
+	}
+}
+
 func (d *DelegateVotes) startNewTerm(currentTermTime *big.Int) *DelegateVotes {
 	d.update(d.Serve.Votes, big.NewInt(0), currentTermTime)
 	return &DelegateVotes{
