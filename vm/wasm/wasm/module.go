@@ -39,6 +39,8 @@ const (
 type Function struct {
 	Sig  *FunctionSig
 	Body *FunctionBody
+	EnvFunc    bool
+	Method     string
 }
 
 // Module represents a parsed WebAssembly module:
@@ -74,6 +76,20 @@ type Module struct {
 		Tables   int
 		Memories int
 	}
+}
+
+type EnvGlobal struct {
+	Env bool
+	Val uint64
+}
+
+func NewEnvGlobal(env bool , val uint64 ) *EnvGlobal {
+	e := &EnvGlobal{
+		Env: env,
+		Val: val,
+	}
+
+	return e
 }
 
 // ResolveFunc is a function that takes a module name and
@@ -114,7 +130,7 @@ func ReadModule(r io.Reader, resolvePath ResolveFunc) (*Module, error) {
 	}
 
 	if m.Import != nil && resolvePath != nil {
-		err := m.resolveImports(resolvePath)
+		err := m.resolveImports(resolvePath) //resolvePath is importer() function
 		if err != nil {
 			return nil, err
 		}

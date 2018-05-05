@@ -23,6 +23,9 @@ package exec
 
 import (
 	"math"
+	"unsafe"
+	"bytes"
+	"encoding/binary"
 )
 
 func (vm *VM) i32Wrapi64() {
@@ -107,4 +110,45 @@ func (vm *VM) f64ConvertUI64() {
 
 func (vm *VM) f64PromoteF32() {
 	vm.pushFloat64(float64(vm.popFloat32()))
+}
+
+func BytesToStr(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func F32ToBytes(f32 float32) []byte {
+	bytes := make([]byte, 4)
+	bits  := math.Float32bits(f32)
+
+	binary.LittleEndian.PutUint32(bytes, bits)
+
+	return bytes
+}
+
+func BytesToF32(b []byte) float32 {
+	f32  := math.Float32frombits(binary.LittleEndian.Uint32(b))
+	return f32
+}
+
+func F64ToBytes(f64 float64) []byte {
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, math.Float64bits(f64))
+	return bytes
+}
+
+func BytesToF64(b []byte) float64 {
+	f64  := math.Float64frombits(binary.LittleEndian.Uint64(b))
+	return f64
+}
+
+func I32ToBytes(i32 uint32) []byte {
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.LittleEndian, i32)
+	return bytesBuffer.Bytes()
+}
+
+func I64ToBytes(i64 uint64) []byte {
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.LittleEndian, i64)
+	return bytesBuffer.Bytes()
 }

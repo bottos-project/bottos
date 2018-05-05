@@ -24,7 +24,28 @@ package exec
 import (
 	"errors"
 	"math"
+	"reflect"
+	"encoding/binary"
 )
+
+type Type int
+
+const (
+	Int8 Type = iota
+	Int16
+	Int32
+	Int64
+	Float32
+	Float64
+	String
+	Struct
+	Unknown
+)
+
+type typeInfo struct {
+	Type    Type
+	Len     int
+}
 
 // ErrOutOfBoundsMemoryAccess is the error value used while trapping the VM
 // when it detects an out of bounds access to the linear memory.
@@ -229,3 +250,81 @@ func (vm *VM) growMemory() {
 	vm.memory = append(vm.memory, make([]byte, n*wasmPageSize)...)
 	vm.pushInt32(int32(curLen))
 }
+func (vm *VM) GetData ( pos uint64 ) ([]byte, error) {
+
+	if pos < 0 || pos == uint64(math.MaxInt64) {
+		return nil , errors.New("*EORROR* Invalid parameter , position is out of memory !!! ")
+	}
+
+	t, ok := vm.memType[pos] //map[uint64]*typeInfo
+	if !ok {
+		return nil, errors.New("*EORROR* Invalid parameter , the specified type can't be found by the parameter !!! ")
+	}
+
+	if int(pos) + t.Len > len(vm.memory) {
+		return nil, errors.New("*EORROR* Invalid parameter , position is out of memory !!!")
+	}
+
+	return vm.memory[int(pos) : int(pos) + t.Len ], nil
+}
+
+func (vm *VM) StorageData( data interface{}) (int, error) {
+
+	if data == nil {
+		return 0 , errors.New("*ERROR* Parameter is empty !!! ")
+	}
+
+	switch reflect.TypeOf(data).Kind() {
+	case reflect.String:
+		return vm.storageMemory([]byte(data.(string)), String)
+	case reflect.Slice:
+		switch data.(type) {
+		case []byte:
+			return vm.storageMemory(data.([]byte), String)
+
+		case []int:
+			byte_array := make([]byte, len(data.([]int))*4)
+			for i, v := range data.([]int) {
+				array := make([]byte, 4)
+				binary.LittleEndian.PutUint32(array, uint32(v))
+				copy(byte_array[i*4:(i+1)*4], array)
+			}
+			return vm.storageMemory(byte_array, Int32)
+
+		default:
+			return 0, errors.New("*ERROR* Parameter's type can't be supported !!! ")
+		}
+	default:
+		return 0, errors.New("*ERROR* Parameter's type can't be supported !!! ")
+	}
+}
+
+func (vm *VM) getStoragePos( size int , t Type ) (int , error) {
+
+	if size <= 0 || vm.memory == nil  {
+		return 0, errors.New("*ERROR* Memory had't been initial or data is empty !!!")
+	}
+
+	if vm.memPos + size > len(vm.memory) {
+		return 0, errors.New("*ERROR* data size is out of the memory's limit !!!")
+	}
+
+	newpos    := vm.memPos + 1
+	vm.memPos += size
+
+	vm.memType[uint64(newpos)] = &typeInfo{Type: t , Len: size}
+
+	return newpos, nil
+}
+
+func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
+	index, err := vm.getStoragePos(len(b), t) //get new pos after storage new data
+	if err != nil {
+		return 0, errors.New("*ERROR* Failed to get the position of data !!!")
+	}
+
+	copy(vm.memory[index:index+len(b)], b)
+
+	return index, nil
+}
+
