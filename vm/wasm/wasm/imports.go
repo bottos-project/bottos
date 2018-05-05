@@ -114,6 +114,53 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 
 	var funcs uint32
 	for _, importEntry := range module.Import.Entries {
+		//add support for "env" import
+		isEnv := false
+		if importEntry.ModuleName == "env" {
+			isEnv = true
+		}
+
+		if isEnv {
+			switch importEntry.Kind {
+			case ExternalFunction:
+				//get the function type
+				funcType := module.Types.Entries[importEntry.Type.(FuncImport).Type]
+
+				//todo complete the function sig and body
+				//todo verify the env function sig????
+
+				fn := &Function{EnvFunc: true, Method: importEntry.FieldName, Sig: &FunctionSig{ParamTypes: funcType.ParamTypes, ReturnTypes: funcType.ReturnTypes}, Body: &FunctionBody{}}
+				module.FunctionIndexSpace = append(module.FunctionIndexSpace, *fn)
+				module.Code.Bodies = append(module.Code.Bodies, *fn.Body)
+				module.imports.Funcs = append(module.imports.Funcs, funcs)
+				funcs++
+			case ExternalGlobal:
+				//todo to support the memorybase global
+				if importEntry.FieldName == "memoryBase" || importEntry.FieldName == "tableBase" {
+					glb := &GlobalEntry{Type: &GlobalVar{Type: ValueTypeI32, Mutable: false},
+						Init:    []byte{getGlobal, byte(0), end}, //global 0 end
+						envGlobal: NewEnvGlobal(true , uint64(65536 / 4)),
+					}
+					module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
+					module.imports.Globals++
+				}
+
+			case ExternalTable:
+				//todo to support the table import
+				module.TableIndexSpace[0] = []uint32{uint32(0)}
+				module.imports.Tables++
+			case ExternalMemory:
+				initMemSize := importEntry.Type.(MemoryImport).Type.Limits.Initial
+				//todo decide how to lazy alloc the memory???
+				memory := make([]byte, 65536*initMemSize)
+				module.LinearMemoryIndexSpace[0] = memory
+				module.imports.Memories++
+
+			default:
+				fmt.Println("not support import type")
+
+			}
+		} else {
 		importedModule, ok := modules[importEntry.ModuleName]
 		if !ok {
 			var err error
@@ -166,23 +213,25 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 			module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
 			module.imports.Globals++
 
-			// In both cases below, index should be always 0 (according to the MVP)
-			// We check it against the length of the index space anyway.
-		case ExternalTable:
-			if int(index) >= len(importedModule.TableIndexSpace) {
-				return InvalidTableIndexError(index)
+				// In both cases below, index should be always 0 (according to the MVP)
+				// We check it against the length of the index space anyway.
+			case ExternalTable:
+				if int(index) >= len(importedModule.TableIndexSpace) {
+					return InvalidTableIndexError(index)
+				}
+				module.TableIndexSpace[0] = importedModule.TableIndexSpace[0]
+				module.imports.Tables++
+			case ExternalMemory:
+				if int(index) >= len(importedModule.LinearMemoryIndexSpace) {
+					return InvalidLinearMemoryIndexError(index)
+				}
+				module.LinearMemoryIndexSpace[0] = importedModule.LinearMemoryIndexSpace[0]
+				module.imports.Memories++
+			default:
+				return InvalidExternalError(exportEntry.Kind)
 			}
-			module.TableIndexSpace[0] = importedModule.TableIndexSpace[0]
-			module.imports.Tables++
-		case ExternalMemory:
-			if int(index) >= len(importedModule.LinearMemoryIndexSpace) {
-				return InvalidLinearMemoryIndexError(index)
-			}
-			module.LinearMemoryIndexSpace[0] = importedModule.LinearMemoryIndexSpace[0]
-			module.imports.Memories++
-		default:
-			return InvalidExternalError(exportEntry.Kind)
 		}
+
 	}
 	return nil
 }

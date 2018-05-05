@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"bytes"
 
 	"github.com/bottos-project/core/vm/wasm/disasm"
 	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
@@ -77,6 +78,13 @@ type VM struct {
 	compiledFuncs []compiledFunction
 
 	funcTable [256]func()
+
+	memPos   int
+	// define a map relationship between memory address and data's type
+	memType  map[uint64]*typeInfo
+	//define env function
+	envFunc  *EnvFunc
+	funcInfo FuncInfo
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -87,14 +95,54 @@ var endianess = binary.LittleEndian
 // NewVM creates a new VM from a given module. If the module defines a
 // start function, it will be executed.
 func NewVM(module *wasm.Module) (*VM, error) {
-	var vm VM
+
+	var value interface{}
+	var err   error
+
+	var vm = &VM {
+		envFunc : NewEnvFunc(),
+		memPos  : -1,
+		memType : make(map[uint64]*typeInfo),
+		memory  : make([]byte, wasmPageSize),
+	}
+
+	if len(module.LinearMemoryIndexSpace) <= 0 {
+		return nil, errors.New("*ERROR* Invalid wasm module !!! ")
+	}
 
 	if module.Memory != nil && len(module.Memory.Entries) != 0 {
 		if len(module.Memory.Entries) > 1 {
-			return nil, ErrMultipleLinearMemories
+			return nil , ErrMultipleLinearMemories
 		}
 		vm.memory = make([]byte, uint(module.Memory.Entries[0].Limits.Initial)*wasmPageSize)
-		copy(vm.memory, module.LinearMemoryIndexSpace[0])
+	}
+	copy(vm.memory, module.LinearMemoryIndexSpace[0])
+
+	if module.Data != nil {
+		for _ , funcList := range module.Data.Entries {
+			if value, err = module.ExecInitExpr(funcList.Offset); err != nil {
+				return nil,  err
+			}
+
+			index, ok := value.(int32)
+			if !ok {
+				return nil , errors.New("*ERROR* Failed to get data index from memory !!!")
+			}
+
+			// if it contains multi-function(splited by '0')
+			if bytes.Contains(funcList.Data, []byte{byte(0)}) != true { //if it just contains one function
+				vm.memType[uint64(index)] = &typeInfo{Type: String, Len: len(funcList.Data)}
+			} else {
+				var idx = int(index)
+				funcArray := bytes.Split(funcList.Data, []byte{byte(0)})
+				for _, function := range funcArray { //record parm's storage address and its type info
+					vm.memType[uint64(idx)] = &typeInfo{Type: String, Len: len(function) + 1}
+					idx += len(function) + 1
+				}
+			}
+		}
+	} else {
+		vm.memPos = len(vm.memory) / 2
 	}
 
 	vm.compiledFuncs = make([]compiledFunction, len(module.FunctionIndexSpace))
@@ -121,6 +169,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 			totalLocalVars: totalLocalVars,
 			args:           len(fn.Sig.ParamTypes),
 			returns:        len(fn.Sig.ReturnTypes) != 0,
+			funcProp:       fn,
 		}
 	}
 
@@ -148,7 +197,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		}
 	}
 
-	return &vm, nil
+	return vm , nil
 }
 
 // Memory returns the linear memory space for the VM.
@@ -296,6 +345,9 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 }
 
 func (vm *VM) execCode(compiled compiledFunction) uint64 {
+	if compiled.funcProp.EnvFunc == true {
+		vm.ExecEnvFunc(compiled)
+	}
 outer:
 	for int(vm.ctx.pc) < len(vm.ctx.code) {
 		op := vm.ctx.code[vm.ctx.pc]
@@ -354,7 +406,10 @@ outer:
 			continue
 		case compile.OpDiscard:
 			place := vm.fetchInt64()
-			vm.ctx.stack = vm.ctx.stack[:len(vm.ctx.stack)-int(place)]
+			if len(vm.ctx.stack)-int(place) > 0 {
+				vm.ctx.stack = vm.ctx.stack[:len(vm.ctx.stack)-int(place)]
+			}
+
 		case compile.OpDiscardPreserveTop:
 			top := vm.ctx.stack[len(vm.ctx.stack)-1]
 			place := vm.fetchInt64()
@@ -369,4 +424,50 @@ outer:
 		return vm.ctx.stack[len(vm.ctx.stack)-1]
 	}
 	return 0
+}
+func (vm *VM) GetMemory() []byte {
+	return vm.memory
+}
+
+func (vm *VM) GetFuncParams() []uint64 {
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+
+	return params
+}
+
+func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
+
+	vm.envFunc.envFuncParam = vm.ctx.locals
+	vm.envFunc.envFuncCtx = vm.ctx
+	oldCtx := vm.ctx
+
+	if compiled.returns {
+		vm.envFunc.envFuncRtn = true
+	} else {
+		vm.envFunc.envFuncRtn = false
+	}
+
+	fc, ok := vm.envFunc.envFuncMap[compiled.funcProp.Method] //get env function
+	if !ok {
+		return errors.New("*ERROR* Failed to search the method :" + compiled.funcProp.Method)
+	}
+
+	_, err := fc(vm)
+	if err != nil {
+		vm.ctx = oldCtx
+		if compiled.returns {
+			vm.pushUint64(0)
+		}
+		return errors.New("*ERROR* Failed to call the method :" + compiled.funcProp.Method)
+	}
+
+	return nil
+}
+
+
+func (vm *VM) GetMsgBytes() ([]byte, error) {
+
+	bytesbuf := bytes.NewBuffer(nil)
+	return bytesbuf.Bytes(), nil
 }

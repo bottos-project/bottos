@@ -471,6 +471,8 @@ func (m *Module) readSectionGlobals(r io.Reader) error {
 type GlobalEntry struct {
 	Type *GlobalVar // Type holds information about the value type and mutability of the variable
 	Init []byte     // Init is an initializer expression that computes the initial value of the variable
+
+	envGlobal *EnvGlobal
 }
 
 func readGlobalEntry(r io.Reader) (e GlobalEntry, err error) {

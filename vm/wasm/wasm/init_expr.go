@@ -162,6 +162,9 @@ func (m *Module) ExecInitExpr(expr []byte) (interface{}, error) {
 				return nil, InvalidGlobalIndexError(index)
 			}
 			lastVal = globalVar.Type.Type
+			if globalVar.envGlobal.Env {
+				stack = append(stack, globalVar.envGlobal.Val)
+			}
 		case end:
 			break
 		default:

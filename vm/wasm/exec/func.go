@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-
+	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
 )
 
@@ -34,12 +34,13 @@ type function interface {
 }
 
 type compiledFunction struct {
-	code           []byte
+	code           []byte //it means the internal call order for a method
 	branchTables   []*compile.BranchTable
 	maxDepth       int  // maximum stack depth reached while executing the function body
 	totalLocalVars int  // number of local variables used by the function
 	args           int  // number of arguments the function accepts
 	returns        bool // whether the function returns a value
+	funcProp       wasm.Function //record function's properties
 }
 
 type goFunction struct {
