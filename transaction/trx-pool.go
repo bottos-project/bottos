@@ -16,10 +16,10 @@ import (
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/contract/contractdb"
 
-	proto "github.com/golang/protobuf/proto"
-    "github.com/bottos-project/crypto-go/crypto"
-    "crypto/sha256"
-    "encoding/hex"
+	// proto "github.com/golang/protobuf/proto"
+    // "github.com/bottos-project/crypto-go/crypto"
+    // "crypto/sha256"
+    // "encoding/hex"
     //"log"
     //"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -202,45 +202,47 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 }
 
 
-func getPubKey(account string) ([]byte) {
+// func getPubKey(account string) ([]byte) {
 
-       return nil
-}
-
-func VerifySignature(trx *types.Transaction) bool {
-       trxToVerify := &types.Transaction {
-               Version    :trx.Version    , 
-        CursorNum  :trx.CursorNum  ,
-        CursorLabel:trx.CursorLabel,
-        Lifetime   :trx.Lifetime   ,
-        Sender     :trx.Sender     ,
-        Contract   :trx.Contract   ,
-        Method     :trx.Method     ,
-        Param      :trx.Param      ,
-        SigAlg     :trx.SigAlg     ,
-        Signature  :[] byte{},
-       }
-
-       serializeData, err := proto.Marshal(trxToVerify)
-       if nil != err {
-               return false
-       }
-
-       //fmt.Println("proto code and hex:")
-       fmt.Println(serializeData)
-    //log.Println(hex.EncodeToString(serializeData))
+//        return nil
+// }
 
 
-       senderPubKey := getPubKey(trx.Sender)
 
-       h := sha256.New()
-       h.Write([]byte(hex.EncodeToString(serializeData)))
-       hashData := h.Sum(nil)
+// func VerifySignature(trx *types.Transaction) bool {
+//        trxToVerify := &types.Transaction {
+//                Version    :trx.Version    , 
+//         CursorNum  :trx.CursorNum  ,
+//         CursorLabel:trx.CursorLabel,
+//         Lifetime   :trx.Lifetime   ,
+//         Sender     :trx.Sender     ,
+//         Contract   :trx.Contract   ,
+//         Method     :trx.Method     ,
+//         Param      :trx.Param      ,
+//         SigAlg     :trx.SigAlg     ,
+//         Signature  :[] byte{},
+//        }
 
-       is_bool := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
-       //log.Println(is_bool)
+//        serializeData, err := proto.Marshal(trxToVerify)
+//        if nil != err {
+//                return false
+//        }
 
-       return is_bool
+//        //fmt.Println("proto code and hex:")
+//        fmt.Println(serializeData)
+//     //log.Println(hex.EncodeToString(serializeData))
+
+
+//        senderPubKey := getPubKey(trx.Sender)
+
+//        h := sha256.New()
+//        h.Write([]byte(hex.EncodeToString(serializeData)))
+//        hashData := h.Sum(nil)
+
+//        is_bool := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
+//        //log.Println(is_bool)
+
+//        return is_bool
        
-}
+// }
 	
