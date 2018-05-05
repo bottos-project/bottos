@@ -13,7 +13,7 @@ import (
 
 type ScheduleDelegate struct {
 	CurrentTermTime *big.Int
-	DelegateVotes
+	//	DelegateVotes
 }
 
 func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) {
@@ -40,13 +40,13 @@ func GetScheduleDelegateRole(ldb *db.DBService, slotNum uint32) (string, error) 
 
 }
 
-func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
+func (s *ScheduleDelegate) ResetCandidatesTerm(ldb *db.DBService) {
 	s.CurrentTermTime = big.NewInt(0)
-	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
+	ResetAllDelegateNewTerm(ldb)
 }
-func (s *ScheduleDelegate) SetDelegateTerm(ldb *db.DBService, termTime *big.Int, list []string) {
+func (s *ScheduleDelegate) SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	s.CurrentTermTime = termTime
-	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
+	SetDelegateListNewTerm(ldb, termTime, list)
 }
 
 func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
@@ -101,9 +101,9 @@ func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
 	}
 
 	if (config.BLOCKS_PER_ROUND >= uint32(len(ftdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
-		s.ResetDelegateTerm(ldb)
+		s.ResetCandidatesTerm(ldb)
 	} else {
-		s.SetDelegateTerm(ldb, newCandidates.TermFinishTime, reporterList)
+		s.SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
 
 	return reporterList
