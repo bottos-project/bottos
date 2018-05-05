@@ -44,7 +44,7 @@ func (s *ScheduleDelegate) ResetDelegateTerm(ldb *db.DBService) {
 	s.CurrentTermTime = big.NewInt(0)
 	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
-func (s *ScheduleDelegate) SetDelegateTerm(ldb *db.DBService, termTime *big.Int) {
+func (s *ScheduleDelegate) SetDelegateTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	s.CurrentTermTime = termTime
 	s.DelegateVotes.ResetAllDelegateNewTerm(ldb)
 }
@@ -103,7 +103,7 @@ func (s *ScheduleDelegate) ElectNextTermDelegates(ldb *db.DBService) []string {
 	if (config.BLOCKS_PER_ROUND >= uint32(len(ftdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
 		s.ResetDelegateTerm(ldb)
 	} else {
-		s.SetDelegateTerm(ldb, newCandidates.TermFinishTime)
+		s.SetDelegateTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
 
 	return reporterList
