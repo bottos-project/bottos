@@ -11,3 +11,12 @@ type Context struct {
 	ContractDB *contractdb.ContractDB
 	Trx *types.Transaction
 }
+
+func (ctx *Context) GetTrxParam() []byte {
+	return ctx.Trx.Param
+}
+
+func (ctx *Context) GetTrxParamSize() uint32 {
+	size := len(ctx.Trx.Param)
+	return uint32(size)
+}
