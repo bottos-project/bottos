@@ -207,6 +207,8 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 //        return nil
 // }
 
+
+
 // func VerifySignature(trx *types.Transaction) bool {
 //        trxToVerify := &types.Transaction {
 //                Version    :trx.Version    , 
