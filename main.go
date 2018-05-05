@@ -22,8 +22,6 @@ import (
 	"github.com/bottos-project/core/action/actor/transaction"
 	actionenv "github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/transaction"
-
-	wasm "github.com/bottos-project/core/vm/wasm/exec"
 )
 
 func main() {
@@ -69,22 +67,6 @@ func main() {
 	//caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool(actorenv)
 	trxactor.SetTrxPool(trxPool)
-
-	wasmInst := wasm.GetInstance()
-	trx := *types.Transaction{
-		Version:1,
-		CursorNum:1,
-		CursorLabel:1,
-		Lifetime:1,
-		Sender:"bottos",
-		Contract:"usermng",
-		Method:"reguser",
-		Param:[]byte{},
-		SigAlg:1,
-		Signature:[]byte{},
-	}
-	ctx := contract.Context{RoleIntf:roleIntf, ContractDB:contractDB, Trx:trx}
-	rst, err := wasmInst.Apply(ctx, 1, false)
 
 	if config.Param.ApiServiceEnable {
 		repo := caapi.NewApiService(actorenv)
