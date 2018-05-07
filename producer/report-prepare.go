@@ -59,9 +59,8 @@ func (r *Reporter) IsSynced(when uint64) bool {
 		return true
 	}
 	time := r.roleIntf.GetSlotTime(1)
-	fmt.Println("set", time, "ddd", when)
+	fmt.Println("current time", when, "slot time ", time)
 	if r.roleIntf.GetSlotTime(1) >= when {
-		fmt.Println("set enable == true")
 		r.state.ReportEnable = true
 		return true
 	}
@@ -87,10 +86,10 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint32) bool {
 		return false
 	}
 	// TODO check   delegate.SigningKey
-	fmt.Println(delegate.ReportKey)
+	fmt.Println("todo check delegate sign key", delegate.ReportKey)
 
 	prate := r.roleIntf.GetDelegateParticipationRate()
-	fmt.Println(prate)
+	fmt.Println("delegate participation rate ", prate)
 
 	if prate < config.DELEGATE_PATICIPATION {
 		fmt.Println("delegate paticipate rate is too low")

@@ -51,7 +51,6 @@ func GetCandidateBySlot(ldb *db.DBService, slotNum uint32) (string, error) {
 		fmt.Println("err")
 		return "", err
 	}
-	fmt.Println("currentSlotNum", chainObject.CurrentAbsoluteSlot, slotNum)
 	currentSlotNum := chainObject.CurrentAbsoluteSlot + uint64(slotNum)
 	currentCoreState, err := GetCoreStateRole(ldb)
 	fmt.Println("currentSlotNum", currentSlotNum)
@@ -63,7 +62,7 @@ func GetCandidateBySlot(ldb *db.DBService, slotNum uint32) (string, error) {
 	if size == 0 {
 		return "", errors.New("delegate is null, please check configuration")
 	}
-	fmt.Println("size", size)
+
 	accountName := currentCoreState.CurrentDelegates[currentSlotNum%size]
 	return accountName, nil
 
@@ -82,48 +81,52 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 
 func ElectNextTermDelegates(ldb *db.DBService) []string {
 	var tmpList []string
-	dgates, err := GetAllSortVotesDelegates(ldb)
+	sortedDelegates, err := GetAllSortVotesDelegates(ldb)
 	if err != nil {
 		return nil
 	}
-	fmt.Println("dgates", dgates)
+	fmt.Println("sortedDelegates", sortedDelegates)
 
-	fDgates := FilterOutgoingDelegate(ldb)
+	filterDgates := FilterOutgoingDelegate(ldb)
 
-	fmt.Println("fDgates", fDgates)
+	fmt.Println("filterDgates", filterDgates)
 
-	for _, dgate := range dgates {
-		for _, fdgate := range fDgates {
-			if dgate == fdgate {
+	for _, sortdgate := range sortedDelegates {
+		for _, filterdgate := range filterDgates {
+			if sortdgate == filterdgate {
 				continue
 			}
-			tmpList = append(tmpList, dgate)
+			tmpList = append(tmpList, sortdgate)
 		}
 	}
-	if uint32(len(tmpList)) <= config.BLOCKS_PER_ROUND {
+	if len(filterDgates) == 0 {
+		tmpList = sortedDelegates
+	}
+	if uint32(len(tmpList)) < config.BLOCKS_PER_ROUND {
+		panic("Not enough active producers registered to schedule a round")
 		return nil
 	}
 
-	candidates := tmpList[0:17]
+	candidates := tmpList[0 : config.VOTED_DELEGATES_PER_ROUND-1]
 	//sort candidates by account name
 	sort.Strings(candidates)
 
 	//TODO Check exist ownername
 	var eligibleList []string
-	ftdelegates, err := GetAllSortFinishTimeDelegates(ldb)
+	finishdelegates, err := GetAllSortFinishTimeDelegates(ldb)
 	if err != nil {
 		return nil
 	}
-	for _, ft := range ftdelegates {
-		for _, fdgate := range fDgates {
-			if ft == fdgate {
+	for _, finishdgate := range finishdelegates {
+		for _, filterdgate := range filterDgates {
+			if finishdgate == filterdgate {
 				continue
 			}
-			eligibleList = append(eligibleList, ft)
+			eligibleList = append(eligibleList, finishdgate)
 		}
 	}
 
-	//filter votesList
+	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
 	var eligibles []string
 
 	for _, list := range eligibleList {
@@ -135,16 +138,20 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 		}
 	}
 	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND
+	if count != 1 {
+		panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")
+		return nil
+	}
 	lastTermUp := eligibles[0 : count-1]
 	//get final reporter lists
 	reporterList := append(candidates, lastTermUp...)
-
+	fmt.Println(lastTermUp[0])
 	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp[count-1])
 	if err != nil {
 		return nil
 	}
 
-	if (config.BLOCKS_PER_ROUND >= uint32(len(ftdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
+	if (config.BLOCKS_PER_ROUND >= uint32(len(finishdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
 		ResetCandidatesTerm(ldb)
 	} else {
 		SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)

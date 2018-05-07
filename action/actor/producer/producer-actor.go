@@ -71,6 +71,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
+		fmt.Println("\n\n\n\n ")
 		p.working()
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
@@ -91,7 +92,8 @@ func (p *ProducerActor) Receive(context actor.Context) {
 	p.handleSystemMsg(context)
 }
 func (p *ProducerActor) working() {
-	fmt.Println("begin to working")
+	fmt.Println("begin to producer block ")
+
 	if p.ins.IsReady() {
 		start := common.MeasureStart()
 		fmt.Println("Ready to generate block")
@@ -107,7 +109,6 @@ func (p *ProducerActor) working() {
 			fmt.Println("GetGlobalPropertyRole failed")
 			return
 		}
-		fmt.Println("GetGlobalPropertyRole", coreStat)
 		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
 		trxApply := transaction.NewTrxApplyService()
@@ -117,10 +118,10 @@ func (p *ProducerActor) working() {
 			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT ||
 				pendingBlockSize > coreStat.Config.MaxBlockSize {
 				pendingTrx = append(pendingTrx, dtag)
-				fmt.Println("max size")
+				fmt.Println("Warning reach max size")
 				continue
 			}
-			fmt.Println("start apply transation", "trx")
+			fmt.Println("start apply transation trx one by one")
 			//p.myDB.StartUndoSession()
 			pass, _ := trxApply.ApplyTransaction(trx)
 			if pass == false {
@@ -130,19 +131,19 @@ func (p *ProducerActor) working() {
 			pendingBlockSize += uint32(20) //unsafe.Sizeof(trx)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
-				fmt.Println("greater MaxBlockSize")
+				fmt.Println("Warning pending block size reach MaxBlockSize")
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
-			fmt.Println("start apply transation dddd")
+			fmt.Println("end apply transation ")
 			//	p.myDB.Commit()
-			fmt.Println("start apply transation dddd")
+
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
-
+		fmt.Println("start package block")
 		block = p.ins.Woker(trxs)
 		if block != nil {
-			fmt.Println("apply block", block)
+			fmt.Println("Start apply block", block)
 			ApplyBlock(block)
 			//TODO brocast
 		}

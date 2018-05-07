@@ -54,8 +54,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := common.NowToSeconds()
 	slot := p.roleIntf.GetSlotAtTime(now)
-	scheduledTime := p.roleIntf.GetSlotTime(slot)
-	fmt.Println("Woker", scheduledTime, slot)
+	//scheduledTime := p.roleIntf.GetSlotTime(slot)
 	accountName, err1 := p.roleIntf.GetCandidateBySlot(slot)
 	if err1 != nil {
 		return nil // errors.New("report Block failed")

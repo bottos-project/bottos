@@ -42,24 +42,21 @@ func SetTrxActorPid(tpid *actor.PID) {
 
 func GetAllPendingTrx() []*types.Transaction {
 	getTrxsReq := &message.GetAllPendingTrxReq{}
-	fmt.Println("trxActorPid", trxActorPid)
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if nil == getTrxsErr {
 		fmt.Println("get all trx req exec result:")
 		fmt.Println("rusult is =======", getTrxsResult)
-		fmt.Println("error  is =======", getTrxsErr)
 	} else {
-		fmt.Println("get all trx req exec error")
+		fmt.Println("get all trx req exec error") //TODO
 	}
 	switch msg := getTrxsResult.(type) {
 
 	case *message.GetAllPendingTrxRsp:
-		fmt.Println("receive pending........", msg)
-
+		fmt.Println("receive pending transactions........", msg)
 	}
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-	fmt.Println("ggggg", len(mesg.Trxs))
+	fmt.Println("pending transaction number ", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
 	for i := 0; i < len(mesg.Trxs); i++ {
 		dbtag := new(types.Transaction)
@@ -68,6 +65,6 @@ func GetAllPendingTrx() []*types.Transaction {
 		trxs = append(trxs, dbtag)
 	}
 
-	fmt.Println("ggggg", trxs)
+	fmt.Println("pending transaction lists", trxs)
 	return trxs
 }
