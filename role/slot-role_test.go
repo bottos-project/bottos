@@ -29,26 +29,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/role"
 )
 
-func startup() *Reporter {
+func startup() RoleInterface {
 	config.LoadConfig()
 	dbInst := db.NewDbService("./temp/db", "./temp/codedb")
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
 	}
-	roleIntf := role.NewRole(dbInst)
-	bc, err := chain.CreateBlockChain(dbInst, roleIntf)
-	if err != nil {
-		fmt.Println("Create DB service fail")
-	}
-	reportIns := &Reporter{false, bc, roleIntf}
-	return reportIns
+	roleIntf := NewRole(dbInst)
+
+	return roleIntf
 }
 
 func TestReporter_GetSlotAtTime(t *testing.T) {

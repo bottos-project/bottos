@@ -64,11 +64,11 @@ type DBApi interface {
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
 	SetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error
 	GetObject(objectName string, key string) (interface{}, error)
-	GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (interface{}, error)
+	GetObjectByIndex(objectName string, indexName string, indexValue string) (interface{}, error)
 	GetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}) (interface{}, error)
 	GetAllObjectKeys(objectName string) ([]string, error)
-	GetAllObjects(objectName string) ([]string, error)
-	GetAllObjectsSortByIndex(objectName string, indexName string) ([]string, error)
+	GetAllObjects(keyName string) ([]string, error)
+	GetAllObjectsSortByIndex(indexName string) ([]string, error)
 	DeleteObject(objectName string, key string) (string, error)
 	Commit()
 	Rollback()

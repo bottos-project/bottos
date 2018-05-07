@@ -4,30 +4,29 @@ import (
 	"math/big"
 
 	"encoding/json"
-
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/bottos-project/core/common"
 
 	"github.com/bottos-project/core/db"
 )
 
-const DelegateVotesObjectName string = "delegate"
-const DelegateVotesObjectKeyName string = "account_name"
+const DelegateVotesObjectName string = "delegatevotes"
+const DelegateVotesObjectKeyName string = "owner_account"
 const DelegateVotesObjectIndexVote string = "votes"
-const DelegateVotesObjectIndexFinishTime string = "finish_time"
+const DelegateVotesObjectIndexFinishTime string = "term_finish_time"
 
 type Serve struct {
-	Votes          uint64
-	Position       *big.Int //uint128
-	TermUpdateTime *big.Int //uint128
-	TermFinishTime *big.Int //uint128
-
+	Votes          uint64   `json:"votes"`
+	Position       *big.Int `json:"position"`
+	TermUpdateTime *big.Int `json:"term_update_time"`
+	TermFinishTime *big.Int `json:"term_finish_time"`
 }
 type DelegateVotes struct {
-	OwnerAccount string
-	Serve
+	OwnerAccount string `json:"owner_account"`
+	Serve        `json:"serve"`
 }
 
 func CreateDelegateVotesRole(ldb *db.DBService) error {
@@ -35,11 +34,11 @@ func CreateDelegateVotesRole(ldb *db.DBService) error {
 	if err != nil {
 		return err
 	}
-	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, DelegateVotesObjectIndexVote)
+	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, "serve.votes")
 	if err != nil {
 		return err
 	}
-	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, DelegateVotesObjectIndexFinishTime)
+	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, "serve.term_finish_time")
 	if err != nil {
 		return err
 	}
@@ -56,11 +55,12 @@ func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) e
 }
 
 func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*DelegateVotes, error) {
+
 	value, err := ldb.GetObject(DelegateVotesObjectName, key)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("account--", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -71,12 +71,12 @@ func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*Delegate
 
 }
 
-func GetDelegateVotesRoleByVote(ldb *db.DBService, key string) (*DelegateVotes, error) {
-	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, key)
+func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes, error) {
+	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, strconv.FormatUint(vote, 10))
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("vote--", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -87,12 +87,12 @@ func GetDelegateVotesRoleByVote(ldb *db.DBService, key string) (*DelegateVotes, 
 
 }
 
-func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key string) (*DelegateVotes, error) {
-	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, key)
+func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*DelegateVotes, error) {
+	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, key.String())
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("finish---", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -109,9 +109,8 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	}
 	termTimeToFinish := new(big.Int)
 	remaining := termTimeToFinish.Sub(common.MaxUint128(), currentPosition)
-	timeFinish := termTimeToFinish.Div(remaining, new(big.Int).SetUint64(currentVotes))
 	if currentVotes > 0 {
-		termTimeToFinish = timeFinish
+		termTimeToFinish = termTimeToFinish.Div(remaining, new(big.Int).SetUint64(currentVotes))
 	} else {
 		termTimeToFinish = common.MaxUint128()
 	}
@@ -127,8 +126,9 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	d.Serve.TermFinishTime = termFinishTime
 }
 func GetAllDelegateVotes(ldb *db.DBService) ([]*DelegateVotes, error) {
-	objects, err := ldb.GetAllObjects(DelegateVotesObjectName)
+	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
+		fmt.Println("failed ", err)
 		return nil, err
 	}
 	var dgates = []*DelegateVotes{}
@@ -152,7 +152,7 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 		return
 	}
 	for _, object := range voteDelegates {
-		dvotes := object.startNewTerm(big.NewInt(0))
+		dvotes := object.StartNewTerm(big.NewInt(0))
 		dvotes.OwnerAccount = object.OwnerAccount
 		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
 		fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
@@ -165,14 +165,14 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 		if err != nil {
 			return
 		}
-		dvotes := delegate.startNewTerm(termTime)
+		dvotes := delegate.StartNewTerm(termTime)
 		SetDelegateVotesRole(ldb, accountName, dvotes)
 		fmt.Println("key", accountName, dvotes)
 
 	}
 }
 
-func (d *DelegateVotes) startNewTerm(currentTermTime *big.Int) *DelegateVotes {
+func (d *DelegateVotes) StartNewTerm(currentTermTime *big.Int) *DelegateVotes {
 	d.update(d.Serve.Votes, big.NewInt(0), currentTermTime)
 	return &DelegateVotes{
 		OwnerAccount: d.OwnerAccount,
@@ -195,36 +195,36 @@ func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 	d.update(newSpeed, newPosition, currentTermTime)
 }
 
-func GetAllSortVotesDelegates(ldb *db.DBService) []string {
-	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote)
+func GetAllSortVotesDelegates(ldb *db.DBService) ([]string, error) {
+	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexVote)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	var accounts = []string{}
 	for _, object := range objects {
 		res := &DelegateVotes{}
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		accounts = append(accounts, res.OwnerAccount)
 	}
-	return accounts
+	return accounts, nil
 }
 
-func GetAllSortFinishTimeDelegates(ldb *db.DBService) []string {
-	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime)
+func GetAllSortFinishTimeDelegates(ldb *db.DBService) ([]string, error) {
+	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexFinishTime)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	var accounts = []string{}
 	for _, object := range objects {
 		res := &DelegateVotes{}
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		accounts = append(accounts, res.OwnerAccount)
 	}
-	return accounts
+	return accounts, nil
 }

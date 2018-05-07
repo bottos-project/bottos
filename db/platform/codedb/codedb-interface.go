@@ -29,11 +29,11 @@ type CodeDbRepo interface {
 	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error
 	CallSetObject(objectName string, key string, objectValue string) error
 	CallGetObject(objectName string, key string) (string, error)
-	CallGetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error)
+	CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error)
 	CallDeleteObject(objectName string, key string) (string, error)
 	CallGetAllObjectKeys(objectName string) ([]string, error)
-	CallGetAllObjects(objectName string) ([]string, error)
-	CallGetAllObjectsSortByIndex(objectName string, indexName string) ([]string, error)
+	CallGetAllObjects(keyName string) ([]string, error)
+	CallGetAllObjectsSortByIndex(indexName string) ([]string, error)
 	CallCommit() error
 	CallRollback() error
 }

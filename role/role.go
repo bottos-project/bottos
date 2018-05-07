@@ -54,6 +54,13 @@ type RoleInterface interface {
 	GetCandidateBySlot(slotNum uint32) (string, error)
 	GetDelegateParticipationRate() uint64
 
+	SetScheduleDelegateRole(value *ScheduleDelegate) error
+	GetScheduleDelegateRole() (*ScheduleDelegate, error)
+
+	CreateDelegateVotesRole() error
+	SetDelegateVotesRole(key string, value *DelegateVotes) error
+	GetAllDelegateVotes() ([]*DelegateVotes, error)
+
 	SetBlockHistory(blockNumber uint32, blockHash common.Hash) error
 	GetBlockHistory(blockNumber uint32) (*BlockHistory, error)
 	AddTransactionHistory(txHash common.Hash, blockHash common.Hash) error
@@ -140,6 +147,23 @@ func (r *Role) GetDelegateParticipationRate() uint64 {
 	}
 
 	return 10000 * rate.RecentSlotFilled / 64
+}
+
+func (r *Role) SetScheduleDelegateRole(value *ScheduleDelegate) error {
+	return SetScheduleDelegateRole(r.Db, value)
+}
+func (r *Role) GetScheduleDelegateRole() (*ScheduleDelegate, error) {
+	return GetScheduleDelegateRole(r.Db)
+}
+
+func (r *Role) CreateDelegateVotesRole() error {
+	return CreateDelegateVotesRole(r.Db)
+}
+func (r *Role) SetDelegateVotesRole(key string, value *DelegateVotes) error {
+	return SetDelegateVotesRole(r.Db, key, value)
+}
+func (r *Role) GetAllDelegateVotes() ([]*DelegateVotes, error) {
+	return GetAllDelegateVotes(r.Db)
 }
 
 func (r *Role) GetCandidateBySlot(slotNum uint32) (string, error) {

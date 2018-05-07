@@ -207,9 +207,9 @@ func setdelegate(ctx *Context) error {
 		newDelegateVotes.OwnerAccount = newdelegate.AccountName
 		err = ctx.RoleIntf.SetDelegateVotesRole(newdelegate.AccountName, newDelegateVotes)
 		if err != nil {
-
+			return fmt.Errorf("set Delegate vote failed")
 		}
-		fmt.Println(newdelegate)
+		fmt.Println("set delegate vote", newDelegateVotes)
 	} else {
 		return fmt.Errorf("Delegate Already Exist")
 	}

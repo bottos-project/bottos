@@ -22,6 +22,7 @@ type ScheduleDelegate struct {
 func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		fmt.Println("Set object", ScheduleDelegateObjectName, "failed")
 		return err
 	}
 
@@ -31,6 +32,7 @@ func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	value, err := ldb.GetObject(ScheduleDelegateObjectName, "my")
 	if err != nil {
+		fmt.Println("GetObject object", ScheduleDelegateObjectName, "failed")
 		return nil, err
 	}
 
@@ -80,8 +82,16 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 
 func ElectNextTermDelegates(ldb *db.DBService) []string {
 	var tmpList []string
-	dgates := GetAllSortVotesDelegates(ldb)
+	dgates, err := GetAllSortVotesDelegates(ldb)
+	if err != nil {
+		return nil
+	}
+	fmt.Println("dgates", dgates)
+
 	fDgates := FilterOutgoingDelegate(ldb)
+
+	fmt.Println("fDgates", fDgates)
+
 	for _, dgate := range dgates {
 		for _, fdgate := range fDgates {
 			if dgate == fdgate {
@@ -93,12 +103,17 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 	if uint32(len(tmpList)) <= config.BLOCKS_PER_ROUND {
 		return nil
 	}
+
 	candidates := tmpList[0:17]
+	//sort candidates by account name
 	sort.Strings(candidates)
 
 	//TODO Check exist ownername
 	var eligibleList []string
-	ftdelegates := GetAllSortFinishTimeDelegates(ldb)
+	ftdelegates, err := GetAllSortFinishTimeDelegates(ldb)
+	if err != nil {
+		return nil
+	}
 	for _, ft := range ftdelegates {
 		for _, fdgate := range fDgates {
 			if ft == fdgate {

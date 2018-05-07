@@ -38,17 +38,17 @@ func (d *DBService) SetObject(objectName string, key string, objectValue string)
 func (d *DBService) GetObject(objectName string, key string) (string, error) {
 	return d.codeRepo.CallGetObject(objectName, key)
 }
-func (d *DBService) GetObjectByIndex(objectName string, indexName string, indexValue interface{}) (string, error) {
+func (d *DBService) GetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
 	return d.codeRepo.CallGetObjectByIndex(objectName, indexName, indexValue)
 }
 func (d *DBService) GetAllObjectKeys(objectName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjectKeys(objectName)
 }
-func (d *DBService) GetAllObjects(objectName string) ([]string, error) {
-	return d.codeRepo.CallGetAllObjects(objectName)
+func (d *DBService) GetAllObjects(keyName string) ([]string, error) {
+	return d.codeRepo.CallGetAllObjects(keyName)
 }
-func (d *DBService) GetAllObjectsSortByIndex(objectName string, indexName string) ([]string, error) {
-	return d.codeRepo.CallGetAllObjectsSortByIndex(objectName, indexName)
+func (d *DBService) GetAllObjectsSortByIndex(indexName string) ([]string, error) {
+	return d.codeRepo.CallGetAllObjectsSortByIndex(indexName)
 }
 func (d *DBService) DeleteObject(objectName string, key string) (string, error) {
 	return d.codeRepo.CallDeleteObject(objectName, key)

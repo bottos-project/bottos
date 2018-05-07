@@ -17,9 +17,18 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 	if err != nil {
 		return nil, err
 	}
-	roleIntf.SetScheduleDelegateRole(&role.ScheduleDelegate{big.NewInt(0)})
+	roleIntf.SetScheduleDelegateRole(&role.ScheduleDelegate{big.NewInt(2)})
 	CreateNativeContractAccount(roleIntf)
 	NativeContractInitChain(roleIntf, intf)
+
+	fmt.Println("current -------------------delegates")
+	values, err := roleIntf.GetAllDelegateVotes()
+	if err != nil {
+		fmt.Println("dderr", err)
+	}
+	for _, val := range values {
+		fmt.Println("dd", val)
+	}
 
 	return intf, nil
 }

@@ -41,7 +41,7 @@ func TestDelegate_writedb(t *testing.T) {
 	value := &Delegate{
 		AccountName:           "lmq",
 		LastSlot:              3,
-		SigningKey:            "0xaaaaaaaaaaaaaaaaaa",
+		ReportKey:             "0xaaaaaaaaaaaaaaaaaa",
 		TotalMissed:           0,
 		LastConfirmedBlockNum: 2}
 	err = SetDelegateRole(ins, value.AccountName, value)
@@ -55,7 +55,7 @@ func TestDelegate_writedb(t *testing.T) {
 	}
 	fmt.Println(value)
 
-	value, err = GetDelegateRoleBySignKey(ins, value.SigningKey)
+	value, err = GetDelegateRoleBySignKey(ins, value.ReportKey)
 	if err != nil {
 		fmt.Println("GetDelegateRoleByAccountName", err)
 	}
@@ -71,13 +71,13 @@ func TestDelegate_WritedbTheSameKey(t *testing.T) {
 	value1 := &Delegate{
 		AccountName:           "lmq1",
 		LastSlot:              4,
-		SigningKey:            "0xaaaaaaaaaaaaaaaaaa",
+		ReportKey:             "0xaaaaaaaaaaaaaaaaaa",
 		TotalMissed:           0,
 		LastConfirmedBlockNum: 3}
 	value2 := &Delegate{
 		AccountName:           "lmq1",
 		LastSlot:              3,
-		SigningKey:            "0xbbbbbb",
+		ReportKey:             "0xbbbbbb",
 		TotalMissed:           0,
 		LastConfirmedBlockNum: 2}
 	err = SetDelegateRole(ins, value1.AccountName, value1)
@@ -96,7 +96,7 @@ func TestDelegate_WritedbTheSameKey(t *testing.T) {
 	}
 	fmt.Println(value)
 
-	value, err = GetDelegateRoleBySignKey(ins, value2.SigningKey)
+	value, err = GetDelegateRoleBySignKey(ins, value2.ReportKey)
 	if err != nil {
 		fmt.Println("GetDelegateRoleByAccountName", err)
 	}
