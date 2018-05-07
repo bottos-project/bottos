@@ -104,7 +104,7 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transactio
 
 	/* check account validate,include contract account */
 	
-	if (VerifySignature(trx)) {
+	if (self.VerifySignature(trx)) {
 		return false, fmt.Errorf("check signature error")
 	}
 
@@ -203,18 +203,23 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 }
 
 
-func getPubKey(account string) ([]byte) {
+func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
-	//return nil
+	account ,err := self.roleIntf.GetAccount(accountName)
+	if (nil != err) {
+		return account.PublicKey, nil
+	} else {
+		return nil, fmt.Errorf("get account failed")
+	}
 	
-	pub_key, _ := hex.DecodeString("0488c8087c7fd0e1f0281c025902a444364a15e6732c65ff1c8b6673da977097447c1fd0c529482521a9883b0d1ce37e151b4572d4ecd996fefedcf0f6901508aa") 
-
-	return pub_key
+	//for debug
+	//pub_key, _ := hex.DecodeString("0488c8087c7fd0e1f0281c025902a444364a15e6732c65ff1c8b6673da977097447c1fd0c529482521a9883b0d1ce37e151b4572d4ecd996fefedcf0f6901508aa") 
+	//return pub_key, nil
 }
 
 
 
-func VerifySignature(trx *types.Transaction) bool {
+func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
        trxToVerify := &types.Transaction {
 				Version    :trx.Version    , 
 				CursorNum  :trx.CursorNum  ,
@@ -230,10 +235,13 @@ func VerifySignature(trx *types.Transaction) bool {
 
        serializeData, err := proto.Marshal(trxToVerify)
        if nil != err {
-            return false
+           return false
 	   }
 	   
-       senderPubKey := getPubKey(trx.Sender)
+	   senderPubKey ,err:= self.getPubKey(trx.Sender)
+	   if nil != err {
+	       return false
+       }
 
        h := sha256.New()
        h.Write([]byte(hex.EncodeToString(serializeData)))
