@@ -78,9 +78,29 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	SetScheduleDelegateRole(ldb, sch)
 	SetDelegateListNewTerm(ldb, termTime, list)
 }
+func filter(sources []string, filters []string) []string {
+	var tmpList []string
+	var has bool
+	for _, src := range sources {
+		has = false
+		for _, filter := range filters {
+			if src == filter {
+				has = true
+				break
+			}
+		}
+		if has == false {
+			tmpList = append(tmpList, src)
+		}
+	}
+	return tmpList
+}
 
 func ElectNextTermDelegates(ldb *db.DBService) []string {
 	var tmpList []string
+	var eligibleList []string
+	var eligibles []string
+
 	sortedDelegates, err := GetAllSortVotesDelegates(ldb)
 	if err != nil {
 		return nil
@@ -91,16 +111,10 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 
 	fmt.Println("filterDgates", filterDgates)
 
-	for _, sortdgate := range sortedDelegates {
-		for _, filterdgate := range filterDgates {
-			if sortdgate == filterdgate {
-				continue
-			}
-			tmpList = append(tmpList, sortdgate)
-		}
-	}
 	if len(filterDgates) == 0 {
 		tmpList = sortedDelegates
+	} else {
+		tmpList = filter(sortedDelegates, filterDgates)
 	}
 	if uint32(len(tmpList)) < config.BLOCKS_PER_ROUND {
 		panic("Not enough active producers registered to schedule a round")
@@ -113,33 +127,23 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 	sort.Strings(candidates)
 
 	//TODO Check exist ownername
-	var eligibleList []string
 	finishdelegates, err := GetAllSortFinishTimeDelegates(ldb)
 	if err != nil {
 		return nil
 	}
-	for _, finishdgate := range finishdelegates {
-		for _, filterdgate := range filterDgates {
-			if finishdgate == filterdgate {
-				continue
-			}
-			eligibleList = append(eligibleList, finishdgate)
-		}
-	}
+
 	if len(filterDgates) == 0 {
 		eligibleList = finishdelegates
+	} else {
+		eligibleList = filter(finishdelegates, filterDgates)
 	}
-	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
-	var eligibles []string
 
-	for _, list := range eligibleList {
-		for _, candidate := range candidates {
-			if list == candidate {
-				continue
-			}
-			eligibles = append(eligibles, list)
-		}
-	}
+	fmt.Println("eligibleList", eligibleList)
+	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
+
+	eligibles = filter(eligibleList, candidates)
+
+	fmt.Println("eligibles", eligibles)
 	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND
 	if count != 1 {
 		panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")
@@ -149,10 +153,10 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 		panic("not enough eligible delegates")
 		return nil
 	}
-	lastTermUp := eligibles[count] //count -1 = 0
+	lastTermUp := eligibles[0] //count -1 = 0
 
 	//get final reporter lists
-	reporterList := append(candidates, eligibles[0:count]...)
+	reporterList := append(candidates, lastTermUp)
 	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp)
 	if err != nil {
 		return nil
