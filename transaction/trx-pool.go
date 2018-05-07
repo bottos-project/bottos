@@ -20,8 +20,6 @@ import (
     "github.com/bottos-project/crypto-go/crypto"
     "crypto/sha256"
     "encoding/hex"
-    "log"
-    //"github.com/golang/protobuf/ptypes/wrappers"
 )
 
 
