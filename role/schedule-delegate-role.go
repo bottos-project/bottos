@@ -107,7 +107,8 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 		return nil
 	}
 
-	candidates := tmpList[0 : config.VOTED_DELEGATES_PER_ROUND-1]
+	candidates := tmpList[0:config.VOTED_DELEGATES_PER_ROUND]
+	fmt.Println("candidates", candidates)
 	//sort candidates by account name
 	sort.Strings(candidates)
 
@@ -125,13 +126,15 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 			eligibleList = append(eligibleList, finishdgate)
 		}
 	}
-
+	if len(filterDgates) == 0 {
+		eligibleList = finishdelegates
+	}
 	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
 	var eligibles []string
 
 	for _, list := range eligibleList {
-		for _, votes := range tmpList {
-			if list == votes {
+		for _, candidate := range candidates {
+			if list == candidate {
 				continue
 			}
 			eligibles = append(eligibles, list)
@@ -142,11 +145,15 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 		panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")
 		return nil
 	}
-	lastTermUp := eligibles[0 : count-1]
+	if len(eligibles) == 0 {
+		panic("not enough eligible delegates")
+		return nil
+	}
+	lastTermUp := eligibles[count] //count -1 = 0
+
 	//get final reporter lists
-	reporterList := append(candidates, lastTermUp...)
-	fmt.Println(lastTermUp[0])
-	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp[count-1])
+	reporterList := append(candidates, eligibles[0:count]...)
+	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp)
 	if err != nil {
 		return nil
 	}

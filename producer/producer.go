@@ -105,15 +105,16 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
+	//TODO
 	block.Header.DelegateSign = block.Sign("123").Bytes()
 	// If this block is last in a round, calculate the schedule for the new round
-	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
-		fmt.Println("elect next term ---------")
-		new_schedule := p.roleIntf.ElectNextTermDelegates()
-		fmt.Println(new_schedule)
-		// TODO     auto new_schedule = _admin->get_next_round(_db);
-		//block.Header.DelgateChanges = get_global_properties().active_producers - new_schedule
-	}
+	//	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
+	fmt.Println("elect next term ---------")
+	new_schedule := p.roleIntf.ElectNextTermDelegates()
+	fmt.Println("next term delgates", new_schedule)
+	// TODO     auto new_schedule = _admin->get_next_round(_db);
+	//block.Header.DelgateChanges = get_global_properties().active_producers - new_schedule
+	//	}
 
 	return block, nil
 }

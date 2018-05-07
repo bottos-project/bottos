@@ -60,7 +60,6 @@ func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*Delegate
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("account--", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -76,7 +75,6 @@ func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes,
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("vote--", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -92,7 +90,6 @@ func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*Delegat
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("finish---", value)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
@@ -167,7 +164,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 		}
 		dvotes := delegate.StartNewTerm(termTime)
 		SetDelegateVotesRole(ldb, accountName, dvotes)
-		fmt.Println("key", accountName, dvotes)
+		fmt.Println("set delegate new term", accountName, dvotes)
 
 	}
 }
