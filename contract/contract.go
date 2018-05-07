@@ -1,23 +1,23 @@
 package contract
 
 import (
-	"time"
-	"strconv"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"math/big"
+	"strconv"
+	"time"
 
-	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
 )
-
 
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
 	intf, err := NewNativeContractHandler()
 	if err != nil {
 		return nil, err
 	}
-
+	roleIntf.SetScheduleDelegateRole(&role.ScheduleDelegate{big.NewInt(0)})
 	CreateNativeContractAccount(roleIntf)
 	NativeContractInitChain(roleIntf, intf)
 
@@ -25,11 +25,11 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 }
 
 func newTransaction(contract string, method string, param []byte) *types.Transaction {
-	trx := &types.Transaction {
-		Sender: contract,
+	trx := &types.Transaction{
+		Sender:   contract,
 		Contract: contract,
-		Method: method,
-		Param: param,
+		Method:   method,
+		Param:    param,
 	}
 
 	return trx
@@ -47,9 +47,9 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 		// 1, new account trx
 		nps := &NewAccountParam{
-			Creator: config.BOTTOS_CONTRACT_NAME, 
-			Name: name, 
-			Pubkey: config.Genesis.InitDelegate.PublicKey, 
+			Creator: config.BOTTOS_CONTRACT_NAME,
+			Name:    name,
+			Pubkey:  config.Genesis.InitDelegate.PublicKey,
 			Deposit: initAmount,
 		}
 		nparam, _ := json.Marshal(nps)
@@ -58,8 +58,8 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 		// 2, transfer trx
 		tps := &TransferParam{
-			From: config.BOTTOS_CONTRACT_NAME, 
-			To: name, 
+			From:  config.BOTTOS_CONTRACT_NAME,
+			To:    name,
 			Value: uint64(config.Genesis.InitDelegate.Balance),
 		}
 		tparam, _ := json.Marshal(tps)
@@ -68,8 +68,8 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 		// 3, set delegate
 		sps := &SetDelegateParam{
-			Name: name, 
-			Pubkey: config.Genesis.InitDelegate.PublicKey, 
+			Name:   name,
+			Pubkey: config.Genesis.InitDelegate.PublicKey,
 		}
 		sparam, _ := json.Marshal(sps)
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
@@ -96,10 +96,9 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 		coreState.CurrentDelegates = append(coreState.CurrentDelegates, name)
 	}
 	roleIntf.SetCoreState(coreState)
-	
+
 	return nil
 }
-
 
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
@@ -108,16 +107,16 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 		return nil
 	}
 
-	bto := &role.Account {
+	bto := &role.Account{
 		AccountName: config.BOTTOS_CONTRACT_NAME,
-		CreateTime: uint64(time.Now().Unix()),
+		CreateTime:  uint64(time.Now().Unix()),
 	}
 	roleIntf.SetAccount(bto.AccountName, bto)
 
 	// balance
 	balance := &role.Balance{
 		AccountName: bto.AccountName,
-		Balance: config.BOTTOS_INIT_SUPPLY,
+		Balance:     config.BOTTOS_INIT_SUPPLY,
 	}
 	roleIntf.SetBalance(bto.AccountName, balance)
 
@@ -183,7 +182,7 @@ func CreateInitialDelegates(roleIntf role.RoleInterface) error {
 	roleIntf.SetCoreState(coreState)
 
 	fmt.Println(coreState)
-	
+
 	return nil
 }
 */
