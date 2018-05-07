@@ -16,12 +16,10 @@ import (
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/contract/contractdb"
 
-	// proto "github.com/golang/protobuf/proto"
-    // "github.com/bottos-project/crypto-go/crypto"
-    // "crypto/sha256"
-    // "encoding/hex"
-    //"log"
-    //"github.com/golang/protobuf/ptypes/wrappers"
+	proto "github.com/golang/protobuf/proto"
+    "github.com/bottos-project/crypto-go/crypto"
+    "crypto/sha256"
+    "encoding/hex"
 )
 
 
@@ -105,7 +103,10 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transactio
 	}
 
 	/* check account validate,include contract account */
-	/* check signature */
+	
+	if (self.VerifySignature(trx)) {
+		return false, fmt.Errorf("check signature error")
+	}
 
 	return true, nil
 }
@@ -202,47 +203,55 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 }
 
 
-// func getPubKey(account string) ([]byte) {
+func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
-//        return nil
-// }
-
-
-
-// func VerifySignature(trx *types.Transaction) bool {
-//        trxToVerify := &types.Transaction {
-//                Version    :trx.Version    , 
-//         CursorNum  :trx.CursorNum  ,
-//         CursorLabel:trx.CursorLabel,
-//         Lifetime   :trx.Lifetime   ,
-//         Sender     :trx.Sender     ,
-//         Contract   :trx.Contract   ,
-//         Method     :trx.Method     ,
-//         Param      :trx.Param      ,
-//         SigAlg     :trx.SigAlg     ,
-//         Signature  :[] byte{},
-//        }
-
-//        serializeData, err := proto.Marshal(trxToVerify)
-//        if nil != err {
-//                return false
-//        }
-
-//        //fmt.Println("proto code and hex:")
-//        fmt.Println(serializeData)
-//     //log.Println(hex.EncodeToString(serializeData))
-
-
-//        senderPubKey := getPubKey(trx.Sender)
-
-//        h := sha256.New()
-//        h.Write([]byte(hex.EncodeToString(serializeData)))
-//        hashData := h.Sum(nil)
-
-//        is_bool := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
-//        //log.Println(is_bool)
-
-//        return is_bool
-       
-// }
+	account ,err := self.roleIntf.GetAccount(accountName)
+	if (nil != err) {
+		return account.PublicKey, nil
+	} else {
+		return nil, fmt.Errorf("get account failed")
+	}
 	
+	//for debug
+	//pub_key, _ := hex.DecodeString("0488c8087c7fd0e1f0281c025902a444364a15e6732c65ff1c8b6673da977097447c1fd0c529482521a9883b0d1ce37e151b4572d4ecd996fefedcf0f6901508aa") 
+	//return pub_key, nil
+}
+
+
+
+func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
+       trxToVerify := &types.Transaction {
+				Version    :trx.Version    , 
+				CursorNum  :trx.CursorNum  ,
+				CursorLabel:trx.CursorLabel,
+				Lifetime   :trx.Lifetime   ,
+				Sender     :trx.Sender     ,
+				Contract   :trx.Contract   ,
+				Method     :trx.Method     ,
+				Param      :trx.Param      ,
+				SigAlg     :trx.SigAlg     ,
+				Signature  :[] byte{},
+       }
+
+       serializeData, err := proto.Marshal(trxToVerify)
+       if nil != err {
+           return false
+	   }
+	   
+	   senderPubKey ,err:= self.getPubKey(trx.Sender)
+	   if nil != err {
+	       return false
+       }
+
+       h := sha256.New()
+       h.Write([]byte(hex.EncodeToString(serializeData)))
+       hashData := h.Sum(nil)
+
+       verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
+		   
+	   fmt.Println("VerifySignature, result",verifyResult)
+
+       return verifyResult
+       
+}
+
