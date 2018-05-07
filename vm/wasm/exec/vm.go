@@ -308,11 +308,12 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 	if int(fnIndex) > len(vm.compiledFuncs) {
 		return nil, InvalidFunctionIndexError(fnIndex)
 	}
+
 	if len(vm.module.GetFunction(int(fnIndex)).Sig.ParamTypes) != len(args) {
 		return nil, ErrInvalidArgumentCount
 	}
-	compiled := vm.compiledFuncs[fnIndex]
 
+	compiled := vm.compiledFuncs[fnIndex]
 	vm.ctx.stack = make([]uint64, 0, compiled.maxDepth)
 	vm.ctx.locals = make([]uint64, compiled.totalLocalVars)
 	vm.ctx.pc = 0
@@ -420,9 +421,11 @@ outer:
 		}
 	}
 
-	if compiled.returns {
+	if compiled.returns && len(vm.ctx.stack) >= 1 {
 		return vm.ctx.stack[len(vm.ctx.stack)-1]
 	}
+
+
 	return 0
 }
 func (vm *VM) GetMemory() []byte {

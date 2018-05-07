@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 type EnvFunc struct {
@@ -26,20 +27,37 @@ func NewEnvFunc() *EnvFunc {
 		envFuncParamIdx: 0,
 	}
 
-	env_func.Register("calloc", calloc)
 	env_func.Register("strcmp", stringcmp)
 	env_func.Register("malloc", malloc)
 	env_func.Register("arrayLen", arrayLen)
 	env_func.Register("memcpy", memcpy)
-	//env_func.Register("read_message", readMessage)
-	env_func.Register("ReadInt32Param", readInt32Param)
-	env_func.Register("ReadInt64Param", readInt64Param)
-	env_func.Register("ReadStringParam", readStringParam)
-	env_func.Register("RawUnmashal", rawUnmashal)
 	env_func.Register("JsonUnmashal", jsonUnmashal)
 	env_func.Register("JsonMashal", jsonMashal)
+	env_func.Register("memset", memset)
+
+	env_func.Register("myprint" , myprint)
+	env_func.Register("get_str_value" , get_str_value)
+	env_func.Register("get_usermng_reg_user" , get_usermng_reg_user)
+	env_func.Register("get_usermng_user_login" , get_usermng_user_login)
+	env_func.Register("set_str_value" , set_str_value)
+	env_func.Register("printi" , printi)
+	env_func.Register("prints" , prints)
+	env_func.Register("get_test_str" , get_test_str)
+	env_func.Register("get_param" , get_param)
+	env_func.Register("set_test_byte" , set_test_byte)
 
 	return &env_func
+}
+
+func Bytes2String(bytes []byte) string {
+
+	for i, b := range bytes {
+		if b == 0 {
+			return string(bytes[:i])
+		}
+	}
+	return string(bytes)
+
 }
 
 func (env *EnvFunc) Register(method string, handler func(*VM) (bool, error)) {
@@ -86,8 +104,6 @@ func calloc(vm *VM) (bool, error) {
 	}
 	return true, nil
 }
-
-//for the c language "malloc" function
 func malloc(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
@@ -101,8 +117,7 @@ func malloc(vm *VM) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	//1. recover the vm context
-	//2. if the call returns value,push the result to the stack
+
 	vm.ctx = envFunc.envFuncCtx
 	if envFunc.envFuncRtn {
 		vm.pushUint64(uint64(index))
@@ -157,6 +172,8 @@ func arrayLen(vm *VM) (bool, error) {
 
 func memcpy(vm *VM) (bool, error) {
 
+	fmt.Println("VM::memcpy")
+
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 3 {
@@ -182,8 +199,42 @@ func memcpy(vm *VM) (bool, error) {
 	return true, nil //this return will be dropped in wasm
 }
 
-/*
+func memset(vm *VM) (bool, error) {
+
+	fmt.Println("VM::memset()")
+
+	params := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+	dest := int(params[0])
+	char := int(params[1])
+	cnt := int(params[2])
+
+	tmp := make([]byte, cnt)
+	for i := 0; i < cnt; i++ {
+		tmp[i] = byte(char)
+	}
+
+	copy(vm.memory[dest:dest+cnt], tmp)
+
+	//1. recover the vm context
+	//2. if the call returns value,push the result to the stack
+	//engine.vm.RestoreCtx()
+	if vm.envFunc != nil {
+		vm.ctx = vm.envFunc.envFuncCtx
+	}
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(1))
+	}
+
+	return true, nil //this return will be dropped in wasm
+}
+
 func readMessage(vm *VM) (bool, error) {
+
+	fmt.Println("VM::readMessage")
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -216,7 +267,6 @@ func readMessage(vm *VM) (bool, error) {
 
 	return true, nil
 }
-*/
 
 func readInt32Param(vm *VM) (bool, error) {
 
@@ -339,6 +389,7 @@ func readStringParam(vm *VM) (bool, error) {
 
 func rawUnmashal(vm *VM) (bool, error) {
 
+	fmt.Println("VM::rawUnmashal")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 3 {
@@ -359,14 +410,12 @@ func rawUnmashal(vm *VM) (bool, error) {
 }
 
 func jsonUnmashal(vm *VM) (bool, error) {
-
+	fmt.Println("VM::jsonUnmashal")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 3 {
 		return false, errors.New("parameter count error while call jsonUnmashal")
 	}
-
-	//fmt.Println("exec::jsonUnmashal() - params = ",params)
 
 	addr := params[0]
 	size := int(params[1])
@@ -377,14 +426,14 @@ func jsonUnmashal(vm *VM) (bool, error) {
 		return false, err
 	}
 	paramList := &ParamList{}
-	err = json.Unmarshal(jsonbytes, paramList) //arg与jsonbytes中的json结构保持一致，获取具体需要计算的
+	err = json.Unmarshal(jsonbytes, paramList)
 
 	if err != nil {
 		return false, err
 	}
 
 	buff := bytes.NewBuffer(nil)
-	for _, param := range paramList.Params { //arg.Params = [20,30]
+	for _, param := range paramList.Params {
 		switch strings.ToLower(param.Type) {
 		case "int":
 			tmp := make([]byte, 4)
@@ -488,7 +537,7 @@ func jsonMashal(vm *VM) (bool, error) {
 	}
 
 	ret := &Rtn{}
-	pstype := strings.ToLower(trimBuffToString(tpstr))
+	pstype := strings.ToLower(BytesToString(tpstr))
 	ret.Type = pstype
 	switch pstype {
 	case "int":
@@ -574,7 +623,7 @@ func stringcmp(vm *VM) (bool, error) {
 			return false, err
 		}
 
-		if trimBuffToString(bytes1) == trimBuffToString(bytes2) {
+		if BytesToString(bytes1) == BytesToString(bytes2) {
 			ret = 0
 		} else {
 			ret = 1
@@ -587,7 +636,159 @@ func stringcmp(vm *VM) (bool, error) {
 	return true, nil
 }
 
-func trimBuffToString(bytes []byte) string {
+func myprint(vm *VM) (bool, error) {
+	pos := vm.envFunc.envFuncParam[0]
+	len := vm.envFunc.envFuncParam[1]
+
+	param := Bytes2String(vm.memory[pos:pos+len])
+	fmt.Println("VM::myprint() param = ",param," , vm.memType = ",vm.memType[pos])
+
+	return true , nil
+}
+
+func get_str_value(vm *VM) (bool, error) {
+	fmt.Println("VM::get_str_value")
+	return true , nil
+}
+
+
+func get_usermng_reg_user(vm *VM) (bool, error) {
+
+	pos    := vm.envFunc.envFuncParam[0]
+	length := vm.envFunc.envFuncParam[1]
+
+	str := "Hello,World !!!"
+	if length < uint64(len(str)) {
+		return false , errors.New("*ERROR* out of the border of the memory !!!")
+	}
+
+	fmt.Println("VM::get_usermng_reg_user() pos = ",pos," , len = ",length)
+
+	// Test to return a string value
+	buff := bytes.NewBuffer(nil)
+	buff.Write([]byte(str))
+	bytes := buff.Bytes()
+
+	if int(pos)+len(bytes) > len(vm.memory) {
+		return false, errors.New("out of memory")
+	}
+
+	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
+	vm.ctx = vm.envFunc.envFuncCtx
+
+	// Test to return a int value
+	/*
+	ret := 123
+	vm.ctx = vm.envFunc.envFuncCtx
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(ret))
+	}
+	*/
+	return true , nil
+}
+
+func get_usermng_user_login(vm *VM) (bool, error) {
+	fmt.Println("VM::get_usermng_user_login")
+	return true , nil
+}
+
+func set_str_value(vm *VM) (bool, error) {
+	fmt.Println("VM::set_str_value")
+	return true , nil
+}
+
+func printi(vm *VM) (bool, error) {
+
+	//val := vm.envFunc.envFuncParam[0]
+	//fmt.Println("VM::printi val = ",val)
+
+	return true , nil
+}
+
+func prints(vm *VM) (bool, error) {
+
+	var len uint64
+
+	pos := vm.envFunc.envFuncParam[0]
+	if _ , ok := vm.memType[pos]; ok {
+		len = uint64(vm.memType[pos].Len)
+	}else{
+		len = vm.envFunc.envFuncParam[1]
+	}
+
+	param := Bytes2String(vm.memory[pos:pos+len])
+
+	fmt.Println("VM::prints param = ",param)
+
+
+	return true , nil
+}
+
+func get_test_str(vm *VM) (bool, error) {
+
+	str := "string from get_test_str !!!"
+	pos:=0
+	// Test to return a string value
+	buff := bytes.NewBuffer(nil)
+	buff.Write([]byte(str))
+	bytes := buff.Bytes()
+
+	if int(pos)+len(bytes) > len(vm.memory) {
+		return false, errors.New("*ERROR* out of memory")
+	}
+
+	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
+	vm.ctx = vm.envFunc.envFuncCtx
+
+	return true , nil
+}
+
+func get_param(vm *VM) (bool, error) {
+	pos    := vm.envFunc.envFuncParam[0]
+	//length := vm.envFunc.envFuncParam[1]
+
+	str   := "Too Young , Too Simple !!!"
+	bytes := []byte(str)
+	if int(pos)+len(bytes) > len(vm.memory) {
+		return false, errors.New("*ERROR* out of memory")
+	}
+
+	fmt.Println("VM::get_param() len(str) = ",len(str))
+
+	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
+	ret := len(str)
+	vm.ctx = vm.envFunc.envFuncCtx
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(ret))
+	}
+
+	return true , nil
+}
+
+func set_test_byte(vm *VM) (bool, error) {
+
+	var len uint64
+
+	pos := vm.envFunc.envFuncParam[0]
+	if _ , ok := vm.memType[pos]; ok {
+		len = uint64(vm.memType[pos].Len)
+	}else{
+		len = vm.envFunc.envFuncParam[1]
+	}
+
+	if len <= 0 {
+		return false , errors.New("*ERROR* out of memory")
+	}
+
+	param := Bytes2String(vm.memory[pos : pos + len])
+	fmt.Println("VM::set_test_byte() pos = ",pos," , len = ",len , " ,param = ",param)
+	//fmt.Println("vm.memory = ",vm.memory)
+
+	return true , nil
+}
+
+//ToDo move to conv.go
+func BytesToString(bytes []byte) string {
 
 	for i, b := range bytes {
 		if b == 0 {

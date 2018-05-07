@@ -139,7 +139,7 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 				if importEntry.FieldName == "memoryBase" || importEntry.FieldName == "tableBase" {
 					glb := &GlobalEntry{Type: &GlobalVar{Type: ValueTypeI32, Mutable: false},
 						Init:    []byte{getGlobal, byte(0), end}, //global 0 end
-						envGlobal: NewEnvGlobal(true , uint64(65536 / 4)),
+						envGlobal: NewEnvGlobal(true , 16),
 					}
 					module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
 					module.imports.Globals++

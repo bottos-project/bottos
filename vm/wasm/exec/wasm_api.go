@@ -9,15 +9,18 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/validate"
+	//"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/contract"
 )
 
-
+var account_name uint64
 const (
 	INVOKE_FUNCTION = "invoke"
-	CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\vm_bak\\testcase\\test_data2\\contract.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\vm_bak\\testcase\\test_data2\\contract.wasm"
+	CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\usermng.wasm"
 )
 
 type ParamList struct {
@@ -34,6 +37,21 @@ type Rtn struct {
 	Val  string
 }
 
+type Apply_context struct {
+	Msg         Message
+}
+
+type Authorization struct {
+	Accout        string
+	CodeVersion	  common.Hash
+}
+
+type Message struct {
+	Wasm_name    string           //crx name
+	Method_name  string           //method name
+	Auth         Authorization
+	Method_param []byte           //parameter
+}
 
 type FuncInfo struct {
 	func_index int64
@@ -57,7 +75,7 @@ type wasm_interface interface {
 
 	Init() error
 	//　a wrap for VM_Call
-	Apply( ctx *contract.Context ,execution_time uint32, received_block bool ) interface{}
+	Apply( ctx Apply_context ,execution_time uint32, received_block bool ) interface{}
 
 	GetFuncInfo(module wasm.Module , entry wasm.ExportEntry) error
 }
@@ -138,8 +156,7 @@ func NewWASM ( ctx *contract.Context ) *VM {
 		}
 
 		/*
-		// TODO
-		if ctx.Msg.Auth.CodeVersion !=  account_name.CodeVersion{
+		if ctx.Trx.Version != accountObj.CodeVersion{
 			//check wasm file's hash
 			//err = errors.New("*ERROR* Fail to match account's information !!!")
 
@@ -177,13 +194,15 @@ func NewWASM ( ctx *contract.Context ) *VM {
 
 func (engine *WASM_ENGINE) Init() error {
 	fmt.Println("Init")
+	//ToDo
 	//load some initial operation
 	return nil
 }
 
+//the function is to be used for json parameter
+func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32, received_block bool ) (interface{} , error){
 
-func (engine *WASM_ENGINE) Apply ( ctx *contract.Context, execution_time uint32, received_block bool ) (interface{} , error){
-	fmt.Println("Apply")
+	fmt.Println("WASM_ENGINE::Apply() ")
 
 	//search matched VM struct according to CTX
 	vm , ok := engine.vm_map[ctx.Trx.Contract];
@@ -197,7 +216,7 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context, execution_time uint32,
 		return nil , errors.New("*ERROR* Failed to find invoke method from wasm module !!!")
 	}
 
-	if err := vm.GetFuncInfo(ctx.Trx.Method, ctx.Trx.Param); err != nil {
+	if err := vm.GetFuncInfo(ctx.Trx.Method,ctx.Trx.Param); err != nil {
 		return nil , err
 	}
 
@@ -219,11 +238,13 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context, execution_time uint32,
 	return nil , nil
 }
 
-func (vm *VM) VM_Call()  ([]byte , error)  {
+func (vm *VM) VM_Call() ([]byte , error)  {
 
 	func_params := make([]uint64, 2)
 	func_params[0] = vm.funcInfo.act_index
 	func_params[1] = vm.funcInfo.arg_index
+
+	fmt.Println("VM::VM_Call() ")
 
 	res, err := vm.ExecCode( vm.funcInfo.func_index , func_params ...)
 	if err != nil {
@@ -244,5 +265,62 @@ func (vm *VM) VM_Call()  ([]byte , error)  {
 	}
 }
 
+//the function is to be used for direct parameter insert
+func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32, received_block bool ) (interface{} , error) {
 
+	fmt.Println("WASM_ENGINE::Apply2")
 
+	var pos int
+	var err error
+
+	//search matched VM struct according to CTX
+	vm , ok := engine.vm_map[ctx.Trx.Contract];
+	if !ok {
+		vm = NewWASM(ctx)
+		engine.vm_map[ctx.Trx.Contract] = vm
+	}
+
+	method := ctx.Trx.Method
+	func_entry , ok := vm.module.Export.Entries[method]
+	if ok == false {
+		return nil , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+	}
+
+	findex := func_entry.Index
+	ftype  := vm.module.Function.Types[int(findex)]
+
+	func_params    := make([]interface{}, 1)
+	func_params[0] = 1
+
+	param_length := len(func_params)
+	parameters   := make([]uint64, param_length)
+
+	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
+		return nil, errors.New("*ERROR*  Parameters count is not right")
+	}
+
+	// just handle parameter for entry function
+	for i, param := range func_params {
+		switch param.(type) {
+		case int:
+			parameters[i] = uint64(param.(int))
+		case []int:
+			//ToDo
+		case string:
+			if pos , err = vm.StorageData(param.(string)); err != nil {
+				return nil , errors.New("*ERROR* Failed to storage data to memory !!!")
+			}
+			parameters[i] = uint64(pos)
+		default:
+			return nil , errors.New("*ERROR* parameter is unsupport type !!!")
+		}
+	}
+
+	res, err := vm.ExecCode(int64(findex), parameters...)
+	if err != nil {
+		return nil, errors.New("*ERROR* Invalid result !" + err.Error())
+	}
+
+	fmt.Println("res = ",res)
+	return nil,nil
+}
