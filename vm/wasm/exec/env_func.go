@@ -35,13 +35,11 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("JsonMashal", jsonMashal)
 	env_func.Register("memset", memset)
 
-	env_func.Register("myprint" , myprint)
-	env_func.Register("get_str_value" , get_str_value)
-	env_func.Register("get_usermng_reg_user" , get_usermng_reg_user)
-	env_func.Register("get_usermng_user_login" , get_usermng_user_login)
-	env_func.Register("set_str_value" , set_str_value)
+	env_func.Register("myprints" , myprint)
 	env_func.Register("printi" , printi)
 	env_func.Register("prints" , prints)
+	env_func.Register("get_str_value" , get_str_value)
+	env_func.Register("set_str_value" , set_str_value)
 	env_func.Register("get_test_str" , get_test_str)
 	env_func.Register("get_param" , get_param)
 	env_func.Register("set_test_byte" , set_test_byte)
@@ -610,6 +608,9 @@ func stringcmp(vm *VM) (bool, error) {
 
 	addr1 := params[0]
 	addr2 := params[1]
+
+	fmt.Println("strcmp", addr1, addr2)
+
 	if addr1 == addr2 {
 		ret = 0
 	} else {
@@ -646,120 +647,188 @@ func myprint(vm *VM) (bool, error) {
 	return true , nil
 }
 
+
 func get_str_value(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract();
+
 	fmt.Println("VM::get_str_value")
-	return true , nil
-}
 
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 6 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+	valueBufPos := int(params[4])
+	valueBufLen := int(params[5])
 
-func get_usermng_reg_user(vm *VM) (bool, error) {
+	// length check
 
-	pos    := vm.envFunc.envFuncParam[0]
-	length := vm.envFunc.envFuncParam[1]
+	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
+	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
 
-	str := "Hello,World !!!"
-	if length < uint64(len(str)) {
-		return false , errors.New("*ERROR* out of the border of the memory !!!")
+	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, object, key)
+
+	valueLen := 0
+	if err == nil {
+		valueLen = len(value);
+		// check buf len
+		if valueLen <= valueBufLen {
+			copy(vm.memory[valueBufPos:valueBufPos+valueLen], []byte(value))
+		} else {
+			valueLen = 0;
+		}
 	}
 
-	fmt.Println("VM::get_usermng_reg_user() pos = ",pos," , len = ",length)
-
-	// Test to return a string value
-	buff := bytes.NewBuffer(nil)
-	buff.Write([]byte(str))
-	bytes := buff.Bytes()
-
-	if int(pos)+len(bytes) > len(vm.memory) {
-		return false, errors.New("out of memory")
+	//1. recover the vm context
+	//2. if the call returns value,push the result to the stack
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(valueLen))
 	}
 
-	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
-	vm.ctx = vm.envFunc.envFuncCtx
-
-	// Test to return a int value
-	/*
-	ret := 123
-	vm.ctx = vm.envFunc.envFuncCtx
-	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(ret))
-	}
-	*/
-	return true , nil
-}
-
-func get_usermng_user_login(vm *VM) (bool, error) {
-	fmt.Println("VM::get_usermng_user_login")
 	return true , nil
 }
 
 func set_str_value(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract();
+
 	fmt.Println("VM::set_str_value")
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 6 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+	valuePos := int(params[4])
+	valueLen := int(params[5])
+
+	// length check
+
+	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
+	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
+	value := Bytes2String(vm.memory[valuePos:valuePos+valueLen])
+
+	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, object, key, value)
+
+	result := 1
+	if err != nil {
+		result = 0;
+	}
+
+	//1. recover the vm context
+	//2. if the call returns value,push the result to the stack
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(result))
+	}
+
 	return true , nil
 }
 
 func printi(vm *VM) (bool, error) {
 
-	//val := vm.envFunc.envFuncParam[0]
-	//fmt.Println("VM::printi val = ",val)
+	i := vm.envFunc.envFuncParam[0]
+	fmt.Println("vm::printi: ", i);
 
 	return true , nil
 }
 
 func prints(vm *VM) (bool, error) {
 
+	fmt.Println("VM::prints start")
 	var len uint64
 
 	pos := vm.envFunc.envFuncParam[0]
+	//len := vm.envFunc.envFuncParam[1]
+
 	if _ , ok := vm.memType[pos]; ok {
 		len = uint64(vm.memType[pos].Len)
 	}else{
 		len = vm.envFunc.envFuncParam[1]
 	}
 
-	param := Bytes2String(vm.memory[pos:pos+len])
+	fmt.Println(pos, len)
+
+	value := make([]byte, len)
+	copy(value, vm.memory[pos:pos+len])
+	param := string(value)
 
 	fmt.Println("VM::prints param = ",param)
-
 
 	return true , nil
 }
 
 func get_test_str(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract();
 
-	str := "string from get_test_str !!!"
-	pos:=0
-	// Test to return a string value
-	buff := bytes.NewBuffer(nil)
-	buff.Write([]byte(str))
-	bytes := buff.Bytes()
+	fmt.Println("VM::get_str_value")
 
-	if int(pos)+len(bytes) > len(vm.memory) {
-		return false, errors.New("*ERROR* out of memory")
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 6 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+	valueBufPos := int(params[4])
+	//valueBufLen := int(params[5])
+
+	// length check
+
+	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
+	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
+
+	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, object, key)
+
+	resultLen := 0
+	if err == nil {
+		valueLen := len(value)
+		copy(vm.memory[int(valueBufPos):int(valueBufPos)+valueLen], []byte(value))
+		resultLen = valueLen
 	}
 
-	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
 	vm.ctx = vm.envFunc.envFuncCtx
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(resultLen))
+	}
 
 	return true , nil
 }
 
 func get_param(vm *VM) (bool, error) {
-	pos    := vm.envFunc.envFuncParam[0]
-	//length := vm.envFunc.envFuncParam[1]
+	contractCtx := vm.GetContract();
 
-	str   := "Too Young , Too Simple !!!"
-	bytes := []byte(str)
-	if int(pos)+len(bytes) > len(vm.memory) {
-		return false, errors.New("*ERROR* out of memory")
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	fmt.Println("VM::get_param() len(str) = ",len(str))
+	bufPos := int(params[0])
+	bufLen := int(params[1])
+	paramLen := len(contractCtx.Trx.Param)
 
-	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
-	ret := len(str)
+	if bufLen <= paramLen {
+		return false, errors.New("buffer not enough")
+	}
+
+	fmt.Println(paramLen, contractCtx.Trx.Param)
+
+	copy(vm.memory[int(bufPos):int(bufPos)+paramLen], contractCtx.Trx.Param)
+
 	vm.ctx = vm.envFunc.envFuncCtx
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(ret))
+		vm.pushUint64(uint64(paramLen))
 	}
 
 	return true , nil

@@ -13,6 +13,8 @@ import (
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/api"
 
+	"github.com/bottos-project/core/common/types"
+
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/contract/contractdb"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/bottos-project/core/action/actor/transaction"
 	actionenv "github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/transaction"
+	wasm "github.com/bottos-project/core/vm/wasm/exec"
 )
 
 func main() {
@@ -82,6 +85,25 @@ func main() {
 			panic(err)
 		}
 	}
+
+	bf  := []byte{0xdc, 0x00, 0x02, 0xda, 0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x75, 0x73, 0x65, 0x72, 0xce, 0x00, 0x00, 0x00, 0x63}
+	//bf  := []byte{0xdc, 0x00, 0x02, 0xda, 0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x75, 0x73, 0x65, 0x72, 0xda, 0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x75, 0x73, 0x65, 0x72}
+
+	trx := &types.Transaction{
+		Version:1,
+		CursorNum:1,
+		CursorLabel:1,
+		Lifetime:1,
+		Sender:"bottos",
+		Contract:"usermng",
+		Method:"userlogin",
+		Param: bf,
+		SigAlg:1,
+		Signature:[]byte{},
+	}
+	ctx := &contract.Context{RoleIntf: roleIntf, ContractDB: contractDB, Trx:trx}
+	_, err = wasm.GetInstance().Apply2(ctx, 1, false)
+	fmt.Println(err)
 
 	WaitSystemDown()
 }

@@ -18,7 +18,7 @@ import (
 var account_name uint64
 const (
 	INVOKE_FUNCTION = "invoke"
-	ENTRY_FUNCTION = "apply"
+	ENTRY_FUNCTION = "start"
 
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
 )
