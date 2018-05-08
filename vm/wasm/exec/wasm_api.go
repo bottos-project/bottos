@@ -295,7 +295,7 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	func_params    := make([]interface{}, 1)
-	func_params[0]  = []byte(ctx.Trx.Method)[0]
+	func_params[0]  = int([]byte(ctx.Trx.Method)[0])
 
 	param_length := len(func_params)
 	parameters   := make([]uint64, param_length)
