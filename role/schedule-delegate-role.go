@@ -45,13 +45,13 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	return res, nil
 
 }
-func GetCandidateBySlot(ldb *db.DBService, slotNum uint32) (string, error) {
+func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		fmt.Println("err")
 		return "", err
 	}
-	currentSlotNum := chainObject.CurrentAbsoluteSlot + uint64(slotNum)
+	currentSlotNum := chainObject.CurrentAbsoluteSlot + slotNum
 	currentCoreState, err := GetCoreStateRole(ldb)
 	fmt.Println("currentSlotNum", currentSlotNum)
 	if err != nil {

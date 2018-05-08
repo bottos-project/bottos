@@ -51,7 +51,7 @@ type RoleInterface interface {
 	SetDelegate(accountName string, value *Delegate) error
 	GetDelegateByAccountName(name string) (*Delegate, error)
 	GetDelegateBySignKey(key string) (*Delegate, error)
-	GetCandidateBySlot(slotNum uint32) (string, error)
+	GetCandidateBySlot(slotNum uint64) (string, error)
 	GetDelegateParticipationRate() uint64
 
 	SetScheduleDelegate(value *ScheduleDelegate) error
@@ -68,8 +68,8 @@ type RoleInterface interface {
 	SetTransactionExpiration(txHash common.Hash, value *TransactionExpiration) error
 	GetTransactionExpiration(txHash common.Hash) (*TransactionExpiration, error)
 
-	GetSlotAtTime(current uint64) uint32
-	GetSlotTime(slotNum uint32) uint64
+	GetSlotAtTime(current uint64) uint64
+	GetSlotTime(slotNum uint64) uint64
 
 	ElectNextTermDelegates() []string
 }
@@ -166,7 +166,7 @@ func (r *Role) GetAllDelegateVotes() ([]*DelegateVotes, error) {
 	return GetAllDelegateVotesRole(r.Db)
 }
 
-func (r *Role) GetCandidateBySlot(slotNum uint32) (string, error) {
+func (r *Role) GetCandidateBySlot(slotNum uint64) (string, error) {
 	return GetCandidateBySlot(r.Db, slotNum)
 }
 
