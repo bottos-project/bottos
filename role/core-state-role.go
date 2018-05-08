@@ -84,8 +84,3 @@ func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
 
 	return res, nil
 }
-
-////TODO
-//func GetCoreStateConfig(ldb *db.DBService){
-
-//}

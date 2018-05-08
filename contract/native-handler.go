@@ -196,16 +196,16 @@ func setdelegate(ctx *Context) error {
 		fmt.Println(newdelegate)
 
 		//create schedule delegate vote role
-		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegateRole()
+		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
 		if err != nil {
 			return fmt.Errorf("critical error schedule delegate is not exist")
 		}
 		//create delegate vote role
-		ctx.RoleIntf.CreateDelegateVotesRole()
+		ctx.RoleIntf.CreateDelegateVotes()
 
 		newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
 		newDelegateVotes.OwnerAccount = newdelegate.AccountName
-		err = ctx.RoleIntf.SetDelegateVotesRole(newdelegate.AccountName, newDelegateVotes)
+		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
 		if err != nil {
 			return fmt.Errorf("set Delegate vote failed")
 		}
