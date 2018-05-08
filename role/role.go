@@ -51,14 +51,14 @@ type RoleInterface interface {
 	SetDelegate(accountName string, value *Delegate) error
 	GetDelegateByAccountName(name string) (*Delegate, error)
 	GetDelegateBySignKey(key string) (*Delegate, error)
-	GetCandidateBySlot(slotNum uint32) (string, error)
+	GetCandidateBySlot(slotNum uint64) (string, error)
 	GetDelegateParticipationRate() uint64
 
-	SetScheduleDelegateRole(value *ScheduleDelegate) error
-	GetScheduleDelegateRole() (*ScheduleDelegate, error)
+	SetScheduleDelegate(value *ScheduleDelegate) error
+	GetScheduleDelegate() (*ScheduleDelegate, error)
 
-	CreateDelegateVotesRole() error
-	SetDelegateVotesRole(key string, value *DelegateVotes) error
+	CreateDelegateVotes() error
+	SetDelegateVotes(key string, value *DelegateVotes) error
 	GetAllDelegateVotes() ([]*DelegateVotes, error)
 
 	SetBlockHistory(blockNumber uint32, blockHash common.Hash) error
@@ -68,8 +68,8 @@ type RoleInterface interface {
 	SetTransactionExpiration(txHash common.Hash, value *TransactionExpiration) error
 	GetTransactionExpiration(txHash common.Hash) (*TransactionExpiration, error)
 
-	GetSlotAtTime(current uint64) uint32
-	GetSlotTime(slotNum uint32) uint64
+	GetSlotAtTime(current uint64) uint64
+	GetSlotTime(slotNum uint64) uint64
 
 	ElectNextTermDelegates() []string
 }
@@ -149,24 +149,24 @@ func (r *Role) GetDelegateParticipationRate() uint64 {
 	return 10000 * rate.RecentSlotFilled / 64
 }
 
-func (r *Role) SetScheduleDelegateRole(value *ScheduleDelegate) error {
+func (r *Role) SetScheduleDelegate(value *ScheduleDelegate) error {
 	return SetScheduleDelegateRole(r.Db, value)
 }
-func (r *Role) GetScheduleDelegateRole() (*ScheduleDelegate, error) {
+func (r *Role) GetScheduleDelegate() (*ScheduleDelegate, error) {
 	return GetScheduleDelegateRole(r.Db)
 }
 
-func (r *Role) CreateDelegateVotesRole() error {
+func (r *Role) CreateDelegateVotes() error {
 	return CreateDelegateVotesRole(r.Db)
 }
-func (r *Role) SetDelegateVotesRole(key string, value *DelegateVotes) error {
+func (r *Role) SetDelegateVotes(key string, value *DelegateVotes) error {
 	return SetDelegateVotesRole(r.Db, key, value)
 }
 func (r *Role) GetAllDelegateVotes() ([]*DelegateVotes, error) {
-	return GetAllDelegateVotes(r.Db)
+	return GetAllDelegateVotesRole(r.Db)
 }
 
-func (r *Role) GetCandidateBySlot(slotNum uint32) (string, error) {
+func (r *Role) GetCandidateBySlot(slotNum uint64) (string, error) {
 	return GetCandidateBySlot(r.Db, slotNum)
 }
 

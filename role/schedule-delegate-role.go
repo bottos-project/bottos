@@ -45,13 +45,13 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	return res, nil
 
 }
-func GetCandidateBySlot(ldb *db.DBService, slotNum uint32) (string, error) {
+func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		fmt.Println("err")
 		return "", err
 	}
-	currentSlotNum := chainObject.CurrentAbsoluteSlot + uint64(slotNum)
+	currentSlotNum := chainObject.CurrentAbsoluteSlot + slotNum
 	currentCoreState, err := GetCoreStateRole(ldb)
 	fmt.Println("currentSlotNum", currentSlotNum)
 	if err != nil {
@@ -78,23 +78,6 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	SetScheduleDelegateRole(ldb, sch)
 	SetDelegateListNewTerm(ldb, termTime, list)
 }
-func filter(sources []string, filters []string) []string {
-	var tmpList []string
-	var has bool
-	for _, src := range sources {
-		has = false
-		for _, filter := range filters {
-			if src == filter {
-				has = true
-				break
-			}
-		}
-		if has == false {
-			tmpList = append(tmpList, src)
-		}
-	}
-	return tmpList
-}
 
 func ElectNextTermDelegates(ldb *db.DBService) []string {
 	var tmpList []string
@@ -114,7 +97,7 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 	if len(filterDgates) == 0 {
 		tmpList = sortedDelegates
 	} else {
-		tmpList = filter(sortedDelegates, filterDgates)
+		tmpList = common.Filter(sortedDelegates, filterDgates)
 	}
 	if uint32(len(tmpList)) < config.BLOCKS_PER_ROUND {
 		panic("Not enough active producers registered to schedule a round")
@@ -135,13 +118,13 @@ func ElectNextTermDelegates(ldb *db.DBService) []string {
 	if len(filterDgates) == 0 {
 		eligibleList = finishdelegates
 	} else {
-		eligibleList = filter(finishdelegates, filterDgates)
+		eligibleList = common.Filter(finishdelegates, filterDgates)
 	}
 
 	fmt.Println("eligibleList", eligibleList)
 	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
 
-	eligibles = filter(eligibleList, candidates)
+	eligibles = common.Filter(eligibleList, candidates)
 
 	fmt.Println("eligibles", eligibles)
 	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND

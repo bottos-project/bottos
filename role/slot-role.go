@@ -28,16 +28,16 @@ import (
 	"github.com/bottos-project/core/config"
 )
 
-func (r *Role) GetSlotAtTime(current uint64) uint32 {
+func (r *Role) GetSlotAtTime(current uint64) uint64 {
 	firstSlotTime := r.GetSlotTime(1)
 
 	if current < firstSlotTime {
 		return 0
 	}
-	return uint32(current-firstSlotTime)/config.DEFAULT_BLOCK_INTERVAL + 1
+	return (current-firstSlotTime)/uint64(config.DEFAULT_BLOCK_INTERVAL) + 1
 }
 
-func (r *Role) GetSlotTime(slotNum uint32) uint64 {
+func (r *Role) GetSlotTime(slotNum uint64) uint64 {
 
 	if slotNum == 0 {
 		return 0
@@ -51,9 +51,9 @@ func (r *Role) GetSlotTime(slotNum uint32) uint64 {
 
 	if object.LastBlockNum == 0 {
 		genesisTime := config.Genesis.GenesisTime
-		return genesisTime + uint64(slotNum*interval)
+		return genesisTime + slotNum*uint64(interval)
 	}
 	headBlockAbsSlot := object.LastBlockTime / uint64(interval)
 	headSlotTime := headBlockAbsSlot * uint64(interval)
-	return headSlotTime + uint64(slotNum*interval)
+	return headSlotTime + slotNum*uint64(interval)
 }

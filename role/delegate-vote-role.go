@@ -122,7 +122,7 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	d.Serve.TermUpdateTime = currentTermTime
 	d.Serve.TermFinishTime = termFinishTime
 }
-func GetAllDelegateVotes(ldb *db.DBService) ([]*DelegateVotes, error) {
+func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
 		fmt.Println("failed ", err)
@@ -144,7 +144,7 @@ func GetAllDelegateVotes(ldb *db.DBService) ([]*DelegateVotes, error) {
 //TODO
 func ResetAllDelegateNewTerm(ldb *db.DBService) {
 
-	voteDelegates, err := GetAllDelegateVotes(ldb)
+	voteDelegates, err := GetAllDelegateVotesRole(ldb)
 	if err != nil {
 		return
 	}

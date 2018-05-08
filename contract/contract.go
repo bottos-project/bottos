@@ -17,7 +17,7 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 	if err != nil {
 		return nil, err
 	}
-	roleIntf.SetScheduleDelegateRole(&role.ScheduleDelegate{big.NewInt(2)})
+	roleIntf.SetScheduleDelegate(&role.ScheduleDelegate{big.NewInt(2)})
 	CreateNativeContractAccount(roleIntf)
 	NativeContractInitChain(roleIntf, intf)
 

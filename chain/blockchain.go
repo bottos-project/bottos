@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"unsafe"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
@@ -198,10 +199,26 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 // TODO
 func (bc *BlockChain) updateCoreState(block *types.Block) {
+
+	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
+		schedule := role.ElectNextTermDelegates(bc.blockDb)
+
+		newCoreState, err := bc.roleIntf.GetCoreState()
+		if err != nil {
+			fmt.Errorf("Loading block database fail, try recovering")
+			return
+		}
+		newCoreState.CurrentDelegates = schedule
+		bc.roleIntf.SetCoreState(newCoreState)
+		//TODO permission object
+	}
+
 }
 
 // TODO
 func (bc *BlockChain) updateChainState(block *types.Block) {
+	var missBlocks uint64
+	var i uint64
 	chainSate, _ := bc.roleIntf.GetChainState()
 
 	chainSate.LastBlockNum = block.GetNumber()
@@ -209,8 +226,48 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	chainSate.LastBlockTime = block.GetTimestamp()
 	chainSate.CurrentDelegate = string(block.GetDelegate())
 
-	// TODO current_absolute_slot
-	// TODO missed_block
+	if chainSate.LastBlockNum == 0 {
+		missBlocks = 1
+	} else {
+		slot := bc.roleIntf.GetSlotAtTime(block.GetTimestamp())
+		missBlocks = slot
+	}
+	if missBlocks == 0 {
+		panic(1)
+		return
+	}
+	missBlocks--
+
+	for i = 0; i < missBlocks; i++ {
+		name, err := bc.roleIntf.GetCandidateBySlot(i + 1)
+
+		delegateLeave, err := bc.roleIntf.GetDelegateByAccountName(name)
+		if err != nil {
+			continue
+		}
+		if delegateLeave.AccountName != chainSate.CurrentDelegate {
+			delegateLeave.TotalMissed++
+			bc.roleIntf.SetDelegate(delegateLeave.AccountName, delegateLeave)
+		}
+	}
+	//update chain state
+	chainSate.CurrentAbsoluteSlot = missBlocks + 1
+
+	size := uint64(unsafe.Sizeof(chainSate.RecentSlotFilled))
+	if missBlocks < size*8 {
+		chainSate.RecentSlotFilled <<= 1
+		chainSate.RecentSlotFilled += 1
+		chainSate.RecentSlotFilled <<= missBlocks
+	} else {
+		coreSate, _ := bc.roleIntf.GetCoreState()
+
+		if uint64(uint32(len(coreSate.CurrentDelegates))/config.BLOCKS_PER_ROUND) > config.DELEGATE_PATICIPATION {
+
+			chainSate.RecentSlotFilled = ^uint64(0)
+		} else {
+			chainSate.RecentSlotFilled = 0
+		}
+	}
 
 	bc.roleIntf.SetChainState(chainSate)
 }
