@@ -35,14 +35,11 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("JsonMashal", jsonMashal)
 	env_func.Register("memset", memset)
 
-	env_func.Register("myprints" , myprint)
 	env_func.Register("printi" , printi)
 	env_func.Register("prints" , prints)
 	env_func.Register("get_str_value" , get_str_value)
 	env_func.Register("set_str_value" , set_str_value)
-	env_func.Register("get_test_str" , get_test_str)
 	env_func.Register("get_param" , get_param)
-	env_func.Register("set_test_byte" , set_test_byte)
 
 	return &env_func
 }
@@ -637,21 +634,8 @@ func stringcmp(vm *VM) (bool, error) {
 	return true, nil
 }
 
-func myprint(vm *VM) (bool, error) {
-	pos := vm.envFunc.envFuncParam[0]
-	len := vm.envFunc.envFuncParam[1]
-
-	param := Bytes2String(vm.memory[pos:pos+len])
-	fmt.Println("VM::myprint() param = ",param," , vm.memType = ",vm.memType[pos])
-
-	return true , nil
-}
-
-
 func get_str_value(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract();
-
-	fmt.Println("VM::get_str_value")
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -690,13 +674,14 @@ func get_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(valueLen))
 	}
 
+	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
+
+
 	return true , nil
 }
 
 func set_str_value(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract();
-
-	fmt.Println("VM::set_str_value")
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -730,22 +715,23 @@ func set_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
+	fmt.Printf("VM: from contract:%v, method:%v, func set_str_value:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
+
 	return true , nil
 }
 
 func printi(vm *VM) (bool, error) {
-
-	i := vm.envFunc.envFuncParam[0]
-	fmt.Println("vm::printi: ", i);
+	contractCtx := vm.GetContract();
+	value := vm.envFunc.envFuncParam[0]
+	fmt.Printf("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value);
 
 	return true , nil
 }
 
 func prints(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract();
 
-	fmt.Println("VM::prints start")
 	var len uint64
-
 	pos := vm.envFunc.envFuncParam[0]
 	//len := vm.envFunc.envFuncParam[1]
 
@@ -755,53 +741,11 @@ func prints(vm *VM) (bool, error) {
 		len = vm.envFunc.envFuncParam[1]
 	}
 
-	fmt.Println(pos, len)
-
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
 	param := string(value)
 
-	fmt.Println("VM::prints param = ",param)
-
-	return true , nil
-}
-
-func get_test_str(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
-
-	fmt.Println("VM::get_str_value")
-
-	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
-	if len(params) != 6 {
-		return false, errors.New("parameter count error while call memcpy")
-	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valueBufPos := int(params[4])
-	//valueBufLen := int(params[5])
-
-	// length check
-
-	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
-	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
-
-	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, object, key)
-
-	resultLen := 0
-	if err == nil {
-		valueLen := len(value)
-		copy(vm.memory[int(valueBufPos):int(valueBufPos)+valueLen], []byte(value))
-		resultLen = valueLen
-	}
-
-	vm.ctx = vm.envFunc.envFuncCtx
-	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(resultLen))
-	}
-
+	fmt.Printf("VM: from contract:%v, method:%v, func prints: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, param);
 	return true , nil
 }
 
@@ -822,8 +766,6 @@ func get_param(vm *VM) (bool, error) {
 		return false, errors.New("buffer not enough")
 	}
 
-	fmt.Println(paramLen, contractCtx.Trx.Param)
-
 	copy(vm.memory[int(bufPos):int(bufPos)+paramLen], contractCtx.Trx.Param)
 
 	vm.ctx = vm.envFunc.envFuncCtx
@@ -831,27 +773,7 @@ func get_param(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(paramLen))
 	}
 
-	return true , nil
-}
-
-func set_test_byte(vm *VM) (bool, error) {
-
-	var len uint64
-
-	pos := vm.envFunc.envFuncParam[0]
-	if _ , ok := vm.memType[pos]; ok {
-		len = uint64(vm.memType[pos].Len)
-	}else{
-		len = vm.envFunc.envFuncParam[1]
-	}
-
-	if len <= 0 {
-		return false , errors.New("*ERROR* out of memory")
-	}
-
-	param := Bytes2String(vm.memory[pos : pos + len])
-	fmt.Println("VM::set_test_byte() pos = ",pos," , len = ",len , " ,param = ",param)
-	//fmt.Println("vm.memory = ",vm.memory)
+	fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param);
 
 	return true , nil
 }
