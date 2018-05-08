@@ -254,7 +254,6 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	chainSate.CurrentAbsoluteSlot = missBlocks + 1
 
 	size := uint64(unsafe.Sizeof(chainSate.RecentSlotFilled))
-	fmt.Println("ddddddddddddddddddddddddddddddddddddddddddddddddd", size)
 	if missBlocks < size*8 {
 		chainSate.RecentSlotFilled <<= 1
 		chainSate.RecentSlotFilled += 1
