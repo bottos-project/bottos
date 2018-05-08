@@ -72,7 +72,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 
 	case *actor.ReceiveTimeout:
 		fmt.Println("\n\n\n\n ")
-		//p.working()
+		p.working()
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
