@@ -20,8 +20,8 @@ const (
 	INVOKE_FUNCTION = "invoke"
 	ENTRY_FUNCTION = "apply"
 
-	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\usermng.wasm"
-	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\old5\\usermng.wasm"
+	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+
 )
 
 type ParamList struct {
