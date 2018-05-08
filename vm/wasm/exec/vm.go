@@ -33,6 +33,7 @@ import (
 	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	"github.com/bottos-project/core/contract"
 )
 
 var (
@@ -85,6 +86,8 @@ type VM struct {
 	//define env function
 	envFunc  *EnvFunc
 	funcInfo FuncInfo
+
+	contract *contract.Context
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -104,6 +107,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		memPos  : -1,
 		memType : make(map[uint64]*typeInfo),
 		memory  : make([]byte, wasmPageSize),
+		contract: nil,
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {
@@ -473,4 +477,18 @@ func (vm *VM) GetMsgBytes() ([]byte, error) {
 
 	bytesbuf := bytes.NewBuffer(nil)
 	return bytesbuf.Bytes(), nil
+}
+
+func (vm *VM) SetContract (contract *contract.Context) error {
+
+	if contract == nil {
+		return errors.New("*ERROR* Empty parameter !!!")
+	}
+
+	vm.contract = contract
+	return nil
+}
+
+func (vm *VM) GetContract () (*contract.Context,error) {
+	return vm.contract,nil
 }

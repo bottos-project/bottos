@@ -8,19 +8,20 @@ import (
 	"encoding/binary"
 	"bytes"
 	"errors"
-
+	"sync"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/validate"
-	//"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/contract"
 )
 
 var account_name uint64
 const (
 	INVOKE_FUNCTION = "invoke"
-	//CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\vm_bak\\testcase\\test_data2\\contract.wasm"
-	CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\usermng.wasm"
+	ENTRY_FUNCTION = "apply"
+
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\usermng.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\old5\\usermng.wasm"
 )
 
 type ParamList struct {
@@ -68,6 +69,8 @@ var wasm_engine *WASM_ENGINE
 type WASM_ENGINE struct {
 	vm      *VM             //it will be inited at NewVM() , one VM struct is on behalf of one wasm module
 	vm_map  map[string]*VM  //the string type need be modified
+
+	vm_lock    *sync.Mutex
 }
 
 type wasm_interface interface {
@@ -84,7 +87,8 @@ func GetInstance() *WASM_ENGINE {
 
 	if wasm_engine == nil {
 		wasm_engine = &WASM_ENGINE{
-			vm_map: make(map[string]*VM),
+			vm_map : make(map[string]*VM),
+			vm_lock: new(sync.Mutex),
 		}
 		wasm_engine.Init()
 	}
@@ -163,6 +167,7 @@ func NewWASM ( ctx *contract.Context ) *VM {
 			return nil
 		}
 		*/
+
 		wasm_code = accountObj.ContractCode
 	} else {
 		wasm_code, err = ioutil.ReadFile(CTX_WASM_FILE)
@@ -188,14 +193,15 @@ func NewWASM ( ctx *contract.Context ) *VM {
 		return nil
 	}
 
+	vm.SetContract(ctx)
+
 	return vm
 }
 
 
 func (engine *WASM_ENGINE) Init() error {
 	fmt.Println("Init")
-	//ToDo
-	//load some initial operation
+	//ToDo load some initial operation
 	return nil
 }
 
@@ -280,7 +286,7 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 		engine.vm_map[ctx.Trx.Contract] = vm
 	}
 
-	method := ctx.Trx.Method
+	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
 		return nil , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
@@ -290,7 +296,7 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	func_params    := make([]interface{}, 1)
-	func_params[0] = 1
+	func_params[0]  = ctx.Trx.Method
 
 	param_length := len(func_params)
 	parameters   := make([]uint64, param_length)
