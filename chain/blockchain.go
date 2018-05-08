@@ -198,6 +198,34 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 // TODO
 func (bc *BlockChain) updateCoreState(block *types.Block) {
+
+	//	if block.Head.Number%config.BLOCKS_PER_ROUND == 0 {
+	//		schedule = role.ElectNextTermDelegates(bc.blockDb)
+	//		config = _admin->get_blockchain_configuration(_db, schedule);
+	//		newCoreState CoreState
+
+	//		SetCoreState(value *CoreState)
+	//	}
+	//	 if (b.block_num() % config::blocks_per_round == 0) {
+	//      auto schedule = calculate_next_round(b);
+	//      auto config = _admin->get_blockchain_configuration(_db, schedule);
+
+	//      const auto& gpo = get_global_properties();
+	//      _db.modify(gpo, [schedule = std::move(schedule), config = std::move(config)] (global_property_object& gpo) {
+	//         gpo.active_producers = std::move(schedule);
+	//         gpo.configuration = std::move(config);
+	//      });
+
+	//      auto active_producers_authority = types::authority(config::producers_authority_threshold, {}, {});
+	//      for(auto& name : gpo.active_producers) {
+	//         active_producers_authority.accounts.push_back({{name, config::active_name}, 1});
+	//      }
+
+	//      auto& po = _db.get<permission_object, by_owner>( boost::make_tuple(config::producers_account_name, config::active_name) );
+	//      _db.modify(po,[active_producers_authority] (permission_object& po) {
+	//         po.auth = active_producers_authority;
+	//      });
+	//   }
 }
 
 // TODO

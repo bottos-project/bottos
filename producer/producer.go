@@ -110,10 +110,16 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	// If this block is last in a round, calculate the schedule for the new round
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
 		fmt.Println("elect next term ---------")
-		new_schedule := p.roleIntf.ElectNextTermDelegates()
-		fmt.Println("next term delgates", new_schedule)
-		// TODO     auto new_schedule = _admin->get_next_round(_db);
-		//block.Header.DelgateChanges = get_global_properties().active_producers - new_schedule
+		newSchedule := p.roleIntf.ElectNextTermDelegates()
+
+		fmt.Println("next term delgates", newSchedule)
+
+		currentState, err := p.roleIntf.GetCoreState()
+		if err != nil {
+			return nil, err
+		}
+		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
+		fmt.Println("DelegateChanges", block.Header.DelegateChanges)
 	}
 
 	return block, nil
