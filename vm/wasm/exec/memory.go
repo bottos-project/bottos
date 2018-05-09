@@ -281,7 +281,6 @@ func (vm *VM) StorageData( data interface{}) (int, error) {
 		switch data.(type) {
 		case []byte:
 			return vm.storageMemory(data.([]byte), String)
-
 		case []int:
 			byte_array := make([]byte, len(data.([]int))*4)
 			for i, v := range data.([]int) {

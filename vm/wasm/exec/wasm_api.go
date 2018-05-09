@@ -18,10 +18,9 @@ import (
 var account_name uint64
 const (
 	INVOKE_FUNCTION = "invoke"
-	ENTRY_FUNCTION = "apply"
+	ENTRY_FUNCTION = "start"
 
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
-
 )
 
 type ParamList struct {
@@ -296,7 +295,7 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	func_params    := make([]interface{}, 1)
-	func_params[0]  = ctx.Trx.Method
+	func_params[0]  = int([]byte(ctx.Trx.Method)[0])
 
 	param_length := len(func_params)
 	parameters   := make([]uint64, param_length)

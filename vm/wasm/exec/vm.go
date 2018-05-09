@@ -489,6 +489,6 @@ func (vm *VM) SetContract (contract *contract.Context) error {
 	return nil
 }
 
-func (vm *VM) GetContract () (*contract.Context,error) {
-	return vm.contract,nil
+func (vm *VM) GetContract () *contract.Context {
+	return vm.contract
 }

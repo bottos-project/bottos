@@ -63,6 +63,14 @@ func check_account(RoleIntf role.RoleInterface, name string) bool {
 	return true
 }
 
+func check_account_name(name string) bool {
+	if len(name) == 0 || len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
+		return false
+	}
+
+	return true
+}
+
 func newaccount(ctx *Context) error {
 	// trx.param --> json
 	newaccount := &NewAccountParam{}
@@ -71,6 +79,16 @@ func newaccount(ctx *Context) error {
 		return err
 	}
 	fmt.Println("new account param: ", newaccount)
+
+	//check params
+	if !check_account_name(newaccount.Creator) {
+		return fmt.Errorf("Creator Name Invalid")
+	}
+
+	//check params
+	if !check_account_name(newaccount.Name) {
+		return fmt.Errorf("Account Name Invalid")
+	}
 
 	// TODO: check from auth
 
@@ -127,6 +145,16 @@ func transfer(ctx *Context) error {
 	}
 
 	fmt.Println("transfer param: ", transfer)
+
+	//check params
+	if !check_account_name(transfer.From) {
+		return fmt.Errorf("From Name Invalid")
+	}
+
+	//check params
+	if !check_account_name(transfer.To) {
+		return fmt.Errorf("To Name Invalid")
+	}
 
 	// check account name
 	if !check_account(ctx.RoleIntf, transfer.From) {
