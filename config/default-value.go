@@ -44,4 +44,4 @@ const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
 
 const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
 
-const MAX_ACCOUNT_NAME_LENGTH int = 21
+const MAX_ACCOUNT_NAME_LENGTH int = 16

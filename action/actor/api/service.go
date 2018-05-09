@@ -183,7 +183,7 @@ func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 
 func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequest, resp *api.QueryAccountResponse) error {
 	name := req.AccountName
-	_, err := h.env.RoleIntf.GetAccount(name)
+	account, err := h.env.RoleIntf.GetAccount(name)
 	if err != nil {
 		resp.Errcode = 1
 		resp.Msg = "Account Not Found"
@@ -206,6 +206,7 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 
 	resp.Result = &api.QueryAccountResponse_Result{}
 	resp.Result.AccountName = name
+	resp.Result.Pubkey = string(account.PublicKey);
 	resp.Result.Balance = balance.Balance
 	resp.Result.StakedBalance = stakedBalance.StakedBalance
 	resp.Errcode = 0

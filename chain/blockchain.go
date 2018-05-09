@@ -278,13 +278,12 @@ func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block
 	blockTime := block.GetTimestamp()
 	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime))
 
-	fmt.Println(delegate.AccountName, delegate.LastConfirmedBlockNum)
-
+	oldNum := delegate.LastConfirmedBlockNum
 	delegate.LastSlot = newSlot
 	delegate.LastConfirmedBlockNum = block.GetNumber()
 	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
 
-	fmt.Println(delegate.AccountName, delegate.LastConfirmedBlockNum)
+	fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", delegate.AccountName, oldNum, delegate.LastConfirmedBlockNum)
 }
 
 // TODO
@@ -299,11 +298,11 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 		delegates[i] = delegate
 		lastConfirmedNums[i] = delegates[i].LastConfirmedBlockNum
 	}
-	fmt.Println(lastConfirmedNums)
+	//fmt.Println(lastConfirmedNums)
 
 	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(delegates) / 100
 	sort.Sort(lastConfirmedNums)
-	fmt.Println(lastConfirmedNums, consensusIndex)
+	//fmt.Println(lastConfirmedNums, consensusIndex)
 	newLastConsensusBlockNum := lastConfirmedNums[consensusIndex]
 	if newLastConsensusBlockNum > chainSate.LastConsensusBlockNum {
 		chainSate.LastConsensusBlockNum = newLastConsensusBlockNum

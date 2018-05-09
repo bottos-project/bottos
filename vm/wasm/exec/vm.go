@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"math"
 	"bytes"
-
+	"sync"
 	"github.com/bottos-project/core/vm/wasm/disasm"
 	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/core/vm/wasm/wasm"
@@ -88,6 +88,8 @@ type VM struct {
 	funcInfo FuncInfo
 
 	contract *contract.Context
+
+	vm_lock *sync.Mutex
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -108,6 +110,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		memType : make(map[uint64]*typeInfo),
 		memory  : make([]byte, wasmPageSize),
 		contract: nil,
+		vm_lock : new(sync.Mutex),
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {
