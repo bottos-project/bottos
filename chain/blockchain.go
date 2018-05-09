@@ -283,7 +283,7 @@ func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block
 	delegate.LastConfirmedBlockNum = block.GetNumber()
 	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
 
-	fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", AccountName, oldNum, delegate.LastConfirmedBlockNum)
+	fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", delegate.AccountName, oldNum, delegate.LastConfirmedBlockNum)
 }
 
 // TODO
