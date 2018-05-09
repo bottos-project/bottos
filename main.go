@@ -6,22 +6,22 @@ import (
 	"os/signal"
 	"path/filepath"
 
+	"github.com/bottos-project/core/api"
 	"github.com/bottos-project/core/chain"
 	"github.com/bottos-project/core/chain/extra"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/api"
 
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/contract/contractdb"
 
-	"github.com/micro/go-micro"
 	cactor "github.com/bottos-project/core/action/actor"
 	caapi "github.com/bottos-project/core/action/actor/api"
 	"github.com/bottos-project/core/action/actor/transaction"
 	actionenv "github.com/bottos-project/core/action/env"
 	"github.com/bottos-project/core/transaction"
+	"github.com/micro/go-micro"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"))
+	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"), "")
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
 		os.Exit(1)
@@ -55,11 +55,11 @@ func main() {
 	txStore := txstore.NewTransactionStore(chain, roleIntf)
 
 	actorenv := &actionenv.ActorEnv{
-		RoleIntf:	roleIntf, 
+		RoleIntf:   roleIntf,
 		ContractDB: contractDB,
-		Chain:		chain, 
-		TxStore:	txStore,
-		NcIntf:		nc,
+		Chain:      chain,
+		TxStore:    txStore,
+		NcIntf:     nc,
 	}
 	cactor.InitActors(actorenv)
 	//caapi.PushTransaction(2876568)
