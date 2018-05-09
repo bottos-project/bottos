@@ -46,7 +46,7 @@ func NewDbService(path string, codedbPath string, optPath string) *DBService {
 	if optPath == "" {
 		return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: nil}
 	}
-	optiondb := optiondb.NewOptionDbRepository(path)
+	optiondb := optiondb.NewOptionDbRepository(optPath)
 	return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: optiondb}
 
 }

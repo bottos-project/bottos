@@ -74,7 +74,7 @@ type RoleInterface interface {
 
 	ElectNextTermDelegates() []string
 
-	ApplyPersistance(block types.Block) error
+	ApplyPersistance(block *types.Block) error
 }
 
 func NewRole(db *db.DBService) RoleInterface {
@@ -201,7 +201,7 @@ func (r *Role) ElectNextTermDelegates() []string {
 	return ElectNextTermDelegatesRole(r.Db)
 }
 
-func (r *Role) ApplyPersistance(block types.Block) error {
+func (r *Role) ApplyPersistance(block *types.Block) error {
 	return ApplyPersistanceRole(r.Db, block)
 }
 

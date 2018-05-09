@@ -27,6 +27,7 @@ package role
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bottos-project/core/common"
@@ -58,7 +59,7 @@ type BlockInfo struct {
 	BlockNumber     uint32          `bson:"block_number"`
 	Timestamp       uint64          `bson:"timestamp"`
 	MerkleRoot      []byte          `bson:"merkle_root"`
-	DelegateAccount []byte          `bson:"delegate"`
+	DelegateAccount string          `bson:"delegate"`
 	Transactions    []bson.ObjectId `bson:"transactions"`
 	CreateTime      time.Time       `bson:"create_time"`
 }
@@ -81,12 +82,12 @@ type TxInfo struct {
 	CreateTime    time.Time     `bson:"create_time"`
 }
 
-func insertAccountInfoRole(ldb *db.DBService, block types.Block, trx *types.Transaction) error {
+func insertAccountInfoRole(ldb *db.DBService, block *types.Block, trx *types.Transaction) error {
 
 	return nil
 }
 
-func insertTxInfoRole(ldb *db.DBService, block types.Block, oids []bson.ObjectId) error {
+func insertTxInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
 	if len(oids) != len(block.Transactions) {
 		return errors.New("invalid param")
 	}
@@ -117,7 +118,7 @@ func insertTxInfoRole(ldb *db.DBService, block types.Block, oids []bson.ObjectId
 
 	return nil
 }
-func insertBlockInfoRole(ldb *db.DBService, block types.Block, oids []bson.ObjectId) error {
+func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
 
 	newBlockInfo := &BlockInfo{
 		bson.NewObjectId(),
@@ -126,7 +127,7 @@ func insertBlockInfoRole(ldb *db.DBService, block types.Block, oids []bson.Objec
 		block.Header.Number,
 		block.Header.Timestamp,
 		block.Header.MerkleRoot,
-		block.Header.Delegate,
+		string(block.Header.Delegate),
 		oids,
 		time.Now(),
 	}
@@ -134,7 +135,8 @@ func insertBlockInfoRole(ldb *db.DBService, block types.Block, oids []bson.Objec
 	return nil
 }
 
-func ApplyPersistanceRole(ldb *db.DBService, block types.Block) error {
+func ApplyPersistanceRole(ldb *db.DBService, block *types.Block) error {
+	fmt.Println("beging............applyPersistance")
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()

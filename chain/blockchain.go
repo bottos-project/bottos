@@ -362,7 +362,7 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	if bc.handledBlockCB != nil {
 		bc.handledBlockCB(block)
 	}
-
+	bc.roleIntf.ApplyPersistance(block)
 	return nil
 }
 

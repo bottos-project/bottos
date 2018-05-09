@@ -25,6 +25,14 @@
 
 package db
 
+import (
+	"fmt"
+)
+
 func (d *DBService) Insert(collection string, value interface{}) error {
+	if d.optDbRepo == nil {
+		fmt.Println("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeer")
+		return nil
+	}
 	return d.optDbRepo.InsertOptionDb(collection, value)
 }
