@@ -4,10 +4,8 @@ import (
 )
 
 type NewAccountParam struct {
-	Creator		string		`json:"creator"`
 	Name		string		`json:"name"`
 	Pubkey		string 		`json:"pubkey"`
-	Deposit		uint64		`json:"deposit"`
 }
 
 type TransferParam struct {
@@ -20,6 +18,18 @@ type SetDelegateParam struct {
 	Name		string		`json:"name"`
 	Pubkey		string 		`json:"pubkey"`
 	// TODO CONFIG
+}
+
+type DeployCodeParam struct {
+	Name		 string		 `json:"name"`
+	VMType       byte        `json:"vm_type"`
+	VMVersion    byte        `json:"vm_version"`
+	ContractCode []byte      `json:"contract_code"`
+}
+
+type DeployABIParam struct {
+	Name		 string		 `json:"name"`
+	ContractAbi	 []byte      `json:"contract_abi"`
 }
 
 type NativeContractInterface interface {

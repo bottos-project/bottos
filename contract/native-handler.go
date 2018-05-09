@@ -6,7 +6,7 @@ import (
 
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
-	//"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/common"
 )
 
 type NativeContractMethod func(*Context) error
@@ -22,8 +22,9 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 
 	nc.Handler["newaccount"] = newaccount
 	nc.Handler["transfer"] = transfer
-	nc.Handler["setcode"] = setcode
 	nc.Handler["setdelegate"] = setdelegate
+	nc.Handler["deploycode"] = deploycode
+	nc.Handler["deployabi"] = deployabi
 
 	return nc, nil
 }
@@ -53,22 +54,17 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
 	return fmt.Errorf("No Native Contract Method")
 }
 
-func check_account(RoleIntf role.RoleInterface, name string) bool {
+func check_account(RoleIntf role.RoleInterface, name string) error {
+	if len(name) == 0 || len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
+		return fmt.Errorf("Invalid Account Name")
+	}
+
 	_, err := RoleIntf.GetAccount(name)
 	if err != nil {
-		// not exist
-		return false
+		return fmt.Errorf("Account Not Exist")
 	}
 
-	return true
-}
-
-func check_account_name(name string) bool {
-	if len(name) == 0 || len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
-		return false
-	}
-
-	return true
+	return nil
 }
 
 func newaccount(ctx *Context) error {
@@ -80,26 +76,12 @@ func newaccount(ctx *Context) error {
 	}
 	fmt.Println("new account param: ", newaccount)
 
-	//check params
-	if !check_account_name(newaccount.Creator) {
-		return fmt.Errorf("Creator Name Invalid")
-	}
+	// TODO: check auth
 
-	//check params
-	if !check_account_name(newaccount.Name) {
-		return fmt.Errorf("Account Name Invalid")
-	}
-
-	// TODO: check from auth
-
-	// check creator
-	if !check_account(ctx.RoleIntf, newaccount.Creator) {
-		return fmt.Errorf("Creator Account Not Exist")
-	}
-
-	//check name
-	if check_account(ctx.RoleIntf, newaccount.Name) {
-		return fmt.Errorf("Account Exist")
+	//check account
+	err = check_account(ctx.RoleIntf, newaccount.Name)
+	if err != nil {
+		return err
 	}
 
 	chainState, _ := ctx.RoleIntf.GetChainState()
@@ -112,22 +94,17 @@ func newaccount(ctx *Context) error {
 	}
 	ctx.RoleIntf.SetAccount(account.AccountName, account)
 
-	// 2, transfer
-	creatorBalance, _ := ctx.RoleIntf.GetBalance(newaccount.Creator)
-	creatorBalance.Balance -= uint64(newaccount.Deposit)
-	ctx.RoleIntf.SetBalance(newaccount.Creator, creatorBalance)
-
-	// balance
+	// 2, create balance
 	balance := &role.Balance{
 		AccountName: newaccount.Name,
 		Balance:     0,
 	}
 	ctx.RoleIntf.SetBalance(newaccount.Name, balance)
 
-	// staked_balance
+	// 3, create staked_balance
 	staked_balance := &role.StakedBalance{
 		AccountName:   newaccount.Name,
-		StakedBalance: uint64(newaccount.Deposit),
+		StakedBalance: 0,
 	}
 	ctx.RoleIntf.SetStakedBalance(newaccount.Name, staked_balance)
 
@@ -146,28 +123,21 @@ func transfer(ctx *Context) error {
 
 	fmt.Println("transfer param: ", transfer)
 
-	//check params
-	if !check_account_name(transfer.From) {
-		return fmt.Errorf("From Name Invalid")
+	// TODO: check auth
+
+	// check account
+	err = check_account(ctx.RoleIntf, transfer.From)
+	if err != nil {
+		return err
 	}
 
-	//check params
-	if !check_account_name(transfer.To) {
-		return fmt.Errorf("To Name Invalid")
+	err = check_account(ctx.RoleIntf, transfer.To)
+	if err != nil {
+		return err
 	}
-
-	// check account name
-	if !check_account(ctx.RoleIntf, transfer.From) {
-		return fmt.Errorf("From Account Not Exist")
-	}
-
-	if !check_account(ctx.RoleIntf, transfer.To) {
-		return fmt.Errorf("To Account Not Exist")
-	}
-
-	// TODO: check from auth
 
 	// check funds
+	// TODO safe math check
 	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
 	if from.Balance < transfer.Value {
 		return fmt.Errorf("Insufficient Funds")
@@ -191,10 +161,6 @@ func transfer(ctx *Context) error {
 	return nil
 }
 
-func setcode(ctx *Context) error {
-	return nil
-}
-
 func setdelegate(ctx *Context) error {
 	// trx.param --> json
 	param := &SetDelegateParam{}
@@ -205,11 +171,12 @@ func setdelegate(ctx *Context) error {
 
 	fmt.Println("setdelegate param: ", param)
 
-	// TODO: check from auth
+	// TODO: check auth
 
-	// check account name
-	if !check_account(ctx.RoleIntf, param.Name) {
-		return fmt.Errorf("Account Not Exist")
+	// check account
+	err = check_account(ctx.RoleIntf, param.Name)
+	if err != nil {
+		return err
 	}
 
 	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
@@ -240,6 +207,89 @@ func setdelegate(ctx *Context) error {
 		fmt.Println("set delegate vote", newDelegateVotes)
 	} else {
 		return fmt.Errorf("Delegate Already Exist")
+	}
+
+	return nil
+}
+
+func check_code(code []byte) error {
+
+	return nil
+}
+
+func deploycode(ctx *Context) error {
+	// trx.param --> json
+	param := &DeployCodeParam{}
+	err := json.Unmarshal(ctx.Trx.Param, param)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("deploycode param: ", param)
+
+	// TODO: check auth
+
+	// check account
+	err = check_account(ctx.RoleIntf, param.Name)
+	if err != nil {
+		return err
+	}
+
+	// check code
+	err = check_code(param.ContractCode)
+	if err != nil {
+		return err
+	}
+
+	codeHash := common.Sha256(param.ContractCode)
+
+	account, _ := ctx.RoleIntf.GetAccount(param.Name)
+	account.CodeVersion = codeHash
+	account.ContractCode = make([]byte, len(param.ContractCode))
+	copy(account.ContractCode, param.ContractCode)
+	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
+	if err != nil {
+		return fmt.Errorf("Set Code Fail")
+	}
+
+	return nil
+}
+
+func check_abi(abi []byte) error {
+
+	return nil
+}
+
+func deployabi(ctx *Context) error {
+	// trx.param --> json
+	param := &DeployABIParam{}
+	err := json.Unmarshal(ctx.Trx.Param, param)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("deployabi param: ", param)
+
+	// TODO: check auth
+
+	// check account
+	err = check_account(ctx.RoleIntf, param.Name)
+	if err != nil {
+		return err
+	}
+
+	// check code
+	err = check_code(param.ContractAbi)
+	if err != nil {
+		return err
+	}
+
+	account, _ := ctx.RoleIntf.GetAccount(param.Name)
+	account.ContractAbi = make([]byte, len(param.ContractAbi))
+	copy(account.ContractAbi, param.ContractAbi)
+	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
+	if err != nil {
+		return fmt.Errorf("Set Abi Fail")
 	}
 
 	return nil
