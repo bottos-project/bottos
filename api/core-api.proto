@@ -91,7 +91,8 @@ message QueryAccountResponse{
 	Result 				result				= 3;
 	message Result {
 		string 			account_name		= 1;
-		uint64 			balance				= 2;
-		uint64 			staked_balance		= 3;
+		string			pubkey				= 2;
+		uint64 			balance				= 3;
+		uint64 			staked_balance		= 4;
 	}
 }
