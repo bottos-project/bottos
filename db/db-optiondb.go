@@ -16,36 +16,15 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: option database interface
+ * file description: code database interface
  * @Author: May Luo
- * @Date:   2017-12-01
+ * @Date:   2017-12-05
  * @Last Modified by:
  * @Last Modified time:
  */
-package optiondb
 
-import (
-	"errors"
-	"fmt"
+package db
 
-	"gopkg.in/mgo.v2"
-)
-
-type OptionDbRepo interface {
-	InsertOptionDb(collection string, value interface{}) error
-}
-
-func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
-	session, err := GetSession(r.mgoEndpoint)
-	if err != nil {
-		fmt.Println(err)
-		return errors.New("Get session faild" + r.mgoEndpoint)
-	}
-
-	insert := func(c *mgo.Collection) error {
-		return c.Insert(value)
-	}
-	session.SetCollection(collection, insert)
-
-	return nil
+func (d *DBService) Insert(collection string, value interface{}) error {
+	return d.optDbRepo.InsertOptionDb(collection, value)
 }

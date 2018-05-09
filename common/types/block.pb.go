@@ -13,7 +13,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type Block struct {
-	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header"`
+	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header" `
 	Transactions []*Transaction `protobuf:"bytes,2,rep,name=transactions" json:"transactions"`
 }
 

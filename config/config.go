@@ -49,6 +49,7 @@ type Parameter struct {
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
+	OptionDb          string    `json:"option_db"`
 }
 
 type KeyPair struct {

@@ -79,7 +79,7 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	SetDelegateListNewTerm(ldb, termTime, list)
 }
 
-func ElectNextTermDelegates(ldb *db.DBService) []string {
+func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	var tmpList []string
 	var eligibleList []string
 	var eligibles []string
