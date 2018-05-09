@@ -31,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"), "")
+	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"), config.Param.OptionDb)
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
 		os.Exit(1)
