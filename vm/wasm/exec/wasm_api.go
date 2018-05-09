@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"sync"
+	"time"
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/validate"
@@ -17,10 +18,12 @@ import (
 
 var account_name uint64
 const (
-	INVOKE_FUNCTION = "invoke"
-	ENTRY_FUNCTION = "start"
+	INVOKE_FUNCTION       = "invoke"
+	ENTRY_FUNCTION        = "start"
 
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	VM_PERIOD_OF_VALIDITY = "1h"
+	WAIT_TIME             = 4
 )
 
 type ParamList struct {
@@ -64,17 +67,21 @@ type FuncInfo struct {
 
 var wasm_engine *WASM_ENGINE
 
+//it means a VM instance , include its created time , end time and status
+type VM_INSTANCE struct {
+	vm           *VM        //it means a vm , it is a WASM module/file
+	create_time  time.Time  //vm instance's created time
+	end_time     time.Time  //vm instance's deadline
+	//running		 bool
+}
+
 //struct wasm is a executable environment for other caller
 type WASM_ENGINE struct {
-	vm      *VM             //it will be inited at NewVM() , one VM struct is on behalf of one wasm module
-	vm_map  map[string]*VM  //the string type need be modified
-
-	vm_lock    *sync.Mutex
+	vm_map            map[string]*VM_INSTANCE //the string type need be modified
+	vm_engine_lock    *sync.Mutex
 }
 
 type wasm_interface interface {
-
-
 	Init() error
 	//　a wrap for VM_Call
 	Apply( ctx Apply_context ,execution_time uint32, received_block bool ) interface{}
@@ -86,8 +93,8 @@ func GetInstance() *WASM_ENGINE {
 
 	if wasm_engine == nil {
 		wasm_engine = &WASM_ENGINE{
-			vm_map : make(map[string]*VM),
-			vm_lock: new(sync.Mutex),
+			vm_map        : make(map[string]*VM_INSTANCE),
+			vm_engine_lock: new(sync.Mutex),
 		}
 		wasm_engine.Init()
 	}
@@ -197,6 +204,26 @@ func NewWASM ( ctx *contract.Context ) *VM {
 	return vm
 }
 
+//as a goruntine to watch vm instance in wasm engine , it will be called by outer
+func (engine *WASM_ENGINE) watch_vm () error {
+
+	for {
+		for contract_name , vm_instance := range engine.vm_map {
+
+			if time.Now().After(vm_instance.end_time) {
+				//engine.vm_engine_lock.Lock()
+
+				delete(engine.vm_map, contract_name)
+
+				//engine.vm_engine_lock.Unlock()
+			}
+		}
+
+		time.Sleep(time.Second * WAIT_TIME)
+	}
+
+	return nil
+}
 
 func (engine *WASM_ENGINE) Init() error {
 	fmt.Println("Init")
@@ -209,12 +236,29 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 
 	fmt.Println("WASM_ENGINE::Apply() ")
 
+	var divisor  time.Duration
+	var deadline time.Time
+
 	//search matched VM struct according to CTX
-	vm , ok := engine.vm_map[ctx.Trx.Contract];
+	var vm *VM = nil
+	vm_instance , ok := engine.vm_map[ctx.Trx.Contract];
 	if !ok {
 		vm = NewWASM(ctx)
-		engine.vm_map[ctx.Trx.Contract] = vm
+
+		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
+		deadline = time.Now().Add(divisor)
+
+		engine.vm_map[ctx.Trx.Contract] = &VM_INSTANCE{
+			vm:          vm,
+			create_time: time.Now(),
+			end_time:    deadline,
+		}
+	}else{
+		vm = vm_instance.vm
 	}
+
+	//avoid that vm instance is deleted because of deadline
+	//vm.vm_lock.Lock()
 
 	vm.funcInfo.func_entry , ok = vm.module.Export.Entries[INVOKE_FUNCTION]
 	if ok == false {
@@ -237,6 +281,8 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 
 	result := &Rtn{}
 	json.Unmarshal(res, result)
+
+	//vm.vm_lock.Unlock()
 
 	fmt.Println("result = ",result.Val)
 
@@ -275,15 +321,31 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 
 	fmt.Println("WASM_ENGINE::Apply2")
 
-	var pos int
-	var err error
+	var pos      int
+	var err      error
+	var divisor  time.Duration
+	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	vm , ok := engine.vm_map[ctx.Trx.Contract];
+	var vm *VM = nil
+	vm_instance , ok := engine.vm_map[ctx.Trx.Contract];
 	if !ok {
 		vm = NewWASM(ctx)
-		engine.vm_map[ctx.Trx.Contract] = vm
+
+		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
+		deadline = time.Now().Add(divisor)
+
+		engine.vm_map[ctx.Trx.Contract] = &VM_INSTANCE{
+			vm:          vm,
+			create_time: time.Now(),
+			end_time:    deadline,
+		}
+	} else {
+		vm = vm_instance.vm
 	}
+
+	//avoid that vm instance is deleted because of deadline
+	//vm.vm_lock.Lock()
 
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
@@ -325,6 +387,8 @@ func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32
 	if err != nil {
 		return nil, errors.New("*ERROR* Invalid result !" + err.Error())
 	}
+
+	//vm.vm_lock.Unlock()
 
 	fmt.Println("res = ",res)
 	return nil,nil
