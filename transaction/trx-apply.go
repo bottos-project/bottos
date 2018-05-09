@@ -95,8 +95,8 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	return true, nil
 
-	account, error := trxApplyService.roleIntf.GetAccount(trx.Sender)
-	if(nil != error || nil == account) {
+	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
+	if(nil != getAccountErr || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
 		return false, fmt.Errorf("check account error")
 	}
@@ -118,15 +118,24 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
+	var exeErr error
+	var exeResult bool
+
 	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 
 		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
-		trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
+		exeErr = trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 	} else {
 		/* call evm... */
 	}
 
-	fmt.Println("trx : ", trx.Hash(),trx,"apply success")
+    if (nil == exeErr) {
+		exeResult = true
+        fmt.Println("trx : ", trx.Hash(),trx,"apply success")
+	}else {
+		exeResult = false
+		fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
+	}
 
-	return true, nil
+	return exeResult, exeErr
 }

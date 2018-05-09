@@ -27,6 +27,7 @@ package role
 
 import (
 	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
 )
 
@@ -72,6 +73,8 @@ type RoleInterface interface {
 	GetSlotTime(slotNum uint64) uint64
 
 	ElectNextTermDelegates() []string
+
+	ApplyPersistance(block types.Block) error
 }
 
 func NewRole(db *db.DBService) RoleInterface {
@@ -195,7 +198,11 @@ func (r *Role) GetTransactionExpiration(txHash common.Hash) (*TransactionExpirat
 }
 
 func (r *Role) ElectNextTermDelegates() []string {
-	return ElectNextTermDelegates(r.Db)
+	return ElectNextTermDelegatesRole(r.Db)
+}
+
+func (r *Role) ApplyPersistance(block types.Block) error {
+	return ApplyPersistanceRole(r.Db, block)
 }
 
 func (r *Role) initRole() {

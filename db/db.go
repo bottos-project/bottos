@@ -32,20 +32,23 @@ import (
 )
 
 type DBService struct {
-	optDbRepo optiondb.OptionDbRepo
 	kvRepo    kvdb.KvDBRepo
 	codeRepo  codedb.CodeDbRepo
+	optDbRepo optiondb.OptionDbRepo
 }
 
-func NewDbService(path string, codedbPath string) *DBService {
+func NewDbService(path string, codedbPath string, optPath string) *DBService {
 	kv, err := kvdb.NewKVDatabase(path)
 	if err != nil {
 		return nil
 	}
-	optiondb := optiondb.NewOptionDbRepository(path)
 	db, err := codedb.NewCodeDbRepository(codedbPath)
+	if optPath == "" {
+		return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: nil}
+	}
+	optiondb := optiondb.NewOptionDbRepository(path)
+	return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: optiondb}
 
-	return &DBService{optDbRepo: optiondb, kvRepo: kv, codeRepo: db}
 }
 
 type DBApi interface {
@@ -74,6 +77,6 @@ type DBApi interface {
 	Rollback()
 	Reset() //TODO
 
-	//mongodb interface
-	Set(string, string)
+	//optiondb interface
+	Insert(collection string, value interface{}) error
 }
