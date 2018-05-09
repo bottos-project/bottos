@@ -104,7 +104,7 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transactio
 
 	/* check account validate,include contract account */
 	
-	if (self.VerifySignature(trx)) {
+	if (!self.VerifySignature(trx)) {
 		return false, fmt.Errorf("check signature error")
 	}
 
@@ -146,6 +146,8 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 	//tell P2P actor to notify trx	
 
+
+	fmt.Printf("handle trx finished\n",trx.Param)
 	context.Respond(nil)
 }
 
@@ -220,38 +222,39 @@ func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
 
 func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
-       trxToVerify := &types.Transaction {
-				Version    :trx.Version    , 
-				CursorNum  :trx.CursorNum  ,
-				CursorLabel:trx.CursorLabel,
-				Lifetime   :trx.Lifetime   ,
-				Sender     :trx.Sender     ,
-				Contract   :trx.Contract   ,
-				Method     :trx.Method     ,
-				Param      :trx.Param      ,
-				SigAlg     :trx.SigAlg     ,
-				Signature  :[] byte{},
-       }
 
-       serializeData, err := proto.Marshal(trxToVerify)
-       if nil != err {
-           return false
-	   }
-	   
-	   senderPubKey ,err:= self.getPubKey(trx.Sender)
-	   if nil != err {
-	       return false
-       }
+	trxToVerify := &types.Transaction {
+			Version    :trx.Version    , 
+			CursorNum  :trx.CursorNum  ,
+			CursorLabel:trx.CursorLabel,
+			Lifetime   :trx.Lifetime   ,
+			Sender     :trx.Sender     ,
+			Contract   :trx.Contract   ,
+			Method     :trx.Method     ,
+			Param      :trx.Param      ,
+			SigAlg     :trx.SigAlg     ,
+			Signature  :[] byte{},
+	}
 
-       h := sha256.New()
-       h.Write([]byte(hex.EncodeToString(serializeData)))
-       hashData := h.Sum(nil)
+	serializeData, err := proto.Marshal(trxToVerify)
+	if nil != err {
+		return false
+	}
+	
+	senderPubKey ,err:= self.getPubKey(trx.Sender)
+	if nil != err {
+		return false
+	}
 
-       verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
-		   
-	   fmt.Println("VerifySignature, result",verifyResult)
+	h := sha256.New()
+	h.Write([]byte(hex.EncodeToString(serializeData)))
+	hashData := h.Sum(nil)
 
-       return verifyResult
+	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
+		
+	fmt.Println("VerifySignature, result",verifyResult)
+
+	return verifyResult
        
 }
 
