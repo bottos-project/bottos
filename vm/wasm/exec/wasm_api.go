@@ -317,7 +317,7 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 }
 
 //the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Apply2 ( ctx *contract.Context ,execution_time uint32, received_block bool ) (interface{} , error) {
+func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (interface{} , error) {
 
 	fmt.Println("WASM_ENGINE::Apply2")
 
