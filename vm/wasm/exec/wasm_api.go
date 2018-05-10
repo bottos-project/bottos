@@ -77,8 +77,12 @@ type VM_INSTANCE struct {
 
 //struct wasm is a executable environment for other caller
 type WASM_ENGINE struct {
-	vm_map            map[string]*VM_INSTANCE //the string type need be modified
+	//the string type need be modified
+	vm_map            map[string]*VM_INSTANCE
 	vm_engine_lock    *sync.Mutex
+
+	//the channel is to communicate with each vm
+	vm_channel        chan []byte
 }
 
 type wasm_interface interface {
@@ -95,6 +99,7 @@ func GetInstance() *WASM_ENGINE {
 		wasm_engine = &WASM_ENGINE{
 			vm_map        : make(map[string]*VM_INSTANCE),
 			vm_engine_lock: new(sync.Mutex),
+			vm_channel    : make(chan []byte , 10),
 		}
 		wasm_engine.Init()
 	}
@@ -152,7 +157,7 @@ func NewWASM ( ctx *contract.Context ) *VM {
 
 	fmt.Println("NewWASM")
 
-	var err error
+	var err       error
 	var wasm_code []byte
 
 	TST := true
@@ -199,8 +204,6 @@ func NewWASM ( ctx *contract.Context ) *VM {
 		return nil
 	}
 
-	vm.SetContract(ctx)
-
 	return vm
 }
 
@@ -222,6 +225,48 @@ func (engine *WASM_ENGINE) watch_vm () error {
 		time.Sleep(time.Second * WAIT_TIME)
 	}
 
+	return nil
+}
+
+//the function is called as a goruntine and to handle new vm request or other request
+func (engine *WASM_ENGINE) StartHandler () error {
+
+	fmt.Println("WASM_ENGINE::StartHandler")
+	var event []byte
+	var ok    bool
+
+	 for {
+		 event , ok = <- engine.vm_channel
+		 if ! ok {
+			 continue
+		 }
+
+		 if len(event) == 1 && event[0] == 0  {
+			 break
+		 }
+
+		 //verify if event is a valid crx
+
+		 //unpack the crx from byte to struct
+		 var sub_crx contract.Context
+
+		 if err := json.Unmarshal(event, &sub_crx) ; err != nil{
+			 fmt.Println("Unmarshal: ", err.Error())
+			continue
+		 }
+
+		 //execute a new sub wasm crx
+		 go engine.Start(&sub_crx , 1 , false)
+
+	}
+
+	fmt.Println("Handler Finished")
+
+	return nil
+}
+
+func (engine *WASM_ENGINE) StopHandler () error {
+	engine.vm_channel <- []byte{0}
 	return nil
 }
 
@@ -253,6 +298,9 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 			create_time: time.Now(),
 			end_time:    deadline,
 		}
+
+		vm.SetContract(ctx)
+		vm.SetChannel(engine.vm_channel)
 	}else{
 		vm = vm_instance.vm
 	}
@@ -319,7 +367,7 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 //the function is to be used for direct parameter insert
 func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (interface{} , error) {
 
-	fmt.Println("WASM_ENGINE::Apply2")
+	fmt.Println("WASM_ENGINE::Start")
 
 	var pos      int
 	var err      error
@@ -340,6 +388,9 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 			create_time: time.Now(),
 			end_time:    deadline,
 		}
+
+		vm.SetContract(ctx)
+		vm.SetChannel(engine.vm_channel)
 	} else {
 		vm = vm_instance.vm
 	}
