@@ -53,7 +53,7 @@ func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	}
 	currentSlotNum := chainObject.CurrentAbsoluteSlot + slotNum
 	currentCoreState, err := GetCoreStateRole(ldb)
-	fmt.Println("currentSlotNum", currentSlotNum)
+	//fmt.Println("currentSlotNum", currentSlotNum)
 	if err != nil {
 		fmt.Println("err")
 		return "", err
@@ -88,11 +88,11 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	if err != nil {
 		return nil
 	}
-	fmt.Println("sortedDelegates", sortedDelegates)
+	//fmt.Println("sortedDelegates", sortedDelegates)
 
 	filterDgates := FilterOutgoingDelegate(ldb)
 
-	fmt.Println("filterDgates", filterDgates)
+	//fmt.Println("filterDgates", filterDgates)
 
 	if len(filterDgates) == 0 {
 		tmpList = sortedDelegates
@@ -105,7 +105,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	}
 
 	candidates := tmpList[0:config.VOTED_DELEGATES_PER_ROUND]
-	fmt.Println("candidates", candidates)
+	//fmt.Println("candidates", candidates)
 	//sort candidates by account name
 	sort.Strings(candidates)
 
@@ -121,12 +121,12 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 		eligibleList = common.Filter(finishdelegates, filterDgates)
 	}
 
-	fmt.Println("eligibleList", eligibleList)
+	//fmt.Println("eligibleList", eligibleList)
 	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
 
 	eligibles = common.Filter(eligibleList, candidates)
 
-	fmt.Println("eligibles", eligibles)
+	//fmt.Println("eligibles", eligibles)
 	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND
 	if count != 1 {
 		panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")

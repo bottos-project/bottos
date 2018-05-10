@@ -96,11 +96,9 @@ func (p *ProducerActor) working() {
 
 	if p.ins.IsReady() {
 		start := common.MeasureStart()
-		fmt.Println("Ready to generate block")
 		trxs := GetAllPendingTrx()
-		fmt.Println("GetAllPendingTrx", trxs)
 		if len(trxs) == 0 {
-			fmt.Println("trxs is null,continue produce block")
+			//fmt.Println("trxs is null,continue produce block")
 		}
 		block := &types.Block{}
 		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
@@ -135,15 +133,15 @@ func (p *ProducerActor) working() {
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
-			fmt.Println("end apply transation ")
 			//	p.myDB.Commit()
 
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
-		fmt.Println("start package block")
+		//fmt.Println("start package block")
 		block = p.ins.Woker(trxs)
 		if block != nil {
-			fmt.Println("Start apply block", block)
+			fmt.Printf("Apply block: hash: %x, delegate: %s, number:%v, trxn:%v\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions))
+
 			ApplyBlock(block)
 			//TODO brocast
 		}

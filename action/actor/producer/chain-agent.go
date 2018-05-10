@@ -26,8 +26,6 @@
 package produceractor
 
 import (
-	"fmt"
-
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/message"
 	"github.com/bottos-project/core/common/types"
@@ -43,8 +41,5 @@ func ApplyBlock(block *types.Block) {
 
 	applyBlock := &message.InsertBlockReq{block}
 	chainActorPid.Tell(applyBlock)
-
-	fmt.Println("send to chain to apply block")
-
 	return
 }

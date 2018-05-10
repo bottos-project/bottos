@@ -36,8 +36,6 @@ type OptionDbRepo interface {
 }
 
 func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
-	fmt.Println("ddddddddddddddddddddddddddddddddddddddd")
-	fmt.Println(value)
 	session, err := GetSession(r.mgoEndpoint)
 	if err != nil {
 		fmt.Println(err)

@@ -136,13 +136,14 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 }
 
 func ApplyPersistanceRole(ldb *db.DBService, block *types.Block) error {
-	fmt.Println("beging............applyPersistance")
+
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()
 	}
 	insertBlockInfoRole(ldb, block, oids)
 	insertTxInfoRole(ldb, block, oids)
+	fmt.Printf("apply to mongodb block hash %x", block.Hash())
 	return nil
 
 }

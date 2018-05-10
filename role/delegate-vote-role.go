@@ -113,7 +113,7 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	}
 
 	if currentTermTime.Cmp(new(big.Int).Sub(common.MaxUint128(), termTimeToFinish)) == -1 {
-		fmt.Println("currentTermTime  time overflow", currentTermTime)
+		fmt.Println("ERROR currentTermTime time overflow", currentTermTime)
 		return
 	}
 	termFinishTime := new(big.Int).Add(currentTermTime, termTimeToFinish)
@@ -125,7 +125,7 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
-		fmt.Println("failed ", err)
+		fmt.Println("ERROR failed ", err)
 		return nil, err
 	}
 	var dgates = []*DelegateVotes{}
@@ -152,7 +152,7 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 		dvotes := object.StartNewTerm(big.NewInt(0))
 		dvotes.OwnerAccount = object.OwnerAccount
 		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
-		fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
+		//fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
 	}
 }
 
@@ -164,7 +164,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 		}
 		dvotes := delegate.StartNewTerm(termTime)
 		SetDelegateVotesRole(ldb, accountName, dvotes)
-		fmt.Println("set delegate new term", accountName, dvotes)
+		//fmt.Println("set delegate new term", accountName, dvotes)
 
 	}
 }
