@@ -92,9 +92,6 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
 	
-
-	return true, nil
-
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if(nil != getAccountErr || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
