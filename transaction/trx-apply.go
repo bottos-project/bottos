@@ -119,13 +119,12 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	var exeErr error
 	var exeResult bool
 
-	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
+	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 
-		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
+	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 		exeErr = trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 	} else {
-		/* call evm... */
-		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
+		/* call evm... */		
 		_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
 	}
 
