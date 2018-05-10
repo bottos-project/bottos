@@ -22,8 +22,12 @@ const (
 	ENTRY_FUNCTION        = "start"
 
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
+
 	VM_PERIOD_OF_VALIDITY = "1h"
 	WAIT_TIME             = 4
+
+	RECURSION_CALL_LIMIT  = 5
 )
 
 type ParamList struct {
@@ -181,7 +185,14 @@ func NewWASM ( ctx *contract.Context ) *VM {
 
 		wasm_code = accountObj.ContractCode
 	} else {
-		wasm_code, err = ioutil.ReadFile(CTX_WASM_FILE)
+		var wasm_file string
+		if ctx.Trx.Contract == "sub" {
+			wasm_file = SUB_WASM_FILE
+		} else {
+			wasm_file = CTX_WASM_FILE
+		}
+
+		wasm_code, err = ioutil.ReadFile(wasm_file)
 		if err != nil {
 			fmt.Println("*ERROR*  error in read file", err.Error())
 			return nil
@@ -228,6 +239,26 @@ func (engine *WASM_ENGINE) watch_vm () error {
 	return nil
 }
 
+func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
+	if event == nil {
+		return errors.New("*ERROR* empty parameter !!!")
+	}
+	//verify if event is a valid crx
+
+	//unpack the crx from byte to struct
+	var sub_crx contract.Context
+
+	if err := json.Unmarshal(event, &sub_crx) ; err != nil{
+		fmt.Println("Unmarshal: ", err.Error())
+		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
+	}
+
+	//execute a new sub wasm crx
+	go engine.Start(&sub_crx , 1 , false)
+
+	return nil
+}
+
 //the function is called as a goruntine and to handle new vm request or other request
 func (engine *WASM_ENGINE) StartHandler () error {
 
@@ -245,22 +276,8 @@ func (engine *WASM_ENGINE) StartHandler () error {
 			 break
 		 }
 
-		 //verify if event is a valid crx
-
-		 //unpack the crx from byte to struct
-		 var sub_crx contract.Context
-
-		 if err := json.Unmarshal(event, &sub_crx) ; err != nil{
-			 fmt.Println("Unmarshal: ", err.Error())
-			continue
-		 }
-
-		 //execute a new sub wasm crx
-		 go engine.Start(&sub_crx , 1 , false)
-
+		 engine.startSubCrx(event)
 	}
-
-	fmt.Println("Handler Finished")
 
 	return nil
 }
