@@ -27,7 +27,6 @@ package chainactor
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/env"
@@ -70,16 +69,16 @@ func (self *ChainActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Printf("BlockActor received started msg", msg)
+		fmt.Printf("BlockActor received started msg", msg)
 
 	case *actor.Stopping:
-		log.Printf("BlockActor received stopping msg")
+		fmt.Printf("BlockActor received stopping msg")
 
 	case *actor.Restart:
-		log.Printf("BlockActor received restart msg")
+		fmt.Printf("BlockActor received restart msg")
 
 	case *actor.Restarting:
-		log.Printf("BlockActor received restarting msg")
+		fmt.Printf("BlockActor received restarting msg")
 	}
 
 }
@@ -104,7 +103,7 @@ func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.Inser
 	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
-			Hash: req.Block.Hash(),
+			Hash:  req.Block.Hash(),
 			Error: err,
 		}
 		ctx.Sender().Request(resp, ctx.Self())
@@ -136,7 +135,7 @@ func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.Quer
 	if ctx.Sender() != nil {
 		resp := &message.QueryBlockResp{}
 		if block == nil {
-			resp.Error = fmt.Errorf("Block not found")		
+			resp.Error = fmt.Errorf("Block not found")
 		} else {
 			resp.Block = block
 		}

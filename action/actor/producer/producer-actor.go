@@ -27,7 +27,6 @@ package produceractor
 
 import (
 	"fmt"
-	"log"
 	"time"
 	//	"unsafe"
 
@@ -66,7 +65,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Printf("ProducerActor received started msg", msg)
+		fmt.Printf("ProducerActor received started msg", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
@@ -75,13 +74,13 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
-		log.Printf("ProducerActor received stopping msg")
+		fmt.Printf("ProducerActor received stopping msg")
 
 	case *actor.Restart:
-		log.Printf("ProducerActor received restart msg")
+		fmt.Printf("ProducerActor received restart msg")
 
 	case *actor.Restarting:
-		log.Printf("ProducerActor received restarting msg")
+		fmt.Printf("ProducerActor received restarting msg")
 	}
 
 }

@@ -27,7 +27,6 @@ package trxactor
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/core/action/message"
@@ -69,16 +68,16 @@ func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Printf("TrxActor received started msg", msg)
+		fmt.Printf("TrxActor received started msg", msg)
 
 	case *actor.Stopping:
-		log.Printf("TrxActor received stopping msg")
+		fmt.Printf("TrxActor received stopping msg")
 
 	case *actor.Restart:
-		log.Printf("TrxActor received restart msg")
+		fmt.Printf("TrxActor received restart msg")
 
 	case *actor.Restarting:
-		log.Printf("TrxActor received restarting msg")
+		fmt.Printf("TrxActor received restarting msg")
 
 	default:
 		return false

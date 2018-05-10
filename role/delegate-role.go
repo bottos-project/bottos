@@ -182,7 +182,7 @@ func FilterOutgoingDelegate(ldb *db.DBService) []string {
 //		if delegate.LastHeight < lastHeight {
 //			delegate.LastHeight = lastHeight
 //			b.Put([]byte(address), delegate.SerializeDelegate())
-//			log.Println("updated", address, lastHeight, delegate)
+//			fmt.Println("updated", address, lastHeight, delegate)
 //		}
 //		return nil
 //	})
@@ -201,7 +201,7 @@ func FilterOutgoingDelegate(ldb *db.DBService) []string {
 //			}
 //			err := b.Put([]byte(delegate.Address), delegate.SerializeDelegate())
 //			if err != nil {
-//				log.Panic(err)
+//				fmt.Panic(err)
 //			}
 //			isInsert = true
 //			return err
@@ -211,7 +211,7 @@ func FilterOutgoingDelegate(ldb *db.DBService) []string {
 //				delegate.LastHeight = lastHeight
 //				err := b.Put([]byte(delegate.Address), delegate.SerializeDelegate())
 //				if err != nil {
-//					log.Panic(err)
+//					fmt.Panic(err)
 //				}
 //				isInsert = true
 //				return err
@@ -221,7 +221,7 @@ func FilterOutgoingDelegate(ldb *db.DBService) []string {
 //	})
 
 //	if err != nil {
-//		log.Panic(err)
+//		fmt.Panic(err)
 //	}
 //	return isInsert
 //}

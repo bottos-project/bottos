@@ -27,7 +27,6 @@ package netactor
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -61,16 +60,16 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Printf("NetActor received started msg", msg)
+		fmt.Printf("NetActor received started msg", msg)
 
 	case *actor.Stopping:
-		log.Printf("NetActor received stopping msg")
+		fmt.Printf("NetActor received stopping msg")
 
 	case *actor.Restart:
-		log.Printf("NetActor received restart msg")
+		fmt.Printf("NetActor received restart msg")
 
 	case *actor.Restarting:
-		log.Printf("NetActor received restarting msg")
+		fmt.Printf("NetActor received restarting msg")
 	}
 
 }

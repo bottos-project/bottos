@@ -27,7 +27,6 @@ package apiactor
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -61,16 +60,16 @@ func (ApiActor *ApiActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Printf("ApiActor received started msg", msg)
+		fmt.Printf("ApiActor received started msg", msg)
 
 	case *actor.Stopping:
-		log.Printf("ApiActor received stopping msg")
+		fmt.Printf("ApiActor received stopping msg")
 
 	case *actor.Restart:
-		log.Printf("ApiActor received restart msg")
+		fmt.Printf("ApiActor received restart msg")
 
 	case *actor.Restarting:
-		log.Printf("ApiActor received restarting msg")
+		fmt.Printf("ApiActor received restarting msg")
 	}
 }
 
