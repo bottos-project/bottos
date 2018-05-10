@@ -83,11 +83,16 @@ type TxInfo struct {
 }
 
 func insertAccountInfoRole(ldb *db.DBService, block *types.Block, trx *types.Transaction) error {
-
+	if trx == nil || block == nil {
+		return errors.New("Error Invalid param")
+	}
 	return nil
 }
 
 func insertTxInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
+	if ldb == nil || block == nil {
+		return errors.New("Error Invalid param")
+	}
 	if len(oids) != len(block.Transactions) {
 		return errors.New("invalid param")
 	}
@@ -119,7 +124,9 @@ func insertTxInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectI
 	return nil
 }
 func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
-
+	if ldb == nil || block == nil {
+		return errors.New("Error Invalid param")
+	}
 	newBlockInfo := &BlockInfo{
 		bson.NewObjectId(),
 		block.Hash(),
