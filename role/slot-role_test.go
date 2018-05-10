@@ -36,7 +36,7 @@ import (
 
 func startup() RoleInterface {
 	config.LoadConfig()
-	dbInst := db.NewDbService("./temp/db", "./temp/codedb")
+	dbInst := db.NewDbService("./temp/db", "./temp/codedb", "")
 	if dbInst == nil {
 		fmt.Println("Create DB service fail")
 	}

@@ -38,15 +38,29 @@ type OptionDbRepo interface {
 func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
 	session, err := GetSession(r.mgoEndpoint)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("collection ", collection, err)
 		return errors.New("Get session faild" + r.mgoEndpoint)
 	}
 
 	insert := func(c *mgo.Collection) error {
-
 		return c.Insert(value)
 	}
 	session.SetCollection(collection, insert)
+
+	return nil
+}
+
+func (r *OptionDbRepository) RemoveAll(collection string) error {
+	session, err := GetSession(r.mgoEndpoint)
+	if err != nil {
+		fmt.Println("collection ", collection, err)
+		return errors.New("Get session faild" + r.mgoEndpoint)
+	}
+	removeAll := func(c *mgo.Collection) error {
+		_, err := c.RemoveAll(nil)
+		return err
+	}
+	session.SetCollection(collection, removeAll)
 
 	return nil
 }

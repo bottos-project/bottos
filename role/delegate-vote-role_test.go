@@ -34,7 +34,7 @@ import (
 )
 
 func TestDelegateVotes_writedb(t *testing.T) {
-	ins := db.NewDbService("./file2", "./file2/db.db")
+	ins := db.NewDbService("./file2", "./file2/db.db", "")
 	err := CreateDelegateVotesRole(ins)
 	if err != nil {
 		fmt.Println(err)
@@ -71,7 +71,7 @@ func TestDelegateVotes_writedb(t *testing.T) {
 	}
 	fmt.Println(value)
 
-	values, nerr := GetAllDelegateVotes(ins)
+	values, nerr := GetAllDelegateVotesRole(ins)
 	if nerr != nil {
 		fmt.Println("GetAllDelegateVotes", nerr)
 	}
@@ -87,4 +87,5 @@ func TestDelegateVotes_writedb(t *testing.T) {
 		fmt.Println("GetAllSortFinishTimeDelegates", nerr)
 	}
 	fmt.Println(len(tvotes))
+	db.Close()
 }

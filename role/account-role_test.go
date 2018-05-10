@@ -22,43 +22,43 @@
  * @Last Modified by:
  * @Last Modified time:
  */
- package role
+package role
 
- import (
-	 //	"encoding/json"
-	 "fmt"
-	 "testing"
-	 "time"
- 
-	 "github.com/bottos-project/core/db"
-	 "github.com/bottos-project/core/common"
- )
+import (
+	//	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/db"
+)
 
 func TestAccount_writedb(t *testing.T) {
-	ins := db.NewDbService("./file", "./file/db.db")
+	ins := db.NewDbService("./file", "./file/db.db", "")
 	err := CreateAccountRole(ins)
 	if err != nil {
 		fmt.Println(err)
 	}
 	value1 := &Account{
-		AccountName:           	"account1",
-		PublicKey:				[]byte("7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"),
-		VMType:              	0,
-		VMVersion:            	1,
-		CodeVersion:           	common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
-		CreateTime:           	uint64(time.Now().Unix()),
-		ContractCode:			[]byte{},
-		ContractAbi:			[]byte{},
+		AccountName:  "account1",
+		PublicKey:    []byte("7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"),
+		VMType:       0,
+		VMVersion:    1,
+		CodeVersion:  common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
+		CreateTime:   uint64(time.Now().Unix()),
+		ContractCode: []byte{},
+		ContractAbi:  []byte{},
 	}
 	value2 := &Account{
-		AccountName:           	"account2",
-		PublicKey:				[]byte("7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"),
-		VMType:              	0,
-		VMVersion:            	1,
-		CodeVersion:           	common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
-		CreateTime:           	uint64(time.Now().Unix() + 1000),
-		ContractCode:			[]byte{},
-		ContractAbi:			[]byte{},
+		AccountName:  "account2",
+		PublicKey:    []byte("7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"),
+		VMType:       0,
+		VMVersion:    1,
+		CodeVersion:  common.StringToHash("26427d49aca564c5774724de0e0b2eb1a7c4f303e73ce7dcef3b52e1ab95cc4b"),
+		CreateTime:   uint64(time.Now().Unix() + 1000),
+		ContractCode: []byte{},
+		ContractAbi:  []byte{},
 	}
 	err = SetAccountRole(ins, value1.AccountName, value1)
 	if err != nil {
@@ -80,4 +80,3 @@ func TestAccount_writedb(t *testing.T) {
 	}
 	fmt.Println(value)
 }
- 
