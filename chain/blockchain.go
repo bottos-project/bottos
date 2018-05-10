@@ -337,6 +337,10 @@ func (bc *BlockChain) clearTransactionExpiration(block *types.Block) error {
 	return nil
 }
 
+func (bc *BlockChain) addBlockHistory(block *types.Block) {
+	bc.roleIntf.SetBlockHistory(block.GetNumber(), block.Hash())
+}
+
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	delegate, _ := bc.roleIntf.GetDelegateByAccountName(string(block.GetDelegate()))
 
@@ -354,6 +358,8 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 
 	// clear transaction expiration
 	bc.clearTransactionExpiration(block)
+
+	bc.addBlockHistory(block)
 
 	// block handled callback
 	if bc.handledBlockCB != nil {
