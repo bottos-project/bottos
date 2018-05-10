@@ -30,6 +30,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -50,6 +52,7 @@ type Parameter struct {
 	ApiServiceEnable  bool      `json:"api_service_enable"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
+	LogConfig         string    `json:"log_config"`
 }
 
 type KeyPair struct {
@@ -90,6 +93,8 @@ func LoadConfig() error {
 		return e
 	}
 
+	loadLogConfig(param.LogConfig)
+
 	genesisConfig := GenesisConfig{}
 	e = json.Unmarshal(file, &genesisConfig)
 	if e != nil {
@@ -99,6 +104,7 @@ func LoadConfig() error {
 	Genesis = &genesisConfig
 
 	fmt.Println(Param, Genesis)
+
 	return nil
 }
 
@@ -111,4 +117,15 @@ func loadConfigJson(fn string) ([]byte, error) {
 	// Remove the UTF-8 Byte Order Mark
 	file = bytes.TrimPrefix(file, []byte("\xef\xbb\xbf"))
 	return file, nil
+}
+
+func loadLogConfig(log_config_file string)  {
+	defer log.Flush()
+	logger, err := log.LoggerFromConfigAsFile(log_config_file)
+	if err != nil {
+		log.Critical("*ERROR* Failed to parse config log file !!!", err)
+		os.Exit(1)
+		return
+	}
+	log.ReplaceLogger(logger)
 }
