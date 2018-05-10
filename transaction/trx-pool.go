@@ -118,7 +118,7 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Println("receive trx, detail: ",trx,)
+	fmt.Println("receive trx, detail: ",trx)
 
 	//fmt.Printf("trx param is: %s\n",trx.Param)
 
