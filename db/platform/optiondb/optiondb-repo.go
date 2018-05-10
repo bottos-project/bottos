@@ -28,8 +28,9 @@ package optiondb
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 
+	"github.com/bottos-project/core/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -54,7 +55,7 @@ func GetSession(url string) (*MongoContext, error) {
 	var err error
 	mgoSession, err := mgo.Dial(url)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return nil, errors.New("Dial faild" + url)
 	}
 	return &MongoContext{mgoSession.Clone()}, nil
@@ -62,20 +63,20 @@ func GetSession(url string) (*MongoContext, error) {
 func (c *MongoContext) GetCollection(db string, collection string) *mgo.Collection {
 	session := c.mgoSession
 	defer session.Close()
-	collects := session.DB("bottos").C(collection)
+	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return collects
 }
 func (c *MongoContext) SetCollection(collection string, s func(*mgo.Collection) error) error {
 	session := c.mgoSession
 	defer session.Close()
-	collects := session.DB("bottos").C(collection)
+	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return s(collects)
 }
 
 func (c *MongoContext) SetCollectionCount(collection string, s func(*mgo.Collection) (int, error)) (int, error) {
 	session := c.mgoSession
 	defer session.Close()
-	collects := session.DB("bottos").C(collection)
+	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return s(collects)
 }
 func (c *MongoContext) SetCollectionByDB(db string, collection string, s func(*mgo.Collection) error) error {
@@ -88,9 +89,8 @@ func (c *MongoContext) SetCollectionByDB(db string, collection string, s func(*m
 // CollectionExists returns true if the collection name exists in the specified database.
 func (c *MongoContext) isCollectionExists(useCollection string) bool {
 	session := c.mgoSession
-	database := session.DB("bottos")
+	database := session.DB(config.DEFAULT_OPTIONDB_NAME)
 	collections, err := database.CollectionNames()
-
 	if err != nil {
 		return false
 	}

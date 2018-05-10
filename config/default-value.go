@@ -45,3 +45,8 @@ const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
 const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
 
 const MAX_ACCOUNT_NAME_LENGTH int = 16
+
+const DEFAULT_OPTIONDB_NAME string = "bottos"
+const DEFAULT_OPTIONDB_TABLE_BLOCK_NAME string = "Blocks"
+const DEFAULT_OPTIONDB_TABLE_TRX_NAME string = "Transactions"
+const DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME string = "Accounts"

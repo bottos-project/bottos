@@ -110,7 +110,7 @@ func insertTxInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectI
 			Signature:     trx.Signature,
 			CreateTime:    time.Now(),
 		}
-		ldb.Insert("Transactions", newtrx)
+		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
 		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
 			insertAccountInfoRole(ldb, block, trx)
 		}
@@ -131,7 +131,7 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 		oids,
 		time.Now(),
 	}
-	ldb.Insert("Blocks", newBlockInfo)
+	ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_BLOCK_NAME, newBlockInfo)
 	return nil
 }
 
