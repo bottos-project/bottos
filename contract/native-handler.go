@@ -54,12 +54,21 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
 	return fmt.Errorf("No Native Contract Method")
 }
 
-func check_account(RoleIntf role.RoleInterface, name string) error {
+func check_account_name(name string) error {
 	if len(name) == 0 || len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
 		return fmt.Errorf("Invalid Account Name")
 	}
 
-	_, err := RoleIntf.GetAccount(name)
+	return nil
+}
+
+func check_account(RoleIntf role.RoleInterface, name string) error {
+	err := check_account_name(name)
+	if err != nil {
+		return err
+	}
+
+	_, err = RoleIntf.GetAccount(name)
 	if err != nil {
 		return fmt.Errorf("Account Not Exist")
 	}
@@ -79,9 +88,14 @@ func newaccount(ctx *Context) error {
 	// TODO: check auth
 
 	//check account
-	err = check_account(ctx.RoleIntf, newaccount.Name)
+	err = check_account_name(newaccount.Name)
 	if err != nil {
 		return err
+	}
+
+	_, err = ctx.RoleIntf.GetAccount(newaccount.Name)
+	if err == nil {
+		return fmt.Errorf("Account Exist")
 	}
 
 	chainState, _ := ctx.RoleIntf.GetChainState()
