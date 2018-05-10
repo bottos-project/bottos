@@ -31,7 +31,7 @@ import (
 
 func (d *DBService) Insert(collection string, value interface{}) error {
 	if d.optDbRepo == nil {
-		fmt.Println("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeer")
+		fmt.Println("error optiondb is not init")
 		return nil
 	}
 	return d.optDbRepo.InsertOptionDb(collection, value)

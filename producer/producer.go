@@ -65,7 +65,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 		return nil // errors.New("report Block failed")
 	}
 
-	fmt.Println("brocasting block", block)
+	//fmt.Println("brocasting block", block)
 	return block
 } /*TODO
 func (p *Reporter) IsValid(block *blockchain.BlockData, receivedAt int64) (valid bool, err error) {
@@ -109,9 +109,7 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 	block.Header.DelegateSign = block.Sign("123").Bytes()
 	// If this block is last in a round, calculate the schedule for the new round
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
-		fmt.Println("elect next term ---------")
 		newSchedule := p.roleIntf.ElectNextTermDelegates()
-
 		fmt.Println("next term delgates", newSchedule)
 
 		currentState, err := p.roleIntf.GetCoreState()
@@ -119,7 +117,7 @@ func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*
 			return nil, err
 		}
 		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
-		fmt.Println("DelegateChanges", block.Header.DelegateChanges)
+		//fmt.Println("DelegateChanges", block.Header.DelegateChanges)
 	}
 
 	return block, nil

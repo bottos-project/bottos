@@ -21,15 +21,6 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 	CreateNativeContractAccount(roleIntf)
 	NativeContractInitChain(roleIntf, intf)
 
-	fmt.Println("current -------------------delegates")
-	values, err := roleIntf.GetAllDelegateVotes()
-	if err != nil {
-		fmt.Println("dderr", err)
-	}
-	for _, val := range values {
-		fmt.Println("dd", val)
-	}
-
 	return intf, nil
 }
 
@@ -46,7 +37,7 @@ func newTransaction(contract string, method string, param []byte) *types.Transac
 
 func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractInterface) error {
 	var trxs []*types.Transaction
-	
+
 	// construct trxs
 	var i uint32
 	for i = 1; i <= config.INIT_DELEGATE_NUM; i++ {
@@ -55,8 +46,8 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 		// 1, new account trx
 		nps := &NewAccountParam{
-			Name:    name,
-			Pubkey:  config.Genesis.InitDelegate.PublicKey,
+			Name:   name,
+			Pubkey: config.Genesis.InitDelegate.PublicKey,
 		}
 		nparam, _ := json.Marshal(nps)
 		trx := newTransaction(config.BOTTOS_CONTRACT_NAME, "newaccount", nparam)
