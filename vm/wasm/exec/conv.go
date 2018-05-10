@@ -116,6 +116,17 @@ func BytesToStr(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
+func BytesToString(bytes []byte) string {
+
+	for i, b := range bytes {
+		if b == 0 {
+			return string(bytes[:i])
+		}
+	}
+	return string(bytes)
+
+}
+
 func F32ToBytes(f32 float32) []byte {
 	bytes := make([]byte, 4)
 	bits  := math.Float32bits(f32)

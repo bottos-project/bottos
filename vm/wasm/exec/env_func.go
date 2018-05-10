@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
+	"github.com/bottos-project/core/contract"
+	"github.com/bottos-project/core/common/types"
 )
 
 type EnvFunc struct {
@@ -40,6 +42,8 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("get_str_value" , get_str_value)
 	env_func.Register("set_str_value" , set_str_value)
 	env_func.Register("get_param" , get_param)
+	env_func.Register("gen_trx" , gen_trx)
+	env_func.Register("recv_trx" , recv_trx)
 
 	return &env_func
 }
@@ -729,23 +733,24 @@ func printi(vm *VM) (bool, error) {
 }
 
 func prints(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	//contractCtx := vm.GetContract();
 
 	var len uint64
 	pos := vm.envFunc.envFuncParam[0]
 	//len := vm.envFunc.envFuncParam[1]
 
 	if _ , ok := vm.memType[pos]; ok {
-		len = uint64(vm.memType[pos].Len)
+		len = uint64(vm.memType[pos].Len) - 1
 	}else{
-		len = vm.envFunc.envFuncParam[1]
+		len = vm.envFunc.envFuncParam[1] - 1
 	}
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
 	param := string(value)
 
-	fmt.Printf("VM: from contract:%v, method:%v, func prints: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, param);
+	fmt.Println("prints: param = ",param)
+	//fmt.Printf("VM: from contract:%v, method:%v, func prints: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, param );
 	return true , nil
 }
 
@@ -778,14 +783,100 @@ func get_param(vm *VM) (bool, error) {
 	return true , nil
 }
 
-//ToDo move to conv.go
-func BytesToString(bytes []byte) string {
+func start_wasm (vm *VM) (bool, error) {
 
-	for i, b := range bytes {
-		if b == 0 {
-			return string(bytes[:i])
-		}
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 1 {
+		return false, errors.New("parameter count error while call memcpy")
 	}
-	return string(bytes)
 
+	return true,nil
+}
+
+func gen_trx (vm *VM) (bool, error) {
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 6 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+
+	s_pos  := int(params[0])
+	s_len  := int(params[1])
+	c_pos  := int(params[2])
+	c_len  := int(params[3])
+	m_pos  := int(params[4])
+	m_len  := int(params[5])
+
+	sender   := BytesToString(vm.memory[s_pos:s_pos+s_len])
+	contrx   := BytesToString(vm.memory[c_pos:c_pos+c_len])
+	method   := BytesToString(vm.memory[m_pos:m_pos+m_len])
+
+
+	str := "Message from Test function!!!"
+	bf  := []byte(str)
+
+	trx := &types.Transaction{
+		Version     : 1,
+		CursorNum   : 1,
+		CursorLabel : 1,
+		Lifetime    : 1,
+		Sender      : sender,
+		Contract    : contrx,
+		Method      : method,
+		Param       : bf,
+		SigAlg      : 1,
+		Signature   : []byte{},
+	}
+	ctx := &contract.Context{ Trx:trx}
+
+	b_ctx , err := json.Marshal(ctx)
+	if err != nil {
+		return false , err
+	}
+
+	pos := 0
+
+	buff := bytes.NewBuffer(nil)
+	buff.Write(b_ctx)
+	bytes := buff.Bytes()
+
+	if int(pos)+len(bytes) > len(vm.memory) {
+		return false, errors.New("*ERROR* out of memory")
+	}
+
+	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
+	vm.ctx = vm.envFunc.envFuncCtx
+
+	//fmt.Println("VM::gen_trx byte = ",b_ctx)
+	//fmt.Println("VM::gen_trx ctx = ",ctx)
+	return true,nil
+}
+
+func recv_trx (vm *VM) (bool, error) {
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("parameter count error while call memcpy")
+	}
+
+	crx_pos  := int(params[0])
+	crx_len  := int(params[1])
+
+	b_crx := vm.memory[crx_pos:crx_pos+crx_len]
+
+	var crx contract.Context
+
+	if err := json.Unmarshal(b_crx, &crx) ; err != nil{
+		fmt.Println("Unmarshal: ", err.Error())
+		return false , nil
+	}
+
+	//fmt.Println("VM::recv_trx crx = ",crx)
+	vm.vm_channel <- b_crx
+	fmt.Println("Send Sem !!! vm.vm_channel = ",vm.vm_channel)
+
+	return true,nil
 }
