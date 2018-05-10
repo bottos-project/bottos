@@ -398,7 +398,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline = time.Now().Add(divisor)
+		deadline   = time.Now().Add(divisor)
 
 		engine.vm_map[ctx.Trx.Contract] = &VM_INSTANCE{
 			vm:          vm,
@@ -456,6 +456,9 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 		return nil, errors.New("*ERROR* Invalid result !" + err.Error())
 	}
 
+	if res != 0 {
+		//Todo failed to execute the crx , any handle operation
+	}
 	//vm.vm_lock.Unlock()
 
 	fmt.Println("res = ",res)

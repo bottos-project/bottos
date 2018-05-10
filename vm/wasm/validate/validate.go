@@ -25,9 +25,9 @@ package validate
 import (
 	"bytes"
 	"io"
-
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	log "github.com/cihub/seelog"
 )
 
 // vibhavp: TODO: We do not verify whether blocks don't access for the parent block, do that.
@@ -56,7 +56,7 @@ func verifyBody(fn *wasm.FunctionSig, body *wasm.FunctionBody, module *wasm.Modu
 		vars := make([]operand, entry.Count)
 		for i := uint32(0); i < entry.Count; i++ {
 			vars[i].Type = entry.Type
-			logger.Printf("Var %v", entry.Type)
+			log.Trace("Var %v", entry.Type)
 		}
 		localVariables = append(localVariables, vars...)
 	}
@@ -74,7 +74,7 @@ func verifyBody(fn *wasm.FunctionSig, body *wasm.FunctionBody, module *wasm.Modu
 			return vm, err
 		}
 
-		logger.Printf("PC: %d OP: %s polymorphic: %v", vm.pc(), opStruct.Name, vm.isPolymorphic())
+		log.Trace("PC: %d OP: %s polymorphic: %v", vm.pc(), opStruct.Name, vm.isPolymorphic())
 
 		if !opStruct.Polymorphic {
 			if err := vm.adjustStack(opStruct); err != nil {
@@ -282,7 +282,7 @@ func verifyBody(fn *wasm.FunctionSig, body *wasm.FunctionBody, module *wasm.Modu
 				return vm, wasm.InvalidFunctionIndexError(index)
 			}
 
-			logger.Printf("Function being called: %v", fn)
+			log.Trace("Function being called: %v", fn)
 			for index := range fn.Sig.ParamTypes {
 				argType := fn.Sig.ParamTypes[len(fn.Sig.ParamTypes)-index-1]
 				operand, under := vm.popOperand()
@@ -379,12 +379,12 @@ func VerifyModule(module *wasm.Module) error {
 		return NoSectionError(wasm.SectionIDCode)
 	}
 
-	logger.Printf("There are %d functions", len(module.Function.Types))
+	log.Trace("There are %d functions", len(module.Function.Types))
 	for i, fn := range module.FunctionIndexSpace {
 		if vm, err := verifyBody(fn.Sig, fn.Body, module); err != nil {
 			return Error{vm.pc(), i, err}
 		}
-		logger.Printf("No errors in function %d", i)
+		log.Trace("No errors in function %d", i)
 	}
 
 	return nil

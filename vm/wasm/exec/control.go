@@ -28,7 +28,7 @@ import "errors"
 var ErrUnreachable = errors.New("exec: reached unreachable")
 
 func (vm *VM) unreachable() {
-	panic(ErrUnreachable)
+	//panic(ErrUnreachable)
 }
 
 func (vm *VM) nop() {}
