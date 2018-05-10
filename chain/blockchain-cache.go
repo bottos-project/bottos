@@ -97,7 +97,7 @@
 			 self.cache.Remove(hash.(common.Hash))
 			 self.cache.Remove(start)
 			 trimmed = true
-			 fmt.Printf("remove block form BlockCache, num = %v, hash = %x\n", start, hash.(common.Hash))
+			 fmt.Printf("remove block form block cache, num = %v, hash = %x\n", start, hash.(common.Hash))
 		 }
 	 }
 
@@ -105,7 +105,7 @@
 		self.startBlock = self.GetBlockByNum(LIB)
 	 }
  
-	 fmt.Printf("BlockCache Trim head block num = %v, LIB = %v, start = %v\n", headBlockNum, LIB, self.startBlock.GetNumber())
+	 fmt.Printf("BlockCache Trim, head block num = %v, LIB = %v, start = %v\n", headBlockNum, LIB, self.startBlock.GetNumber())
 	 return nil
  }
  

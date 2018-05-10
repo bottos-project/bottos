@@ -315,7 +315,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 	if lastBlock != nil {
 		lastBlockNum = lastBlock.GetNumber()
 	}
-	fmt.Printf("lastBlockNum = %v, newLastConsensusBlockNum = %v\n", lastBlockNum, newLastConsensusBlockNum)
+	//fmt.Printf("lastBlockNum = %v, newLastConsensusBlockNum = %v\n", lastBlockNum, newLastConsensusBlockNum)
 
 	if lastBlockNum < newLastConsensusBlockNum {
 		for i := lastBlockNum + 1; i <= newLastConsensusBlockNum; i++ {
@@ -338,8 +338,6 @@ func (bc *BlockChain) clearTransactionExpiration(block *types.Block) error {
 }
 
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
-	fmt.Println("BlockChain : Handling block")
-
 	delegate, _ := bc.roleIntf.GetDelegateByAccountName(string(block.GetDelegate()))
 
 	// TODO
@@ -409,8 +407,6 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	// TODO db lock
 
-	fmt.Printf("InsertBlock: hash: %x, number:%v, trxn:%v\n", block.Hash(), block.GetNumber(), len(block.Transactions))
-
 	err := bc.ValidateBlock(block)
 	if err != nil {
 		fmt.Println("Validate Block error: ", err)
@@ -434,7 +430,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 	//bc.stateDb.Commit()
 
-	//fmt.Println("\n\n\n")
+	fmt.Printf("InsertBlock: hash: %x, number:%v, trxn:%v\n", block.Hash(), block.GetNumber(), len(block.Transactions))
 
 	return nil
 }

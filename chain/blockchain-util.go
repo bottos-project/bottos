@@ -126,7 +126,7 @@ func WriteBlock(db *db.DBService, block *types.Block) error {
 		return err
 	}
 
-	fmt.Printf("WriteBlock, hash: %x, key: %x, value: %x\n", block.Hash().Bytes(), key, data)
+	//fmt.Printf("WriteBlock, hash: %x, key: %x, value: %x\n", block.Hash().Bytes(), key, data)
 
 	return writeHead(db, block)
 }
