@@ -118,9 +118,11 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Println("receive trx, detail: ",trx, "hash: ", trx.Hash())
+	fmt.Println("receive trx, detail: ",trx,)
 
-	fmt.Printf("trx param is %s\n",trx.Param)
+	//fmt.Printf("trx param is: %s\n",trx.Param)
+
+	fmt.Println("trx hash is: ",trx.Hash())
 	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
@@ -147,7 +149,7 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	//tell P2P actor to notify trx	
 
 
-	fmt.Printf("handle trx finished\n",trx.Param)
+	fmt.Printf("handle trx finished\n")
 	context.Respond(nil)
 }
 
