@@ -10,7 +10,7 @@ import (
 
 	"github.com/bottos-project/core/p2p"
 )
-
+／＊
 func New(config *config) (*bto, error) {
 	protocols := append([]p2p.Protocol{}, bto.protocolManager.SubProtocols...)
 	if config.Shh {
@@ -30,4 +30,4 @@ func New(config *config) (*bto, error) {
 		TrustedNodes:    config.parseNodes(trustedNodes),
 		NodeDatabase:    nodeDb,
 	}
-}
+}＊／
