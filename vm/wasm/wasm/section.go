@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-
+	log "github.com/cihub/seelog"
 	"github.com/bottos-project/core/vm/wasm/wasm/internal/readpos"
 	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
 )
@@ -110,7 +110,7 @@ func (m *Module) readSection(r *readpos.ReadPos) (bool, error) {
 	var err error
 	var id uint32
 
-	logger.Println("Reading section ID")
+	log.Trace("Reading section ID")
 	if id, err = leb128.ReadVarUint32(r); err != nil {
 		if err == io.EOF { // no bytes were read, the reader is empty
 			return true, nil
@@ -119,7 +119,7 @@ func (m *Module) readSection(r *readpos.ReadPos) (bool, error) {
 	}
 	s := Section{ID: SectionID(id)}
 
-	logger.Println("Reading payload length")
+	log.Trace("Reading payload length")
 	if s.PayloadLen, err = leb128.ReadVarUint32(r); err != nil {
 		return false, nil
 	}
@@ -139,7 +139,7 @@ func (m *Module) readSection(r *readpos.ReadPos) (bool, error) {
 		payloadDataLen -= uint32(len(s.Name))
 	}
 
-	logger.Printf("Section payload length: %d", payloadDataLen)
+	log.Trace("Section payload length: %d", payloadDataLen)
 
 	s.Start = r.CurPos
 
@@ -149,84 +149,84 @@ func (m *Module) readSection(r *readpos.ReadPos) (bool, error) {
 
 	switch s.ID {
 	case SectionIDCustom:
-		logger.Println("section custom")
+		log.Trace("section custom")
 		if err = m.readSectionCustom(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Other = append(m.Other, s)
 		}
 	case SectionIDType:
-		logger.Println("section type")
+		log.Trace("section type")
 		if err = m.readSectionTypes(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Types.Section = s
 		}
 	case SectionIDImport:
-		logger.Println("section import")
+		log.Trace("section import")
 		if err = m.readSectionImports(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Import.Section = s
 		}
 	case SectionIDFunction:
-		logger.Println("section function")
+		log.Trace("section function")
 		if err = m.readSectionFunctions(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Function.Section = s
 		}
 	case SectionIDTable:
-		logger.Println("section table")
+		log.Trace("section table")
 		if err = m.readSectionTables(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Table.Section = s
 		}
 	case SectionIDMemory:
-		logger.Println("section memory")
+		log.Trace("section memory")
 		if err = m.readSectionMemories(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Memory.Section = s
 		}
 	case SectionIDGlobal:
-		logger.Println("section global")
+		log.Trace("section global")
 		if err = m.readSectionGlobals(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Global.Section = s
 		}
 	case SectionIDExport:
-		logger.Println("section export")
+		log.Trace("section export")
 		if err = m.readSectionExports(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Export.Section = s
 		}
 	case SectionIDStart:
-		logger.Println("section start")
+		log.Trace("section start")
 		if err = m.readSectionStart(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Start.Section = s
 		}
 	case SectionIDElement:
-		logger.Println("section element")
+		log.Trace("section element")
 		if err = m.readSectionElements(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Elements.Section = s
 		}
 	case SectionIDCode:
-		logger.Println("section code")
+		log.Trace("section code")
 		if err = m.readSectionCode(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
 			m.Code.Section = s
 		}
 	case SectionIDData:
-		logger.Println("section data")
+		log.Trace("section data")
 		if err = m.readSectionData(sectionReader); err == nil {
 			s.End = r.CurPos
 			s.Bytes = sectionBytes.Bytes()
@@ -236,7 +236,7 @@ func (m *Module) readSection(r *readpos.ReadPos) (bool, error) {
 		return false, InvalidSectionIDError(s.ID)
 	}
 
-	logger.Println(err)
+	log.Trace(err)
 	return false, err
 }
 
@@ -324,12 +324,12 @@ func readImportEntry(r io.Reader) (ImportEntry, error) {
 
 	switch i.Kind {
 	case ExternalFunction:
-		logger.Println("importing function")
+		log.Trace("importing function")
 		var t uint32
 		t, err = leb128.ReadVarUint32(r)
 		i.Type = FuncImport{t}
 	case ExternalTable:
-		logger.Println("importing table")
+		log.Trace("importing table")
 		var table *Table
 
 		table, err = readTable(r)
@@ -337,7 +337,7 @@ func readImportEntry(r io.Reader) (ImportEntry, error) {
 			i.Type = TableImport{*table}
 		}
 	case ExternalMemory:
-		logger.Println("importing memory")
+		log.Trace("importing memory")
 		var mem *Memory
 
 		mem, err = readMemory(r)
@@ -345,7 +345,7 @@ func readImportEntry(r io.Reader) (ImportEntry, error) {
 			i.Type = MemoryImport{*mem}
 		}
 	case ExternalGlobal:
-		logger.Println("importing global var")
+		log.Trace("importing global var")
 		var gl *GlobalVar
 		gl, err = readGlobalVar(r)
 		if gl != nil {
@@ -455,7 +455,7 @@ func (m *Module) readSectionGlobals(r io.Reader) error {
 	}
 	s.Globals = make([]GlobalEntry, count)
 
-	logger.Printf("%d global entries\n", count)
+	log.Trace("%d global entries\n", count)
 	for i := range s.Globals {
 		s.Globals[i], err = readGlobalEntry(r)
 		if err != nil {
@@ -476,17 +476,17 @@ type GlobalEntry struct {
 }
 
 func readGlobalEntry(r io.Reader) (e GlobalEntry, err error) {
-	logger.Println("reading global_type")
+	log.Trace("reading global_type")
 	e.Type, err = readGlobalVar(r)
 	if err != nil {
-		logger.Println("Error!")
+		log.Trace("Error!")
 		return
 	}
-	logger.Println("reading init expr")
+	log.Trace("reading init expr")
 
 	// init_expr is delimited by opcode "end" (0x0b)
 	e.Init, err = readInitExpr(r)
-	logger.Println("Value:", e.Init)
+	log.Trace("Value:", e.Init)
 	return e, err
 }
 
@@ -643,10 +643,10 @@ func (m *Module) readSectionCode(r io.Reader) error {
 		return err
 	}
 	s.Bodies = make([]FunctionBody, count)
-	logger.Printf("%d function bodies\n", count)
+	log.Trace("%d function bodies\n", count)
 
 	for i := range s.Bodies {
-		logger.Printf("Reading function %d\n", i)
+		log.Trace("Reading function %d\n", i)
 		if s.Bodies[i], err = readFunctionBody(r); err != nil {
 			return err
 		}
@@ -704,10 +704,10 @@ func readFunctionBody(r io.Reader) (FunctionBody, error) {
 		}
 	}
 
-	logger.Printf("bodySize: %d, localCount: %d\n", bodySize, localCount)
+	log.Trace("bodySize: %d, localCount: %d\n", bodySize, localCount)
 
 	code := bytesReader.Bytes()
-	logger.Printf("Read %d bytes for function body", len(code))
+	log.Trace("Read %d bytes for function body", len(code))
 
 	if code[len(code)-1] != end {
 		return f, ErrFunctionNoEnd

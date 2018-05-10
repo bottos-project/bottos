@@ -24,7 +24,7 @@ package wasm
 import (
 	"errors"
 	"io"
-
+	log "github.com/cihub/seelog"
 	"github.com/bottos-project/core/vm/wasm/wasm/internal/readpos"
 )
 
@@ -148,6 +148,6 @@ func ReadModule(r io.Reader, resolvePath ResolveFunc) (*Module, error) {
 
 	}
 
-	logger.Printf("There are %d entries in the function index space.", len(m.FunctionIndexSpace))
+	log.Trace("There are %d entries in the function index space.", len(m.FunctionIndexSpace))
 	return m, nil
 }

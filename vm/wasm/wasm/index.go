@@ -24,6 +24,7 @@ package wasm
 import (
 	"fmt"
 	"reflect"
+	log "github.com/cihub/seelog"
 )
 
 type InvalidTableIndexError uint32
@@ -91,7 +92,7 @@ func (m *Module) populateGlobals() error {
 	}
 
 	m.GlobalIndexSpace = append(m.GlobalIndexSpace, m.Global.Globals...)
-	logger.Printf("There are %d entries in the global index spaces.", len(m.GlobalIndexSpace))
+	log.Trace("There are %d entries in the global index spaces.", len(m.GlobalIndexSpace))
 	return nil
 }
 
@@ -138,7 +139,7 @@ func (m *Module) populateTables() error {
 		}
 	}
 
-	logger.Printf("There are %d entries in the table index space.", len(m.TableIndexSpace))
+	log.Trace("There are %d entries in the table index space.", len(m.TableIndexSpace))
 	return nil
 }
 

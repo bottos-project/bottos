@@ -33,6 +33,7 @@ import (
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
 	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	log "github.com/cihub/seelog"
 )
 
 // Instr describes an instruction, consisting of an operator, with its
@@ -130,7 +131,7 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		logger.Printf("stack top is %d", stackDepths.Top())
+		log.Trace("stack top is %d", stackDepths.Top())
 
 		opStr, err := ops.New(op)
 		if err != nil {
@@ -156,7 +157,7 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 			instr.Unreachable = !isInstrReachable(blockPolymorphicOps)
 		}
 
-		logger.Printf("op: %s, unreachable: %v", opStr.Name, instr.Unreachable)
+		log.Trace("op: %s, unreachable: %v", opStr.Name, instr.Unreachable)
 		if !opStr.Polymorphic && !instr.Unreachable {
 			top := int(stackDepths.Top())
 			top -= len(opStr.Args)
@@ -228,12 +229,12 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 					StackTopDiff: int64(elemsDiscard),
 					PreserveTop:  blockSig != wasm.BlockTypeEmpty,
 				}
-				logger.Printf("discard %d elements, preserve top: %v", elemsDiscard, instr.NewStack.PreserveTop)
+				log.Trace("discard %d elements, preserve top: %v", elemsDiscard, instr.NewStack.PreserveTop)
 			} else {
 				instr.NewStack = &StackInfo{}
 			}
 
-			logger.Printf("setting new stack for %s block (%d)", disas.Code[blockStartIndex].Op.Name, blockStartIndex)
+			log.Trace("setting new stack for %s block (%d)", disas.Code[blockStartIndex].Op.Name, blockStartIndex)
 			disas.Code[blockStartIndex].NewStack = instr.NewStack
 			if !instr.Unreachable {
 				blockPolymorphicOps = blockPolymorphicOps[:len(blockPolymorphicOps)-1]
@@ -253,7 +254,7 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 			if err != nil {
 				return nil, err
 			}
-			logger.Printf("if, depth is %d", stackDepths.Top())
+			log.Trace("if, depth is %d", stackDepths.Top())
 			stackDepths.Push(stackDepths.Top())
 			// If this new block is unreachable, its
 			// entire instruction sequence is unreachable
@@ -330,7 +331,7 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 					curDepth := stackDepths.Top()
 					branchDepth := stackDepths.Get(stackDepths.Len() - 2 - int(entry))
 					elemsDiscard := int(curDepth) - int(branchDepth)
-					logger.Printf("Curdepth %d branchDepth %d discard %d", curDepth, branchDepth, elemsDiscard)
+					log.Trace("Curdepth %d branchDepth %d discard %d", curDepth, branchDepth, elemsDiscard)
 
 					if elemsDiscard < 0 {
 						return nil, ErrStackUnderflow
@@ -476,10 +477,8 @@ func Disassemble(fn wasm.Function, module *wasm.Module) (*Disassembly, error) {
 		curIndex++
 	}
 
-	if logging {
-		for _, instr := range disas.Code {
-			logger.Printf("%v %v", instr.Op.Name, instr.NewStack)
-		}
+	for _, instr := range disas.Code {
+		log.Trace("%v %v", instr.Op.Name, instr.NewStack)
 	}
 
 	return disas, nil

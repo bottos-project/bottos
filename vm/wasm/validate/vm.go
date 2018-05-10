@@ -25,7 +25,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-
+	log "github.com/cihub/seelog"
 	"github.com/bottos-project/core/vm/wasm/wasm"
 	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
 	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
@@ -89,7 +89,7 @@ func (vm *mockVM) fetchUint64() (uint64, error) {
 }
 
 func (vm *mockVM) pushBlock(op byte, blockType wasm.BlockType) {
-	logger.Printf("Pushing block %v", blockType)
+	log.Trace("Pushing block %v", blockType)
 	vm.blocks = append(vm.blocks, block{
 		pc:          vm.pc(),
 		stackTop:    vm.stackTop,
@@ -181,13 +181,13 @@ func (vm *mockVM) popOperand() (operand, bool) {
 	o = vm.stack[stackTop]
 	vm.stackTop--
 
-	logger.Printf("Stack after pop is %v. Popped %v", vm.stack[:vm.stackTop], o)
+	log.Trace("Stack after pop is %v. Popped %v", vm.stack[:vm.stackTop], o)
 	return o, false
 }
 
 func (vm *mockVM) pushOperand(t wasm.ValueType) {
 	o := operand{t}
-	logger.Printf("Stack top: %d, Len of stack :%d", vm.stackTop, len(vm.stack))
+	log.Trace("Stack top: %d, Len of stack :%d", vm.stackTop, len(vm.stack))
 	if vm.stackTop == len(vm.stack) {
 		vm.stack = append(vm.stack, o)
 	} else {
@@ -195,7 +195,7 @@ func (vm *mockVM) pushOperand(t wasm.ValueType) {
 	}
 	vm.stackTop++
 
-	logger.Printf("Stack after push is %v. Pushed %v", vm.stack[:vm.stackTop], o)
+	log.Trace("Stack after push is %v. Pushed %v", vm.stack[:vm.stackTop], o)
 }
 
 func (vm *mockVM) adjustStack(op ops.Op) error {

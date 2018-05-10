@@ -859,7 +859,7 @@ func recv_trx (vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 2 {
-		return false, errors.New("parameter count error while call memcpy")
+		return false, errors.New("*ERROR* parameter count error while call memcpy")
 	}
 
 	crx_pos  := int(params[0])
@@ -874,9 +874,8 @@ func recv_trx (vm *VM) (bool, error) {
 		return false , nil
 	}
 
-	//fmt.Println("VM::recv_trx crx = ",crx)
 	vm.vm_channel <- b_crx
-	fmt.Println("Send Sem !!! vm.vm_channel = ",vm.vm_channel)
+	fmt.Println("Send Sem !!!")
 
 	return true,nil
 }
