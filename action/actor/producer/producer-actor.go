@@ -39,7 +39,6 @@ import (
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/producer"
 	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/transaction"
 )
 
 type ProducerActor struct {
@@ -109,7 +108,6 @@ func (p *ProducerActor) working() {
 		}
 		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
-		trxApply := transaction.NewTrxApplyService()
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
@@ -119,9 +117,9 @@ func (p *ProducerActor) working() {
 				fmt.Println("Warning reach max size")
 				continue
 			}
-			fmt.Println("start apply transation trx one by one")
+
 			//p.myDB.StartUndoSession()
-			pass, _ := trxApply.ApplyTransaction(trx)
+			pass, _ := VerifyTransactions(trx)
 			if pass == false {
 				fmt.Println("ApplyTransaction failed")
 				continue
