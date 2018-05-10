@@ -26,7 +26,7 @@
 package chain
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
