@@ -13,6 +13,7 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/contract/contractdb"
+	wasm "github.com/bottos-project/core/vm/wasm/exec"
 )
 
 type TrxApplyService struct {
@@ -124,6 +125,8 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 		exeErr = trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 	} else {
 		/* call evm... */
+		applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
+		_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
 	}
 
     if (nil == exeErr) {
