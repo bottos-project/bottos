@@ -13,10 +13,7 @@ service CoreApi{
 	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
 	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
-
-	//rpc query_table_rows()returns (){}
-	//rpc query_table_row_by_string_key()returns (){}
-	//rpc query_abi_encode()returns (){}
+	rpc QueryObjectByStringKey(QueryObjectByKeyReq)returns (QueryObjectByKeyResponse){}
 } 
 
 
@@ -94,5 +91,23 @@ message QueryAccountResponse{
 		string			pubkey				= 2;
 		uint64 			balance				= 3;
 		uint64 			staked_balance		= 4;
+	}
+}
+
+message QueryObjectByKeyReq{
+	string 				contract			= 1;
+	string 				object				= 2;
+	string 				key					= 3;
+}
+
+message QueryObjectByKeyResponse{
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	Result 				result				= 3;
+	message Result {
+		string 			contract			= 1;
+		string			object				= 2;
+		string 			key					= 3;
+		string 			value				= 4;
 	}
 }

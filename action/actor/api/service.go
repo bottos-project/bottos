@@ -210,7 +210,28 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 	resp.Result.Balance = balance.Balance
 	resp.Result.StakedBalance = stakedBalance.StakedBalance
 	resp.Errcode = 0
+
 	return nil
+}
+
+
+func (h *ApiService) QueryObjectByStringKey(ctx context.Context, req *api.QueryObjectByKeyReq, resp *api.QueryObjectByKeyResponse) error {
+	contract := req.Contract
+	object := req.Object
+	key := req.Key
+	value, err := h.env.ContractDB.GetStrValue(contract, object, key)
+	if err != nil {
+		resp.Errcode = 1
+		resp.Msg = "KeyValue Not Found"
+		return nil
+	}
+
+	resp.Result = &api.QueryObjectByKeyResponse_Result{}
+	resp.Result.Contract = contract
+	resp.Result.Object = object
+	resp.Result.Key = key
+	resp.Result.Value = value
+	resp.Errcode = 0
 
 	return nil
 }
