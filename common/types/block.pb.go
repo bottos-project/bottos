@@ -13,8 +13,8 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type Block struct {
-	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header" `
-	Transactions []*Transaction `protobuf:"bytes,2,rep,name=transactions" json:"transactions"`
+	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header,omitempty"`
+	Transactions []*Transaction `protobuf:"bytes,2,rep,name=transactions" json:"transactions,omitempty"`
 }
 
 func (m *Block) Reset()                    { *m = Block{} }
@@ -37,14 +37,14 @@ func (m *Block) GetTransactions() []*Transaction {
 }
 
 type Header struct {
-	Version         uint32   `protobuf:"varint,1,opt,name=version" json:"version"`
-	PrevBlockHash   []byte   `protobuf:"bytes,2,opt,name=prev_block_hash,json=prevBlockHash,proto3" json:"prev_block_hash"`
-	Number          uint32   `protobuf:"varint,3,opt,name=number" json:"number"`
-	Timestamp       uint64   `protobuf:"varint,4,opt,name=timestamp" json:"timestamp"`
-	MerkleRoot      []byte   `protobuf:"bytes,5,opt,name=merkle_root,json=merkleRoot,proto3" json:"merkle_root"`
-	Delegate        []byte   `protobuf:"bytes,6,opt,name=delegate,proto3" json:"delegate"`
-	DelegateSign    []byte   `protobuf:"bytes,7,opt,name=delegate_sign,json=delegateSign,proto3" json:"delegate_sign"`
-	DelegateChanges []string `protobuf:"bytes,8,rep,name=delegate_changes,json=delegateChanges" json:"delegate_changes"`
+	Version         uint32   `protobuf:"varint,1,opt,name=version" json:"version,omitempty"`
+	PrevBlockHash   []byte   `protobuf:"bytes,2,opt,name=prev_block_hash,json=prevBlockHash,proto3" json:"prev_block_hash,omitempty"`
+	Number          uint32   `protobuf:"varint,3,opt,name=number" json:"number,omitempty"`
+	Timestamp       uint64   `protobuf:"varint,4,opt,name=timestamp" json:"timestamp,omitempty"`
+	MerkleRoot      []byte   `protobuf:"bytes,5,opt,name=merkle_root,json=merkleRoot,proto3" json:"merkle_root,omitempty"`
+	Delegate        []byte   `protobuf:"bytes,6,opt,name=delegate,proto3" json:"delegate,omitempty"`
+	DelegateSign    []byte   `protobuf:"bytes,7,opt,name=delegate_sign,json=delegateSign,proto3" json:"delegate_sign,omitempty"`
+	DelegateChanges []string `protobuf:"bytes,8,rep,name=delegate_changes,json=delegateChanges" json:"delegate_changes,omitempty"`
 }
 
 func (m *Header) Reset()                    { *m = Header{} }

@@ -298,6 +298,10 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 
+	//check recursion limit
+	if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
+		return errors.New("*ERROR* Exceeds maximum call number !!!")
+	}
 
 	//execute a new sub wasm crx
 	go engine.Start(&sub_crx , 1 , false)

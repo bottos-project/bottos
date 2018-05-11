@@ -39,9 +39,9 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type PushTrxResponse struct {
-	Errcode uint32                  `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string                  `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *PushTrxResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32                  `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string                  `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *PushTrxResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *PushTrxResponse) Reset()                    { *m = PushTrxResponse{} }
@@ -71,8 +71,8 @@ func (m *PushTrxResponse) GetResult() *PushTrxResponse_Result {
 }
 
 type PushTrxResponse_Result struct {
-	Trx     *types.Transaction `protobuf:"bytes,1,opt,name=trx" json:"trx"`
-	TrxHash string             `protobuf:"bytes,2,opt,name=trx_hash,json=trxHash" json:"trx_hash"`
+	Trx     *types.Transaction `protobuf:"bytes,1,opt,name=trx" json:"trx,omitempty"`
+	TrxHash string             `protobuf:"bytes,2,opt,name=trx_hash,json=trxHash" json:"trx_hash,omitempty"`
 }
 
 func (m *PushTrxResponse_Result) Reset()                    { *m = PushTrxResponse_Result{} }
@@ -95,7 +95,7 @@ func (m *PushTrxResponse_Result) GetTrxHash() string {
 }
 
 type QueryTrxRequest struct {
-	TrxHash string `protobuf:"bytes,1,opt,name=trx_hash,json=trxHash" json:"trx_hash"`
+	TrxHash string `protobuf:"bytes,1,opt,name=trx_hash,json=trxHash" json:"trx_hash,omitempty"`
 }
 
 func (m *QueryTrxRequest) Reset()                    { *m = QueryTrxRequest{} }
@@ -111,9 +111,9 @@ func (m *QueryTrxRequest) GetTrxHash() string {
 }
 
 type QueryTrxResponse struct {
-	Errcode uint32             `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string             `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *types.Transaction `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32             `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string             `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *types.Transaction `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *QueryTrxResponse) Reset()                    { *m = QueryTrxResponse{} }
@@ -143,8 +143,8 @@ func (m *QueryTrxResponse) GetResult() *types.Transaction {
 }
 
 type QueryBlockRequest struct {
-	BlockNum  uint32 `protobuf:"varint,1,opt,name=block_num,json=blockNum" json:"block_num"`
-	BlockHash string `protobuf:"bytes,2,opt,name=block_hash,json=blockHash" json:"block_hash"`
+	BlockNum  uint32 `protobuf:"varint,1,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
+	BlockHash string `protobuf:"bytes,2,opt,name=block_hash,json=blockHash" json:"block_hash,omitempty"`
 }
 
 func (m *QueryBlockRequest) Reset()                    { *m = QueryBlockRequest{} }
@@ -167,9 +167,9 @@ func (m *QueryBlockRequest) GetBlockHash() string {
 }
 
 type QueryBlockResponse struct {
-	Errcode uint32                     `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string                     `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *QueryBlockResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32                     `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string                     `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *QueryBlockResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *QueryBlockResponse) Reset()                    { *m = QueryBlockResponse{} }
@@ -199,15 +199,15 @@ func (m *QueryBlockResponse) GetResult() *QueryBlockResponse_Result {
 }
 
 type QueryBlockResponse_Result struct {
-	PrevBlockHash    string               `protobuf:"bytes,1,opt,name=prev_block_hash,json=prevBlockHash" json:"prev_block_hash"`
-	BlockNum         uint32               `protobuf:"varint,2,opt,name=block_num,json=blockNum" json:"block_num"`
-	BlockHash        string               `protobuf:"bytes,3,opt,name=block_hash,json=blockHash" json:"block_hash"`
-	CursorBlockLabel uint32               `protobuf:"varint,4,opt,name=cursor_block_label,json=cursorBlockLabel" json:"cursor_block_label"`
-	BlockTime        uint64               `protobuf:"varint,5,opt,name=block_time,json=blockTime" json:"block_time"`
-	TrxMerkleRoot    string               `protobuf:"bytes,6,opt,name=trx_merkle_root,json=trxMerkleRoot" json:"trx_merkle_root"`
-	Delegate         string               `protobuf:"bytes,7,opt,name=delegate" json:"delegate"`
-	DelegateSign     string               `protobuf:"bytes,8,opt,name=delegate_sign,json=delegateSign" json:"delegate_sign"`
-	Trxs             []*types.Transaction `protobuf:"bytes,9,rep,name=trxs" json:"trxs"`
+	PrevBlockHash    string               `protobuf:"bytes,1,opt,name=prev_block_hash,json=prevBlockHash" json:"prev_block_hash,omitempty"`
+	BlockNum         uint32               `protobuf:"varint,2,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
+	BlockHash        string               `protobuf:"bytes,3,opt,name=block_hash,json=blockHash" json:"block_hash,omitempty"`
+	CursorBlockLabel uint32               `protobuf:"varint,4,opt,name=cursor_block_label,json=cursorBlockLabel" json:"cursor_block_label,omitempty"`
+	BlockTime        uint64               `protobuf:"varint,5,opt,name=block_time,json=blockTime" json:"block_time,omitempty"`
+	TrxMerkleRoot    string               `protobuf:"bytes,6,opt,name=trx_merkle_root,json=trxMerkleRoot" json:"trx_merkle_root,omitempty"`
+	Delegate         string               `protobuf:"bytes,7,opt,name=delegate" json:"delegate,omitempty"`
+	DelegateSign     string               `protobuf:"bytes,8,opt,name=delegate_sign,json=delegateSign" json:"delegate_sign,omitempty"`
+	Trxs             []*types.Transaction `protobuf:"bytes,9,rep,name=trxs" json:"trxs,omitempty"`
 }
 
 func (m *QueryBlockResponse_Result) Reset()                    { *m = QueryBlockResponse_Result{} }
@@ -287,9 +287,9 @@ func (*QueryChainInfoRequest) ProtoMessage()               {}
 func (*QueryChainInfoRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 type QueryChainInfoResponse struct {
-	Errcode uint32                         `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string                         `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *QueryChainInfoResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32                         `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string                         `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *QueryChainInfoResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *QueryChainInfoResponse) Reset()                    { *m = QueryChainInfoResponse{} }
@@ -319,12 +319,12 @@ func (m *QueryChainInfoResponse) GetResult() *QueryChainInfoResponse_Result {
 }
 
 type QueryChainInfoResponse_Result struct {
-	HeadBlockNum          uint32 `protobuf:"varint,1,opt,name=head_block_num,json=headBlockNum" json:"head_block_num"`
-	HeadBlockHash         string `protobuf:"bytes,2,opt,name=head_block_hash,json=headBlockHash" json:"head_block_hash"`
-	HeadBlockTime         uint64 `protobuf:"varint,3,opt,name=head_block_time,json=headBlockTime" json:"head_block_time"`
-	HeadBlockDelegate     string `protobuf:"bytes,4,opt,name=head_block_delegate,json=headBlockDelegate" json:"head_block_delegate"`
-	CursorLabel           uint32 `protobuf:"varint,5,opt,name=cursor_label,json=cursorLabel" json:"cursor_label"`
-	LastConsensusBlockNum uint32 `protobuf:"varint,6,opt,name=last_consensus_block_num,json=lastConsensusBlockNum" json:"last_consensus_block_num"`
+	HeadBlockNum          uint32 `protobuf:"varint,1,opt,name=head_block_num,json=headBlockNum" json:"head_block_num,omitempty"`
+	HeadBlockHash         string `protobuf:"bytes,2,opt,name=head_block_hash,json=headBlockHash" json:"head_block_hash,omitempty"`
+	HeadBlockTime         uint64 `protobuf:"varint,3,opt,name=head_block_time,json=headBlockTime" json:"head_block_time,omitempty"`
+	HeadBlockDelegate     string `protobuf:"bytes,4,opt,name=head_block_delegate,json=headBlockDelegate" json:"head_block_delegate,omitempty"`
+	CursorLabel           uint32 `protobuf:"varint,5,opt,name=cursor_label,json=cursorLabel" json:"cursor_label,omitempty"`
+	LastConsensusBlockNum uint32 `protobuf:"varint,6,opt,name=last_consensus_block_num,json=lastConsensusBlockNum" json:"last_consensus_block_num,omitempty"`
 }
 
 func (m *QueryChainInfoResponse_Result) Reset()         { *m = QueryChainInfoResponse_Result{} }
@@ -377,7 +377,7 @@ func (m *QueryChainInfoResponse_Result) GetLastConsensusBlockNum() uint32 {
 }
 
 type QueryAccountRequest struct {
-	AccountName string `protobuf:"bytes,1,opt,name=account_name,json=accountName" json:"account_name"`
+	AccountName string `protobuf:"bytes,1,opt,name=account_name,json=accountName" json:"account_name,omitempty"`
 }
 
 func (m *QueryAccountRequest) Reset()                    { *m = QueryAccountRequest{} }
@@ -393,9 +393,9 @@ func (m *QueryAccountRequest) GetAccountName() string {
 }
 
 type QueryAccountResponse struct {
-	Errcode uint32                       `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string                       `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *QueryAccountResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32                       `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string                       `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *QueryAccountResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *QueryAccountResponse) Reset()                    { *m = QueryAccountResponse{} }
@@ -425,10 +425,10 @@ func (m *QueryAccountResponse) GetResult() *QueryAccountResponse_Result {
 }
 
 type QueryAccountResponse_Result struct {
-	AccountName   string `protobuf:"bytes,1,opt,name=account_name,json=accountName" json:"account_name"`
-	Pubkey        string `protobuf:"bytes,2,opt,name=pubkey" json:"pubkey"`
-	Balance       uint64 `protobuf:"varint,3,opt,name=balance" json:"balance"`
-	StakedBalance uint64 `protobuf:"varint,4,opt,name=staked_balance,json=stakedBalance" json:"staked_balance"`
+	AccountName   string `protobuf:"bytes,1,opt,name=account_name,json=accountName" json:"account_name,omitempty"`
+	Pubkey        string `protobuf:"bytes,2,opt,name=pubkey" json:"pubkey,omitempty"`
+	Balance       uint64 `protobuf:"varint,3,opt,name=balance" json:"balance,omitempty"`
+	StakedBalance uint64 `protobuf:"varint,4,opt,name=staked_balance,json=stakedBalance" json:"staked_balance,omitempty"`
 }
 
 func (m *QueryAccountResponse_Result) Reset()                    { *m = QueryAccountResponse_Result{} }
@@ -465,9 +465,9 @@ func (m *QueryAccountResponse_Result) GetStakedBalance() uint64 {
 }
 
 type QueryObjectByKeyReq struct {
-	Contract string `protobuf:"bytes,1,opt,name=contract" json:"contract"`
-	Object   string `protobuf:"bytes,2,opt,name=object" json:"object"`
-	Key      string `protobuf:"bytes,3,opt,name=key" json:"key"`
+	Contract string `protobuf:"bytes,1,opt,name=contract" json:"contract,omitempty"`
+	Object   string `protobuf:"bytes,2,opt,name=object" json:"object,omitempty"`
+	Key      string `protobuf:"bytes,3,opt,name=key" json:"key,omitempty"`
 }
 
 func (m *QueryObjectByKeyReq) Reset()                    { *m = QueryObjectByKeyReq{} }
@@ -497,9 +497,9 @@ func (m *QueryObjectByKeyReq) GetKey() string {
 }
 
 type QueryObjectByKeyResponse struct {
-	Errcode uint32                           `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
-	Msg     string                           `protobuf:"bytes,2,opt,name=msg" json:"msg"`
-	Result  *QueryObjectByKeyResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result"`
+	Errcode uint32                           `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string                           `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  *QueryObjectByKeyResponse_Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (m *QueryObjectByKeyResponse) Reset()                    { *m = QueryObjectByKeyResponse{} }
@@ -529,10 +529,10 @@ func (m *QueryObjectByKeyResponse) GetResult() *QueryObjectByKeyResponse_Result 
 }
 
 type QueryObjectByKeyResponse_Result struct {
-	Contract string `protobuf:"bytes,1,opt,name=contract" json:"contract"`
-	Object   string `protobuf:"bytes,2,opt,name=object" json:"object"`
-	Key      string `protobuf:"bytes,3,opt,name=key" json:"key"`
-	Value    string `protobuf:"bytes,4,opt,name=value" json:"value"`
+	Contract string `protobuf:"bytes,1,opt,name=contract" json:"contract,omitempty"`
+	Object   string `protobuf:"bytes,2,opt,name=object" json:"object,omitempty"`
+	Key      string `protobuf:"bytes,3,opt,name=key" json:"key,omitempty"`
+	Value    string `protobuf:"bytes,4,opt,name=value" json:"value,omitempty"`
 }
 
 func (m *QueryObjectByKeyResponse_Result) Reset()         { *m = QueryObjectByKeyResponse_Result{} }

@@ -818,16 +818,17 @@ func gen_trx (vm *VM) (bool, error) {
 	bf  := []byte(str)
 
 	trx := &types.Transaction{
-		Version     : 1,
-		CursorNum   : 1,
-		CursorLabel : 1,
-		Lifetime    : 1,
-		Sender      : sender,
-		Contract    : contrx,
-		Method      : method,
-		Param       : bf,
-		SigAlg      : 1,
-		Signature   : []byte{},
+		Version        : 1,
+		CursorNum      : 1,
+		CursorLabel    : 1,
+		Lifetime       : 1,
+		Sender         : sender,
+		Contract       : contrx,
+		Method         : method,
+		Param          : bf,
+		SigAlg         : 1,
+		Signature      : []byte{},
+		RecursionLayer : vm.contract.Trx.RecursionLayer + 1,
 	}
 	ctx := &contract.Context{ Trx:trx}
 
@@ -851,13 +852,14 @@ func gen_trx (vm *VM) (bool, error) {
 
 	//fmt.Println("VM::gen_trx byte = ",b_ctx)
 	//fmt.Println("VM::gen_trx ctx = ",ctx)
+
 	return true,nil
 }
 
 func recv_trx (vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("*ERROR* parameter count error while call memcpy")
 	}
@@ -873,6 +875,7 @@ func recv_trx (vm *VM) (bool, error) {
 		fmt.Println("Unmarshal: ", err.Error())
 		return false , nil
 	}
+
 
 	vm.vm_channel <- b_crx
 	fmt.Println("Send Sem !!!")
