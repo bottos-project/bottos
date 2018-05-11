@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	CONFIG_FILE_NAME = "./chaincfg.json"
+	CONFIG_FILE_NAME = "./chainconfig.json"
 )
 
 var Param *Parameter
