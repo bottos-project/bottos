@@ -29,38 +29,67 @@ import (
 	"fmt"
 
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type OptionDbRepo interface {
 	InsertOptionDb(collection string, value interface{}) error
+	OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
 }
 
+var insertSession *MongoContext
+var getSession *MongoContext
+
 func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
-	session, err := GetSession(r.mgoEndpoint)
-	if err != nil {
-		fmt.Println("collection ", collection, err)
-		return errors.New("Get session faild" + r.mgoEndpoint)
+	var err error
+	if insertSession == nil || insertSession.mgoSession == nil {
+		insertSession, err = GetSession(r.mgoEndpoint)
+		if err != nil {
+			fmt.Println("collection cccccccccccc", insertSession, collection, err)
+			return errors.New("Get session faild" + r.mgoEndpoint)
+		}
 	}
 
 	insert := func(c *mgo.Collection) error {
 		return c.Insert(value)
 	}
-	session.SetCollection(collection, insert)
+	insertSession.SetCollection(collection, insert)
+	//insertSession.Close()
 
 	return nil
 }
 
-func (r *OptionDbRepository) RemoveAll(collection string) error {
-	session, err := GetSession(r.mgoEndpoint)
-	if err != nil {
-		fmt.Println("collection ", collection, err)
-		return errors.New("Get session faild" + r.mgoEndpoint)
+func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
+	var err error
+	if getSession == nil || getSession.mgoSession == nil {
+		getSession, err = GetSession(r.mgoEndpoint)
+		if err != nil {
+			fmt.Println("collection ", getSession, collection, err)
+			return errors.New("Get session faild" + r.mgoEndpoint)
+		}
 	}
 	removeAll := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(nil)
 		return err
 	}
-	session.SetCollection(collection, removeAll)
+	getSession.SetCollection(collection, removeAll)
 
 	return nil
+}
+
+func (r *OptionDbRepository) OptionDbFind(collection string, key string, value interface{}) (interface{}, error) {
+	var err error
+	if getSession == nil || getSession.mgoSession == nil {
+		getSession, err = GetSession(r.mgoEndpoint)
+		if err != nil {
+			fmt.Println("collection ", getSession, collection, err)
+			return nil, errors.New("Get session faild" + r.mgoEndpoint)
+		}
+	}
+	var mesgs interface{}
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{key: value}).All(&mesgs)
+	}
+	getSession.SetCollection(collection, query)
+	return mesgs, nil
 }

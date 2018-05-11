@@ -82,10 +82,26 @@ type TxInfo struct {
 	CreateTime    time.Time     `bson:"create_time"`
 }
 
+func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error) {
+
+	object, err := ldb.Find(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, "account_name", accountName)
+	if err != nil {
+		fmt.Println("find ", accountName, "failed ")
+		return nil, errors.New("find " + accountName + "failed ")
+	}
+	return object.(*AccountInfo), nil
+}
+
 func insertAccountInfoRole(ldb *db.DBService, block *types.Block, trx *types.Transaction) error {
 	if trx == nil || block == nil {
 		return errors.New("Error Invalid param")
 	}
+	if trx.Contract != config.BOTTOS_CONTRACT_NAME {
+		return errors.New("Invalid contract param")
+	}
+	//	if trx.Method == "transfer" {
+
+	//	}
 	return nil
 }
 
@@ -143,7 +159,6 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 }
 
 func ApplyPersistanceRole(ldb *db.DBService, block *types.Block) error {
-
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()
@@ -152,5 +167,9 @@ func ApplyPersistanceRole(ldb *db.DBService, block *types.Block) error {
 	insertTxInfoRole(ldb, block, oids)
 	fmt.Printf("apply to mongodb block hash %x", block.Hash())
 	return nil
+}
+
+//TODO start retro block when core start
+func StartRetroBlock(ldb *db.DBService) {
 
 }

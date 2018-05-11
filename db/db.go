@@ -79,4 +79,5 @@ type DBApi interface {
 
 	//optiondb interface
 	Insert(collection string, value interface{}) error
+	Find(collection string, key string, value interface{}) (interface{}, error)
 }
