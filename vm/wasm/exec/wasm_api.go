@@ -1,3 +1,29 @@
+
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description: the interface for WASM execution
+ * @Author: Stewart Li
+ * @Date:   2017-12-04
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package exec
 
 import (
@@ -69,14 +95,18 @@ type FuncInfo struct {
 	func_type  wasm.FunctionSig
 }
 
+type SUB_CRX_MSG struct {
+	ctx        *contract.Context
+	father_vm  int
+}
+
 var wasm_engine *WASM_ENGINE
 
 //it means a VM instance , include its created time , end time and status
 type VM_INSTANCE struct {
-	vm           *VM        //it means a vm , it is a WASM module/file
-	create_time  time.Time  //vm instance's created time
-	end_time     time.Time  //vm instance's deadline
-	//running		 bool
+	vm            *VM        //it means a vm , it is a WASM module/file
+	create_time   time.Time  //vm instance's created time
+	end_time      time.Time  //vm instance's deadline
 }
 
 //struct wasm is a executable environment for other caller
@@ -138,7 +168,7 @@ func (vm *VM) GetFuncInfo(method string , param []byte) error {
 }
 
 //reference to wasm-run
-func importer(name string) (*wasm.Module, error) {
+func importer ( name string ) (*wasm.Module, error) {
 	f, err := os.Open(name + ".wasm")
 	if err != nil {
 		return nil, err
@@ -239,11 +269,26 @@ func (engine *WASM_ENGINE) watch_vm () error {
 	return nil
 }
 
+func (engine *WASM_ENGINE) Find (contract_name string) (*VM_INSTANCE , error) {
+	if len(engine.vm_map) == 0 {
+		return nil , errors.New("*WARN* Can't find the vm instance !!!")
+	}
+
+	vm_instance , ok := engine.vm_map[contract_name];
+	if !ok {
+		return nil , errors.New("*WARN* Can't find the vm instance !!!")
+	}
+
+	return vm_instance , nil
+}
+
 func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 	if event == nil {
 		return errors.New("*ERROR* empty parameter !!!")
 	}
-	//verify if event is a valid crx
+
+	//Todo verify if event is a valid crx
+	//github.com/asaskevich/govalidator
 
 	//unpack the crx from byte to struct
 	var sub_crx contract.Context
@@ -252,6 +297,7 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 		fmt.Println("Unmarshal: ", err.Error())
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
+
 
 	//execute a new sub wasm crx
 	go engine.Start(&sub_crx , 1 , false)
@@ -263,7 +309,7 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 func (engine *WASM_ENGINE) StartHandler () error {
 
 	fmt.Println("WASM_ENGINE::StartHandler")
-	var event []byte
+	var event []byte  //it means a MSG struct from ctx execution
 	var ok    bool
 
 	 for {
@@ -318,6 +364,7 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 
 		vm.SetContract(ctx)
 		vm.SetChannel(engine.vm_channel)
+
 	}else{
 		vm = vm_instance.vm
 	}
@@ -367,6 +414,11 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 		return nil , err
 	}
 
+	if res != 0 {
+		//Todo failed to execute the crx , any handle operation
+		return nil , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
+	}
+
 	switch vm.funcInfo.func_type.ReturnTypes[0] {
 	case wasm.ValueTypeI32:
 		return I32ToBytes(res.(uint32)), nil
@@ -408,6 +460,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 		vm.SetContract(ctx)
 		vm.SetChannel(engine.vm_channel)
+
 	} else {
 		vm = vm_instance.vm
 	}
@@ -458,6 +511,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 	if res != 0 {
 		//Todo failed to execute the crx , any handle operation
+		return nil , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
 	}
 	//vm.vm_lock.Unlock()
 
