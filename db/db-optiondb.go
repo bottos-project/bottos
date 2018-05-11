@@ -26,6 +26,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -35,4 +36,11 @@ func (d *DBService) Insert(collection string, value interface{}) error {
 		return nil
 	}
 	return d.optDbRepo.InsertOptionDb(collection, value)
+}
+func (d *DBService) Find(collection string, key string, value interface{}) (interface{}, error) {
+	if d.optDbRepo == nil {
+		fmt.Println("error optiondb is not init")
+		return nil, errors.New("error optiondb is not init")
+	}
+	return d.optDbRepo.OptionDbFind(collection, key, value)
 }

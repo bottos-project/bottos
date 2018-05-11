@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	//"time"
 
 	"github.com/bottos-project/core/config"
 	"gopkg.in/mgo.v2"
@@ -53,6 +54,19 @@ func GetSession(url string) (*MongoContext, error) {
 		return nil, errors.New("invalid para url")
 	}
 	var err error
+	// tried doing this - doesn't work as intended
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Detected panic")
+			var ok bool
+			err, ok := r.(error)
+			if !ok {
+				fmt.Printf("pkg:  %v,  error: %s", r, err)
+			}
+		}
+	}()
+
+	//maxWait := time.Duration(5 * time.Second)
 	mgoSession, err := mgo.Dial(url)
 	if err != nil {
 		fmt.Println(err)
@@ -62,13 +76,13 @@ func GetSession(url string) (*MongoContext, error) {
 }
 func (c *MongoContext) GetCollection(db string, collection string) *mgo.Collection {
 	session := c.mgoSession
-	defer session.Close()
+	//defer session.Close()
 	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return collects
 }
 func (c *MongoContext) SetCollection(collection string, s func(*mgo.Collection) error) error {
 	session := c.mgoSession
-	defer session.Close()
+	//defer session.Close()
 	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return s(collects)
 }
@@ -84,6 +98,10 @@ func (c *MongoContext) SetCollectionByDB(db string, collection string, s func(*m
 	defer session.Close()
 	collects := session.DB(db).C(collection)
 	return s(collects)
+}
+
+func (c *MongoContext) Close() {
+	c.mgoSession.Close()
 }
 
 // CollectionExists returns true if the collection name exists in the specified database.
