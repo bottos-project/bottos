@@ -13,7 +13,7 @@ service CoreApi{
 	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
 	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
-	rpc QueryObjectByStringKey(QueryObjectByKeyReq)returns (QueryObjectByKeyResponse){}
+	rpc QueryObject(QueryObjectReq)returns (QueryObjectResponse){}
 } 
 
 
@@ -94,13 +94,13 @@ message QueryAccountResponse{
 	}
 }
 
-message QueryObjectByKeyReq{
+message QueryObjectReq{
 	string 				contract			= 1;
 	string 				object				= 2;
 	string 				key					= 3;
 }
 
-message QueryObjectByKeyResponse{
+message QueryObjectResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result 				result				= 3;
