@@ -99,6 +99,7 @@ func insertAccountInfoRole(ldb *db.DBService, block *types.Block, trx *types.Tra
 	if trx.Contract != config.BOTTOS_CONTRACT_NAME {
 		return errors.New("Invalid contract param")
 	}
+	//TODO
 	//	if trx.Method == "transfer" {
 
 	//	}
@@ -165,7 +166,8 @@ func ApplyPersistanceRole(ldb *db.DBService, block *types.Block) error {
 	}
 	insertBlockInfoRole(ldb, block, oids)
 	insertTxInfoRole(ldb, block, oids)
-	fmt.Printf("apply to mongodb block hash %x", block.Hash())
+	//if success
+	fmt.Printf("apply to mongodb block hash %x\n", block.Hash())
 	return nil
 }
 

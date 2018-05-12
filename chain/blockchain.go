@@ -221,9 +221,6 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	var i uint64
 	chainSate, _ := bc.roleIntf.GetChainState()
 
-	chainSate.LastBlockNum = block.GetNumber()
-	chainSate.LastBlockHash = block.Hash()
-	chainSate.LastBlockTime = block.GetTimestamp()
 	chainSate.CurrentDelegate = string(block.GetDelegate())
 
 	if chainSate.LastBlockNum == 0 {
@@ -233,6 +230,7 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 		missBlocks = slot
 	}
 	if missBlocks == 0 {
+		fmt.Println("missBlocks", missBlocks)
 		panic(1)
 		return
 	}
@@ -269,7 +267,12 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 		}
 	}
 
+	chainSate.LastBlockNum = block.GetNumber()
+	chainSate.LastBlockHash = block.Hash()
+	chainSate.LastBlockTime = block.GetTimestamp()
+
 	bc.roleIntf.SetChainState(chainSate)
+
 }
 
 func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block) {
@@ -380,11 +383,11 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	}
 
 	// block timestamp check
-	if block.GetTimestamp() <= bc.HeadBlockTime() {
+	if block.GetTimestamp() <= bc.HeadBlockTime() && bc.HeadBlockNum() != 0 {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
-	if block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL) {
+	if (block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL)) && bc.HeadBlockNum() != 0 {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 

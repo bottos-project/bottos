@@ -59,8 +59,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 	if err1 != nil {
 		return nil // errors.New("report Block failed")
 	}
-
-	block, err := p.reportBlock(accountName, trxs)
+	block, err := p.reportBlock(p.state.ScheduledTime, accountName, trxs)
 	if err != nil {
 		return nil // errors.New("report Block failed")
 	}
@@ -98,11 +97,11 @@ func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
 }
 
 //func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
-func (p *Reporter) reportBlock(accountName string, trxs []*types.Transaction) (*types.Block, error) {
+func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*types.Transaction) (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
 	head.Number = p.core.HeadBlockNum() + 1
-	head.Timestamp = p.core.HeadBlockTime() + uint64(config.DEFAULT_BLOCK_INTERVAL)
+	head.Timestamp = blockTime
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
 	//TODO

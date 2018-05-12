@@ -37,15 +37,14 @@ func Now() uint64 {
 	return uint64(time.Now().Unix())
 }
 func NowToSeconds() uint64 {
-	return uint64(time.Now().Unix())
+	return uint64(time.Now().UnixNano() / 1000 / 1000000)
 }
 func NowToMicroseconds() uint64 {
 	return uint64(time.Now().UnixNano() / 1000)
 }
 func ToNanoseconds(current time.Time) uint64 {
 	cur := current.UnixNano()
-	fmt.Println(cur)
-	return 0
+	return uint64(cur)
 }
 
 //current monotonic clock time use to measure time
