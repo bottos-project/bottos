@@ -65,7 +65,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 		//rsp.retCode = ??
 		return nil
 	}
-	
+
 	reqMsg := &message.PushTrxReq{
 		Trx: trx,
 		TrxSender : message.TrxSenderTypeFront,
@@ -215,7 +215,7 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 }
 
 
-func (h *ApiService) QueryObjectByStringKey(ctx context.Context, req *api.QueryObjectByKeyReq, resp *api.QueryObjectByKeyResponse) error {
+func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, resp *api.QueryObjectResponse) error {
 	contract := req.Contract
 	object := req.Object
 	key := req.Key
@@ -226,7 +226,7 @@ func (h *ApiService) QueryObjectByStringKey(ctx context.Context, req *api.QueryO
 		return nil
 	}
 
-	resp.Result = &api.QueryObjectByKeyResponse_Result{}
+	resp.Result = &api.QueryObjectResponse_Result{}
 	resp.Result.Contract = contract
 	resp.Result.Object = object
 	resp.Result.Key = key

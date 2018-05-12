@@ -17,8 +17,8 @@ It has these top-level messages:
 	QueryChainInfoResponse
 	QueryAccountRequest
 	QueryAccountResponse
-	QueryObjectByKeyReq
-	QueryObjectByKeyResponse
+	QueryObjectReq
+	QueryObjectResponse
 */
 package api
 
@@ -57,7 +57,7 @@ type CoreApiClient interface {
 	QueryBlock(ctx context.Context, in *QueryBlockRequest, opts ...client.CallOption) (*QueryBlockResponse, error)
 	QueryChainInfo(ctx context.Context, in *QueryChainInfoRequest, opts ...client.CallOption) (*QueryChainInfoResponse, error)
 	QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error)
-	QueryObjectByStringKey(ctx context.Context, in *QueryObjectByKeyReq, opts ...client.CallOption) (*QueryObjectByKeyResponse, error)
+	QueryObject(ctx context.Context, in *QueryObjectReq, opts ...client.CallOption) (*QueryObjectResponse, error)
 }
 
 type coreApiClient struct {
@@ -128,9 +128,9 @@ func (c *coreApiClient) QueryAccount(ctx context.Context, in *QueryAccountReques
 	return out, nil
 }
 
-func (c *coreApiClient) QueryObjectByStringKey(ctx context.Context, in *QueryObjectByKeyReq, opts ...client.CallOption) (*QueryObjectByKeyResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryObjectByStringKey", in)
-	out := new(QueryObjectByKeyResponse)
+func (c *coreApiClient) QueryObject(ctx context.Context, in *QueryObjectReq, opts ...client.CallOption) (*QueryObjectResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryObject", in)
+	out := new(QueryObjectResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ type CoreApiHandler interface {
 	QueryBlock(context.Context, *QueryBlockRequest, *QueryBlockResponse) error
 	QueryChainInfo(context.Context, *QueryChainInfoRequest, *QueryChainInfoResponse) error
 	QueryAccount(context.Context, *QueryAccountRequest, *QueryAccountResponse) error
-	QueryObjectByStringKey(context.Context, *QueryObjectByKeyReq, *QueryObjectByKeyResponse) error
+	QueryObject(context.Context, *QueryObjectReq, *QueryObjectResponse) error
 }
 
 func RegisterCoreApiHandler(s server.Server, hdlr CoreApiHandler, opts ...server.HandlerOption) {
@@ -177,6 +177,6 @@ func (h *CoreApi) QueryAccount(ctx context.Context, in *QueryAccountRequest, out
 	return h.CoreApiHandler.QueryAccount(ctx, in, out)
 }
 
-func (h *CoreApi) QueryObjectByStringKey(ctx context.Context, in *QueryObjectByKeyReq, out *QueryObjectByKeyResponse) error {
-	return h.CoreApiHandler.QueryObjectByStringKey(ctx, in, out)
+func (h *CoreApi) QueryObject(ctx context.Context, in *QueryObjectReq, out *QueryObjectResponse) error {
+	return h.CoreApiHandler.QueryObject(ctx, in, out)
 }
