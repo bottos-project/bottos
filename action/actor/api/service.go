@@ -59,15 +59,63 @@ func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
 
+func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
+	param, err := common.HexToBytes(trx.Param)
+	if err != nil {
+		return nil, err
+	}
 
-func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *api.PushTrxResponse) error {
+	signature, err := common.HexToBytes(trx.Signature)
+	if err != nil {
+		return nil, err
+	}
+
+	intTrx := &types.Transaction{
+		Version:		trx.Version,
+		CursorNum:		trx.CursorNum,
+		CursorLabel:	trx.CursorLabel,
+		Lifetime:		trx.Lifetime,
+		Sender:			trx.Sender,
+		Contract:		trx.Contract,
+		Method:			trx.Method,
+		Param:			param,
+		SigAlg:			trx.SigAlg,
+		Signature:		signature,
+	}
+
+	return intTrx, nil
+}
+
+func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
+	apiTrx := &api.Transaction{
+		Version:		trx.Version,
+		CursorNum:		trx.CursorNum,
+		CursorLabel:	trx.CursorLabel,
+		Lifetime:		trx.Lifetime,
+		Sender:			trx.Sender,
+		Contract:		trx.Contract,
+		Method:			trx.Method,
+		Param:			common.BytesToHex(trx.Param),
+		SigAlg:			trx.SigAlg,
+		Signature:		common.BytesToHex(trx.Signature),
+	}
+
+	return apiTrx
+}
+
+func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *api.PushTrxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
 	}
 
+	intTrx, err := convertApiTrxToIntTrx(trx)
+	if err != nil {
+		return nil
+	}
+
 	reqMsg := &message.PushTrxReq{
-		Trx: trx,
+		Trx: intTrx,
 		TrxSender : message.TrxSenderTypeFront,
 	}
 	
@@ -84,14 +132,14 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *types.Transaction, resp *
 
 	if (nil == handlerErr) {
 		resp.Result = &api.PushTrxResponse_Result{}
-		resp.Result.TrxHash = trx.Hash().ToHexString()
-		resp.Result.Trx = trx
+		resp.Result.TrxHash = intTrx.Hash().ToHexString()
+		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
 		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
 		resp.Result = &api.PushTrxResponse_Result{}
-		resp.Result.TrxHash = trx.Hash().ToHexString()
-		resp.Result.Trx = trx
+		resp.Result.TrxHash = intTrx.Hash().ToHexString()
+		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
 		//resp.Msg = handlerErr.(string)
 		resp.Msg = "to be add detail error describtion"
 		resp.Errcode = 100
@@ -118,7 +166,7 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 		return nil
 	}
 
-	resp.Result = response.Trx
+	resp.Result = convertIntTrxToApiTrx(response.Trx)
 	resp.Errcode = 0
 	return nil
 }

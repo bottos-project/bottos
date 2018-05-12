@@ -1,14 +1,13 @@
 syntax = "proto3";
 
-import "github.com/bottos-project/core/common/types/transaction.proto";
-//import "github.com/bottos-project/core/common/types/block.proto";
+import "github.com/bottos-project/core/api/transaction.proto";
 
 package api;
 
 option go_package = "github.com/bottos-project/core/api";
 
 service CoreApi{
-	rpc PushTrx(types.Transaction)returns (PushTrxResponse){}
+	rpc PushTrx(Transaction)returns (PushTrxResponse){}
 	rpc QueryTrx(QueryTrxRequest)returns (QueryTrxResponse){}
 	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
 	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
@@ -22,8 +21,8 @@ message PushTrxResponse{
 	string 				msg					= 2;
 	Result				result 				= 3;
 	message Result{
-		types.Transaction 	trx				= 1;
-		string 				trx_hash		= 2;
+		Transaction 	trx					= 1;
+		string 			trx_hash			= 2;
 	}
 }
 
@@ -34,7 +33,7 @@ message QueryTrxRequest{
 message QueryTrxResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
-	types.Transaction	result 				= 3;
+	Transaction			result 				= 3;
 }
 
 
@@ -56,7 +55,7 @@ message QueryBlockResponse{
         string          trx_merkle_root     = 6;
         string          delegate            = 7;
         string          delegate_sign       = 8;
-        repeated types.Transaction trxs     = 9;
+        repeated Transaction trxs     		= 9;
 	}
 }
 

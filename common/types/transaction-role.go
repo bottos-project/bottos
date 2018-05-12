@@ -18,3 +18,4 @@ func (trx *Transaction) Hash() common.Hash {
 func (trx *Transaction) ValidateSign() bool {
 	return true
 }
+
