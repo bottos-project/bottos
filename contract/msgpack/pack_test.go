@@ -2,7 +2,7 @@ package msgpack
 
 import (
 	"fmt"
-	"bytes"
+	//"bytes"
 	"testing"
 	"encoding/hex"
 )
@@ -144,7 +144,7 @@ func TestPackMarshalReguser(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 	
-	fmt.Printf("%v\n", BytesToHex())
+	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 }
 
