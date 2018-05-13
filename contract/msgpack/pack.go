@@ -51,7 +51,7 @@ func PackUint64(writer io.Writer, value uint64) (n int, err error) {
 
 func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 	length := len(value)
-	n1, err := writer.Write(Bytes{BIN16, byte(length >> 16), byte(length)})
+	n1, err := writer.Write(Bytes{BIN16, byte(length >> 8), byte(length)})
 	if err != nil {
 		return n1, err
 	}
@@ -61,7 +61,7 @@ func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 
 func PackStr16(writer io.Writer, value string) (n int, err error) {
 	length := len(value)
-	n1, err := writer.Write(Bytes{STR16, byte(length >> 16), byte(length)})
+	n1, err := writer.Write(Bytes{STR16, byte(length >> 8), byte(length)})
 	if err != nil {
 		return n1, err
 	}
