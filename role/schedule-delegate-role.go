@@ -62,7 +62,8 @@ func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	if size == 0 {
 		return "", errors.New("delegate is null, please check configuration")
 	}
-
+	//fmt.Println("dddd", currentCoreState.CurrentDelegates)
+	//fmt.Println("size", size)
 	accountName := currentCoreState.CurrentDelegates[currentSlotNum%size]
 	return accountName, nil
 

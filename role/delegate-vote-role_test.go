@@ -87,5 +87,4 @@ func TestDelegateVotes_writedb(t *testing.T) {
 		fmt.Println("GetAllSortFinishTimeDelegates", nerr)
 	}
 	fmt.Println(len(tvotes))
-	db.Close()
 }
