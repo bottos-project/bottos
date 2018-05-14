@@ -828,11 +828,16 @@ func gen_trx (vm *VM) (bool, error) {
 		Param          : bf,
 		SigAlg         : 1,
 		Signature      : []byte{},
-		RecursionLayer : vm.contract.Trx.RecursionLayer + 1,
 	}
 	ctx := &contract.Context{ Trx:trx}
 
-	b_ctx , err := json.Marshal(ctx)
+	sub_crx_msg := SUB_CRX_MSG{
+		ctx:ctx,
+		call_dep : 1,
+	}
+
+	b_ctx , err := json.Marshal(sub_crx_msg)
+	//b_ctx , err := json.Marshal(ctx)
 	if err != nil {
 		return false , err
 	}
