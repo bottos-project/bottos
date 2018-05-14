@@ -1,12 +1,12 @@
 package contract
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
 	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/core/contract/msgpack"
 )
 
 type NativeContractMethod func(*Context) error
@@ -79,7 +79,7 @@ func check_account(RoleIntf role.RoleInterface, name string) error {
 func newaccount(ctx *Context) error {
 	// trx.param --> json
 	newaccount := &NewAccountParam{}
-	err := json.Unmarshal(ctx.Trx.Param, newaccount)
+	err := msgpack.Unmarshal(ctx.Trx.Param, newaccount)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func newaccount(ctx *Context) error {
 func transfer(ctx *Context) error {
 	// trx.param --> json
 	transfer := &TransferParam{}
-	err := json.Unmarshal(ctx.Trx.Param, transfer)
+	err := msgpack.Unmarshal(ctx.Trx.Param, transfer)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func transfer(ctx *Context) error {
 func setdelegate(ctx *Context) error {
 	// trx.param --> json
 	param := &SetDelegateParam{}
-	err := json.Unmarshal(ctx.Trx.Param, param)
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func check_code(code []byte) error {
 func deploycode(ctx *Context) error {
 	// trx.param --> json
 	param := &DeployCodeParam{}
-	err := json.Unmarshal(ctx.Trx.Param, param)
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func check_abi(abi []byte) error {
 func deployabi(ctx *Context) error {
 	// trx.param --> json
 	param := &DeployABIParam{}
-	err := json.Unmarshal(ctx.Trx.Param, param)
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
 		return err
 	}

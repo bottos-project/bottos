@@ -1,7 +1,6 @@
 package contract
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/contract/msgpack"
 )
 
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
@@ -49,7 +49,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			Name:   name,
 			Pubkey: config.Genesis.InitDelegate.PublicKey,
 		}
-		nparam, _ := json.Marshal(nps)
+		nparam, _ := msgpack.Marshal(nps)
 		trx := newTransaction(config.BOTTOS_CONTRACT_NAME, "newaccount", nparam)
 		trxs = append(trxs, trx)
 
@@ -59,7 +59,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			To:    name,
 			Value: uint64(config.Genesis.InitDelegate.Balance),
 		}
-		tparam, _ := json.Marshal(tps)
+		tparam, _ := msgpack.Marshal(tps)
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "transfer", tparam)
 		trxs = append(trxs, trx)
 
@@ -68,7 +68,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			Name:   name,
 			Pubkey: config.Genesis.InitDelegate.PublicKey,
 		}
-		sparam, _ := json.Marshal(sps)
+		sparam, _ := msgpack.Marshal(sps)
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
 		trxs = append(trxs, trx)
 	}

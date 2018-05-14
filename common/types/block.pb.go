@@ -13,14 +13,14 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type Block struct {
-	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header,omitempty"`
-	Transactions []*Transaction `protobuf:"bytes,2,rep,name=transactions" json:"transactions,omitempty"`
+	Header       *Header        `protobuf:"bytes,1,opt,name=header" json:"header"`
+	Transactions []*Transaction `protobuf:"bytes,2,rep,name=transactions" json:"transactions"`
 }
 
 func (m *Block) Reset()                    { *m = Block{} }
 func (m *Block) String() string            { return proto.CompactTextString(m) }
 func (*Block) ProtoMessage()               {}
-func (*Block) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (*Block) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 func (m *Block) GetHeader() *Header {
 	if m != nil {
@@ -37,20 +37,20 @@ func (m *Block) GetTransactions() []*Transaction {
 }
 
 type Header struct {
-	Version         uint32   `protobuf:"varint,1,opt,name=version" json:"version,omitempty"`
-	PrevBlockHash   []byte   `protobuf:"bytes,2,opt,name=prev_block_hash,json=prevBlockHash,proto3" json:"prev_block_hash,omitempty"`
-	Number          uint32   `protobuf:"varint,3,opt,name=number" json:"number,omitempty"`
-	Timestamp       uint64   `protobuf:"varint,4,opt,name=timestamp" json:"timestamp,omitempty"`
-	MerkleRoot      []byte   `protobuf:"bytes,5,opt,name=merkle_root,json=merkleRoot,proto3" json:"merkle_root,omitempty"`
-	Delegate        []byte   `protobuf:"bytes,6,opt,name=delegate,proto3" json:"delegate,omitempty"`
-	DelegateSign    []byte   `protobuf:"bytes,7,opt,name=delegate_sign,json=delegateSign,proto3" json:"delegate_sign,omitempty"`
-	DelegateChanges []string `protobuf:"bytes,8,rep,name=delegate_changes,json=delegateChanges" json:"delegate_changes,omitempty"`
+	Version         uint32   `protobuf:"varint,1,opt,name=version" json:"version"`
+	PrevBlockHash   []byte   `protobuf:"bytes,2,opt,name=prev_block_hash,json=prevBlockHash,proto3" json:"prev_block_hash"`
+	Number          uint32   `protobuf:"varint,3,opt,name=number" json:"number"`
+	Timestamp       uint64   `protobuf:"varint,4,opt,name=timestamp" json:"timestamp"`
+	MerkleRoot      []byte   `protobuf:"bytes,5,opt,name=merkle_root,json=merkleRoot,proto3" json:"merkle_root"`
+	Delegate        []byte   `protobuf:"bytes,6,opt,name=delegate,proto3" json:"delegate"`
+	DelegateSign    []byte   `protobuf:"bytes,7,opt,name=delegate_sign,json=delegateSign,proto3" json:"delegate_sign"`
+	DelegateChanges []string `protobuf:"bytes,8,rep,name=delegate_changes,json=delegateChanges" json:"delegate_changes"`
 }
 
 func (m *Header) Reset()                    { *m = Header{} }
 func (m *Header) String() string            { return proto.CompactTextString(m) }
 func (*Header) ProtoMessage()               {}
-func (*Header) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (*Header) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
 
 func (m *Header) GetVersion() uint32 {
 	if m != nil {
@@ -114,10 +114,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("github.com/bottos-project/core/common/types/block.proto", fileDescriptor1)
+	proto.RegisterFile("github.com/bottos-project/core/common/types/block.proto", fileDescriptor2)
 }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor2 = []byte{
 	// 330 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x91, 0xcf, 0x4f, 0xc2, 0x30,
 	0x14, 0xc7, 0x33, 0x7e, 0x0c, 0x28, 0x2c, 0x98, 0x1e, 0x4c, 0x43, 0x4c, 0x5c, 0x30, 0x9a, 0x19,

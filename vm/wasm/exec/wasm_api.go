@@ -50,10 +50,13 @@ const (
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
 	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
 
-	VM_PERIOD_OF_VALIDITY = "1h"
-	WAIT_TIME             = 4
+	VM_PERIOD_OF_VALIDITY     = "1h"
+	WAIT_TIME                 = 4
 
-	RECURSION_CALL_LIMIT  = 5
+	RECURSION_CALL_DEP_LIMIT  = 5
+	RECURSION_CALL_WID_LIMIT  = 10
+
+	EOS_INVALID_CODE = 1
 )
 
 type ParamList struct {
@@ -97,7 +100,7 @@ type FuncInfo struct {
 
 type SUB_CRX_MSG struct {
 	ctx        *contract.Context
-	father_vm  int
+	call_dep   int
 }
 
 var wasm_engine *WASM_ENGINE
@@ -194,7 +197,7 @@ func NewWASM ( ctx *contract.Context ) *VM {
 	var err       error
 	var wasm_code []byte
 
-	TST := true
+	TST := false
 	//if non-Test condition , get wasm_code from Accout
 	if !TST {
 		//db handler will be invoked from Msg struct
@@ -291,20 +294,26 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 	//github.com/asaskevich/govalidator
 
 	//unpack the crx from byte to struct
-	var sub_crx contract.Context
+	//var sub_crx contract.Context
+	var msg SUB_CRX_MSG
 
-	if err := json.Unmarshal(event, &sub_crx) ; err != nil{
+	//if err := json.Unmarshal(event, &sub_crx) ; err != nil{
+	if err := json.Unmarshal(event, &msg) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 
+	fmt.Println("WASM_ENGINE::startSubCrx msg = ",msg)
+
 	//check recursion limit
+	/*
 	if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
 		return errors.New("*ERROR* Exceeds maximum call number !!!")
 	}
+	*/
 
 	//execute a new sub wasm crx
-	go engine.Start(&sub_crx , 1 , false)
+	//go engine.Start(&sub_crx , 1 , false)
 
 	return nil
 }
@@ -438,7 +447,7 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 }
 
 //the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (interface{} , error) {
+func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (uint32 , error) {
 
 	fmt.Println("WASM_ENGINE::Start")
 
@@ -475,7 +484,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
-		return nil , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+		return EOS_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
 	}
 
 	findex := func_entry.Index
@@ -488,7 +497,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	parameters   := make([]uint64, param_length)
 
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return nil, errors.New("*ERROR*  Parameters count is not right")
+		return EOS_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
 	}
 
 	// just handle parameter for entry function
@@ -500,25 +509,33 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 			//ToDo
 		case string:
 			if pos , err = vm.StorageData(param.(string)); err != nil {
-				return nil , errors.New("*ERROR* Failed to storage data to memory !!!")
+				return EOS_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
 			}
 			parameters[i] = uint64(pos)
 		default:
-			return nil , errors.New("*ERROR* parameter is unsupport type !!!")
+			return EOS_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
 		}
 	}
 
 	res, err := vm.ExecCode(int64(findex), parameters...)
 	if err != nil {
-		return nil, errors.New("*ERROR* Invalid result !" + err.Error())
+		return EOS_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
 	}
 
-	if res != 0 {
-		//Todo failed to execute the crx , any handle operation
-		return nil , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
+	var result uint32
+	switch val := res.(type) {
+	case uint32:
+		result = val
+	default:
+		return EOS_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
 	}
+
+	if result != 0 {
+		//Todo failed to execute the crx , any handle operation
+		return result , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
+	}
+
 	//vm.vm_lock.Unlock()
 
-	fmt.Println("res = ",res)
-	return nil,nil
+	return result , nil
 }

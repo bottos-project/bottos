@@ -104,10 +104,10 @@ func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
 }
 
-func HexToBytes(str string) []byte {
-	h, _ := hex.DecodeString(str)
+func HexToBytes(str string) ([]byte, error) {
+	h, err := hex.DecodeString(str)
 
-	return h
+	return h, err
 }
 
 func NumberToBytes(num interface{}, bits int) []byte {
@@ -128,7 +128,10 @@ func HexStringToBytes(s string) []byte {
 		if len(s)%2 == 1 {
 			s = "0" + s
 		}
-		return HexToBytes(s)
+		b, err := HexToBytes(s)
+		if err == nil {
+			return b
+		}
 	}
 	return nil
 }
