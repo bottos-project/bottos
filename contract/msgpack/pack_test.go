@@ -158,6 +158,7 @@ func TestTransfer(t *testing.T) {
 
 	fmt.Println("TestTransfer...")
 
+	// marshal
 	ts := Transfer {
 		From: "delegate1",
 		To: "delegate2",
@@ -167,9 +168,13 @@ func TestTransfer(t *testing.T) {
 	
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
+
+	ts1 := &Transfer{}
+	err = Unmarshal(b, ts1)
+	fmt.Println("ts1: ", ts1)
 }
 
-func TestMarshalNewAccount(t *testing.T) {
+func TestNewAccount(t *testing.T) {
 	type newaccountparam struct {
 		Name		string
 		Pubkey		string
@@ -179,10 +184,13 @@ func TestMarshalNewAccount(t *testing.T) {
 		Pubkey: "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
 	}
 
-	fmt.Println("TestMarshalNewAccount...")
+	fmt.Println("TestNewAccount...")
 	b, err := Marshal(param)
 	
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 	
+	param1 := &newaccountparam{}
+	err = Unmarshal(b, param1)
+	fmt.Println("param1: ", param1)
 }
