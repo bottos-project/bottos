@@ -248,8 +248,9 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 			bc.roleIntf.SetDelegate(delegateLeave.AccountName, delegateLeave)
 		}
 	}
+
 	//update chain state
-	chainSate.CurrentAbsoluteSlot = missBlocks + 1
+	chainSate.CurrentAbsoluteSlot += missBlocks + 1
 
 	size := uint64(unsafe.Sizeof(chainSate.RecentSlotFilled))
 	if missBlocks < size*8 {
