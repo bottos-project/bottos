@@ -74,6 +74,6 @@ func VerifyTransactions(trx *types.Transaction) (bool, error) {
 	return true, nil
 	fmt.Println("start apply transation trx one by one")
 	trxApply := transaction.NewTrxApplyService()
-	pass, err := trxApply.ApplyTransaction(trx)
-	return pass, err
+	pass, _ := trxApply.ApplyTransaction(trx)
+	return pass, nil
 }
