@@ -644,7 +644,7 @@ func get_str_value(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 6 {
-		return false, errors.New("parameter count error while call memcpy")
+		return false, errors.New("parameter count error while call get_str_value")
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -655,10 +655,14 @@ func get_str_value(vm *VM) (bool, error) {
 
 	// length check
 
-	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
-	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
-	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, object, key)
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	fmt.Println(string(object), len(object), string(key), len(key))
+	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	valueLen := 0
 	if err == nil {
@@ -680,7 +684,6 @@ func get_str_value(vm *VM) (bool, error) {
 
 	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
 
-
 	return true , nil
 }
 
@@ -690,7 +693,7 @@ func set_str_value(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 6 {
-		return false, errors.New("parameter count error while call memcpy")
+		return false, errors.New("parameter count error while call set_str_value")
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -711,7 +714,7 @@ func set_str_value(vm *VM) (bool, error) {
 	copy(value, vm.memory[valuePos:valuePos+valueLen])
 
 	fmt.Println(string(object), len(object), string(key), len(key), string(value), len(value))
-	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, object, key, value)
+	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
 
 	result := 1
 	if err != nil {
@@ -741,22 +744,14 @@ func printi(vm *VM) (bool, error) {
 func prints(vm *VM) (bool, error) {
 	//contractCtx := vm.GetContract();
 
-	//var len uint64
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-
-	//if _ , ok := vm.memType[pos]; ok {
-	//	len = uint64(vm.memType[pos].Len) - 1
-	//}else{
-	//	len = vm.envFunc.envFuncParam[1] - 1
-	//}
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
 	param := string(value)
 
-	fmt.Println("prints: param = ",param)
-	//fmt.Printf("VM: from contract:%v, method:%v, func prints: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, param );
+	fmt.Printf("VM: prints: %v\n", param);
 	return true , nil
 }
 
