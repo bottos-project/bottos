@@ -53,9 +53,6 @@ const (
 	VM_PERIOD_OF_VALIDITY     = "1h"
 	WAIT_TIME                 = 4
 
-	RECURSION_CALL_DEP_LIMIT  = 5
-	RECURSION_CALL_WID_LIMIT  = 10
-
 	EOS_INVALID_CODE = 1
 )
 
@@ -294,16 +291,13 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 	//github.com/asaskevich/govalidator
 
 	//unpack the crx from byte to struct
-	//var sub_crx contract.Context
-	var msg SUB_CRX_MSG
+	var sub_crx contract.Context
+	//var msg SUB_CRX_MSG
 
-	//if err := json.Unmarshal(event, &sub_crx) ; err != nil{
-	if err := json.Unmarshal(event, &msg) ; err != nil{
+	if err := json.Unmarshal(event, &sub_crx) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
-
-	fmt.Println("WASM_ENGINE::startSubCrx msg = ",msg)
 
 	//check recursion limit
 	/*
@@ -313,7 +307,7 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 	*/
 
 	//execute a new sub wasm crx
-	//go engine.Start(&sub_crx , 1 , false)
+	go engine.Start(&sub_crx , 1 , false)
 
 	return nil
 }
@@ -380,6 +374,8 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 
 	}else{
 		vm = vm_instance.vm
+		//to set a new context for a existing VM instance
+		vm.SetContract(ctx)
 	}
 
 	//avoid that vm instance is deleted because of deadline
