@@ -53,7 +53,7 @@ const (
 	VM_PERIOD_OF_VALIDITY     = "1h"
 	WAIT_TIME                 = 4
 
-	EOS_INVALID_CODE = 1
+	EOS_INVALID_CODE          = 1
 )
 
 type ParamList struct {
@@ -299,6 +299,7 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 
+	fmt.Println("WASM_ENGINE::startSubCrx sub_crx = ",sub_crx)
 	//check recursion limit
 	/*
 	if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
@@ -472,12 +473,12 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 	} else {
 		vm = vm_instance.vm
+		//to set a new context for a existing VM instance
 		vm.SetContract(ctx)
 	}
 
 	//avoid that vm instance is deleted because of deadline
 	//vm.vm_lock.Lock()
-
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
@@ -496,7 +497,6 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
 		return EOS_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
 	}
-
 	// just handle parameter for entry function
 	for i, param := range func_params {
 		switch param.(type) {
