@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/contract/msgpack"
 )
 
 type EnvFunc struct {
