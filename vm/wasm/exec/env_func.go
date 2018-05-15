@@ -42,7 +42,7 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("get_str_value" , get_str_value)
 	env_func.Register("set_str_value" , set_str_value)
 	env_func.Register("get_param" , get_param)
-	env_func.Register("gen_trx" , gen_trx)
+	env_func.Register("call_trx" , call_trx)
 	env_func.Register("recv_trx" , recv_trx)
 
 	return &env_func
@@ -778,7 +778,8 @@ func get_param(vm *VM) (bool, error) {
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(paramLen))
 	}
-	fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param);
+
+	fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
 
 	return true , nil
 }
@@ -794,69 +795,69 @@ func start_wasm (vm *VM) (bool, error) {
 	return true,nil
 }
 
-func gen_trx (vm *VM) (bool, error) {
+func call_trx (vm *VM) (bool, error) {
 
-	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
-	if len(params) != 6 {
-		return false, errors.New("parameter count error while call memcpy")
+	//check max call limit
+	if vm.callWid > CALL_DEP_LIMIT {
+		return false, errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
 	}
 
-	s_pos  := int(params[0])
-	s_len  := int(params[1])
-	c_pos  := int(params[2])
-	c_len  := int(params[3])
-	m_pos  := int(params[4])
-	m_len  := int(params[5])
+	fmt.Println("VM::call_trx")
+	envFunc := vm.envFunc
+	params  := envFunc.envFuncParam
 
-	sender   := BytesToString(vm.memory[s_pos:s_pos+s_len])
-	contrx   := BytesToString(vm.memory[c_pos:c_pos+c_len])
-	method   := BytesToString(vm.memory[m_pos:m_pos+m_len])
+	if len(params) != 4 {
+		return false, errors.New("*ERROR* Parameter count error while call memcpy")
+	}
 
+	c_pos  := int(params[0])
+	m_pos  := int(params[1])
+	p_pos  := int(params[2])
+	p_len  := int(params[3])
 
-	str := "Message from Test function!!!"
-	bf  := []byte(str)
+	contrx   := BytesToString(vm.memory[c_pos:c_pos+vm.memType[uint64(c_pos)].Len-1])
+	method   := BytesToString(vm.memory[m_pos:m_pos+vm.memType[uint64(m_pos)].Len-1])
+	//the bytes after msgpack.Marshal
+	param    := vm.memory[p_pos:p_pos + p_len]
+
+	//below codes is just for test
+	/*
+	type transferparam struct {
+		To			string
+		Amount		uint32
+	}
+
+	var tf transferparam
+
+	msgpack.Unmarshal(param , &tf)
+
+	fmt.Println("VM::call_trx() param from contract: ",tf)
+	*/
 
 	trx := &types.Transaction{
 		Version        : 1,
 		CursorNum      : 1,
 		CursorLabel    : 1,
 		Lifetime       : 1,
-		Sender         : sender,
+		Sender         : vm.GetContract().Trx.Sender,
 		Contract       : contrx,
 		Method         : method,
-		Param          : bf,
+		Param          : param,       //the bytes after msgpack.Marshal
 		SigAlg         : 1,
 		Signature      : []byte{},
 	}
 	ctx := &contract.Context{ Trx:trx}
 
-	sub_crx_msg := SUB_CRX_MSG{
-		ctx:ctx,
-		call_dep : 1,
-	}
-
-	b_ctx , err := json.Marshal(sub_crx_msg)
-	//b_ctx , err := json.Marshal(ctx)
+	b_ctx , err := json.Marshal(ctx)
 	if err != nil {
 		return false , err
 	}
 
-	pos := 0
+	//Todo thread synchronization
+	vm.callWid++
 
-	buff := bytes.NewBuffer(nil)
-	buff.Write(b_ctx)
-	bytes := buff.Bytes()
-
-	if int(pos)+len(bytes) > len(vm.memory) {
-		return false, errors.New("*ERROR* out of memory")
-	}
-
-	copy(vm.memory[int(pos):int(pos)+len(bytes)], bytes)
-	vm.ctx = vm.envFunc.envFuncCtx
-
-	//fmt.Println("VM::gen_trx byte = ",b_ctx)
-	//fmt.Println("VM::gen_trx ctx = ",ctx)
+	vm.vm_channel <- b_ctx
+	fmt.Println("Send Sem !!!")
 
 	return true,nil
 }
@@ -881,7 +882,7 @@ func recv_trx (vm *VM) (bool, error) {
 		return false , nil
 	}
 
-
+	fmt.Println("VM::recv_trx")
 	vm.vm_channel <- b_crx
 	fmt.Println("Send Sem !!!")
 

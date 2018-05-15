@@ -81,8 +81,10 @@ type VM struct {
 	funcTable      [256]func()
 
 	memPos         int
-	//To avoid the too much the number of recursion execution in contract
-	recursionLayer int
+	//To avoid the too much the number of recursion execution(dep) in contract
+	callDep        int
+	//To limit the too much the number of new contract execution(wid) in contract
+	callWid        int
 	// define a map relationship between memory address and data's type
 	memType        map[uint64]*typeInfo
 	//define env function
@@ -116,7 +118,8 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		memory         : make([]byte, wasmPageSize),
 		contract       : nil,
 		vm_lock        : new(sync.Mutex),
-		recursionLayer : 0,
+		callDep        : 0,
+		callWid        : 0,
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {
