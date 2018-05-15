@@ -19,7 +19,9 @@ import (
 	proto "github.com/golang/protobuf/proto"
     "github.com/bottos-project/crypto-go/crypto"
     "crypto/sha256"
-    "encoding/hex"
+	"encoding/hex"
+	bottosErr "github.com/bottos-project/core/common/errors"
+	
 )
 
 
@@ -96,19 +98,21 @@ func (self *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, error){
+func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode){
 
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
-		return false, fmt.Errorf("check max pending trx num error")
+		//return false, fmt.Errorf("check max pending trx num error")
+		return false, bottosErr.ErrTrxPendingNumLimit		
 	}
 
 	/* check account validate,include contract account */
 	
 	if (!self.VerifySignature(trx)) {
-		return false, fmt.Errorf("check signature error")
+		//return false, fmt.Errorf("check signature error")
+		return false, bottosErr.ErrTrxSignError		
 	}
 
-	return true, nil
+	return true, bottosErr.ErrNoError
 }
 
 func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){	
@@ -150,7 +154,7 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 
 	fmt.Printf("handle trx finished\n")
-	context.Respond(nil)
+	context.Respond(bottosErr.ErrNoError)
 }
 
 // HandlTransactionFromP2P handles a transaction from P2P
