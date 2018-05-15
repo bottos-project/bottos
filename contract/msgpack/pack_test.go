@@ -228,3 +228,25 @@ func TestDatafileReg(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
+
+
+func TestUserReg(t *testing.T) {
+	type TestStruct struct{
+		V1 string
+		V2 string
+	}
+	fmt.Println("TestUserReg...")
+
+	ts := TestStruct {
+		V1: "didinfotest",
+		V2: "userinfotest",
+	}
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
