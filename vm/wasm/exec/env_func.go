@@ -701,10 +701,16 @@ func set_str_value(vm *VM) (bool, error) {
 
 	// length check
 
-	object := Bytes2String(vm.memory[objectPos:objectPos+objectLen])
-	key := Bytes2String(vm.memory[keyPos:keyPos+keyLen])
-	value := Bytes2String(vm.memory[valuePos:valuePos+valueLen])
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	value := make([]byte, valueLen)
+	copy(value, vm.memory[valuePos:valuePos+valueLen])
+
+	fmt.Println(string(object), len(object), string(key), len(key), string(value), len(value))
 	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, object, key, value)
 
 	result := 1
