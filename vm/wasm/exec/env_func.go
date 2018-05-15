@@ -735,15 +735,15 @@ func printi(vm *VM) (bool, error) {
 func prints(vm *VM) (bool, error) {
 	//contractCtx := vm.GetContract();
 
-	var len uint64
+	//var len uint64
 	pos := vm.envFunc.envFuncParam[0]
-	//len := vm.envFunc.envFuncParam[1]
+	len := vm.envFunc.envFuncParam[1]
 
-	if _ , ok := vm.memType[pos]; ok {
-		len = uint64(vm.memType[pos].Len) - 1
-	}else{
-		len = vm.envFunc.envFuncParam[1] - 1
-	}
+	//if _ , ok := vm.memType[pos]; ok {
+	//	len = uint64(vm.memType[pos].Len) - 1
+	//}else{
+	//	len = vm.envFunc.envFuncParam[1] - 1
+	//}
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
@@ -777,7 +777,6 @@ func get_param(vm *VM) (bool, error) {
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(paramLen))
 	}
-
 	fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param);
 
 	return true , nil
