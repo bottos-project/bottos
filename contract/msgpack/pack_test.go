@@ -194,3 +194,37 @@ func TestNewAccount(t *testing.T) {
 	err = Unmarshal(b, param1)
 	fmt.Println("param1: ", param1)
 }
+
+
+
+func TestDatafileReg(t *testing.T) {
+	type TestSubStruct struct{
+		V1 string
+		V2 string
+		V3 uint64
+		V4 string
+		V5 string
+		V6 string
+		V7 uint64
+		V8 string
+	}
+
+	type TestStruct struct{
+		V1 string
+		V2 *TestSubStruct
+	}
+	fmt.Println("TestDatafileReg...")
+
+	ts := TestStruct {
+		V1: "filehashtest",
+		V2: &TestSubStruct{V1:"usernametest", V2:"sissidTest", V3:111, V4:"filenameTest",V5:"filepolicytest",V6:"authpathtest",V7:222,V8:"sign"},
+	}
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}

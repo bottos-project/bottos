@@ -46,6 +46,8 @@ func NewContractDB(db *db.DBService) *ContractDB {
 func (cdb *ContractDB) SetStrValue(contract string, object string, key string, value string) error {
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.setStrValue(objName, key, value)
+
+	fmt.Println("SetStrValue: ", contract, object, key, objName, value)
 	if err != nil {
 		return fmt.Errorf("SetStr error, contract: %v, object: %v, key: %v, value: %v", contract, object, key, value)
 	}
@@ -55,6 +57,9 @@ func (cdb *ContractDB) SetStrValue(contract string, object string, key string, v
 func (cdb *ContractDB) GetStrValue(contract string, object string, key string) (string, error) {
 	objName := cdb.getObjectName(contract, object)
 	value, err := cdb.getStrValue(objName, key)
+
+	fmt.Println("GetStrValue: ", contract, object, key, objName, value)
+
 	if err != nil {
 		return "", fmt.Errorf("GetStr error, contract: %v, object: %v, key: %v", contract, object, key)
 	}
@@ -64,6 +69,7 @@ func (cdb *ContractDB) GetStrValue(contract string, object string, key string) (
 func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string) error {
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.removeStrValue(objName, key)
+
 	if err != nil {
 		return fmt.Errorf("RemoveStr error, contract: %v, object: %v, key: %v", contract, object, key)
 	}
