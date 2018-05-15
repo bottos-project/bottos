@@ -36,6 +36,8 @@ import (
 	"github.com/bottos-project/core/api"
 	"github.com/bottos-project/core/action/message"
 	"github.com/bottos-project/core/action/env"
+
+	bottosErr "github.com/bottos-project/core/common/errors"
 )
 
 type ApiService struct {
@@ -130,7 +132,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 
 	fmt.Println("handle result is ",handlerErr)
 
-	if (nil == handlerErr) {
+	if (bottosErr.ErrNoError == handlerErr) {
 		resp.Result = &api.PushTrxResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
@@ -140,9 +142,13 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Result = &api.PushTrxResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
-		//resp.Msg = handlerErr.(string)
-		resp.Msg = "to be add detail error describtion"
-		resp.Errcode = 100
+		//resp.Msg = handlerErr.(string)GetCodeString
+		//resp.Msg = "to be add detail error describtion"
+		var tempErr bottosErr.ErrCode
+		tempErr = handlerErr.(bottosErr.ErrCode)
+
+		resp.Errcode = (uint32)(tempErr)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
 	}
 
 	return nil
