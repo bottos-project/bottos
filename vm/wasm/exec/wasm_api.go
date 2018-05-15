@@ -472,6 +472,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 	} else {
 		vm = vm_instance.vm
+		vm.SetContract(ctx)
 	}
 
 	//avoid that vm instance is deleted because of deadline
