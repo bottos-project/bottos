@@ -53,7 +53,10 @@ const (
 	VM_PERIOD_OF_VALIDITY     = "1h"
 	WAIT_TIME                 = 4
 
-	EOS_INVALID_CODE          = 1
+	BOT_INVALID_CODE          = 1
+
+	CALL_DEP_LIMIT            = 5
+	CALL_WID_LIMIT            = 10
 )
 
 type ParamList struct {
@@ -292,7 +295,6 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 
 	//unpack the crx from byte to struct
 	var sub_crx contract.Context
-	//var msg SUB_CRX_MSG
 
 	if err := json.Unmarshal(event, &sub_crx) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
@@ -320,17 +322,16 @@ func (engine *WASM_ENGINE) StartHandler () error {
 	var event []byte  //it means a MSG struct from ctx execution
 	var ok    bool
 
-	 for {
-		 event , ok = <- engine.vm_channel
-		 if ! ok {
-			 continue
-		 }
+	for {
+		event , ok = <- engine.vm_channel
+		if ! ok {
+			continue
+		}
 
-		 if len(event) == 1 && event[0] == 0  {
-			 break
-		 }
-
-		 engine.startSubCrx(event)
+		if len(event) == 1 && event[0] == 0  {
+			break
+		}
+		engine.startSubCrx(event)
 	}
 
 	return nil
@@ -482,7 +483,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
-		return EOS_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+		return BOT_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
 	}
 
 	findex := func_entry.Index
@@ -495,7 +496,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	parameters   := make([]uint64, param_length)
 
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return EOS_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
+		return BOT_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
 	}
 	// just handle parameter for entry function
 	for i, param := range func_params {
@@ -506,17 +507,17 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 			//ToDo
 		case string:
 			if pos , err = vm.StorageData(param.(string)); err != nil {
-				return EOS_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
+				return BOT_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
 			}
 			parameters[i] = uint64(pos)
 		default:
-			return EOS_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
+			return BOT_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
 		}
 	}
 
 	res, err := vm.ExecCode(int64(findex), parameters...)
 	if err != nil {
-		return EOS_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
+		return BOT_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
 	}
 
 	var result uint32
@@ -524,7 +525,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	case uint32:
 		result = val
 	default:
-		return EOS_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
+		return BOT_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
 	}
 
 	if result != 0 {

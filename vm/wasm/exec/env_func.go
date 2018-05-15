@@ -798,28 +798,32 @@ func start_wasm (vm *VM) (bool, error) {
 
 func call_trx (vm *VM) (bool, error) {
 
-	fmt.Println("VM::call_trx")
-	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
-
-	if len(params) != 5 {
-		return false, errors.New("parameter count error while call memcpy")
+	//check max call limit
+	if vm.callWid > CALL_DEP_LIMIT {
+		return false, errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
 	}
 
-	s_pos  := int(params[0])
-	c_pos  := int(params[1])
-	m_pos  := int(params[2])
-	p_pos  := int(params[3])
-	p_len  := int(params[4])
+	fmt.Println("VM::call_trx")
+	envFunc := vm.envFunc
+	params  := envFunc.envFuncParam
 
-	sender   := BytesToString(vm.memory[s_pos:s_pos+vm.memType[uint64(s_pos)].Len-1])
+	if len(params) != 4 {
+		return false, errors.New("*ERROR* Parameter count error while call memcpy")
+	}
+
+	c_pos  := int(params[0])
+	m_pos  := int(params[1])
+	p_pos  := int(params[2])
+	p_len  := int(params[3])
+
 	contrx   := BytesToString(vm.memory[c_pos:c_pos+vm.memType[uint64(c_pos)].Len-1])
 	method   := BytesToString(vm.memory[m_pos:m_pos+vm.memType[uint64(m_pos)].Len-1])
-
+	//the bytes after msgpack.Marshal
 	param    := vm.memory[p_pos:p_pos + p_len]
 
+	//below codes is just for test
+	/*
 	type transferparam struct {
-		From		string
 		To			string
 		Amount		uint32
 	}
@@ -829,16 +833,17 @@ func call_trx (vm *VM) (bool, error) {
 	msgpack.Unmarshal(param , &tf)
 
 	fmt.Println("VM::call_trx() param from contract: ",tf)
+	*/
 
 	trx := &types.Transaction{
 		Version        : 1,
 		CursorNum      : 1,
 		CursorLabel    : 1,
 		Lifetime       : 1,
-		Sender         : sender,
+		Sender         : vm.GetContract().Trx.Sender,
 		Contract       : contrx,
 		Method         : method,
-		Param          : param,
+		Param          : param,       //the bytes after msgpack.Marshal
 		SigAlg         : 1,
 		Signature      : []byte{},
 	}
@@ -848,6 +853,9 @@ func call_trx (vm *VM) (bool, error) {
 	if err != nil {
 		return false , err
 	}
+
+	//Todo thread synchronization
+	vm.callWid++
 
 	vm.vm_channel <- b_ctx
 	fmt.Println("Send Sem !!!")
