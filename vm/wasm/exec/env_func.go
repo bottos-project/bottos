@@ -643,17 +643,22 @@ func get_str_value(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
-	if len(params) != 6 {
+	if len(params) != 8 {
 		return false, errors.New("parameter count error while call get_str_value")
 	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valueBufPos := int(params[4])
-	valueBufLen := int(params[5])
+	contractPos := int(params[0])
+	contractLen := int(params[1])
+	objectPos := int(params[2])
+	objectLen := int(params[3])
+	keyPos := int(params[4])
+	keyLen := int(params[5])
+	valueBufPos := int(params[6])
+	valueBufLen := int(params[7])
 
 	// length check
+
+	contract := make([]byte, contractLen)
+	copy(contract, vm.memory[contractPos:contractPos+contractLen])
 
 	object := make([]byte, objectLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
@@ -661,8 +666,8 @@ func get_str_value(vm *VM) (bool, error) {
 	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
-	fmt.Println(string(object), len(object), string(key), len(key))
-	value, err := contractCtx.ContractDB.GetStrValue(contractCtx.Trx.Contract, string(object), string(key))
+	fmt.Println(string(contract), len(contract), string(object), len(object), string(key), len(key))
+	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
 
 	valueLen := 0
 	if err == nil {
@@ -682,7 +687,7 @@ func get_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(valueLen))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
+	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value);
 
 	return true , nil
 }
