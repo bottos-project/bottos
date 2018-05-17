@@ -290,3 +290,39 @@ func TestAssetReg(t *testing.T) {
 	fmt.Println("ts1 ", ts1, err)
 }
 
+
+
+
+func TestDataReqReg(t *testing.T) {
+	type TestSubStruct struct{
+		V1 string
+		V2 string
+		V3 uint64
+		V4 string
+		V5 string
+		V6 uint32
+		V7 uint64
+		V8 string
+		V9 uint32
+	}
+
+	type TestStruct struct{
+		V1 string
+		V2 *TestSubStruct
+	}
+	fmt.Println("TestDataReqReg...")
+
+	ts := TestStruct {
+		V1: "12345678901234567899",
+		V2: &TestSubStruct{V1:"usernametest",  V2:"reqnametest", V3:111,V4:"pathtest",V5:"hasttest",V6:222,V7:333,V8:"desctriptest",V9:444},
+	}
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
+
