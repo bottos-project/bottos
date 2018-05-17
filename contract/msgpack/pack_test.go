@@ -220,7 +220,7 @@ func TestDatafileReg(t *testing.T) {
 		V2: &TestSubStruct{V1:"usernametest", V2:"sissidTest", V3:111, V4:"filenameTest",V5:"filepolicytest",V6:"authpathtest",V7:222,V8:"sign"},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -229,6 +229,56 @@ func TestDatafileReg(t *testing.T) {
 	fmt.Println("ts1 ", ts1, err)
 }
 
+func TestAssetfileReg(t *testing.T) {
+	type TestSubStruct struct {
+		UserName    string
+		AssetName   string
+		AssetType   string
+		FeatureTag  string
+		SamplePath  string
+		SampleHash  string
+		StoragePath string
+		StorageHash string
+		ExpireTime  uint32
+		Price       uint64
+		Description string
+		UploadDate  uint32
+		Signature   string
+	}
+
+	type TestStruct struct {
+		V1 string
+		V2 *TestSubStruct
+	}
+	fmt.Println("TestAssetfileReg...")
+
+	ts := TestStruct{
+		V1: "assethashtest",
+		V2: &TestSubStruct{
+			UserName:    "btd121",
+			AssetName:   "assetnametest",
+			AssetType:   "1231",
+			FeatureTag:   "1231",
+			SamplePath:  "pathtest",
+			SampleHash:  "samplehasttest",
+			StoragePath: "stpathtest",
+			StorageHash: "sthashtest",
+			ExpireTime:  345,
+			Price:       345,
+			Description: "destest",
+			UploadDate:  100,
+			Signature:   "sigtest",
+		},
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
 
 func TestUserReg(t *testing.T) {
 	type TestStruct struct{
@@ -242,7 +292,7 @@ func TestUserReg(t *testing.T) {
 		V2: "userinfotest",
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
