@@ -67,7 +67,7 @@
  }
  
 func getTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
-	key := hash.ToHexString()
+	key := hashToKey(hash)
 	//fmt.Println("GetTransactionHistoryByHash key: ", key)
 	value, err := ldb.GetObject(TransactionHistoryObjectName, key)
 	if err != nil {
