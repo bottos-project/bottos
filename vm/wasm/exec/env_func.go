@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/core/contract/msgpack"
 )
 
 type EnvFunc struct {
@@ -44,6 +45,7 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("get_param" , get_param)
 	env_func.Register("call_trx" , call_trx)
 	env_func.Register("recv_trx" , recv_trx)
+	env_func.Register("parse_param" , parse_param)
 
 	return &env_func
 }
@@ -764,8 +766,8 @@ func get_param(vm *VM) (bool, error) {
 		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	bufPos := int(params[0])
-	bufLen := int(params[1])
+	bufPos   := int(params[0])
+	bufLen   := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
@@ -864,6 +866,7 @@ func call_trx (vm *VM) (bool, error) {
 
 func recv_trx (vm *VM) (bool, error) {
 
+	fmt.Println("VM::recv_trx")
 	envFunc := vm.envFunc
 	params  := envFunc.envFuncParam
 	if len(params) != 2 {
@@ -882,9 +885,37 @@ func recv_trx (vm *VM) (bool, error) {
 		return false , nil
 	}
 
-	fmt.Println("VM::recv_trx")
+
 	vm.vm_channel <- b_crx
 	fmt.Println("Send Sem !!!")
 
 	return true,nil
+}
+
+func parse_param (vm *VM) (bool, error) {
+
+	fmt.Println("VM::parse_param")
+	envFunc := vm.envFunc
+	params  := envFunc.envFuncParam
+
+	if len(params) != 2 {
+		return false, errors.New("*ERROR* Parameter count error while call memcpy")
+	}
+
+	param_pos  := int(params[0])
+	param_len  := int(params[1])
+	param      := vm.memory[param_pos:param_pos + param_len]
+
+	type transferparam struct {
+		To			string
+		Amount		uint32
+	}
+
+	var tf transferparam
+	msgpack.Unmarshal(param , &tf)
+
+	fmt.Println("VM::parse_param() param from contract param: ", param)
+	fmt.Println("VM::parse_param() param from contract tf:    ", tf)
+
+	return true , nil
 }
