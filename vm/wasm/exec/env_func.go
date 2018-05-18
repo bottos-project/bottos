@@ -864,7 +864,8 @@ func call_trx (vm *VM) (bool, error) {
 		SigAlg         : 1,
 		Signature      : []byte{},
 	}
-	ctx := &contract.Context{ Trx:trx}
+	//ctx := &contract.Context{ Trx:trx}
+	ctx := &contract.Context{RoleIntf:vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx:trx}
 
 	/*
 	b_ctx , err := json.Marshal(ctx)
