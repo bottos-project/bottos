@@ -348,12 +348,13 @@ func TestDataReqReg(t *testing.T) {
 		V1 string
 		V2 string
 		V3 uint64
-		V4 string
+		V4 uint64
 		V5 string
-		V6 uint32
-		V7 uint64
-		V8 string
+		V6 uint64
+		V7 uint32
+		V8 uint64
 		V9 uint32
+		V10 string
 	}
 
 	type TestStruct struct{
@@ -364,7 +365,7 @@ func TestDataReqReg(t *testing.T) {
 
 	ts := TestStruct {
 		V1: "12345678901234567899",
-		V2: &TestSubStruct{V1:"usernametest",  V2:"reqnametest", V3:111,V4:"pathtest",V5:"hasttest",V6:222,V7:333,V8:"desctriptest",V9:444},
+		V2: &TestSubStruct{V1:"usernametest",  V2:"reqnametest", V3:111,V4:222,V5:"hasttest",V6:222,V7:2,V8:333,V9:444,V10:"desctriptest"},
 	}
 	b, err := Marshal(ts)
 	
