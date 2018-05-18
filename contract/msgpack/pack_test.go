@@ -216,8 +216,8 @@ func TestDatafileReg(t *testing.T) {
 	fmt.Println("TestDatafileReg...")
 
 	ts := TestStruct {
-		V1: "filehashtest",
-		V2: &TestSubStruct{V1:"usernametest", V2:"sissidTest", V3:111, V4:"filenameTest",V5:"filepolicytest",V6:"authpathtest",V7:222,V8:"sign"},
+		V1: "12345678901234567890",
+		V2: &TestSubStruct{V1:"salertest", V2:"sissidTest", V3:111, V4:"filenameTest",V5:"filepolicytest",V6:"authpathtest",V7:222,V8:"sign"},
 	}
 	b, err := Marshal(ts)
 
@@ -327,8 +327,8 @@ func TestAssetReg(t *testing.T) {
 	fmt.Println("TestAssetReg...")
 
 	ts := TestStruct {
-		V1: "assethashtest",
-		V2: &TestSubStruct{V1:"usernametest", V2:"assetname", V3:"assettypetest", V4:"tagtest",V5:"pathtest",V6:"hasttest",V7:"storepathtest",V8:"storehashtest",V9:11,V10:22,V11:"desctriptest",V12:333,V13:"signtest"},
+		V1: "23456789012345678901",
+		V2: &TestSubStruct{V1:"usernametest", V2:"assetname", V3:"assettypetest", V4:"tagtest",V5:"pathtest",V6:"hasttest",V7:"storepathtest",V8:"12345678901234567890",V9:11,V10:22,V11:"desctriptest",V12:333,V13:"signtest"},
 	}
 	b, err := Marshal(ts)
 	
@@ -364,7 +364,7 @@ func TestDataReqReg(t *testing.T) {
 	fmt.Println("TestDataReqReg...")
 
 	ts := TestStruct {
-		V1: "12345678901234567899",
+		V1: "12345678901234567890",
 		V2: &TestSubStruct{V1:"usernametest",  V2:"reqnametest", V3:111,V4:222,V5:"hasttest",V6:222,V7:2,V8:333,V9:444,V10:"desctriptest"},
 	}
 	b, err := Marshal(ts)
@@ -410,7 +410,7 @@ func TestGoodsProReq(t *testing.T) {
 
 
 
-func TestDataDealReq(t *testing.T) {
+func TestDataDeal_PreSaleReq(t *testing.T) {
 	type TestSubStruct struct{
 		V1 string
 		V2 string
@@ -424,11 +424,39 @@ func TestDataDealReq(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestDataDealReq...")
+	fmt.Println("TestDataDeal_PreSaleReq...")
 
 	ts := TestStruct {
 		V1: "12345678901234567899",
 		V2: &TestSubStruct{V1:"usernametest",  V2:"assetidTest", V3:"requireId",V4:"consumerId",V5:2,V6:222},
+	}
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
+
+
+func TestDataDeal_BuyAssetReq(t *testing.T) {
+	type TestSubStruct struct{
+		V1 string
+		V2 string
+		V3 uint64
+	}
+
+	type TestStruct struct{
+		V1 string
+		V2 *TestSubStruct
+	}
+	fmt.Println("TestDataDeal_BuyAssetReq...")
+
+	ts := TestStruct {
+		V1: "12345678901234567899",
+		V2: &TestSubStruct{V1:"buyertest",  V2:"23456789012345678901", V3:1234},
 	}
 	b, err := Marshal(ts)
 	
