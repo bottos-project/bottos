@@ -163,9 +163,10 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
             mgo_param.VMType    = p.VMType
             mgo_param.VMVersion = p.VMVersion
             mgo_param.ContractCode = common.BytesToHex(p.ContractCode)
-        
+            fmt.Println("decodedParam OK!!!!")
             return mgo_param, nil
         } else {
+            fmt.Println("decodedParam FAILED!!!: decodedParam: ", decodedParam)
             return nil, errors.New("Decode DeployCodeParam failed.")
         }
     }
