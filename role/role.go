@@ -202,7 +202,7 @@ func (r *Role) ElectNextTermDelegates() []string {
 }
 
 func (r *Role) ApplyPersistance(block *types.Block) error {
-	return ApplyPersistanceRole(r.Db, block)
+	return ApplyPersistanceRole(r, r.Db, block)
 }
 
 func (r *Role) initRole() {

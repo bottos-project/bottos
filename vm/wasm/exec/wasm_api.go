@@ -126,8 +126,13 @@ type wasm_interface interface {
 	Init() error
 	//　a wrap for VM_Call
 	Apply( ctx Apply_context ,execution_time uint32, received_block bool ) interface{}
-
+	Start( ctx *contract.Context  , execution_time uint32, received_block bool ) (uint32 , error)
+	Process( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) (uint32 , error)
 	GetFuncInfo(module wasm.Module , entry wasm.ExportEntry) error
+}
+
+type VM_RUNTIME struct {
+	vm_list []VM_INSTANCE
 }
 
 func GetInstance() *WASM_ENGINE {
@@ -444,10 +449,15 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 	}
 }
 
-//the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (uint32 , error) {
-
+func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,  execution_time uint32, received_block bool ) (uint32 , error) {
 	fmt.Println("WASM_ENGINE::Start")
+	return engine.Process(ctx , 1 ,execution_time , received_block )
+}
+
+//the function is to be used for direct parameter insert
+func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) (uint32 , error) {
+
+	fmt.Println("WASM_ENGINE::Process")
 
 	var pos      int
 	var err      error
@@ -537,6 +547,28 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	if result != 0 {
 		//Todo failed to execute the crx , any handle operation
 		return result , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
+	}
+
+	if len(vm.sub_trx_lst) == 0 {
+		return result , nil
+	}
+
+
+	if depth + 1 >= CALL_DEP_LIMIT {
+		return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(dep) !!!")
+	}
+
+	//recursive call sub-trx
+	for i , sub_trx := range vm.sub_trx_lst {
+
+		if i+1 > CALL_WID_LIMIT {
+			return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
+		}
+
+		if result , err = engine.Process(sub_trx , depth + 1 ,  execution_time , received_block); err != nil {
+			return result , err
+		}
+
 	}
 
 	//vm.vm_lock.Unlock()
