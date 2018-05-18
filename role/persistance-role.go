@@ -83,6 +83,8 @@ type TxInfo struct {
 	CreateTime    time.Time     `bson:"create_time"`
 }
 
+/**======Internal Contract struct definition====*/
+
 type transferparam struct {
     From        string  `json:"from"`
     To          string  `json:"to"`
@@ -94,11 +96,6 @@ type newaccountparam struct {
     Pubkey      string  `json: pubkey`
 }
 
-type reguser struct {
-    Didid       string `json:"didid"`
-    Didinfo     string `json:"didinfo"`
-}
-
 type TParam interface {
     //Accountparam
     //Transferparam transferpa
@@ -107,7 +104,7 @@ type TParam interface {
 }
 
 type DeployCodeParam struct {
-    Name         string      `json:"name"`
+    Name         string     `json:"name"`
     VMType       byte        `json:"vm_type"`
     VMVersion    byte        `json:"vm_version"`
     ContractCode []byte      `json:"contract_code"`
@@ -119,6 +116,143 @@ type mgo_DeployCodeParam struct {
     VMVersion    byte        `json:"vm_version"`
     ContractCode string      `json:"contract_code"`
  }
+
+
+/**======External Contract struct definition====*/
+
+type AssetInfo struct {
+    userName            string `json:“username”`
+    assetName           string `json:"assetname"`
+    assetType           string `json:"assettype"`
+    featureTag     string `json:"featuretag"`
+    samplePath     string `json:"samplepath"`
+    sampleHash     string `json:"samplehash"`
+    storagePath    string `json:"storagepath"`      // not enough for multislices of big files
+    storageHash    string `json:"storagehash"`
+    expireTime          uint32 `json:"expiretime"`
+    price               uint64 `json:"price"`
+    description         string `json:"description"`
+    uploadDate          uint32 `json:"uploaddate"`
+    signature           string `json:"signature"`
+}
+
+type RegAssetReq struct {
+    assetId string `json:"assedid"`
+    info AssetInfo 
+}
+
+type reguser struct {
+    Didid        string `json:"didid"`
+    Didinfo      string `json:"didinfo"`
+}
+
+type UserLogin struct {
+    userName string    `json:"username"`
+    randomNum uint32 `json:"randomnum"`
+}
+
+type DataDealnfo struct {
+    userName     string `json:"username"`
+    sessionId    string `json:”sessionid“`
+    assetId      string `json:"assetid"`
+    random_num   uint64 `json:"random_num"`
+    signature    uint64 `json:"signature"`
+}
+
+type DataDealReq struct {
+    dataExchangeId string  `json:"dataexchangeid"`
+    info DataDealnfo
+}
+
+type PresaleInfo struct {
+    userName string    `json:"username"`
+    sessionId string   `json:"sessionid"`
+    assetId string     `json:"assetid"`
+    assetName string   `json:"assetname"`
+    dataReqId string   `json:"datareqid"`
+    dataReqName string `json:"datareqname"`
+    consumer string    `json:"consumer"`
+    random_num uint64  `json:"randomnum"`
+    signature string   `json:"signature"`
+}
+
+type PresaleReq struct {
+    dataPresaleId string   `json:"datapresaleid"`
+    info PresaleInfo
+}
+
+type DataFileInfo struct {
+    userName    string  `json:"username"` 
+    sessionId   string `json:"sessonid"`
+    fileSize    uint64 `json:"filesize"`
+    fileName    string `json:"filename"`
+    filePolicy  string `json:"filepolicy"`
+    authPath    string `json:"authpath"`
+    fileNumber  uint64 `json:"filenumber"`
+    signature   string `json:"signature"`
+}
+
+type DataFileRegReq struct {
+    fileHash   string  `json:"filehash"`
+    info    DataFileInfo
+}
+
+type AuthBasicInfo struct {
+    authType   string  `json:"authType"`
+    authPath   string  `json:"authpath"`
+}
+
+type DataFileAuthInfo struct {
+    hashUserName    string `json:"hashusername"`
+    info            AuthBasicInfo
+}
+
+type DataFileAuthReq struct {
+    storgeHash  string `json:"storagehash"`
+    userName    string `json:"username"`
+}
+
+type DataReqInfo struct {
+
+    userName    string `json:"username"`
+    reqName     string `json:"reqname"`
+    featureTag  uint64 `json:"featuretag"`
+    samplePath  string `json:"samplepath"`
+    sampleHash  string `json:"samplehash"`
+    expireTime  uint32 `json:"expiretime"`
+    price       uint64 `json:"price"`
+    description   string   `json:"description"`
+    publishDate   uint32   `json:"publishdate"`
+
+}
+
+type RegDataReqReq struct{
+    dataReqId   string `json:"datareqid"`
+    info        DataReqInfo
+}
+
+type GoodsProReq struct {
+    userName    string `json:"username"`
+    opType      uint32 `json:"optype"`
+    goodsType   string `json:"goodstype"`
+    goodsId     string `json:"goodsid"`
+}
+
+type NodeClusterReg struct {
+    nodeIP    string   `json:"nodeip"`
+    clusterIP string   `json:"clusterip"`
+}
+
+type NodeBaseInfo struct {
+    nodeIp     string  `json:"nodeip"`
+    nodePort   string  `json:"nodeport"`
+    nodeAddress string `json:"nodeaddress"`
+}
+
+type NodeInfoReq struct {
+    nodeId  string `json:"nodeid"`
+    info    NodeBaseInfo
+}
 
 func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error) {
 
@@ -132,6 +266,7 @@ func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error)
 
 func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
     var decodedParam interface{}
+    fmt.Println("ParseParam: Contract: ", Contract, ", Method: ", Method)
     if Contract == "bottos" {
         if Method == "newaccount" {
             decodedParam = &newaccountparam {}
@@ -143,52 +278,112 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
             fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         } 
-    } else if Contract == "usermsg" {
+    } else if Contract == "usermng" {
         if Method == "reguser" {
             decodedParam = &reguser{}
+        } else if Method == "userlogin" {
+            decodedParam = &UserLogin{}
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
+        } 
+    } else if Contract == "assetmng" {
+         if Method == "assetreg" {
+            decodedParam = &RegAssetReq {}
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
+        } 
+    } else if Contract == "datadealmng" {
+        if Method == "buydata" {
+            decodedParam = &DataDealReq {}
+        } else if Method == "presaledata" {
+            decodedParam = &PresaleReq {}
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
+        }
+    } else if Contract == "datafilemng" {
+        if Method == "datafilereg" {
+           decodedParam = &DataFileRegReq {}
+        } else if Method == "fileauthreg" {
+            decodedParam = &DataFileAuthReq {}
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
+        }
+    } else if Contract == "datareqmng" {
+       if Method == "datarequirementreg" {
+           decodedParam = &RegDataReqReq  {}
+       } else {
+           fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+           return nil, errors.New("Not supported")
+       }
+    } else if Contract == "favoritemng" {
+        if Method == "favoritepro" {
+            decodedParam = &GoodsProReq {}
+        } else {
+           fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+           return nil, errors.New("Not supported")
+       }
+    } else if Contract == "nodeclustermng" {
+        if Method == "reg" {
+            decodedParam = &NodeClusterReg {}
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
+        }
+    } else if Contract == "nodemng" {
+        if Method == "nodeinforeg" {
+            decodedParam = &NodeInfoReq {}       
+        } else {
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            return nil, errors.New("Not supported")
         }
     } else {
         fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
         return nil, errors.New("Not supported")
     }
     
-    fmt.Println("insertTxInfoRole: done: Contract: ", Contract, ", Method: ", Method)
     err := msgpack.Unmarshal(Param, decodedParam)
     
     if Contract == "bottos" && Method == "deploycode" {
-        p, ok := decodedParam.(DeployCodeParam)
-        if ok {
+        //p, ok := decodedParam.(DeployCodeParam)
+        
+        var tmpval = &DeployCodeParam {}
+        err = msgpack.Unmarshal(Param, tmpval)
+        //if ok {
+        if err == nil {
             var mgo_param = mgo_DeployCodeParam {}
-            mgo_param.Name      = p.Name
-            mgo_param.VMType    = p.VMType
-            mgo_param.VMVersion = p.VMVersion
-            mgo_param.ContractCode = common.BytesToHex(p.ContractCode)
+            mgo_param.Name      = tmpval.Name
+            mgo_param.VMType    = tmpval.VMType
+            mgo_param.VMVersion = tmpval.VMVersion
+            mgo_param.ContractCode = common.BytesToHex(tmpval.ContractCode)
             fmt.Println("decodedParam OK!!!!")
             return mgo_param, nil
         } else {
-            fmt.Println("decodedParam FAILED!!!: decodedParam: ", decodedParam)
+            
             return nil, errors.New("Decode DeployCodeParam failed.")
         }
     }
-
+    
     if err != nil {
+        fmt.Println("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
         return nil, err
     }
 
+    fmt.Println("insertTxInfoRole: done: Contract: ", Contract, ", Method: ", Method)
     return decodedParam, nil
 }
 
 func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
 	
-    fmt.Println("LYP: 11 START insertTxInfoRole!!!")
-    
     if ldb == nil || block == nil {
-		return errors.New("Error Invalid param")
+	    return errors.New("Error Invalid param")
 	}
 	if len(oids) != len(block.Transactions) {
 		return errors.New("invalid param")
 	}
-    fmt.Println("LYP: 22 START  insertTxInfoRole!!! len(oids): ", len(oids), ", len(block.Transactions): ", len(block.Transactions))
 
 	for i, trx := range block.Transactions {
 		newtrx := &TxInfo{
@@ -209,7 +404,6 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 			CreateTime:    time.Now(),
 		}
         
-        fmt.Println("LYP: 33 START  insertTxInfoRole!!! Method: ", trx.Method, "|", newtrx.Method)
         decodedParam, err := ParseParam(trx.Param, newtrx.Contract, newtrx.Method)
         
         if err != nil {
@@ -217,13 +411,9 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
         } else {
             newtrx.Param = decodedParam
         }
-
-        fmt.Println("LYP: 33 START  insertTxInfoRole!!!")
 		
         ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
-        fmt.Println("LYP: 44 START  insertTxInfoRole!!!")
 		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
-            fmt.Println("LYP: 55 START  insertTxInfoRole!!!")
 			insertAccountInfoRole(r, ldb, block, trx, oids[i])
 		}
 	}
@@ -327,14 +517,12 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 }
 
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
-	fmt.Println("LYP: len(block.Transactions): ", len(block.Transactions))
     oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()
 	}
     
 	insertBlockInfoRole(ldb, block, oids)
-    fmt.Println("LYP: insertTxInfoRole!!!")
     insertTxInfoRole(r, ldb, block, oids)
     
     fmt.Printf("apply to mongodb block hash %x", block.Hash())
