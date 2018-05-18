@@ -73,28 +73,32 @@ type context struct {
 type VM struct {
 	ctx context
 
-	module         *wasm.Module
-	globals        []uint64
-	memory         []byte
-	compiledFuncs  []compiledFunction
+	module        *wasm.Module
+	globals       []uint64
+	memory        []byte
+	compiledFuncs []compiledFunction
 
-	funcTable      [256]func()
+	funcTable     [256]func()
 
-	memPos         int
-	//To avoid the too much the number of recursion execution in contract
-	recursionLayer int
+	memPos        int
+	//To avoid the too much the number of recursion execution(dep) in contract
+	callDep       int
+	//To limit the too much the number of new contract execution(wid) in contract
+	callWid       int
 	// define a map relationship between memory address and data's type
-	memType        map[uint64]*typeInfo
+	memType       map[uint64]*typeInfo
 	//define env function
-	envFunc        *EnvFunc
-	funcInfo       FuncInfo
+	envFunc       *EnvFunc
+	funcInfo      FuncInfo
 
-	contract       *contract.Context
+	contract      *contract.Context
 
-	vm_lock        *sync.Mutex
+	vm_lock       *sync.Mutex
 	//the channel be used to communcate with vm_engine
-	vm_channel     chan []byte
+	vm_channel    chan []byte
 
+	//record sub-trx for recursive call[wid]
+	sub_trx_lst   []*contract.Context
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -116,7 +120,8 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		memory         : make([]byte, wasmPageSize),
 		contract       : nil,
 		vm_lock        : new(sync.Mutex),
-		recursionLayer : 0,
+		callDep        : 0,
+		callWid        : 0,
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {

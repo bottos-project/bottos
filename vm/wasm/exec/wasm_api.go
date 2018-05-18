@@ -53,7 +53,10 @@ const (
 	VM_PERIOD_OF_VALIDITY     = "1h"
 	WAIT_TIME                 = 4
 
-	EOS_INVALID_CODE = 1
+	BOT_INVALID_CODE          = 1
+
+	CALL_DEP_LIMIT            = 5
+	CALL_WID_LIMIT            = 10
 )
 
 type ParamList struct {
@@ -123,8 +126,13 @@ type wasm_interface interface {
 	Init() error
 	//　a wrap for VM_Call
 	Apply( ctx Apply_context ,execution_time uint32, received_block bool ) interface{}
-
+	Start( ctx *contract.Context  , execution_time uint32, received_block bool ) (uint32 , error)
+	Process( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) (uint32 , error)
 	GetFuncInfo(module wasm.Module , entry wasm.ExportEntry) error
+}
+
+type VM_RUNTIME struct {
+	vm_list []VM_INSTANCE
 }
 
 func GetInstance() *WASM_ENGINE {
@@ -292,13 +300,13 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 
 	//unpack the crx from byte to struct
 	var sub_crx contract.Context
-	//var msg SUB_CRX_MSG
 
 	if err := json.Unmarshal(event, &sub_crx) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 
+	fmt.Println("WASM_ENGINE::startSubCrx sub_crx = ",sub_crx)
 	//check recursion limit
 	/*
 	if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
@@ -319,17 +327,16 @@ func (engine *WASM_ENGINE) StartHandler () error {
 	var event []byte  //it means a MSG struct from ctx execution
 	var ok    bool
 
-	 for {
-		 event , ok = <- engine.vm_channel
-		 if ! ok {
-			 continue
-		 }
+	for {
+		event , ok = <- engine.vm_channel
+		if ! ok {
+			continue
+		}
 
-		 if len(event) == 1 && event[0] == 0  {
-			 break
-		 }
-
-		 engine.startSubCrx(event)
+		if len(event) == 1 && event[0] == 0  {
+			break
+		}
+		engine.startSubCrx(event)
 	}
 
 	return nil
@@ -361,7 +368,7 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline = time.Now().Add(divisor)
+		deadline   = time.Now().Add(divisor)
 
 		engine.vm_map[ctx.Trx.Contract] = &VM_INSTANCE{
 			vm:          vm,
@@ -442,10 +449,15 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 	}
 }
 
-//the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32, received_block bool ) (uint32 , error) {
-
+func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,  execution_time uint32, received_block bool ) (uint32 , error) {
 	fmt.Println("WASM_ENGINE::Start")
+	return engine.Process(ctx , 1 ,execution_time , received_block )
+}
+
+//the function is to be used for direct parameter insert
+func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) (uint32 , error) {
+
+	fmt.Println("WASM_ENGINE::Process")
 
 	var pos      int
 	var err      error
@@ -472,29 +484,30 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 	} else {
 		vm = vm_instance.vm
+		//to set a new context for a existing VM instance
 		vm.SetContract(ctx)
 	}
 
 	//avoid that vm instance is deleted because of deadline
 	//vm.vm_lock.Lock()
-
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
-		return EOS_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+		return BOT_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
 	}
 
 	findex := func_entry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	func_params    := make([]interface{}, 1)
+	//Get function's string first char
 	func_params[0]  = int([]byte(ctx.Trx.Method)[0])
 
 	param_length := len(func_params)
 	parameters   := make([]uint64, param_length)
 
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return EOS_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
+		return BOT_INVALID_CODE , errors.New("*ERROR* Parameters count is not right")
 	}
 
 	// just handle parameter for entry function
@@ -502,21 +515,25 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 		switch param.(type) {
 		case int:
 			parameters[i] = uint64(param.(int))
-		case []int:
-			//ToDo
+		case []byte:
+			offset, err := vm.storageMemory(param.([]byte) , Int8)
+			if err != nil {
+				return BOT_INVALID_CODE, err
+			}
+			parameters[i] = uint64(offset)
 		case string:
 			if pos , err = vm.StorageData(param.(string)); err != nil {
-				return EOS_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
+				return BOT_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
 			}
 			parameters[i] = uint64(pos)
 		default:
-			return EOS_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
+			return BOT_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
 		}
 	}
 
 	res, err := vm.ExecCode(int64(findex), parameters...)
 	if err != nil {
-		return EOS_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
+		return BOT_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
 	}
 
 	var result uint32
@@ -524,7 +541,7 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	case uint32:
 		result = val
 	default:
-		return EOS_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
+		return BOT_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
 	}
 
 	if result != 0 {
@@ -532,7 +549,31 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 		return result , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
 	}
 
+	if len(vm.sub_trx_lst) == 0 {
+		return result , nil
+	}
+
+
+	if depth + 1 >= CALL_DEP_LIMIT {
+		return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(dep) !!!")
+	}
+
+	//recursive call sub-trx
+	for i , sub_trx := range vm.sub_trx_lst {
+
+		if i+1 > CALL_WID_LIMIT {
+			return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
+		}
+
+		if result , err = engine.Process(sub_trx , depth + 1 ,  execution_time , received_block); err != nil {
+			return result , err
+		}
+
+	}
+
 	//vm.vm_lock.Unlock()
 
 	return result , nil
 }
+
+

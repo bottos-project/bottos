@@ -14,6 +14,7 @@ import (
 	"github.com/bottos-project/core/contract"
 	"github.com/bottos-project/core/contract/contractdb"
 	wasm "github.com/bottos-project/core/vm/wasm/exec"
+	bottosErr "github.com/bottos-project/core/common/errors"
 )
 
 type TrxApplyService struct {
@@ -91,33 +92,36 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
 
-func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, error) {
+func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 	
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if(nil != getAccountErr || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
-		return false, fmt.Errorf("check account error")
+		//return false, fmt.Errorf("check account error")
+		return false, bottosErr.ErrTrxAccountError		
 	}
 
 	if !trxApplyService.CheckTransactionLifeTime(trx) {
 		fmt.Println("check lift time error, trx: ", trx.Hash())
-		return false, fmt.Errorf("check lift time error")
+		//return false, fmt.Errorf("check lift time error")
+		return false, bottosErr.ErrTrxLifeTimeError		
 	}
 
 	if !trxApplyService.CheckTransactionUnique(trx) {
 		fmt.Println("check trx unique error, trx: ", trx.Hash())
-		return false, fmt.Errorf("check trx unique error")
+		//return false, fmt.Errorf("check trx unique error")
+		return false, bottosErr.ErrTrxUniqueError		
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
 		fmt.Println("check chain match error, trx: ", trx.Hash())
-		return false, fmt.Errorf("check chain match error")
+		//return false, fmt.Errorf("check chain match error")
+		return false, bottosErr.ErrTrxChainMathError		
 	}
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
 	var exeErr error
-	var exeResult bool
 
 	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 
@@ -129,12 +133,10 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	}
 
     if (nil == exeErr) {
-		exeResult = true
-        fmt.Println("trx : ", trx.Hash(),trx,"apply success")
+		fmt.Println("trx : ", trx.Hash(),trx,"apply success")
+		return true, bottosErr.ErrNoError
 	}else {
-		exeResult = false
 		fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
+		return false, bottosErr.ErrTrxContractHanldeError
 	}
-
-	return exeResult, exeErr
 }

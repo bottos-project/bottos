@@ -163,3 +163,8 @@ func I64ToBytes(i64 uint64) []byte {
 	binary.Write(bytesBuffer, binary.LittleEndian, i64)
 	return bytesBuffer.Bytes()
 }
+
+func ByteToFloat64(bytes []byte) float64 {
+	bits := binary.LittleEndian.Uint64(bytes)
+	return math.Float64frombits(bits)
+}
