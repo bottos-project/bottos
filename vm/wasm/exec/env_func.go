@@ -791,13 +791,15 @@ func printi(vm *VM) (bool, error) {
 func prints(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
+	len := vm.envFunc.envFuncParam[1]
 
-	value := make([]byte, vm.memType[pos].Len-1)
-	copy(value, vm.memory[pos:pos+uint64(vm.memType[pos].Len)-1])
+	value := make([]byte, len)
+	copy(value, vm.memory[pos : pos+len])
 	param := string(value)
 
 	fmt.Printf("VM: prints: %v\n", param);
 	return true , nil
+
 }
 
 func get_param(vm *VM) (bool, error) {
