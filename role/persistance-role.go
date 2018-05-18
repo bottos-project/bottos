@@ -60,6 +60,7 @@ type BlockInfo struct {
 	Timestamp       uint64          `bson:"timestamp"`
 	MerkleRoot      string/*[]byte*/   `bson:"merkle_root"`
 	DelegateAccount string          `bson:"delegate"`
+    DelegateSign    string          `bson:"delegate_sign"`
 	Transactions    []bson.ObjectId `bson:"transactions"`
 	CreateTime      time.Time       `bson:"create_time"`
 }
@@ -121,24 +122,24 @@ type mgo_DeployCodeParam struct {
 /**======External Contract struct definition====*/
 
 type AssetInfo struct {
-    userName            string `json:“username”`
-    assetName           string `json:"assetname"`
-    assetType           string `json:"assettype"`
-    featureTag     string `json:"featuretag"`
-    samplePath     string `json:"samplepath"`
-    sampleHash     string `json:"samplehash"`
-    storagePath    string `json:"storagepath"`      // not enough for multislices of big files
-    storageHash    string `json:"storagehash"`
-    expireTime          uint32 `json:"expiretime"`
-    price               uint64 `json:"price"`
-    description         string `json:"description"`
-    uploadDate          uint32 `json:"uploaddate"`
-    signature           string `json:"signature"`
+    UserName            string `json:“username”`
+    UssetName           string `json:"assetname"`
+    AssetType           string `json:"assettype"`
+    FeatureTag     string `json:"featuretag"`
+    SamplePath     string `json:"samplepath"`
+    SampleHash     string `json:"samplehash"`
+    StoragePath    string `json:"storagepath"`      // not enough for multislices of big files
+    StorageHash    string `json:"storagehash"`
+    ExpireTime          uint32 `json:"expiretime"`
+    Price               uint64 `json:"price"`
+    Description         string `json:"description"`
+    UploadDate          uint32 `json:"uploaddate"`
+    Signature           string `json:"signature"`
 }
 
 type RegAssetReq struct {
-    assetId string `json:"assedid"`
-    info AssetInfo 
+    AssetId string `json:"assedid"`
+    Info AssetInfo 
 }
 
 type reguser struct {
@@ -147,111 +148,111 @@ type reguser struct {
 }
 
 type UserLogin struct {
-    userName string    `json:"username"`
-    randomNum uint32 `json:"randomnum"`
+    UserName string    `json:"username"`
+    RandomNum uint32 `json:"randomnum"`
 }
 
 type DataDealnfo struct {
-    userName     string `json:"username"`
-    sessionId    string `json:”sessionid“`
-    assetId      string `json:"assetid"`
-    random_num   uint64 `json:"random_num"`
-    signature    uint64 `json:"signature"`
+    UserName     string `json:"username"`
+    SessionId    string `json:”sessionid“`
+    AssetId      string `json:"assetid"`
+    Random_num   uint64 `json:"random_num"`
+    Signature    uint64 `json:"signature"`
 }
 
 type DataDealReq struct {
-    dataExchangeId string  `json:"dataexchangeid"`
-    info DataDealnfo
+    DataExchangeId string  `json:"dataexchangeid"`
+    Info DataDealnfo
 }
 
 type PresaleInfo struct {
-    userName string    `json:"username"`
-    sessionId string   `json:"sessionid"`
-    assetId string     `json:"assetid"`
-    assetName string   `json:"assetname"`
-    dataReqId string   `json:"datareqid"`
-    dataReqName string `json:"datareqname"`
-    consumer string    `json:"consumer"`
-    random_num uint64  `json:"randomnum"`
-    signature string   `json:"signature"`
+    UserName string    `json:"username"`
+    SessionId string   `json:"sessionid"`
+    AssetId string     `json:"assetid"`
+    AssetName string   `json:"assetname"`
+    DataReqId string   `json:"datareqid"`
+    DataReqName string `json:"datareqname"`
+    Consumer string    `json:"consumer"`
+    Random_num uint64  `json:"randomnum"`
+    Signature string   `json:"signature"`
 }
 
 type PresaleReq struct {
-    dataPresaleId string   `json:"datapresaleid"`
-    info PresaleInfo
+    DataPresaleId string   `json:"datapresaleid"`
+    Info PresaleInfo
 }
 
 type DataFileInfo struct {
-    userName    string  `json:"username"` 
-    sessionId   string `json:"sessonid"`
-    fileSize    uint64 `json:"filesize"`
-    fileName    string `json:"filename"`
-    filePolicy  string `json:"filepolicy"`
-    authPath    string `json:"authpath"`
-    fileNumber  uint64 `json:"filenumber"`
-    signature   string `json:"signature"`
+    UserName    string  `json:"username"` 
+    SessionId   string `json:"sessonid"`
+    FileSize    uint64 `json:"filesize"`
+    FileName    string `json:"filename"`
+    FilePolicy  string `json:"filepolicy"`
+    AuthPath    string `json:"authpath"`
+    FileNumber  uint64 `json:"filenumber"`
+    Signature   string `json:"signature"`
 }
 
 type DataFileRegReq struct {
-    fileHash   string  `json:"filehash"`
-    info    DataFileInfo
+    FileHash   string  `json:"filehash"`
+    Info    DataFileInfo
 }
 
 type AuthBasicInfo struct {
-    authType   string  `json:"authType"`
-    authPath   string  `json:"authpath"`
+    AuthType   string  `json:"authType"`
+    AuthPath   string  `json:"authpath"`
 }
 
 type DataFileAuthInfo struct {
-    hashUserName    string `json:"hashusername"`
-    info            AuthBasicInfo
+    HashUserName    string `json:"hashusername"`
+    Info            AuthBasicInfo
 }
 
 type DataFileAuthReq struct {
-    storgeHash  string `json:"storagehash"`
-    userName    string `json:"username"`
+    StorgeHash  string `json:"storagehash"`
+    UserName    string `json:"username"`
 }
 
 type DataReqInfo struct {
 
-    userName    string `json:"username"`
-    reqName     string `json:"reqname"`
-    featureTag  uint64 `json:"featuretag"`
-    samplePath  string `json:"samplepath"`
-    sampleHash  string `json:"samplehash"`
-    expireTime  uint32 `json:"expiretime"`
-    price       uint64 `json:"price"`
-    description   string   `json:"description"`
-    publishDate   uint32   `json:"publishdate"`
+    UserName    string `json:"username"`
+    ReqName     string `json:"reqname"`
+    FeatureTag  uint64 `json:"featuretag"`
+    SamplePath  string `json:"samplepath"`
+    SampleHash  string `json:"samplehash"`
+    ExpireTime  uint32 `json:"expiretime"`
+    Price       uint64 `json:"price"`
+    Description   string   `json:"description"`
+    PublishDate   uint32   `json:"publishdate"`
 
 }
 
 type RegDataReqReq struct{
-    dataReqId   string `json:"datareqid"`
-    info        DataReqInfo
+    DataReqId   string `json:"datareqid"`
+    Info        DataReqInfo
 }
 
 type GoodsProReq struct {
-    userName    string `json:"username"`
-    opType      uint32 `json:"optype"`
-    goodsType   string `json:"goodstype"`
-    goodsId     string `json:"goodsid"`
+    UserName    string `json:"username"`
+    OpType      uint32 `json:"optype"`
+    GoodsType   string `json:"goodstype"`
+    GoodsId     string `json:"goodsid"`
 }
 
 type NodeClusterReg struct {
-    nodeIP    string   `json:"nodeip"`
-    clusterIP string   `json:"clusterip"`
+    NodeIP    string   `json:"nodeip"`
+    ClusterIP string   `json:"clusterip"`
 }
 
 type NodeBaseInfo struct {
-    nodeIp     string  `json:"nodeip"`
-    nodePort   string  `json:"nodeport"`
-    nodeAddress string `json:"nodeaddress"`
+    NodeIp     string  `json:"nodeip"`
+    NodePort   string  `json:"nodeport"`
+    NodeAddress string `json:"nodeaddress"`
 }
 
 type NodeInfoReq struct {
-    nodeId  string `json:"nodeid"`
-    info    NodeBaseInfo
+    NodeId  string `json:"nodeid"`
+    Info    NodeBaseInfo
 }
 
 func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error) {
@@ -266,7 +267,6 @@ func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error)
 
 func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
     var decodedParam interface{}
-    fmt.Println("ParseParam: Contract: ", Contract, ", Method: ", Method)
     if Contract == "bottos" {
         if Method == "newaccount" {
             decodedParam = &newaccountparam {}
@@ -359,10 +359,8 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
             mgo_param.VMType    = tmpval.VMType
             mgo_param.VMVersion = tmpval.VMVersion
             mgo_param.ContractCode = common.BytesToHex(tmpval.ContractCode)
-            fmt.Println("decodedParam OK!!!!")
             return mgo_param, nil
         } else {
-            
             return nil, errors.New("Decode DeployCodeParam failed.")
         }
     }
@@ -372,7 +370,6 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         return nil, err
     }
 
-    fmt.Println("insertTxInfoRole: done: Contract: ", Contract, ", Method: ", Method)
     return decodedParam, nil
 }
 
@@ -435,6 +432,7 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 		block.Header.Timestamp,
 		common.BytesToHex(block.Header.MerkleRoot),
 		string(block.Header.Delegate),
+        common.BytesToHex(block.Header.DelegateSign),
 		oids,
 		time.Now(),
 	}
