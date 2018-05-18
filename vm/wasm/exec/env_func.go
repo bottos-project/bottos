@@ -749,13 +749,11 @@ func printi(vm *VM) (bool, error) {
 }
 
 func prints(vm *VM) (bool, error) {
-	//contractCtx := vm.GetContract();
 
 	pos := vm.envFunc.envFuncParam[0]
-	len := vm.envFunc.envFuncParam[1]
 
-	value := make([]byte, len)
-	copy(value, vm.memory[pos:pos+len])
+	value := make([]byte, vm.memType[pos].Len-1)
+	copy(value, vm.memory[pos:pos+uint64(vm.memType[pos].Len)-1])
 	param := string(value)
 
 	fmt.Printf("VM: prints: %v\n", param);
@@ -791,23 +789,8 @@ func get_param(vm *VM) (bool, error) {
 	return true , nil
 }
 
-func start_wasm (vm *VM) (bool, error) {
-
-	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
-	if len(params) != 1 {
-		return false, errors.New("parameter count error while call memcpy")
-	}
-
-	return true,nil
-}
 
 func call_trx (vm *VM) (bool, error) {
-
-	//check max call limit
-	if vm.callWid > CALL_DEP_LIMIT {
-		return false, errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
-	}
 
 	fmt.Println("VM::call_trx")
 	envFunc := vm.envFunc
@@ -827,20 +810,6 @@ func call_trx (vm *VM) (bool, error) {
 	//the bytes after msgpack.Marshal
 	param    := vm.memory[p_pos:p_pos + p_len]
 
-	//below codes is just for test
-	/*
-	type transferparam struct {
-		To			string
-		Amount		uint32
-	}
-
-	var tf transferparam
-
-	msgpack.Unmarshal(param , &tf)
-
-	fmt.Println("VM::call_trx() param from contract: ",tf)
-	*/
-
 	trx := &types.Transaction{
 		Version        : 1,
 		CursorNum      : 1,
@@ -855,18 +824,23 @@ func call_trx (vm *VM) (bool, error) {
 	}
 	ctx := &contract.Context{ Trx:trx}
 
+	/*
 	b_ctx , err := json.Marshal(ctx)
 	if err != nil {
 		return false , err
 	}
+	*/
 
 	//Todo thread synchronization
 	vm.callWid++
 
-	vm.vm_channel <- b_ctx
-	fmt.Println("Send Sem !!!")
+	vm.sub_trx_lst = append(vm.sub_trx_lst, ctx)
 
-	return true,nil
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint32(uint32(0))
+	}
+
+	return true , nil
 }
 
 func recv_trx (vm *VM) (bool, error) {
