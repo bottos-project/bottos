@@ -393,8 +393,42 @@ func TestGoodsProReq(t *testing.T) {
 
 	fmt.Println("TestGoodsProReq...")
 
-	ts := TestStruct {V1:"usernametest",  V2:1, V3:"asset",V4:"goodsIdTest"}
+	ts := TestStruct {V1:"usernametest",  V2:2, V3:"asset",V4:"goodsIdTest"}
 	
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
+
+
+
+
+
+func TestDataDealReq(t *testing.T) {
+	type TestSubStruct struct{
+		V1 string
+		V2 string
+		V3 string
+		V4 string
+		V5 uint32
+		V6 uint64
+	}
+
+	type TestStruct struct{
+		V1 string
+		V2 *TestSubStruct
+	}
+	fmt.Println("TestDataDealReq...")
+
+	ts := TestStruct {
+		V1: "12345678901234567899",
+		V2: &TestSubStruct{V1:"usernametest",  V2:"assetidTest", V3:"requireId",V4:"consumerId",V5:2,V6:222},
+	}
 	b, err := Marshal(ts)
 	
 	fmt.Printf("%v\n", BytesToHex(b))
