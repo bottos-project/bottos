@@ -376,3 +376,31 @@ func TestDataReqReg(t *testing.T) {
 	fmt.Println("ts1 ", ts1, err)
 }
 
+
+
+
+
+
+
+func TestGoodsProReq(t *testing.T) {
+	type TestStruct struct{
+		V1 string
+		V2 uint32
+		V3 string
+		V4 string
+	}
+
+
+	fmt.Println("TestGoodsProReq...")
+
+	ts := TestStruct {V1:"usernametest",  V2:1, V3:"asset",V4:"goodsIdTest"}
+	
+	b, err := Marshal(ts)
+	
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+}
