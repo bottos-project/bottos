@@ -70,6 +70,8 @@ func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.removeStrValue(objName, key)
 
+	fmt.Println("RemoveStrValue: ", contract, object, key, objName)
+
 	if err != nil {
 		return fmt.Errorf("RemoveStr error, contract: %v, object: %v, key: %v", contract, object, key)
 	}

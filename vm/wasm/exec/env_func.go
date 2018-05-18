@@ -42,6 +42,7 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("prints" , prints)
 	env_func.Register("get_str_value" , get_str_value)
 	env_func.Register("set_str_value" , set_str_value)
+	env_func.Register("remove_str_value" , remove_str_value)
 	env_func.Register("get_param" , get_param)
 	env_func.Register("call_trx" , call_trx)
 	env_func.Register("recv_trx" , recv_trx)
@@ -736,6 +737,45 @@ func set_str_value(vm *VM) (bool, error) {
 	}
 
 	fmt.Printf("VM: from contract:%v, method:%v, func set_str_value:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
+
+	return true , nil
+}
+
+func remove_str_value(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract();
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 4 {
+		return false, errors.New("parameter count error while call remove_str_value")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+
+	// length check
+
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
+
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	fmt.Println(string(object), len(object), string(key), len(key))
+	err := contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
+
+	result := 1
+	if err != nil {
+		result = 0;
+	}
+
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(result))
+	}
+
+	fmt.Printf("VM: from contract:%v, method:%v, func remove_str_value:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key);
 
 	return true , nil
 }
