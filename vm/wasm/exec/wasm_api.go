@@ -363,7 +363,7 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline = time.Now().Add(divisor)
+		deadline   = time.Now().Add(divisor)
 
 		engine.vm_map[ctx.Trx.Contract] = &VM_INSTANCE{
 			vm:          vm,
@@ -490,21 +490,27 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	func_params    := make([]interface{}, 1)
+	//Get function's string first char
 	func_params[0]  = int([]byte(ctx.Trx.Method)[0])
 
 	param_length := len(func_params)
 	parameters   := make([]uint64, param_length)
 
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return BOT_INVALID_CODE , errors.New("*ERROR*  Parameters count is not right")
+		return BOT_INVALID_CODE , errors.New("*ERROR* Parameters count is not right")
 	}
+
 	// just handle parameter for entry function
 	for i, param := range func_params {
 		switch param.(type) {
 		case int:
 			parameters[i] = uint64(param.(int))
-		case []int:
-			//ToDo
+		case []byte:
+			offset, err := vm.storageMemory(param.([]byte) , Int8)
+			if err != nil {
+				return BOT_INVALID_CODE, err
+			}
+			parameters[i] = uint64(offset)
 		case string:
 			if pos , err = vm.StorageData(param.(string)); err != nil {
 				return BOT_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
@@ -537,3 +543,5 @@ func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,execution_time uint32,
 
 	return result , nil
 }
+
+
