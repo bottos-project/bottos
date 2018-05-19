@@ -217,14 +217,14 @@ type DataReqInfo struct {
 
     UserName    string `json:"username"`
     ReqName     string `json:"reqname"`
+    ReqType     uint64 `json:"reqtype"`
     FeatureTag  uint64 `json:"featuretag"`
-    SamplePath  string `json:"samplepath"`
     SampleHash  string `json:"samplehash"`
-    ExpireTime  uint32 `json:"expiretime"`
+    ExpireTime  uint64 `json:"expiretime"`
+    OpType      uint32 `json:"optype"`
     Price       uint64 `json:"price"`
-    Description   string   `json:"description"`
-    PublishDate   uint32   `json:"publishdate"`
-
+    FavoriFlag  uint32 `json:"favoriflag"`
+    Description string `description`
 }
 
 type RegDataReqReq struct{
@@ -297,7 +297,7 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
     } else if Contract == "datadealmng" {
         if Method == "buydata" {
             decodedParam = &DataDealReq {}
-        } else if Method == "presaledata" {
+        } else if Method == "presale" {
             decodedParam = &PresaleReq {}
         } else {
             fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
@@ -313,8 +313,8 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
             return nil, errors.New("Not supported")
         }
     } else if Contract == "datareqmng" {
-       if Method == "datarequirementreg" {
-           decodedParam = &RegDataReqReq  {}
+       if Method == "datareqreg" {
+           decodedParam = &RegDataReqReq {}
        } else {
            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
            return nil, errors.New("Not supported")
@@ -369,7 +369,6 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         fmt.Println("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
         return nil, err
     }
-
     return decodedParam, nil
 }
 
