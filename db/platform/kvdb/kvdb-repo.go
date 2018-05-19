@@ -31,6 +31,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 var OpenFileLimit = 64
@@ -70,6 +71,9 @@ func (k *KVDatabase) CallDelete(key []byte) error {
 func (k *KVDatabase) CallNewIterator() iterator.Iterator {
 	return k.db.NewIterator(nil, nil)
 }
+func (k *KVDatabase) CallNewIteratorPrefix() iterator.Iterator {
+	return k.db.NewIterator(nil, nil)
+}
 
 func (k *KVDatabase) CallFlush() error {
 
@@ -80,4 +84,21 @@ func (k *KVDatabase) CallClose() {
 
 	k.db.Close()
 	fmt.Println("flushed and closed db:", k.fn)
+}
+
+func (k *KVDatabase) CallSeek(prefixKey []byte) ([]interface{}, error) {
+	var valueList []interface{}
+	iter := k.db.NewIterator(util.BytesPrefix(prefixKey), nil)
+	for iter.Next() {
+		//ptrKey := iter.Key()
+		key := iter.Value()
+		if value, err := k.db.Get(key, nil); err != nil {
+			continue
+		} else {
+			valueList = append(valueList, value)
+		}
+	}
+	iter.Release()
+	err := iter.Error()
+	return valueList, err
 }
