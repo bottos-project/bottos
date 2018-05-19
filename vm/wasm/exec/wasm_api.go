@@ -561,16 +561,17 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 	//recursive call sub-trx
 	for i , sub_trx := range vm.sub_trx_lst {
 
-		if i+1 > CALL_WID_LIMIT {
+		if i + 1 > CALL_WID_LIMIT {
 			return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
 		}
 
 		if result , err = engine.Process(sub_trx , depth + 1 ,  execution_time , received_block); err != nil {
 			return result , err
 		}
-
 	}
 
+	//clean
+	vm.sub_trx_lst = vm.sub_trx_lst[:0]
 	//vm.vm_lock.Unlock()
 
 	return result , nil
