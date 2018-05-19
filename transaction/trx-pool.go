@@ -134,11 +134,6 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 		return
 	}
 	//pool.stateDb.StartUndoSession()
-	
-
-	//for test
-	curTime := common.Now()
-	trx.Lifetime = curTime  + 10   
 
 	result , err := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {

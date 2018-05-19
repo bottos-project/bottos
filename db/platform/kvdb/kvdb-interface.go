@@ -30,4 +30,5 @@ type KvDBRepo interface {
 	CallDelete(key []byte) error
 	CallClose()
 	CallFlush() error
+	CallSeek(prefixKey []byte) ([]interface{}, error)
 }

@@ -43,6 +43,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 	
 	//curTime := trxApplyService.core.HeadBlockTime()
 	//for test:
+	return true
 	curTime := common.Now()
 
 	if (curTime >= trx.Lifetime) {

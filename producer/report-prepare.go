@@ -22,8 +22,6 @@ func (r *Reporter) IsReady() bool {
 	r.state.SetCheckFlag(1) //TODO
 	if r.IsSynced(now) == false {
 		//TODO
-		//fmt.Println("is not synced")
-		//return false
 	}
 
 	slot := r.roleIntf.GetSlotAtTime(now)
@@ -37,11 +35,9 @@ func (r *Reporter) IsReady() bool {
 		return false
 	}
 	if (now <= object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
-		//fmt.Println("invalide times ", object.LastBlockTime)
 		return false
 	}
 	if r.IsMyTurn(now, slot) == false {
-		//fmt.Println("is not my turn")
 		return false
 	}
 	return true
@@ -65,11 +61,9 @@ func (r *ReportState) SetCheckFlag(flag uint32) {
 }
 func (r *Reporter) IsSynced(when uint64) bool {
 	if r.state.ReportEnable == true {
-		//fmt.Println("report enable == true")
 		return true
 	}
 	r.roleIntf.GetSlotTime(1)
-	//fmt.Println("current time", when, "slot time ", time)
 	if r.roleIntf.GetSlotTime(1) >= when {
 		r.state.ReportEnable = true
 		return true
