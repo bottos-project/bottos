@@ -123,7 +123,7 @@ type mgo_DeployCodeParam struct {
 
 type AssetInfo struct {
     UserName            string `json:“username”`
-    UssetName           string `json:"assetname"`
+    AssetName           string `json:"assetname"`
     AssetType           string `json:"assettype"`
     FeatureTag     string `json:"featuretag"`
     SamplePath     string `json:"samplepath"`
