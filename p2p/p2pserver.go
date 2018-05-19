@@ -11,30 +11,9 @@ import (
 	//"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"github.com/AsynkronIT/protoactor-go/actor"
+
 
 )
-
-type netServer struct {
-
-	port            uint16
-	addr            string
-
-	listener        net.Listener
-
-	seed_peer       []string
-
-	neighborList    []*net.UDPAddr
-	serverAddr      *net.UDPAddr
-
-	socket          *net.UDPConn
-
-	nodeMap         map[uint64]*peer
-
-	publicKey       string           //todo
-
-	netLock         sync.RWMutex
-}
 
 //
 type p2pServer struct{
@@ -52,29 +31,6 @@ type P2PConfig struct {
 	ServAddr    string
 	ServPort    uint16
 	PeerLst     []string
-}
-
-type peer struct {
-	peerName     string
-
-	publicKey    string
-
-	syncState    uint32
-	neighborNode []peer
-}
-
-//its function to sync the trx , blk and peer info with other p2p other
-type notifyManager struct {
-	//
-	p2p      *p2pServer
-
-	peerList []peer
-
-	stopSync chan bool
-	pid      *actor.PID
-
-	//for reading/writing peerlist
-	sync.RWMutex
 }
 
 //parse json configuration
@@ -98,8 +54,6 @@ func ReadFile(filename string) *P2PConfig{
 		fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
-
-	//fmt.Println("ReadFile pc = ",pc)
 
 	return &pc
 }
@@ -137,7 +91,6 @@ func (p2p *p2pServer) Init() error {
 		return errors.New("*ERROR* Failed to Listen !!! ")
 	}
 
-
 	return nil
 }
 
@@ -151,6 +104,8 @@ func (p2p *p2pServer) Start() error {
 	}
 
 	p2p.Init()
+
+	fmt.Println("p2pServer::Start() p2p.serv.socket = ",p2p.serv.socket)
 
 	if p2p.serv != nil {
 		//wait for connection from others
@@ -167,16 +122,17 @@ func (p2p *p2pServer) Start() error {
 }
 
 func (p2p *p2pServer) ActiveSeeds() error {
-	var i = 0
+	fmt.Println("p2pServer::ActiveSeeds()")
 	for {
 		select {
 		case <- p2p.time_interval.C:
-			fmt.Println("i = ",i)
+			p2p.ConnectSeeds()
 			p2p.ResetTimer()
 		}
 	}
 }
 
+//reset timer
 func  (p2p *p2pServer) ResetTimer ()  {
 	p2p.time_interval.Stop()
 	p2p.time_interval.Reset(time.Second * TIME_INTERVAL)
@@ -188,24 +144,28 @@ func (p2p *p2pServer) ConnectSeeds() error {
 
 	for _ , peer := range p2p.p2pConfig.PeerLst {
 		//fmt.Println(" peer = ",peer)
-		p2p.Connect(peer)  //todo connect remote seed peer , if it's successful , add it into remote_list
+		p2p.Connect(peer , false)  //todo connect remote seed peer , if it's successful , add it into remote_list
 	}
 
 	return nil
 }
 
 //
-func (p2p *p2pServer) Connect(addr string) error {
-	//fmt.Println("p2pServer::ConnectSeed()")
+func (p2p *p2pServer) Connect(addr string , isExist bool) error {
+	fmt.Println("p2pServer::ConnectSeed()")
+	//todo check if the new peer is in peer list
+
 	remoteAddr, err := net.ResolveUDPAddr("udp4", addr+":"+fmt.Sprint(p2p.serv.port))
 	if err != nil {
 		fmt.Println("*ERROR* Failed to create a remote server addr !!!")
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
-
-
 	fmt.Println("remoteAddr = ",remoteAddr)
+	//todo test connection with remote peer
+
+
+	//todo package remote peer info as "peer" struct
 
 	return nil
 }
@@ -216,99 +176,6 @@ func  (p2p *p2pServer) RunHeartBeat() error {
 	return nil
 }
 
-
-func NewNetServer(config *P2PConfig) *netServer {
-	if config == nil {
-		fmt.Println("*ERROR* Parmeter is empty !!!")
-		return nil
-	}
-
-	return &netServer{
-		addr: config.ServAddr,
-		port: config.ServPort,
-	}
-}
-
-//start listener
-func (serv *netServer) Start() error {
-	fmt.Println("netServer::Start()")
-
-	go serv.Listening()
-
-	return nil
-}
-
-//run accept
-func (serv *netServer) Listening() {
-
-	fmt.Println("netServer::Listening()")
-
-	//userlist should be packaged as a "peer" struct
-	userlist  := make([]*net.UDPAddr, 0, 10)
-
-
-	data := make([]byte, 4096)
-	for {
-		read, addr, err := serv.socket.ReadFromUDP(data)
-		if err != nil {
-			fmt.Println("*ERROR* Failed to receive the data : ", err)
-			continue
-		}
-
-		fmt.Println("data = ",data[0:read]," , addr = ",addr)
-		userlist = append(userlist, addr) //todo set a map[string]*Conn
-		fmt.Println("userlist = ",userlist)
-	}
-
-	return
-}
-
-
-func (notify *notifyManager) Start() {
-	fmt.Println("notifyManager::Start")
-	for {
-		//signal from actor
-		go notify.BroadcastTrx()
-		//signal from actor
-		go notify.BroadcastBlk()
-
-		go notify.SyncHash()
-		go notify.SyncPeer()
-
-		//receive
-	}
-}
-
-func (notify *notifyManager) BroadCast(buf []byte, isSync bool) {
-	notify.RLock()
-	defer notify.RUnlock()
-
-	for _ , node := range notify.peerList {
-		fmt.Println("node: ",node)
-	}
-
-	return
-}
-
-//sync trx info with other peer
-func (notify *notifyManager) BroadcastTrx() {
-	fmt.Println("notifyManager::BroadcastTrx")
-}
-
-//sync blk info with other peer
-func (notify *notifyManager) BroadcastBlk() {
-	fmt.Println("notifyManager::BroadcastBlk")
-}
-
-//sync blk's hash info with other peer
-func (notify *notifyManager) SyncHash() {
-	fmt.Println("notifyManager::SyncHash")
-}
-
-//sync peer info with other peer
-func (notify *notifyManager) SyncPeer() {
-	fmt.Println("notifyManager::SyncPeer")
-}
 
 
 
