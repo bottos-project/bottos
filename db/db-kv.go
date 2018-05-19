@@ -46,3 +46,7 @@ func (d *DBService) Close() {
 
 	d.kvRepo.CallClose()
 }
+func (d *DBService) Seek(prefixKey []byte) ([]interface{}, error) {
+
+	return d.kvRepo.CallSeek(prefixKey)
+}

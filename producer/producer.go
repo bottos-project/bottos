@@ -41,7 +41,6 @@ type Reporter struct {
 }
 type ReporterRepo interface {
 	Woker(Trxs []*types.Transaction) *types.Block
-	VerifyTrxs(Trxs []*types.Transaction) error
 	IsReady() bool
 }
 
@@ -54,7 +53,6 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := common.NowToSeconds()
 	slot := p.roleIntf.GetSlotAtTime(now)
-	//scheduledTime := p.roleIntf.GetSlotTime(slot)
 	accountName, err1 := p.roleIntf.GetCandidateBySlot(slot)
 	if err1 != nil {
 		return nil // errors.New("report Block failed")
@@ -66,37 +64,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	//fmt.Println("brocasting block", block)
 	return block
-} /*TODO
-func (p *Reporter) IsValid(block *blockchain.BlockData, receivedAt int64) (valid bool, err error) {
-	slot := p.getSlotAt(receivedAt)
-	requiredTS := p.GetCurrentSlotStart(receivedAt)
-
-	position := p.GetPosition(block.Signer)
-	if position != slot {
-		return false, fmt.Errorf("not in required slot: %d, producer position = %d", slot, position)
-	}
-	diff := requiredTS - block.GetTimestamp()
-	if diff < 0 {
-		diff = -diff
-	}
-	valid = diff < Epsilon
-	if !valid {
-		err = fmt.Errorf("incorrect timestamp: %d. Required: %d ± %v", block.GetTimestamp(), requiredTS, Epsilon)
-	}
-	return
-}*/
-func (p *Reporter) StartTag() error {
-	//p.core.
-
-	return nil
-
 }
-func (p *Reporter) VerifyTrxs(trxs []*types.Transaction) error {
-
-	return nil
-}
-
-//func reportBlock(reportTime time.Time, reportor role.Delegate) *types.Block {
 func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*types.Transaction) (*types.Block, error) {
 	head := types.NewHeader()
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
@@ -104,20 +72,17 @@ func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*typ
 	head.Timestamp = blockTime
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
-	//TODO
 	block.Header.DelegateSign = block.Sign("123").Bytes()
+
 	// If this block is last in a round, calculate the schedule for the new round
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
 		newSchedule := p.roleIntf.ElectNextTermDelegates()
 		fmt.Println("next term delgates", newSchedule)
-
 		currentState, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			return nil, err
 		}
 		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
-		//fmt.Println("DelegateChanges", block.Header.DelegateChanges)
 	}
-
 	return block, nil
 }
