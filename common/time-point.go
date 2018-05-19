@@ -52,11 +52,15 @@ func MeasureStart() uint64 {
 	return monotime.Now()
 }
 func Elapsed(t uint64) uint64 {
+	nanoElapse := MeasureStart() - t
+	microElapse := nanoElapse / 1000
+	fmt.Println(microElapse)
+	return microElapse
 
-	elapse := MeasureStart() - t
-	fmt.Println(elapse)
-	return elapse
+}
 
+func NanoToMicroSec(src uint64) uint64 {
+	return uint64(src / 1000)
 }
 
 func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
