@@ -11,7 +11,7 @@ type notifyManager struct {
 	//
 	p2p      *p2pServer
 
-	peerList []peer
+	peerList []Peer
 
 	stopSync chan bool
 	pid      *actor.PID
