@@ -36,6 +36,7 @@ import (
 	"github.com/bottos-project/core/config"
 	"github.com/bottos-project/core/db"
 	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/core/contract"
 	//trx "github.com/bottos-project/core/transaction"
 )
 
@@ -43,6 +44,7 @@ type BlockChain struct {
 	blockDb    *db.DBService
 	roleIntf   role.RoleInterface
 	blockCache *BlockChainCache
+	nc         contract.NativeContractInterface
 
 	handledBlockCB HandledBlockCallback
 
@@ -51,7 +53,7 @@ type BlockChain struct {
 	chainmu sync.RWMutex
 }
 
-func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (BlockChainInterface, error) {
+func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
 		return nil, err
@@ -61,16 +63,12 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (Bl
 		blockDb:    dbInstance,
 		blockCache: blockCache,
 		roleIntf:   roleIntf,
+		nc:			nc,
 	}
 
-	bc.genesisBlock = bc.GetBlockByNumber(0)
-	if bc.genesisBlock == nil {
-		var err error
-		fmt.Println("Write genesis block")
-		bc.genesisBlock, err = WriteGenesisBlock(dbInstance)
-		if err != nil {
-			return nil, err
-		}
+	err = bc.initChain()
+	if err != nil {
+		return nil, err
 	}
 
 	err = bc.LoadBlockDb()
@@ -82,6 +80,46 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface) (Bl
 	bc.initBlockCache()
 
 	return bc, nil
+}
+
+func (bc *BlockChain) initChain() error {
+	bc.genesisBlock = bc.GetBlockByNumber(0)
+	if bc.genesisBlock != nil {
+		return nil
+	}
+
+	header := &types.Header {
+		Version: 1,
+		Number: 0,
+		Timestamp: config.Genesis.GenesisTime,
+		Delegate: []byte(config.BOTTOS_CONTRACT_NAME),
+	}
+	trxs, err := contract.NativeContractInitChain(bc.roleIntf, bc.nc)
+	if err != nil {
+		return err
+	}
+	block := types.NewBlock(header, trxs)
+
+	// execute trxs
+	for _, trx := range trxs {
+		ctx := &contract.Context{RoleIntf: bc.roleIntf, Trx: trx}
+		err := bc.nc.ExecuteNativeContract(ctx)
+		if err != nil {
+			fmt.Println("NativeContractInitChain Error: ", trx, err)
+			//return err
+			break
+		}
+	}
+
+	err = WriteGenesisBlock(bc.blockDb, block)
+	if err != nil {
+		return  err
+	}
+
+	bc.genesisBlock = block
+	bc.roleIntf.ApplyPersistance(block)
+
+	return nil
 }
 
 func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
