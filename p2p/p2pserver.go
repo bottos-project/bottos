@@ -1,10 +1,14 @@
 package p2pserver
 
 import (
+	//"io"
 	"fmt"
 	"net"
 	"sync"
 	"errors"
+	//"crypto"
+	//"crypto/rand"
+	"crypto/rsa"
 	//"log"
 	//"encoding/binary"
 	//"encoding/hex"
@@ -60,6 +64,15 @@ func NewServ() *p2pServer{
 	fmt.Println("NewServ()")
 
 	p2pconfig := ReadFile(CONF_FILE)
+
+	/*
+	prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
+	*/
 
 	return &p2pServer{
 		serv:          NewNetServer(p2pconfig),
@@ -124,10 +137,54 @@ func  (p2p *p2pServer) RunHeartBeat() error {
 }
 
 
+type RsaKeyPair struct {
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+}
+
+// Key represents a crypto key that can be compared to another key
+type Key interface {
+	// Bytes returns a serialized, storeable representation of this key
+	Bytes() ([]byte, error)
+
+	// Equals checks whether two PubKeys are the same
+	Equals(Key) bool
+}
+
+// PrivKey represents a private key that can be used to generate a public key,
+// sign data, and decrypt data that was encrypted with a public key
+type PrivKey interface {
+	Key
+
+	// Cryptographically sign the given bytes
+	Sign([]byte) ([]byte, error)
+
+	// Return a public key paired with this private key
+	GetPublic() PubKey
+}
+
+type PubKey interface {
+	Key
+
+	// Verify that 'sig' is the signed hash of 'data'
+	Verify(data []byte, sig []byte) (bool, error)
+}
 
 
+/*
+// Generates a keypair
+func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, error) {
 
+	privateKey, err := rsa.GenerateKey(src, bits)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	publicKey := &privateKey.PublicKey
+
+	return &RsaKeyPair{privateKey:privateKey}, &RsaKeyPair{ publicKey:publicKey}, nil
+}
+*/
 
 
 

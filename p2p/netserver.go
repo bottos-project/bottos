@@ -1,14 +1,16 @@
 package p2pserver
 
 import (
-	"io"
+	//"io"
 	"fmt"
 	"net"
 	"sync"
 	"time"
 	"errors"
 	"strings"
-	"crypto/sha1"
+	//"crypto/sha1"
+	"hash/fnv"
+	"encoding/json"
 )
 
 type netServer struct {
@@ -33,6 +35,7 @@ type netServer struct {
 	netLock         sync.RWMutex
 }
 
+
 func NewNetServer(config *P2PConfig) *netServer {
 	if config == nil {
 		fmt.Println("*ERROR* Parmeter is empty !!!")
@@ -43,6 +46,7 @@ func NewNetServer(config *P2PConfig) *netServer {
 		config:        config,
 		addr:          config.ServAddr,
 		port:          config.ServPort,
+		peerMap:       make(map[uint64]*Peer),
 		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
@@ -59,12 +63,13 @@ func (serv *netServer) Start() error {
 //run accept
 func (serv *netServer) Listening() {
 
-	fmt.Println("netServer::Listening()")
+	fmt.Println("netServer::Listening() ")
 
 	//userlist should be packaged as a "peer" struct
-	peer_list  := make([]*net.UDPAddr, 0, 10)
+	//peer_list  := make([]*net.UDPAddr, 0, 10)
 
 	data := make([]byte, 4096)
+	var msg message
 	for {
 		read, addr, err := serv.socket.ReadFromUDP(data)
 		if err != nil {
@@ -72,11 +77,42 @@ func (serv *netServer) Listening() {
 			continue
 		}
 
-		//In here . it need use different handler function according to requirement, eg. handle login/income blk.ctx and so on
+		json.Unmarshal(data , msg)
+		switch msg.msg_type {
+		case request:
+			//package a response msg to response the remote peer
+			rsp := message {
+				src:      serv.addr,
+				dst:      msg.src,
+				msg_type: response,
+			}
 
-		fmt.Println("data = ",data[0:read]," , addr = ",addr)
-		peer_list = append(peer_list, addr) //todo set a map[string]*Conn
-		fmt.Println("peer_list = ",peer_list)
+			data , err = json.Marshal(rsp)
+			if err != nil{
+				fmt.Println("*WRAN* Failed to package the response message : ", err)
+			}
+
+			fmt.Println("netServer::Listening() request data = ",data , " , read = ",read , " , addr = ",addr)
+			//serv.socket.WriteToUDP()
+
+		case response:
+
+			/*
+			//In here . it need use different handler function according to requirement, eg. handle login/income blk.ctx and so on
+			fmt.Println("data = ",data[0:read]," , addr = ",addr)
+			peer_list = append(peer_list, addr) //todo set a map[string]*Conn
+			fmt.Println("peer_list = ",peer_list)
+			*/
+			//package remote peer info as "peer" struct and add it into peer list
+			addr_port := msg.dst + ":" + fmt.Sprint(serv.port)
+			peer := NewPeer(msg.dst , addr)
+			peer_identify := Hash(addr_port)
+			serv.peerMap[uint64(peer_identify)] = peer
+
+			fmt.Println("netServer::Listening() response data = ",data , " , read = ",read , " , addr = ",addr)
+		}
+
+
 	}
 
 	return
@@ -101,18 +137,30 @@ func  (serv *netServer) ResetTimer ()  {
 
 //connect seed during start p2p server
 func (serv *netServer) ConnectSeeds() error {
-	fmt.Println("p2pServer::ConnectSeed()")
 
+	fmt.Println("p2pServer::ConnectSeed()")
 	for _ , peer := range serv.config.PeerLst {
 		fmt.Println("try to connect peer: ",peer)
-		serv.Connect(peer , false)  //todo connect remote seed peer , if it's successful , add it into remote_list
+
+		var msg = message {
+			src:      serv.addr,
+			dst:      peer,
+			msg_type: request,
+		}
+
+		req , err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		serv.Connect(peer , req , false)  //todo connect remote seed peer , if it's successful , add it into remote_list
 	}
 
 	return nil
 }
 
 //to connect certain peer
-func (serv *netServer) Connect(addr string , isExist bool) error {
+func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
 	fmt.Println("p2pServer::ConnectSeed()")
 
 	//check if the new peer is in peer list
@@ -127,22 +175,32 @@ func (serv *netServer) Connect(addr string , isExist bool) error {
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
+	/*
 	//test connection with remote peer
-	var TST_DAT []byte
-	_ , err = serv.socket.WriteToUDP(TST_DAT , remoteAddr)
+	var msg = message {
+		src:      serv.addr,
+		dst:      addr,
+		msg_type: request,
+	}
+
+	req , err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	*/
+
+	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
 		fmt.Println("*ERROR* Failed to send Test message to remote peer !!!")
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
 
-	//todo package remote peer info as "peer" struct and add it into peer list
+	/*
+	//package remote peer info as "peer" struct and add it into peer list
 	peer := NewPeer(addr)
-
-	sha_handler := sha1.New()
-	io.WriteString(sha_handler , addr_port)
-
-	sha_handler.Sum(nil)
-	serv.peerMap[1] = peer
+	peer_identify := Hash(addr_port)
+	serv.peerMap[uint64(peer_identify)] = peer
+	*/
 
 	return nil
 }
@@ -158,3 +216,8 @@ func (serv *netServer) IsExist(addr string , isExist bool) bool {
 	return false
 }
 
+func Hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}

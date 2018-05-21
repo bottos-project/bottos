@@ -1,17 +1,23 @@
 package p2pserver
 
+import  (
+	"net"
+)
+
 type Peer struct {
 	peerAddr     string
-
 	publicKey    string
+
+	peer_sock    *net.UDPAddr
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-func NewPeer(addr string) *Peer {
+func NewPeer(addr_name string , addr_sock *net.UDPAddr) *Peer {
 	return &Peer{
-		peerAddr:   addr,
+		peerAddr:   addr_name,
+		peer_sock:  addr_sock,
 		syncState:  0,
 	}
 }
