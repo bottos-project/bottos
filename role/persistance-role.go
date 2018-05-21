@@ -167,15 +167,12 @@ type DataDealReq struct {
 
 type PresaleInfo struct {
     UserName string    `json:"username"`
-    SessionId string   `json:"sessionid"`
     AssetId string     `json:"assetid"`
-    AssetName string   `json:"assetname"`
     DataReqId string   `json:"datareqid"`
-    DataReqName string `json:"datareqname"`
     Consumer string    `json:"consumer"`
-    Random_num uint64  `json:"randomnum"`
-    Signature string   `json:"signature"`
+    OpType   uint32    `json:"optype"` 
 }
+
 
 type PresaleReq struct {
     DataPresaleId string   `json:"datapresaleid"`
@@ -446,7 +443,6 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
     if trx.Contract != config.BOTTOS_CONTRACT_NAME {
         return errors.New("Invalid contract param")
     }
-    
     if trx.Method == "transfer" {
         data := &transferparam{}
         err :=  msgpack.Unmarshal(trx.Param, data)
@@ -487,8 +483,6 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
         if err != nil {
             return err
         }
-        fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
-            
         //accountInfos, err := GetAccount(data.Name)
             
         NewAccount := &AccountInfo {
@@ -518,7 +512,6 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()
 	}
-    
 	insertBlockInfoRole(ldb, block, oids)
     insertTxInfoRole(r, ldb, block, oids)
     
