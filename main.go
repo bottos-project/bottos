@@ -46,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	chain, err := chain.CreateBlockChain(dbInst, roleIntf)
+	chain, err := chain.CreateBlockChain(dbInst, roleIntf, nc)
 	if err != nil {
 		fmt.Println("Create BlockChain error: ", err)
 		os.Exit(1)

@@ -31,7 +31,6 @@ import (
 	"github.com/bottos-project/core/common"
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/config"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -83,24 +82,12 @@ func GetLastBlock(db *db.DBService) *types.Block {
 	return GetBlock(db, common.BytesToHash(data))
 }
 
-func WriteGenesisBlock(blockDb *db.DBService) (*types.Block, error) {
-	// TODO make block and write to db
-	header := &types.Header{
-		PrevBlockHash:  []byte{},
-		Number:         0,
-		Timestamp:      config.Genesis.GenesisTime,
-		MerkleRoot:     []byte{},
-		Delegate:       []byte{},
-		DelegateSign:   []byte{},
+func WriteGenesisBlock(db *db.DBService, block *types.Block) error {
+	if err := WriteBlock(db, block); err != nil {
+		return err
 	}
 
-	block := types.NewBlock(header, []*types.Transaction{})
-
-	if err := WriteBlock(blockDb, block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
+	return nil
 }
 
 func writeHead(db *db.DBService, block *types.Block) error {

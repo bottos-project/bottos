@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
-	"time"
+	//"time"
 
 	"github.com/bottos-project/core/common/types"
 	"github.com/bottos-project/core/config"
@@ -18,8 +18,6 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 		return nil, err
 	}
 	roleIntf.SetScheduleDelegate(&role.ScheduleDelegate{big.NewInt(2)})
-	CreateNativeContractAccount(roleIntf)
-	NativeContractInitChain(roleIntf, intf)
 
 	return intf, nil
 }
@@ -35,7 +33,12 @@ func newTransaction(contract string, method string, param []byte) *types.Transac
 	return trx
 }
 
-func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractInterface) error {
+func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractInterface) ([]*types.Transaction, error) {
+	err := CreateNativeContractAccount(roleIntf)
+	if err != nil {
+		return nil, err
+	}
+
 	var trxs []*types.Transaction
 
 	// construct trxs
@@ -73,20 +76,10 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 		trxs = append(trxs, trx)
 	}
 
-	// execute trxs
-	for _, trx := range trxs {
-		ctx := &Context{RoleIntf: roleIntf, Trx: trx}
-		err := ncIntf.ExecuteNativeContract(ctx)
-		if err != nil {
-			fmt.Println("NativeContractInitChain Error: ", trx, err)
-			//return err
-			break
-		}
-	}
-
 	// init CoreState delegates
 	coreState, _ := roleIntf.GetCoreState()
-	for i = 1; i <= config.INIT_DELEGATE_NUM; i++ {
+	i = 1
+	for i = 1; i <= config.BLOCKS_PER_ROUND; i++ {
 		name := config.Genesis.InitDelegate.Name
 		name = name + strconv.Itoa(int(i))
 
@@ -94,7 +87,9 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 	}
 	roleIntf.SetCoreState(coreState)
 
-	return nil
+	fmt.Println("NativeContractInitChain: ", coreState)
+
+	return trxs, nil
 }
 
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
@@ -106,7 +101,7 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 
 	bto := &role.Account{
 		AccountName: config.BOTTOS_CONTRACT_NAME,
-		CreateTime:  uint64(time.Now().Unix()),
+		CreateTime:  config.Genesis.GenesisTime,
 	}
 	roleIntf.SetAccount(bto.AccountName, bto)
 
