@@ -151,10 +151,7 @@ type UserLogin struct {
 
 type DataDealnfo struct {
     UserName     string `json:"username"`
-    SessionId    string `json:”sessionid“`
     AssetId      string `json:"assetid"`
-    Random_num   uint64 `json:"random_num"`
-    Signature    uint64 `json:"signature"`
 }
 
 type DataDealReq struct {
