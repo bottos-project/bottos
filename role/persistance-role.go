@@ -43,13 +43,13 @@ type AccountInfo struct {
 	Balance          uint32        `bson:"bto_balance"`
 	StakedBalance    uint64        `bson:"staked_balance"`
 	UnstakingBalance string        `bson:"unstaking_balance"`
-	PublicKey        []byte        `bson:"public_key"`
-	VMType           byte          `bson:"vm_type"`
-	VMVersion        byte          `bson:"vm_version"`
-	CodeVersion      common.Hash   `bson:"code_version"`
+	PublicKey        string        `bson:"public_key"`
+	//VMType           byte          `bson:"vm_type"`
+	//VMVersion        byte          `bson:"vm_version"`
+	//CodeVersion      common.Hash   `bson:"code_version"`
 	CreateTime       time.Time     `bson:"create_time"`
-	ContractCode     []byte        `bson:"contract_code"`
-	ContractAbi      []byte        `bson:"abi"`
+	//ContractCode     []byte        `bson:"contract_code"`
+	//ContractAbi      []byte        `bson:"abi"`
 	UpdatedTime      time.Time     `bson:"updated_time"`
 }
 type BlockInfo struct {
@@ -126,15 +126,12 @@ type AssetInfo struct {
     AssetName           string `json:"assetname"`
     AssetType           string `json:"assettype"`
     FeatureTag     string `json:"featuretag"`
-    SamplePath     string `json:"samplepath"`
     SampleHash     string `json:"samplehash"`
-    StoragePath    string `json:"storagepath"`      // not enough for multislices of big files
     StorageHash    string `json:"storagehash"`
     ExpireTime          uint32 `json:"expiretime"`
+    OpType              uint32 `json:"optype"`
     Price               uint64 `json:"price"`
     Description         string `json:"description"`
-    UploadDate          uint32 `json:"uploaddate"`
-    Signature           string `json:"signature"`
 }
 
 type RegAssetReq struct {
@@ -181,13 +178,13 @@ type PresaleReq struct {
 
 type DataFileInfo struct {
     UserName    string  `json:"username"` 
-    SessionId   string `json:"sessonid"`
     FileSize    uint64 `json:"filesize"`
     FileName    string `json:"filename"`
     FilePolicy  string `json:"filepolicy"`
-    AuthPath    string `json:"authpath"`
     FileNumber  uint64 `json:"filenumber"`
-    Signature   string `json:"signature"`
+    Simorass    uint32 `json:"simorass"`
+    OpType      uint32 `json:"optype"`
+    StoreAddr   string `json:"storeaddr"`
 }
 
 type DataFileRegReq struct {
@@ -484,14 +481,14 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
             return err
         }
         //accountInfos, err := GetAccount(data.Name)
-            
+        
         NewAccount := &AccountInfo {
             ID:               oid,
             AccountName:      data.Name,
             Balance:          0,//uint32        `bson:"bto_balance"`
             StakedBalance:    0,//uint64        `bson:"staked_balance"`
             UnstakingBalance: "",//             `bson:"unstaking_balance"`
-            PublicKey:        []byte(data.Pubkey),
+            PublicKey:        data.Pubkey,
            // VMType:           0,// byte          `bson:"vm_type"`
            // VMVersion:        0, //byte          `bson:"vm_version"`
             //CodeVersion:      common.BytesToHash(123), //common.Hash   `bson:"code_version"`
