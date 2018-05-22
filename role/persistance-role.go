@@ -97,6 +97,11 @@ type newaccountparam struct {
     Pubkey      string  `json: pubkey`
 }
 
+type SetDelegateParam struct {
+    Name        string  `json: name`
+    Pubkey      string  `json: pubkey`
+}
+
 type TParam interface {
     //Accountparam
     //Transferparam transferpa
@@ -261,12 +266,14 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
     if Contract == "bottos" {
         if Method == "newaccount" {
             decodedParam = &newaccountparam {}
+        } else if Method == "setdelegate" {
+            decodedParam = &SetDelegateParam {}
         } else if Method == "transfer" {
             decodedParam = &transferparam {}
         } else if Method == "deploycode" {
             decodedParam = &DeployCodeParam {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
             return nil, errors.New("Not supported")
         } 
     } else if Contract == "usermng" {
@@ -371,7 +378,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 	if len(oids) != len(block.Transactions) {
 		return errors.New("invalid param")
 	}
-
+    fmt.Printf("insertTxInfoRole:len(block.Transactions): %d\n", len(block.Transactions))
 	for i, trx := range block.Transactions {
 		newtrx := &TxInfo{
 			ID:            oids[i],
@@ -509,7 +516,7 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 	insertBlockInfoRole(ldb, block, oids)
     insertTxInfoRole(r, ldb, block, oids)
     
-    fmt.Printf("apply to mongodb block hash %x", block.Hash())
+    fmt.Printf("apply to mongodb block hash %x, block number %d", block.Hash(), block.Header.Number)
 	return nil
 }
 
