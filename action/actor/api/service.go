@@ -167,13 +167,13 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 
 	response := res.(*message.QueryTrxResp)
 	if response.Trx == nil {
-		resp.Errcode = 2
-		resp.Msg = "Transaction not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiTrxNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiTrxNotFound)
 		return nil
 	}
 
 	resp.Result = convertIntTrxToApiTrx(response.Trx)
-	resp.Errcode = 0
+	resp.Errcode = uint32(bottosErr.ErrNoError)
 	return nil
 }
 
@@ -184,14 +184,15 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
-		resp.Errcode = 1
+		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
 		return nil
 	}
 
 	response := res.(*message.QueryBlockResp)
 	if response.Block == nil {
-		resp.Errcode = 2
-		resp.Msg = "Block not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
 		return nil
 	}
 
@@ -214,13 +215,15 @@ func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 	msgReq := &message.QueryChainInfoReq{}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
-		resp.Errcode = 1
+		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		return nil
 	}
 
 	response := res.(*message.QueryChainInfoResp)
 	if response.Error != nil {
-		resp.Errcode = 2
+		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		return nil
 	}
 
@@ -239,22 +242,22 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 	name := req.AccountName
 	account, err := h.env.RoleIntf.GetAccount(name)
 	if err != nil {
-		resp.Errcode = 1
-		resp.Msg = "Account Not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
 	balance, err := h.env.RoleIntf.GetBalance(name)
 	if err != nil {
-		resp.Errcode = 1
-		resp.Msg = "Balance Not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
 	stakedBalance, err := h.env.RoleIntf.GetStakedBalance(name)
 	if err != nil {
-		resp.Errcode = 1
-		resp.Msg = "Staked Balance Not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
@@ -275,8 +278,8 @@ func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 	key := req.Key
 	value, err := h.env.ContractDB.GetStrValue(contract, object, key)
 	if err != nil {
-		resp.Errcode = 1
-		resp.Msg = "KeyValue Not Found"
+		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
 		return nil
 	}
 
