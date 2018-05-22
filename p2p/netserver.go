@@ -40,7 +40,6 @@ type netServer struct {
 
 func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
-
 }
 
 func NewNetServer(config *P2PConfig) *netServer {
@@ -69,11 +68,12 @@ func (serv *netServer) Start() error {
 
 //run accept
 func (serv *netServer) Listening() {
-	fmt.Println("netServer::Listening() tcp")
-
+	fmt.Println("netServer::Listening()")
+	//listener, err := net.Listen("tcp", serv.addr+":"+fmt.Sprint(serv.port))
 	listener, err := net.Listen("tcp", ":"+fmt.Sprint(serv.port))
 	if err != nil {
-		// handle error
+		fmt.Println("*ERROR* Failed to listen at port: "+fmt.Sprint(serv.port))
+		return
 	}
 
 	defer listener.Close()
@@ -84,6 +84,7 @@ func (serv *netServer) Listening() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
+			fmt.Println("netServer::Listening() Failed to accept")
 			continue
 		}
 
@@ -99,29 +100,19 @@ func (serv *netServer) Listening() {
 			continue
 		}
 
-		serv.HandleMsg(conn , &msg)
-		//str:= bytesToString(data[0:len])
-		//fmt.Println("netServer::Listening() ----- Unmarshal err = ",err,", msg = " , msg," , data[0:len] = ",data[0:len])
-		//fmt.Println("netServer::Listening() ----- Unmarshal err = ",err,", str = " , str," , data[0:len]")
+		go serv.HandleMsg(conn , &msg)
 	}
 
 }
 
 //run accept
 func (serv *netServer) HandleMsg(conn net.Conn , msg *message) {
-
+	//defer conn.Close()
 	fmt.Println("netServer::HandleMsg() ")
-
-	//userlist should be packaged as a "peer" struct
-	//peer_list  := make([]*net.UDPAddr, 0, 10)
-
 
 	switch msg.MsgType {
 	case request:
 
-		fmt.Println("request")
-
-		//package a response msg to response the remote peer
 		rsp := message {
 			Src:      serv.addr,
 			Dst:      msg.Src,
@@ -133,30 +124,40 @@ func (serv *netServer) HandleMsg(conn net.Conn , msg *message) {
 			fmt.Println("*WRAN* Failed to package the response message : ", err)
 		}
 
-		//fmt.Println("netServer::Listening() request data = ",data , " , read = ",read , " , addr = ",addr,", msg = ",msg)
-		//serv.socket.WriteToUDP()
-		serv.Connect(msg.Dst , data , false)
+		//fmt.Println("netServer::HandleMsg() request len(data) = ",len(data) , ", rsp = ",rsp," , conn.RemoteAddr = ",conn.RemoteAddr()," , conn.LocalAddr = ",conn.LocalAddr())
 
-	case response:
+		//create a new conn to response the remote peer
+		newconn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+		if err != nil {
+			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+			return
+		}
 
-		fmt.Println("response")
+		len , err := newconn.Write(data)
+		if err != nil {
+			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+			return
+		}
 
-			/*
-			//In here . it need use different handler function according to requirement, eg. handle login/income blk.ctx and so on
-			fmt.Println("data = ",data[0:read]," , addr = ",addr)
-			peer_list = append(peer_list, addr) //todo set a map[string]*Conn
-			fmt.Println("peer_list = ",peer_list)
-			*/
+		if len < 0 {
+			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+			return
+		}
 
 		//package remote peer info as "peer" struct and add it into peer list
 		addr_port := msg.Dst + ":" + fmt.Sprint(serv.port)
 		peer := NewPeer(msg.Dst , &conn)
 		peer_identify := Hash(addr_port)
 		serv.peerMap[uint64(peer_identify)] = peer
+	case response:
 
-		fmt.Println("netServer::Listening() response data =  , msg.Dst = ",msg.Dst)
+		fmt.Println("response - netServer::Listening() serv.peerMap = ",serv.peerMap)
+		/*
+		for key , peer := range serv.peerMap {
+			fmt.Println("msg.Dst = ",msg.Dst," , key = ",key," , peer = ",peer)
+		}
+		*/
 	}
-
 
 	return
 }
@@ -183,9 +184,9 @@ func (serv *netServer) ConnectSeeds() error {
 
 	fmt.Println("p2pServer::ConnectSeed()")
 	for _ , peer := range serv.config.PeerLst {
-
 		//check if the new peer is in peer list
 		if serv.IsExist(peer , false) {
+			fmt.Println("the Peer had existed !")
 			continue
 		}
 
@@ -194,8 +195,6 @@ func (serv *netServer) ConnectSeeds() error {
 			Dst:      peer,
 			MsgType:  request,
 		}
-
-		fmt.Println("try to connect peer: ",peer," , serv.peerMap = ",serv.peerMap)
 
 		req , err := json.Marshal(msg)
 		if err != nil {
@@ -208,18 +207,14 @@ func (serv *netServer) ConnectSeeds() error {
 	return nil
 }
 
-//to connect certain peer
-func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
-	fmt.Println("p2pServer::ConnectSeed() addr = ",addr)
-
-	addr_port := addr+":"+fmt.Sprint(serv.port)
-	conn , err := net.Dial("tcp", addr_port)
-	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
-		return err
+//to connect specified peer
+func (serv *netServer) ConnectTo (conn net.Conn , msg []byte , isExist bool) error {
+	fmt.Println("p2pServer::ConnectTo()")
+	if conn == nil {
+		return errors.New("*ERROR* Invalid parameter !!!")
 	}
 
-	_  , err = conn.Write(msg)
+	_  , err := conn.Write(msg)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
@@ -228,9 +223,32 @@ func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
 	return nil
 }
 
+//to connect to certain peer
+func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
+	addr_port := addr+":"+fmt.Sprint(serv.port)
+	//fmt.Println("p2pServer::Connect() addr_port = ",addr_port)
 
-//to connect certain peer
-func (serv *netServer) Connect2(addr string , msg []byte , isExist bool) error {
+	conn , err := net.Dial("tcp", addr_port)
+	if err != nil {
+		//fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		return err
+	}
+
+	//len , err := conn.Write(msg)
+	_ , err = conn.Write(msg)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return err
+	}
+
+	//fmt.Println("p2pServer::Connect() len = ",len)
+
+	return nil
+}
+
+
+//to connect certain peer with udp
+func (serv *netServer) ConnectUDP(addr string , msg []byte , isExist bool) error {
 	fmt.Println("p2pServer::ConnectSeed() addr = ",addr)
 
 	addr_port := addr+":"+fmt.Sprint(serv.port)
