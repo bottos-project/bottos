@@ -9,15 +9,16 @@ type Peer struct {
 	publicKey    string
 
 	peer_sock    *net.UDPAddr
+	conn         *net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-func NewPeer(addr_name string , addr_sock *net.UDPAddr) *Peer {
+func NewPeer(addr_name string , conn *net.Conn) *Peer {
 	return &Peer{
 		peerAddr:   addr_name,
-		peer_sock:  addr_sock,
+		conn:       conn,
 		syncState:  0,
 	}
 }

@@ -8,9 +8,12 @@ import (
 	"time"
 	"errors"
 	"strings"
+	//"reflect"
+	"unsafe"
 	//"crypto/sha1"
 	"hash/fnv"
 	"encoding/json"
+	//"github.com/bottos-project/core/contract/msgpack"
 )
 
 type netServer struct {
@@ -35,6 +38,10 @@ type netServer struct {
 	netLock         sync.RWMutex
 }
 
+func bytesToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+
+}
 
 func NewNetServer(config *P2PConfig) *netServer {
 	if config == nil {
@@ -62,40 +69,77 @@ func (serv *netServer) Start() error {
 
 //run accept
 func (serv *netServer) Listening() {
+	fmt.Println("netServer::Listening() tcp")
 
-	fmt.Println("netServer::Listening() ")
+	listener, err := net.Listen("tcp", ":"+fmt.Sprint(serv.port))
+	if err != nil {
+		// handle error
+	}
+
+	defer listener.Close()
+
+	data := make([]byte, 4096)
+	var msg message
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+
+		len , err := conn.Read(data)
+		if err != nil {
+			fmt.Println("*WRAN* Can't read data from remote peer !!!")
+			continue
+		}
+
+		err = json.Unmarshal(data[0:len] , &msg)
+		if err != nil {
+			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+			continue
+		}
+
+		serv.HandleMsg(conn , &msg)
+		//str:= bytesToString(data[0:len])
+		//fmt.Println("netServer::Listening() ----- Unmarshal err = ",err,", msg = " , msg," , data[0:len] = ",data[0:len])
+		//fmt.Println("netServer::Listening() ----- Unmarshal err = ",err,", str = " , str," , data[0:len]")
+	}
+
+}
+
+//run accept
+func (serv *netServer) HandleMsg(conn net.Conn , msg *message) {
+
+	fmt.Println("netServer::HandleMsg() ")
 
 	//userlist should be packaged as a "peer" struct
 	//peer_list  := make([]*net.UDPAddr, 0, 10)
 
-	data := make([]byte, 4096)
-	var msg message
-	for {
-		read, addr, err := serv.socket.ReadFromUDP(data)
-		if err != nil {
-			fmt.Println("*ERROR* Failed to receive the data : ", err)
-			continue
+
+	switch msg.MsgType {
+	case request:
+
+		fmt.Println("request")
+
+		//package a response msg to response the remote peer
+		rsp := message {
+			Src:      serv.addr,
+			Dst:      msg.Src,
+			MsgType:  response,
 		}
 
-		json.Unmarshal(data , msg)
-		switch msg.msg_type {
-		case request:
-			//package a response msg to response the remote peer
-			rsp := message {
-				src:      serv.addr,
-				dst:      msg.src,
-				msg_type: response,
-			}
+		data , err := json.Marshal(rsp)
+		if err != nil{
+			fmt.Println("*WRAN* Failed to package the response message : ", err)
+		}
 
-			data , err = json.Marshal(rsp)
-			if err != nil{
-				fmt.Println("*WRAN* Failed to package the response message : ", err)
-			}
+		//fmt.Println("netServer::Listening() request data = ",data , " , read = ",read , " , addr = ",addr,", msg = ",msg)
+		//serv.socket.WriteToUDP()
+		serv.Connect(msg.Dst , data , false)
 
-			fmt.Println("netServer::Listening() request data = ",data , " , read = ",read , " , addr = ",addr)
-			//serv.socket.WriteToUDP()
+	case response:
 
-		case response:
+		fmt.Println("response")
 
 			/*
 			//In here . it need use different handler function according to requirement, eg. handle login/income blk.ctx and so on
@@ -103,17 +147,16 @@ func (serv *netServer) Listening() {
 			peer_list = append(peer_list, addr) //todo set a map[string]*Conn
 			fmt.Println("peer_list = ",peer_list)
 			*/
-			//package remote peer info as "peer" struct and add it into peer list
-			addr_port := msg.dst + ":" + fmt.Sprint(serv.port)
-			peer := NewPeer(msg.dst , addr)
-			peer_identify := Hash(addr_port)
-			serv.peerMap[uint64(peer_identify)] = peer
 
-			fmt.Println("netServer::Listening() response data = ",data , " , read = ",read , " , addr = ",addr)
-		}
+		//package remote peer info as "peer" struct and add it into peer list
+		addr_port := msg.Dst + ":" + fmt.Sprint(serv.port)
+		peer := NewPeer(msg.Dst , &conn)
+		peer_identify := Hash(addr_port)
+		serv.peerMap[uint64(peer_identify)] = peer
 
-
+		fmt.Println("netServer::Listening() response data =  , msg.Dst = ",msg.Dst)
 	}
+
 
 	return
 }
@@ -140,13 +183,19 @@ func (serv *netServer) ConnectSeeds() error {
 
 	fmt.Println("p2pServer::ConnectSeed()")
 	for _ , peer := range serv.config.PeerLst {
-		fmt.Println("try to connect peer: ",peer)
+
+		//check if the new peer is in peer list
+		if serv.IsExist(peer , false) {
+			continue
+		}
 
 		var msg = message {
-			src:      serv.addr,
-			dst:      peer,
-			msg_type: request,
+			Src:      serv.addr,
+			Dst:      peer,
+			MsgType:  request,
 		}
+
+		fmt.Println("try to connect peer: ",peer," , serv.peerMap = ",serv.peerMap)
 
 		req , err := json.Marshal(msg)
 		if err != nil {
@@ -161,12 +210,28 @@ func (serv *netServer) ConnectSeeds() error {
 
 //to connect certain peer
 func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
-	fmt.Println("p2pServer::ConnectSeed()")
+	fmt.Println("p2pServer::ConnectSeed() addr = ",addr)
 
-	//check if the new peer is in peer list
-	if serv.IsExist(addr , isExist) {
-		return nil
+	addr_port := addr+":"+fmt.Sprint(serv.port)
+	conn , err := net.Dial("tcp", addr_port)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		return err
 	}
+
+	_  , err = conn.Write(msg)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return err
+	}
+
+	return nil
+}
+
+
+//to connect certain peer
+func (serv *netServer) Connect2(addr string , msg []byte , isExist bool) error {
+	fmt.Println("p2pServer::ConnectSeed() addr = ",addr)
 
 	addr_port := addr+":"+fmt.Sprint(serv.port)
 	remoteAddr, err := net.ResolveUDPAddr("udp4", addr_port)
@@ -191,7 +256,7 @@ func (serv *netServer) Connect(addr string , msg []byte , isExist bool) error {
 
 	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
-		fmt.Println("*ERROR* Failed to send Test message to remote peer !!!")
+		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
 
