@@ -27,6 +27,7 @@ func (cli *CLI) printUsage() {
 	fmt.Println("  newaccount -name NAME -pubkey PUBKEY - Create a New account")
 	fmt.Println("  transfer -from FROM -to TO -amount AMOUNT - transfer bottos from FROM account to TO")
 	fmt.Println("  deploycode -contract NAME -wasm PATH - deploy contract NAME from .wasm file")
+	fmt.Println("  deployabi -contract NAME -abi PATH - deploy contract NAME from .abi file")
 	fmt.Println("")
 }
 
@@ -214,6 +215,69 @@ func (cli *CLI) deploycode(name string, path string) {
 	cli.jsonPrint(b)
 }
 
+
+func (cli *CLI) deployabi(name string, path string) {
+	chainInfo, err := cli.queryChainInfo()
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+
+	_, err = ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println("Open abi file error: ", err)
+		return
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Println("Open abi file error: ", err)
+		return
+	}
+
+	defer f.Close()
+
+	fi, err := f.Stat()
+	if err != nil {
+		fmt.Println("Open abi file error: ", err)
+		return
+	}
+
+	type DeployAbiParam struct {
+		Name		 string		 `json:"name"`
+		ContractAbi  []byte      `json:"contract_abi"`
+	}
+
+	dcp := &DeployAbiParam{
+		Name: name,
+	}
+	dcp.ContractAbi = make([]byte, fi.Size())
+	f.Read(dcp.ContractAbi)
+	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
+	param, _ := msgpack.Marshal(dcp)
+
+	trx1 := &coreapi.Transaction{
+		Version:1,
+		CursorNum: chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime: chainInfo.HeadBlockTime+1000,
+		Sender:"bottos",
+		Contract:"bottos",
+		Method:"deployabi",
+		Param: BytesToHex(param),
+		SigAlg:1,
+		Signature:string(""),
+	}
+	deployAbiRsp, err := cli.client.PushTrx(context.TODO(), trx1)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	b, _ := json.Marshal(deployAbiRsp)
+	cli.jsonPrint(b)
+}
+
 // Run parses command line arguments and processes commands
 func (cli *CLI) Run() {
 	cli.validateArgs()
@@ -231,6 +295,10 @@ func (cli *CLI) Run() {
 	deployCodeName := deployCodeCmd.String("contract", "", "contract name")
 	deployCodePath := deployCodeCmd.String("wasm", "", ".wasm file path")
 
+	deployAbiCmd := flag.NewFlagSet("deployabi", flag.ExitOnError)
+	deployAbiName := deployAbiCmd.String("contract", "", "contract name")
+	deployAbiPath := deployAbiCmd.String("abi", "", ".abi file path")
+
 	switch os.Args[1] {
 	case "transfer":
 		err := transferCmd.Parse(os.Args[2:])
@@ -244,6 +312,11 @@ func (cli *CLI) Run() {
 		}
 	case "deploycode":
 		err := deployCodeCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "deployabi":
+		err := deployAbiCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -277,6 +350,15 @@ func (cli *CLI) Run() {
 		}
 
 		cli.deploycode(*deployCodeName, *deployCodePath)
+	}
+
+	if deployAbiCmd.Parsed() {
+		if *deployAbiName == "" || *deployAbiPath == "" {
+			deployAbiCmd.Usage()
+			os.Exit(1)
+		}
+
+		cli.deployabi(*deployAbiName, *deployAbiPath)
 	}
 }
 
