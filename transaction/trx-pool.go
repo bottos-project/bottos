@@ -69,7 +69,8 @@ func (self *TrxPool) expirationCheckLoop() {
 
 			var currentTime = common.Now()
 			for trxHash := range self.pending {				
-				if (currentTime >= (self.pending[trxHash].Lifetime)) {					
+				if (currentTime >= (self.pending[trxHash].Lifetime)) {				
+					fmt.Println("remove expirate trx, hash is: ", trxHash,"curtime",currentTime,"lifeTime",self.pending[trxHash].Lifetime )	
 					delete(self.pending, trxHash)					
 				}				
 			}
@@ -89,6 +90,8 @@ func (self *TrxPool) addTransaction(trx *types.Transaction) {
 
 	trxHash := trx.Hash()
 	self.pending[trxHash] = trx
+
+	fmt.Println("add trx to pool succ, hash is: ",trx.Hash())
 }
 
 func (self *TrxPool) Stop() {	
@@ -181,7 +184,7 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 	rsp := &message.GetAllPendingTrxRsp{}
 	for trxHash := range self.pending {
-
+        fmt.Println("get all trx, add trx to rsp, hash is: ", self.pending[trxHash].Hash())
 		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])		
 	}
 
@@ -191,12 +194,13 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
 	for _, trx := range trxs {
+		fmt.Println("remove trx, hash is: ", trx.Hash())
 		delete(self.pending, trx.Hash())
 	}
 }
 
 func (self *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
-
+    fmt.Println("remove single trx, hash is: ", trx.Hash())
 	delete(self.pending, trx.Hash())
 }
 
