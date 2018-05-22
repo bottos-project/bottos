@@ -77,7 +77,6 @@ func check_account(RoleIntf role.RoleInterface, name string) error {
 }
 
 func newaccount(ctx *Context) error {
-	// trx.param --> json
 	newaccount := &NewAccountParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, newaccount)
 	if err != nil {
@@ -128,7 +127,6 @@ func newaccount(ctx *Context) error {
 }
 
 func transfer(ctx *Context) error {
-	// trx.param --> json
 	transfer := &TransferParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, transfer)
 	if err != nil {
@@ -176,7 +174,6 @@ func transfer(ctx *Context) error {
 }
 
 func setdelegate(ctx *Context) error {
-	// trx.param --> json
 	param := &SetDelegateParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
@@ -232,7 +229,6 @@ func check_code(code []byte) error {
 }
 
 func deploycode(ctx *Context) error {
-	// trx.param --> json
 	param := &DeployCodeParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
@@ -269,13 +265,15 @@ func deploycode(ctx *Context) error {
 	return nil
 }
 
-func check_abi(abi []byte) error {
-
+func check_abi(abiRaw []byte) error {
+	_, err := ParseAbi(abiRaw)
+	if err != nil {
+		return fmt.Errorf("ABI Parse error: %v", err) 
+	}
 	return nil
 }
 
 func deployabi(ctx *Context) error {
-	// trx.param --> json
 	param := &DeployABIParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
@@ -293,7 +291,7 @@ func deployabi(ctx *Context) error {
 	}
 
 	// check code
-	err = check_code(param.ContractAbi)
+	err = check_abi(param.ContractAbi)
 	if err != nil {
 		return err
 	}
@@ -303,7 +301,7 @@ func deployabi(ctx *Context) error {
 	copy(account.ContractAbi, param.ContractAbi)
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
-		return fmt.Errorf("Set Abi Fail")
+		return fmt.Errorf("Deploy ABI Fail")
 	}
 
 	return nil
