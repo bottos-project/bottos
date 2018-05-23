@@ -1,3 +1,34 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+// This program is free software: you can distribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+// Copyright 2017 The go-interpreter Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package exec provides functions for executing WebAssembly bytecode.
+
+/*
+ * file description: the interface for WASM execution
+ * @Author: Stewart Li
+ * @Date:   2018-02-08
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package p2pserver
 
 import (
@@ -7,9 +38,9 @@ import (
 )
 
 //its function to sync the trx , blk and peer info with other p2p other
-type notifyManager struct {
+type NotifyManager struct {
 	//
-	p2p      *p2pServer
+	p2p      *P2PServer
 
 	peerList []Peer
 
@@ -20,8 +51,8 @@ type notifyManager struct {
 	sync.RWMutex
 }
 
-func (notify *notifyManager) Start() {
-	fmt.Println("notifyManager::Start")
+func (notify *NotifyManager) Start() {
+	fmt.Println("NotifyManager::Start")
 	for {
 		//signal from actor
 		go notify.BroadcastTrx()
@@ -35,7 +66,7 @@ func (notify *notifyManager) Start() {
 	}
 }
 
-func (notify *notifyManager) BroadCast(buf []byte, isSync bool) {
+func (notify *NotifyManager) BroadCast(buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
@@ -47,23 +78,23 @@ func (notify *notifyManager) BroadCast(buf []byte, isSync bool) {
 }
 
 //sync trx info with other peer
-func (notify *notifyManager) BroadcastTrx() {
-	fmt.Println("notifyManager::BroadcastTrx")
+func (notify *NotifyManager) BroadcastTrx() {
+	fmt.Println("NotifyManager::BroadcastTrx")
 }
 
 //sync blk info with other peer
-func (notify *notifyManager) BroadcastBlk() {
-	fmt.Println("notifyManager::BroadcastBlk")
+func (notify *NotifyManager) BroadcastBlk() {
+	fmt.Println("NotifyManager::BroadcastBlk")
 }
 
 //sync blk's hash info with other peer
-func (notify *notifyManager) SyncHash() {
-	fmt.Println("notifyManager::SyncHash")
+func (notify *NotifyManager) SyncHash() {
+	fmt.Println("NotifyManager::SyncHash")
 }
 
 //sync peer info with other peer
-func (notify *notifyManager) SyncPeer() {
-	fmt.Println("notifyManager::SyncPeer")
+func (notify *NotifyManager) SyncPeer() {
+	fmt.Println("NotifyManager::SyncPeer")
 }
 
 

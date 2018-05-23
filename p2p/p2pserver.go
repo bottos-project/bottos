@@ -1,3 +1,34 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+// This program is free software: you can distribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+// Copyright 2017 The go-interpreter Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package exec provides functions for executing WebAssembly bytecode.
+
+/*
+ * file description: the interface for WASM execution
+ * @Author: Stewart Li
+ * @Date:   2018-02-08
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package p2pserver
 
 import (
@@ -19,9 +50,9 @@ import (
 )
 
 //
-type p2pServer struct{
-	serv          *netServer
-	notify        *notifyManager
+type P2PServer struct{
+	serv          *NetServer
+	notify        *NotifyManager
 
 	p2pConfig     *P2PConfig
 
@@ -60,7 +91,7 @@ func ReadFile(filename string) *P2PConfig{
 }
 
 //
-func NewServ() *p2pServer{
+func NewServ() *P2PServer{
 	fmt.Println("NewServ()")
 
 	p2pconfig := ReadFile(CONF_FILE)
@@ -74,13 +105,13 @@ func NewServ() *p2pServer{
 	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	return &p2pServer{
+	return &P2PServer{
 		serv:          NewNetServer(p2pconfig),
 		p2pConfig:     p2pconfig,
 	}
 }
 
-func (p2p *p2pServer) Init() error {
+func (p2p *P2PServer) Init() error {
 
 	fmt.Println("p2pServer::Init()")
 
@@ -105,7 +136,7 @@ func (p2p *p2pServer) Init() error {
 
 
 //it is the entry of p2p
-func (p2p *p2pServer) Start() error {
+func (p2p *P2PServer) Start() error {
 	fmt.Println("p2pServer::Start()")
 
 	if p2p.p2pConfig == nil {
@@ -123,6 +154,7 @@ func (p2p *p2pServer) Start() error {
 
 	//Todo connect to other seed nodes
 	go p2p.serv.ActiveSeeds()
+	go p2p.serv.WatchStatus()
 
 	// Todo ping/pong
 	go p2p.RunHeartBeat()
@@ -131,7 +163,7 @@ func (p2p *p2pServer) Start() error {
 }
 
 //run a heart beat to watch the network status
-func  (p2p *p2pServer) RunHeartBeat() error {
+func  (p2p *P2PServer) RunHeartBeat() error {
 	fmt.Println("p2pServer::RunHeartBeat()")
 	return nil
 }
