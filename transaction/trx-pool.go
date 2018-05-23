@@ -127,8 +127,6 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 
 	fmt.Println("receive trx, detail: ",trx)
 
-	//fmt.Printf("trx param is: %s\n",trx.Param)
-
 	fmt.Println("trx hash is: ",trx.Hash())
 	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
