@@ -39,25 +39,31 @@ import (
 
 //its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-	//
-	p2p      *P2PServer
 
-	peerList []Peer
+	p2p      *P2PServer
 
 	stopSync chan bool
 	pid      *actor.PID
 
+	peerMap  map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
 
+func NewNotifyManager() *NotifyManager {
+	return &NotifyManager {
+		peerMap:    make(map[uint64]*Peer),
+	}
+}
+
 func (notify *NotifyManager) Start() {
 	fmt.Println("NotifyManager::Start")
+
 	for {
 		//signal from actor
-		go notify.BroadcastTrx()
+		go notify.BoardcastTrx(nil , false)
 		//signal from actor
-		go notify.BroadcastBlk()
+		go notify.BoradcastBlk()
 
 		go notify.SyncHash()
 		go notify.SyncPeer()
@@ -66,11 +72,11 @@ func (notify *NotifyManager) Start() {
 	}
 }
 
-func (notify *NotifyManager) BroadCast(buf []byte, isSync bool) {
+func (notify *NotifyManager) BoardcastTrx (buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
-	for _ , node := range notify.peerList {
+	for _ , node := range notify.peerMap {
 		fmt.Println("node: ",node)
 	}
 
@@ -78,7 +84,7 @@ func (notify *NotifyManager) BroadCast(buf []byte, isSync bool) {
 }
 
 //sync trx info with other peer
-func (notify *NotifyManager) BroadcastTrx() {
+func (notify *NotifyManager) BoradcastBlk() {
 	fmt.Println("NotifyManager::BroadcastTrx")
 }
 

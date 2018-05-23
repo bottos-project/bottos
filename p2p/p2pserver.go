@@ -34,7 +34,7 @@ package p2pserver
 import (
 	//"io"
 	"fmt"
-	"net"
+	//"net"
 	"sync"
 	"errors"
 	//"crypto"
@@ -52,8 +52,6 @@ import (
 //
 type P2PServer struct{
 	serv          *NetServer
-	notify        *NotifyManager
-
 	p2pConfig     *P2PConfig
 
 	p2pLock        sync.RWMutex
@@ -114,7 +112,7 @@ func NewServ() *P2PServer{
 func (p2p *P2PServer) Init() error {
 
 	fmt.Println("p2pServer::Init()")
-
+	/*
 	serv_addr := p2p.serv.addr + ":" + fmt.Sprint(p2p.serv.port)
 	var err error
 
@@ -130,6 +128,7 @@ func (p2p *P2PServer) Init() error {
 		fmt.Println("*ERROR* Failed to Listen !!! ", err)
 		return errors.New("*ERROR* Failed to Listen !!! ")
 	}
+	*/
 
 	return nil
 }

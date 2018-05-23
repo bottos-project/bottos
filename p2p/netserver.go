@@ -40,11 +40,10 @@ import (
 	"errors"
 	"strings"
 	//"reflect"
-	"unsafe"
+	//"unsafe"
 	//"crypto/sha1"
 	"hash/fnv"
 	"encoding/json"
-	//"github.com/bottos-project/core/contract/msgpack"
 )
 
 type NetServer struct {
@@ -52,6 +51,7 @@ type NetServer struct {
 	port            uint16
 	addr            string
 
+	notify          *NotifyManager
 	listener        net.Listener
 
 	seed_peer       []string
@@ -60,17 +60,10 @@ type NetServer struct {
 	serverAddr      *net.UDPAddr
 	socket          *net.UDPConn
 
-	peerMap         map[uint64]*Peer
-
-	publicKey       string           //todo
+	publicKey       string             //todo
 
 	time_interval   *time.Timer
-
 	netLock         sync.RWMutex
-}
-
-func bytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
 }
 
 func NewNetServer(config *P2PConfig) *NetServer {
@@ -83,7 +76,7 @@ func NewNetServer(config *P2PConfig) *NetServer {
 		config:        config,
 		addr:          config.ServAddr,
 		port:          config.ServPort,
-		peerMap:       make(map[uint64]*Peer),
+		notify:        NewNotifyManager(),
 		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
@@ -100,7 +93,6 @@ func (serv *NetServer) Start() error {
 //run accept
 func (serv *NetServer) Listening() {
 	fmt.Println("NetServer::Listening()")
-	//listener, err := net.Listen("tcp", serv.addr+":"+fmt.Sprint(serv.port))
 	listener, err := net.Listen("tcp", ":"+fmt.Sprint(serv.port))
 	if err != nil {
 		fmt.Println("*ERROR* Failed to listen at port: "+fmt.Sprint(serv.port))
@@ -109,8 +101,6 @@ func (serv *NetServer) Listening() {
 
 	defer listener.Close()
 
-
-
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -118,17 +108,13 @@ func (serv *NetServer) Listening() {
 			continue
 		}
 
-		fmt.Println("NetServer::Listening() conn = ",conn)
-
-		go serv.HandleMsg(conn)
+		go serv.HandleMessage(conn)
 	}
-
 }
 
 //run accept
-func (serv *NetServer) HandleMsg(conn net.Conn) {
-	//defer conn.Close()
-	//fmt.Println("netServer::HandleMsg()")
+func (serv *NetServer) HandleMessage(conn net.Conn) {
+
 	data := make([]byte, 4096)
 	var msg message
 
@@ -143,11 +129,10 @@ func (serv *NetServer) HandleMsg(conn net.Conn) {
 		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
-	fmt.Println("NetServer::Listening() Loop msg = ",msg)
 
 	switch msg.MsgType {
 	case request:
-		//todo receive a connection request from other peer passively
+		//receive a connection request from other peer passively
 		rsp := message {
 			Src:      serv.addr,
 			Dst:      msg.Src,
@@ -159,16 +144,14 @@ func (serv *NetServer) HandleMsg(conn net.Conn) {
 			fmt.Println("*WRAN* Failed to package the response message : ", err)
 		}
 
-		//fmt.Println("netServer::HandleMsg() request len(data) = ",len(data) , ", rsp = ",rsp," , conn.RemoteAddr = ",conn.RemoteAddr()," , conn.LocalAddr = ",conn.LocalAddr())
-
 		//create a new conn to response the remote peer
-		newconn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+		remote_conn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 		if err != nil {
 			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 			return
 		}
 
-		len , err := newconn.Write(data)
+		len , err := remote_conn.Write(data)
 		if err != nil {
 			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 			return
@@ -179,55 +162,30 @@ func (serv *NetServer) HandleMsg(conn net.Conn) {
 			return
 		}
 
-		//package remote peer info as "peer" struct and add it into peer list
-		addr_port := msg.Src + ":" + fmt.Sprint(serv.port)
-		peer := NewPeer(msg.Src , &newconn)
-		peer_identify := Hash(addr_port)
-		if _, ok := serv.peerMap[uint64(peer_identify)]; !ok {
-			serv.peerMap[uint64(peer_identify)] = peer
-		}
+		serv.AppendList(remote_conn , msg)
 
-		fmt.Println("NetServer::HandleMsg() request from = ", msg.Src)
-
-		//fmt.Println("<-------------------------------------------------------------->")
-		/*
-		for key , peer := range serv.peerMap {
-			fmt.Println("NetServer::HandleMsg() request key = ",key," , peer = ",peer)
-		}
-		*/
-		//fmt.Println("<-------------------------------------------------------------->")
-
-	case response: //a response from my proactive connect
-		//todo if the remote peer hadn't existed at local , add it into local
+	case response:
+		//a response from my proactive connect
+		//if the remote peer hadn't existed at local , add it into local
 		fmt.Println("NetServer::HandleMsg() response to = ", msg.Src)
 		if serv.IsExist(msg.Src , false) {
-			//fmt.Println("the Peer had existed ! peer = ",peer)
 			return
 		}
 
-		newconn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+		remote_conn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 		if err != nil {
 			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 			return
 		}
 
-		addr_port := msg.Src + ":" + fmt.Sprint(serv.port)
-		peer := NewPeer(msg.Src , &newconn)
-		peer_identify := Hash(addr_port)
-		if _, ok := serv.peerMap[uint64(peer_identify)]; !ok {
-			serv.peerMap[uint64(peer_identify)] = peer
-		}
+		serv.AppendList(remote_conn , msg)
 
+	case crx_boardcast:
+		fmt.Println("NetServer::HandleMsg()")
 
-		//fmt.Println("<-------------------------------------------------------------->")
-		//fmt.Println("NetServer::HandleMsg() response to = ", msg.Src)
-		/*
-		for key , peer := range serv.peerMap {
-			fmt.Println("NetServer::HandleMsg() response key = ",key," , peer = ",peer)
-		}
-		*/
-		//fmt.Println("<-------------------------------------------------------------->")
-		//fmt.Println("NetServer::HandleMsg() response - netServer::Listening() len(serv.peerMap) = ",len(serv.peerMap))
+	case blk_boardcast:
+		fmt.Println("NetServer::HandleMsg()")
+
 	}
 
 	return
@@ -245,6 +203,19 @@ func (serv *NetServer) ActiveSeeds() error {
 	}
 }
 
+func (serv *NetServer) AppendList(conn net.Conn , msg message) error {
+	//package remote peer info as "peer" struct and add it into peer list
+	addr_port := msg.Src + ":" + fmt.Sprint(serv.port)
+	peer := NewPeer(msg.Src , &conn)
+	peer_identify := Hash(addr_port)
+
+	if _, ok := serv.notify.peerMap[uint64(peer_identify)]; !ok {
+		serv.notify.peerMap[uint64(peer_identify)] = peer
+	}
+
+	return nil
+}
+
 //reset time to start timer for a new round
 func  (serv *NetServer) ResetTimer ()  {
 	serv.time_interval.Stop()
@@ -254,18 +225,10 @@ func  (serv *NetServer) ResetTimer ()  {
 //connect seed during start p2p server
 func (serv *NetServer) ConnectSeeds() error {
 
-	//fmt.Println("p2pServer::ConnectSeeds()")
-
-	/*
-	for key, peer := range serv.peerMap {
-		fmt.Println("NetServer::ConnectSeeds() key = ", key, " , peer = ", peer)
-	}
-	*/
-
+	fmt.Println("p2pServer::ConnectSeeds()")
 	for _ , peer := range serv.config.PeerLst {
 		//check if the new peer is in peer list
 		if serv.IsExist(peer , false) {
-			//fmt.Println("the Peer had existed ! peer = ",peer)
 			continue
 		}
 
@@ -280,8 +243,8 @@ func (serv *NetServer) ConnectSeeds() error {
 			return err
 		}
 
-		//fmt.Println("NetServer::ConnectSeeds want to connect peer = ",peer)
-		go serv.Connect(peer , req , false)  //todo connect remote seed peer , if it's successful , add it into remote_list
+		//connect remote seed peer , if it's successful , add it into remote_list
+		go serv.Connect(peer , req , false)
 	}
 
 	return nil
@@ -306,11 +269,9 @@ func (serv *NetServer) ConnectTo (conn net.Conn , msg []byte , isExist bool) err
 //to connect to certain peer proactively
 func (serv *NetServer) Connect(addr string , msg []byte , isExist bool) error {
 	addr_port := addr+":"+fmt.Sprint(serv.port)
-	//fmt.Println("p2pServer::Connect() addr_port = ",addr_port)
-
 	conn , err := net.Dial("tcp", addr_port)
 	if err != nil {
-		//fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return err
 	}
 
@@ -324,8 +285,6 @@ func (serv *NetServer) Connect(addr string , msg []byte , isExist bool) error {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
-
-	fmt.Println("p2pServer::Connect() proactively finish to connect remote peer addr_port = ",addr_port," , len = ",len)
 
 	return nil
 }
@@ -372,10 +331,8 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 }
 
 func (serv *NetServer) IsExist(addr string , isExist bool) bool {
-	//fmt.Println("NetServer::IsExist")
-	for _ , peer := range serv.peerMap {
+	for _ , peer := range serv.notify.peerMap {
 		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
-			//fmt.Println("NettrueServer::IsExist find")
 			return true
 		}
 	}
@@ -385,12 +342,9 @@ func (serv *NetServer) IsExist(addr string , isExist bool) bool {
 
 func (serv *NetServer) WatchStatus() {
 	fmt.Println("NetServer::WatchStatus")
-	//for {
-	//fmt.Println("<-------------------------------------------------------------->")
-		for key, peer := range serv.peerMap {
-			fmt.Println("<------------ NetServer::WatchStatus() key = ", key, " , peer = ", peer)
-		}
-	//}
+	for key, peer := range serv.notify.peerMap {
+		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer)
+	}
 }
 
 
