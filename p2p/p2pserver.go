@@ -154,7 +154,6 @@ func (p2p *P2PServer) Start() error {
 
 	//Todo connect to other seed nodes
 	go p2p.serv.ActiveSeeds()
-	go p2p.serv.WatchStatus()
 
 	// Todo ping/pong
 	go p2p.RunHeartBeat()
