@@ -30,11 +30,13 @@ import (
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+    "github.com/bottos-project/core/config"
 )
 
 type OptionDbRepo interface {
-	InsertOptionDb(collection string, value interface{}) error
-	OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
+    InsertOptionDb(collection string, value interface{}) error
+    OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
+    OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error
 }
 
 var insertSession *MongoContext
@@ -87,9 +89,29 @@ func (r *OptionDbRepository) OptionDbFind(collection string, key string, value i
 		}
 	}
 	var mesgs interface{}
-	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{key: value}).All(&mesgs)
-	}
-	getSession.SetCollection(collection, query)
-	return mesgs, nil
+    getSession.GetCollection(config.DEFAULT_OPTIONDB_NAME, collection).Find(bson.M{"$or": []bson.M{bson.M{key: value}}}).One(&mesgs)
+    if mesgs == nil {
+        return nil, errors.New("No record is found.")
+    }
+    
+    return mesgs, nil
 }
+
+func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
+    var err error
+    selector := bson.M{key: value}
+    data := bson.M{"$set": bson.M{updatekey: updatevalue}}
+
+	if getSession == nil || getSession.mgoSession == nil {
+		getSession, err = GetSession(r.mgoEndpoint)
+		if err != nil {
+			fmt.Println("collection ", getSession, collection, err)
+			return errors.New("Get session faild" + r.mgoEndpoint)
+		}
+	}
+    
+    _, err = getSession.mgoSession.DB(config.DEFAULT_OPTIONDB_NAME).C(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME).UpdateAll(selector, data)
+
+    return err 
+}
+

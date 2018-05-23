@@ -40,16 +40,11 @@ import (
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
 	AccountName      string        `bson:"account_name"`
-	Balance          uint32        `bson:"bto_balance"`
+	Balance          uint64        `bson:"bto_balance"`
 	StakedBalance    uint64        `bson:"staked_balance"`
 	UnstakingBalance string        `bson:"unstaking_balance"`
 	PublicKey        string        `bson:"public_key"`
-	//VMType           byte          `bson:"vm_type"`
-	//VMVersion        byte          `bson:"vm_version"`
-	//CodeVersion      common.Hash   `bson:"code_version"`
 	CreateTime       time.Time     `bson:"create_time"`
-	//ContractCode     []byte        `bson:"contract_code"`
-	//ContractAbi      []byte        `bson:"abi"`
 	UpdatedTime      time.Time     `bson:"updated_time"`
 }
 type BlockInfo struct {
@@ -77,7 +72,6 @@ type TxInfo struct {
 	Sender        string        `bson:"sender"`
 	Contract      string        `bson:"contract"`
 	Method        string        `bson:"method"`
-	//Param         []byte        `bson:"param"`
 	Param         TParam        `bson:"param"`
 	SigAlg        uint32        `bson:"sig_alg"`
 	Signature     string/*[]byte*/        `bson:"signature"`
@@ -251,14 +245,9 @@ type NodeInfoReq struct {
     Info    NodeBaseInfo
 }
 
-func findAcountInfo(ldb *db.DBService, accountName string) (*AccountInfo, error) {
-
-	object, err := ldb.Find(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, "account_name", accountName)
-	if err != nil {
-		fmt.Println("find ", accountName, "failed ")
-		return nil, errors.New("find " + accountName + "failed ")
-	}
-	return object.(*AccountInfo), nil
+func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
+    fmt.Println("findAcountInfo 1: accountName: ", accountName)
+    return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
 func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
@@ -436,6 +425,25 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 	return ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_BLOCK_NAME, newBlockInfo)
 }
 
+func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
+    value, err := findAcountInfo(ldb, accountName)
+    if err != nil {
+        return nil, err
+    }
+    AccountRec := value.(AccountInfo)
+
+    res := &Balance{    
+                       AccountName: accountName,
+                       Balance:     AccountRec.Balance,
+                   }
+    
+    return res, nil
+}
+
+func SetBalanceOp(ldb *db.DBService, accountName string, balance uint64) error {
+    return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "balance", balance)
+}
+
 func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
 	if ldb == nil || block == nil {
 		return errors.New("Error Invalid param")
@@ -444,6 +452,25 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
     if trx.Contract != config.BOTTOS_CONTRACT_NAME {
         return errors.New("Invalid contract param")
     }
+
+
+    /* Create bottos account */
+    _, err := findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
+    if err != nil {
+
+        bto := &AccountInfo{
+            ID:               bson.NewObjectId(),
+            AccountName:      config.BOTTOS_CONTRACT_NAME,
+            Balance:          config.BOTTOS_INIT_SUPPLY,//uint32        `bson:"bto_balance"`
+            StakedBalance:    0,//uint64        `bson:"staked_balance"`
+            UnstakingBalance: "",//             `bson:"unstaking_balance"`
+            PublicKey:        "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+            CreateTime:       time.Unix(int64(config.Genesis.GenesisTime), 0), //time.Time     `bson:"create_time"`
+            UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
+        }
+        ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, bto)
+    }
+
     if trx.Method == "transfer" {
         data := &transferparam{}
         err :=  msgpack.Unmarshal(trx.Param, data)
@@ -451,13 +478,13 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
          
         FromAccountName := data.From
         ToAccountName   := data.To
-        SrcBalanceInfo, err := r.GetBalance(FromAccountName)    //data.Value
+        SrcBalanceInfo, err := GetBalanceOp(ldb, FromAccountName)    //data.Value
          
         if(err != nil) {
             return err
         }
 
-        DstBalanceInfo, err := r.GetBalance(ToAccountName)
+        DstBalanceInfo, err := GetBalanceOp(ldb, ToAccountName)
          
         if(err != nil) {
             return err
@@ -470,11 +497,11 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
         SrcBalanceInfo.Balance -= data.Value
         DstBalanceInfo.Balance += data.Value
         
-        err = r.SetBalance(FromAccountName, SrcBalanceInfo)
+        err = SetBalanceOp(ldb, FromAccountName, SrcBalanceInfo.Balance)
         if err != nil {
             return err
         }
-        err = r.SetBalance(ToAccountName,   DstBalanceInfo)
+        err = SetBalanceOp(ldb, ToAccountName, DstBalanceInfo.Balance)
         if err != nil {
             return err
         }
@@ -484,7 +511,6 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
         if err != nil {
             return err
         }
-        //accountInfos, err := GetAccount(data.Name)
         
         NewAccount := &AccountInfo {
             ID:               oid,
@@ -493,12 +519,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
             StakedBalance:    0,//uint64        `bson:"staked_balance"`
             UnstakingBalance: "",//             `bson:"unstaking_balance"`
             PublicKey:        data.Pubkey,
-           // VMType:           0,// byte          `bson:"vm_type"`
-           // VMVersion:        0, //byte          `bson:"vm_version"`
-            //CodeVersion:      common.BytesToHash(123), //common.Hash   `bson:"code_version"`
             CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
-           // ContractCode:     "",  //[]byte   `bson:"contract_code"`
-           // ContractAbi:      "",  //[]byte   `bson:"abi"`
             UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
        }
                
