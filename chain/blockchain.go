@@ -427,7 +427,8 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	}
 
 	if (block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL)) && bc.HeadBlockNum() != 0 {
-		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		//return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
 	//slot := bc.roleIntf.GetSlotAtTime(block.GetTimestamp())
