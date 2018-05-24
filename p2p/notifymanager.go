@@ -34,31 +34,39 @@ package p2pserver
 import (
 	"fmt"
 	"sync"
+	"reflect"
+	"strings"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 //its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
 
-	p2p      *P2PServer
+	p2p              *P2PServer
+	stopSync         chan bool
 
-	stopSync chan bool
-	pid      *actor.PID
+	trxActorPid      *actor.PID
+	chainActorPid    *actor.PID
+	producerActorPid *actor.PID
 
-	peerMap  map[uint64]*Peer
+	peerMap          map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
 
 func NewNotifyManager() *NotifyManager {
 	return &NotifyManager {
-		peerMap:    make(map[uint64]*Peer),
+		peerMap:          make(map[uint64]*Peer),
+		trxActorPid:      nil,
+		chainActorPid:    nil,
+		producerActorPid: nil,
 	}
 }
 
 func (notify *NotifyManager) Start() {
 	fmt.Println("NotifyManager::Start")
 
+	/*
 	for {
 		//signal from actor
 		go notify.BoardcastTrx(nil , false)
@@ -70,17 +78,30 @@ func (notify *NotifyManager) Start() {
 
 		//receive
 	}
+	*/
 }
 
-func (notify *NotifyManager) BoardcastTrx (buf []byte, isSync bool) {
+func (notify *NotifyManager) BroadcastTrx (buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
-	for _ , node := range notify.peerMap {
-		fmt.Println("node: ",node)
+	for _ , peer := range notify.peerMap {
+		fmt.Println("NotifyManager::BoardcastTrx() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
+		if peer.GetPeerState() == ESTABLISH {
+			peer.SendTo(buf , false)
+		}
 	}
 
 	return
+}
+
+func (notify *NotifyManager) AddPeer(peer *Peer) {
+	notify.Lock()
+	defer notify.Unlock()
+
+	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+		notify.peerMap[peer.GetId()] = peer
+	}
 }
 
 //sync trx info with other peer
@@ -103,7 +124,15 @@ func (notify *NotifyManager) SyncPeer() {
 	fmt.Println("NotifyManager::SyncPeer")
 }
 
+func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {
+	for _ , peer := range notify.peerMap {
+		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
+			return true
+		}
+	}
 
+	return false
+}
 
 
 

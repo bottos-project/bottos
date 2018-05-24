@@ -45,7 +45,7 @@ import (
 	//"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-
+	"github.com/AsynkronIT/protoactor-go/actor"
 
 )
 
@@ -104,7 +104,7 @@ func NewServ() *P2PServer{
 	*/
 
 	return &P2PServer{
-		serv:          NewNetServer(p2pconfig),
+		serv:          NewNetServer(),
 		p2pConfig:     p2pconfig,
 	}
 }
@@ -163,6 +163,44 @@ func (p2p *P2PServer) Start() error {
 //run a heart beat to watch the network status
 func  (p2p *P2PServer) RunHeartBeat() error {
 	fmt.Println("p2pServer::RunHeartBeat()")
+	return nil
+}
+
+func  (p2p *P2PServer) SetTrxActor (trxActorPid *actor.PID)  {
+	p2p.serv.notify.trxActorPid = trxActorPid
+}
+
+func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
+	p2p.serv.notify.chainActorPid = chainActorPid
+}
+
+func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
+	fmt.Println("p2pServer::RunHeartBeat()")
+	switch call_type{
+	case TRANSACTION:
+
+		trx_byte , err := json.Marshal(m)
+		if err != nil{
+			fmt.Println("*WRAN* Failed to package the response message : ", err)
+		}
+
+		msg := message {
+			Src:     p2p.p2pConfig.ServAddr,
+			MsgType: CRX_BROADCAST,
+			Content: trx_byte,
+		}
+
+		msg_byte , err := json.Marshal(msg)
+		if err != nil{
+			fmt.Println("*WRAN* Failed to package the response message : ", err)
+		}
+
+		p2p.serv.notify.BroadcastTrx(msg_byte , false)
+
+	case BLOCK:
+		p2p.serv.notify.BoradcastBlk()
+
+	}
 	return nil
 }
 

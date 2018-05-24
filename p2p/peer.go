@@ -34,22 +34,28 @@ package p2pserver
 
 import  (
 	"net"
+	"fmt"
+	"errors"
 )
 
 type Peer struct {
 	peerAddr     string
+	servPort     int
+	peerId       uint32
 	publicKey    string
 
 	peer_sock    *net.UDPAddr
-	conn         *net.Conn
+	conn         net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-func NewPeer(addr_name string , conn *net.Conn) *Peer {
+func NewPeer(addr_name string , serv_port int , conn net.Conn) *Peer {
 	return &Peer{
 		peerAddr:   addr_name,
+		servPort:   serv_port,
+		peerId:     0,
 		conn:       conn,
 		syncState:  0,
 	}
@@ -63,5 +69,30 @@ func (p *Peer) SetPeerAddr(addr string) {
 	p.peerAddr = addr
 }
 
+func (p *Peer) SetPeerState(state uint32) {
+	p.syncState = state
+}
 
+func (p *Peer) GetPeerState() uint32 {
+	return p.syncState
+}
 
+func (p *Peer) GetId() uint64 {
+	if p.peerId == 0 {
+		addr_port := p.peerAddr + ":" + fmt.Sprint(p.servPort)
+		p.peerId   = Hash(addr_port)
+	}
+
+	return uint64(p.peerId)
+}
+
+func (p *Peer) SendTo(buf []byte, isSync bool) error {
+	len , err := p.conn.Write(buf)
+	if err != nil {
+		return errors.New("*ERROR* Failed to send data !!!")
+	}else if len <= 0 {
+		return errors.New("*ERROR* Failed to send data !!!")
+	}
+
+	return nil
+}

@@ -38,17 +38,18 @@ import (
 	"sync"
 	"time"
 	"errors"
-	"strings"
 	//"reflect"
 	//"unsafe"
 	//"crypto/sha1"
-	"hash/fnv"
+	//"hash/fnv"
 	"encoding/json"
+	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/common/types"
 )
 
 type NetServer struct {
 	config          *P2PConfig
-	port            uint16
+	port            int
 	addr            string
 
 	notify          *NotifyManager
@@ -59,23 +60,23 @@ type NetServer struct {
 	neighborList    []*net.UDPAddr
 	serverAddr      *net.UDPAddr
 	socket          *net.UDPConn
-
-	publicKey       string             //todo
+	//todo
+	publicKey       string
 
 	time_interval   *time.Timer
 	netLock         sync.RWMutex
 }
 
-func NewNetServer(config *P2PConfig) *NetServer {
-	if config == nil {
+func NewNetServer(/*config *P2PConfig*/) *NetServer {
+	/*if config == nil {
 		fmt.Println("*ERROR* Parmeter is empty !!!")
 		return nil
-	}
+	}*/
 
 	return &NetServer{
-		config:        config,
-		addr:          config.ServAddr,
-		port:          config.ServPort,
+		//config:        config,
+		//addr:          config.Param.P //config.Param.ServAddr,
+		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
 		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
@@ -101,6 +102,7 @@ func (serv *NetServer) Listening() {
 
 	defer listener.Close()
 
+	//main loop for listen
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -131,12 +133,12 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 	}
 
 	switch msg.MsgType {
-	case request:
+	case REQUEST:
 		//receive a connection request from other peer passively
 		rsp := message {
 			Src:      serv.addr,
 			Dst:      msg.Src,
-			MsgType:  response,
+			MsgType:  RESPONSE,
 		}
 
 		data , err := json.Marshal(rsp)
@@ -155,20 +157,18 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		if err != nil {
 			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 			return
-		}
-
-		if len < 0 {
+		} else if len < 0 {
 			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 			return
 		}
 
 		serv.AppendList(remote_conn , msg)
 
-	case response:
+	case RESPONSE:
 		//a response from my proactive connect
 		//if the remote peer hadn't existed at local , add it into local
-		fmt.Println("NetServer::HandleMsg() response to = ", msg.Src)
-		if serv.IsExist(msg.Src , false) {
+		fmt.Println("NetServer::HandleMessage() response to = ", msg.Src)
+		if serv.notify.IsExist(msg.Src , false) {
 			return
 		}
 
@@ -180,11 +180,25 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 
 		serv.AppendList(remote_conn , msg)
 
-	case crx_boardcast:
-		fmt.Println("NetServer::HandleMsg()")
+	case CRX_BROADCAST:
+		//Todo receive crx_boardcast from other peer , and set it to txpool
+		fmt.Println("NetServer::HandleMessage()")
 
-	case blk_boardcast:
-		fmt.Println("NetServer::HandleMsg()")
+		var new_crx types.Transaction
+		err = json.Unmarshal(msg.Content , &new_crx)
+		if err != nil {
+			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+			return
+		}
+
+		if serv.notify.trxActorPid != nil {
+			fmt.Println("NetServer::HandleMessage() send new_crx: ",new_crx)
+			serv.notify.trxActorPid.Tell(new_crx)
+		}
+
+	case BLK_BROADCAST:
+		//Todo receive blk_boardcast from other peer
+		fmt.Println("NetServer::HandleMessage()")
 
 	}
 
@@ -205,13 +219,9 @@ func (serv *NetServer) ActiveSeeds() error {
 
 func (serv *NetServer) AppendList(conn net.Conn , msg message) error {
 	//package remote peer info as "peer" struct and add it into peer list
-	addr_port := msg.Src + ":" + fmt.Sprint(serv.port)
-	peer := NewPeer(msg.Src , &conn)
-	peer_identify := Hash(addr_port)
-
-	if _, ok := serv.notify.peerMap[uint64(peer_identify)]; !ok {
-		serv.notify.peerMap[uint64(peer_identify)] = peer
-	}
+	peer := NewPeer(msg.Src , serv.port , conn)
+	peer.SetPeerState(ESTABLISH)
+	serv.notify.AddPeer(peer)
 
 	return nil
 }
@@ -228,14 +238,14 @@ func (serv *NetServer) ConnectSeeds() error {
 	fmt.Println("p2pServer::ConnectSeeds()")
 	for _ , peer := range serv.config.PeerLst {
 		//check if the new peer is in peer list
-		if serv.IsExist(peer , false) {
+		if serv.notify.IsExist(peer , false) {
 			continue
 		}
 
 		var msg = message {
 			Src:      serv.addr,
 			Dst:      peer,
-			MsgType:  request,
+			MsgType:  REQUEST,
 		}
 
 		req , err := json.Marshal(msg)
@@ -257,8 +267,11 @@ func (serv *NetServer) ConnectTo (conn net.Conn , msg []byte , isExist bool) err
 		return errors.New("*ERROR* Invalid parameter !!!")
 	}
 
-	_  , err := conn.Write(msg)
+	len , err := conn.Write(msg)
 	if err != nil {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return err
+	} else if len < 0 {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
@@ -279,9 +292,7 @@ func (serv *NetServer) Connect(addr string , msg []byte , isExist bool) error {
 	if err != nil {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
-	}
-
-	if len < 0 {
+	} else if len < 0 {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
@@ -330,26 +341,11 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 	return nil
 }
 
-func (serv *NetServer) IsExist(addr string , isExist bool) bool {
-	for _ , peer := range serv.notify.peerMap {
-		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (serv *NetServer) WatchStatus() {
 	fmt.Println("NetServer::WatchStatus")
+
 	for key, peer := range serv.notify.peerMap {
 		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer)
 	}
-}
-
-
-func Hash(s string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return h.Sum32()
+	//serv.notify.BoardcastTrx(nil , false)
 }
