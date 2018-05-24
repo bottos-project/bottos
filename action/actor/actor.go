@@ -75,6 +75,8 @@ func registerActorMsgTbl(m *MultiActor) {
 	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> chain
 	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
 
+	netactor.SetTrxActorPid(m.trxActorPid)
+	netactor.SetChainActorPid(m.chainActorPid)
 }
 
 func (m *MultiActor) GetTrxActorPID() *actor.PID {
