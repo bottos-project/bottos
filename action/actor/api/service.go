@@ -292,3 +292,22 @@ func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 
 	return nil
 }
+
+func (h *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *api.QueryAbiResponse) error {
+	contract := req.Contract
+	account, err := h.env.RoleIntf.GetAccount(contract)
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		return nil
+	}
+
+	if len(account.ContractAbi) > 0 {
+		resp.Result = string(account.ContractAbi)
+	} else {
+		// TODO
+		return nil
+	}
+	
+	return nil
+}
