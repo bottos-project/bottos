@@ -67,16 +67,28 @@ type NetServer struct {
 	netLock         sync.RWMutex
 }
 
-func NewNetServer(/*config *P2PConfig*/) *NetServer {
-	/*if config == nil {
-		fmt.Println("*ERROR* Parmeter is empty !!!")
-		return nil
-	}*/
+func NewNetServer() *NetServer {
 
 	return &NetServer{
 		//config:        config,
 		//addr:          config.Param.P //config.Param.ServAddr,
 		port:          config.Param.P2PPort,
+		notify:        NewNotifyManager(),
+		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
+	}
+}
+
+//for UT
+func NewNetServerTst(config *P2PConfig) *NetServer {
+	if config == nil {
+		fmt.Println("*ERROR* Parmeter is empty !!!")
+		return nil
+	}
+
+	return &NetServer{
+		config:        config,
+		addr:          config.ServAddr,
+		port:          config.ServPort,
 		notify:        NewNotifyManager(),
 		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}

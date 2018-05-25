@@ -59,7 +59,7 @@ type P2PServer struct{
 
 type P2PConfig struct {
 	ServAddr    string
-	ServPort    uint16
+	ServPort    int
 	PeerLst     []string
 }
 
@@ -102,11 +102,20 @@ func NewServ() *P2PServer{
 
 	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
-
-	return &P2PServer{
-		serv:          NewNetServer(),
-		p2pConfig:     p2pconfig,
+	var p2pserv *P2PServer
+	if TST == false {
+		p2pserv = &P2PServer{
+			serv:      NewNetServer(),
+			p2pConfig: p2pconfig,
+		}
+	}else{
+		p2pserv = &P2PServer{
+			serv:      NewNetServerTst(p2pconfig),
+			p2pConfig: p2pconfig,
+		}
 	}
+
+	return p2pserv
 }
 
 func (p2p *P2PServer) Init() error {
