@@ -27,7 +27,7 @@ package netactor
 
 import (
 	"fmt"
-	"encoding/json"
+	//"encoding/json"
 	"github.com/bottos-project/core/common/types"
 	p2pserv "github.com/bottos-project/core/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"

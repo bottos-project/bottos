@@ -38,9 +38,11 @@ func SetTrxActorPid(tpid *actor.PID) {
 	p2p.SetTrxActor(tpid)
 }
 
+/*
 func SetChainActorPid(cpid *actor.PID) {
 	p2p.SetChainActor(cpid)
 }
+*/
 
 //Get Trx from TxPool , and the trx will be boardcasted by p2p component
 //func ReceiveNewTrx() []*types.Transaction {
