@@ -29,7 +29,7 @@
 	 "fmt"
 	 "testing"
  
-	 "github.com/bottos-project/core/db"
+	 "github.com/bottos-project/bottos/db"
  )
 
  type TestParam struct {

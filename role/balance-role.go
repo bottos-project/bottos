@@ -28,7 +28,7 @@ package role
 import (
 	"encoding/json"
 
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/db"
 )
 
 const BalanceObjectName string = "balance"

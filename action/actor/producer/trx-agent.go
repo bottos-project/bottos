@@ -30,9 +30,9 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/transaction"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/transaction"
 )
 
 var trxActorPid *actor.PID

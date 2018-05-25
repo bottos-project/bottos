@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
-	"github.com/bottos-project/core/contract"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/contract/msgpack"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 type EnvFunc struct {

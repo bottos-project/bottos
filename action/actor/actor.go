@@ -29,13 +29,13 @@ import (
 	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	apiactor "github.com/bottos-project/core/action/actor/api"
-	chainactor "github.com/bottos-project/core/action/actor/chain"
-	netactor "github.com/bottos-project/core/action/actor/net"
-	produceractor "github.com/bottos-project/core/action/actor/producer"
-	trxactor "github.com/bottos-project/core/action/actor/transaction"
+	apiactor "github.com/bottos-project/bottos/action/actor/api"
+	chainactor "github.com/bottos-project/bottos/action/actor/chain"
+	netactor "github.com/bottos-project/bottos/action/actor/net"
+	produceractor "github.com/bottos-project/bottos/action/actor/producer"
+	trxactor "github.com/bottos-project/bottos/action/actor/transaction"
 
-	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/bottos/action/env"
 )
 
 var apiActorPid *actor.PID
@@ -75,8 +75,8 @@ func registerActorMsgTbl(m *MultiActor) {
 	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> chain
 	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
 
-	netactor.SetTrxActorPid(m.trxActorPid)
-	netactor.SetChainActorPid(m.chainActorPid)
+	//netactor.SetTrxActorPid(m.trxActorPid)
+	//netactor.SetChainActorPid(m.chainActorPid)
 }
 
 func (m *MultiActor) GetTrxActorPID() *actor.PID {

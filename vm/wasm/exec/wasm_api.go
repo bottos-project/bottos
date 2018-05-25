@@ -36,10 +36,10 @@ import (
 	"errors"
 	"sync"
 	"time"
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/vm/wasm/wasm"
-	"github.com/bottos-project/core/vm/wasm/validate"
-	"github.com/bottos-project/core/contract"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/validate"
+	"github.com/bottos-project/bottos/contract"
 )
 
 var account_name uint64

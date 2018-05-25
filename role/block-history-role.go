@@ -30,8 +30,8 @@ import (
 	_"fmt"
 	"strconv"
 
-	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/common"
 )
 
 const BlockHistoryObjectName string = "block_history"

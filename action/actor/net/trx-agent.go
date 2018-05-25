@@ -25,10 +25,10 @@
 
 package netactor
 
-//import "github.com/bottos-project/core/transaction"
+//import "github.com/bottos-project/bottos/transaction"
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 var trxActorPid *actor.PID
@@ -38,13 +38,16 @@ func SetTrxActorPid(tpid *actor.PID) {
 	p2p.SetTrxActor(tpid)
 }
 
+/*
 func SetChainActorPid(cpid *actor.PID) {
 	p2p.SetChainActor(cpid)
 }
+*/
 
 //Get Trx from TxPool , and the trx will be boardcasted by p2p component
 //func ReceiveNewTrx() []*types.Transaction {
 func GetAllPendingTrx() []*types.Transaction {
+	/*
 	getTrxsReq := &message.GetAllPendingTrxReq{}
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 	if nil == getTrxsErr {
@@ -63,6 +66,8 @@ func GetAllPendingTrx() []*types.Transaction {
 	}
 
 	return trxs
+	*/
+	return nil
 }
 
 //Send new Trx from other peers

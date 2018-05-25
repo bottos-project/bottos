@@ -27,16 +27,15 @@ package netactor
 
 import (
 	"fmt"
-	"encoding/json"
-	"github.com/bottos-project/core/common/types"
-	p2pserv "github.com/bottos-project/core/p2p"
+	//"encoding/json"
+	"github.com/bottos-project/bottos/common/types"
+	p2pserv "github.com/bottos-project/bottos/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 var NetActorPid *actor.PID
 var p2p *p2pserv.P2PServer = nil
 
-var
 
 type NetActor struct {
 	props *actor.Props

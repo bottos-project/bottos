@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/bottos/common"
 
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/db"
 )
 
 const DelegateVotesObjectName string = "delegatevotes"

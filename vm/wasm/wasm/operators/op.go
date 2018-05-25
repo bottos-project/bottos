@@ -26,7 +26,7 @@ package operators
 import (
 	"fmt"
 
-	"github.com/bottos-project/core/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 var (

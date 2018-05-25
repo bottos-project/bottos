@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-	"github.com/bottos-project/core/vm/wasm/wasm"
-	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
 )
 
 type function interface {

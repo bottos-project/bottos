@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bottos-project/core/contract/msgpack"
+	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 

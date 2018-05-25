@@ -25,8 +25,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bottos-project/core/vm/wasm/wasm"
-	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 )
 
 type Error struct {

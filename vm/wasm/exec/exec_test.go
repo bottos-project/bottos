@@ -34,9 +34,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bottos-project/core/vm/wasm/exec"
-	"github.com/bottos-project/core/vm/wasm/validate"
-	"github.com/bottos-project/core/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/exec"
+	"github.com/bottos-project/bottos/vm/wasm/validate"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 const (

@@ -4,7 +4,7 @@ package p2pserver
 //	//"time"
 //	//"sync"
 
-//	"github.com/bottos-project/core/common"
+//	"github.com/bottos-project/bottos/common"
 
 type Protocol struct {
 	//bc *chain.BlockChain

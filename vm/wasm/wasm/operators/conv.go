@@ -24,7 +24,7 @@ package operators
 import (
 	"regexp"
 
-	"github.com/bottos-project/core/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 var reCvrtOp = regexp.MustCompile(`(.+)\.(?:[a-z]|\_)+\/(.+)`)

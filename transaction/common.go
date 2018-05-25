@@ -1,7 +1,7 @@
 package transaction
 
 import (
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 type trxApplyApi interface {

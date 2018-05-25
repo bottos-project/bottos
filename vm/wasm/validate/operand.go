@@ -22,7 +22,7 @@
 package validate
 
 import (
-	"github.com/bottos-project/core/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 type operand struct {

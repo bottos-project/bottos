@@ -22,7 +22,7 @@
 package exec
 
 import (
-	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 )
 
 func (vm *VM) newFuncTable() {

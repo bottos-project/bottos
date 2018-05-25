@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "github.com/bottos-project/core/api";
+option go_package = "github.com/bottos-project/bottos/api";
 
 /*
 Transaction Example:

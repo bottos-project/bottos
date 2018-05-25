@@ -6,10 +6,10 @@ import (
 	"strconv"
 	//"time"
 
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/contract/msgpack"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {

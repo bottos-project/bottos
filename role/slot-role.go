@@ -25,7 +25,7 @@
 package role
 
 import (
-	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/bottos/config"
 )
 
 func (r *Role) GetSlotAtTime(current uint64) uint64 {

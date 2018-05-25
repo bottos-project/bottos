@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/db"
 )
 
 func TestDelegate_writedb(t *testing.T) {

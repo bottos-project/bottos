@@ -3,10 +3,10 @@ package contract
 import (
 	"fmt"
 
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/contract/msgpack"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 type NativeContractMethod func(*Context) error

@@ -28,7 +28,7 @@ import (
 	"io"
 	"math"
 
-	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
 )
 
 const (

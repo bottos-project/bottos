@@ -59,7 +59,7 @@ type P2PServer struct{
 
 type P2PConfig struct {
 	ServAddr    string
-	ServPort    uint16
+	ServPort    int
 	PeerLst     []string
 }
 
@@ -103,10 +103,20 @@ func NewServ() *P2PServer{
 	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	return &P2PServer{
-		serv:          NewNetServer(),
-		p2pConfig:     p2pconfig,
+	var p2pserv *P2PServer = nil
+	if TST == 0 {
+		p2pserv = &P2PServer{
+			serv:      NewNetServer(),
+			p2pConfig: p2pconfig,
+		}
+	}else{
+		p2pserv = &P2PServer{
+			serv:      NewNetServerTst(p2pconfig),
+			p2pConfig: p2pconfig,
+		}
 	}
+
+	return p2pserv
 }
 
 func (p2p *P2PServer) Init() error {
@@ -174,6 +184,7 @@ func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
+//A interface for
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 	fmt.Println("p2pServer::RunHeartBeat()")
 	switch call_type{
@@ -186,7 +197,7 @@ func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 
 		msg := message {
 			Src:     p2p.p2pConfig.ServAddr,
-			MsgType: CRX_BROADCAST,
+			MsgType: CRX_BROADCAST, // the type to notify other peers new crx
 			Content: trx_byte,
 		}
 

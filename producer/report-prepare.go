@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
 )
 
 type ReportState struct {

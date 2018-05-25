@@ -26,9 +26,9 @@
 package db
 
 import (
-	"github.com/bottos-project/core/db/platform/codedb"
-	"github.com/bottos-project/core/db/platform/kvdb"
-	"github.com/bottos-project/core/db/platform/optiondb"
+	"github.com/bottos-project/bottos/db/platform/codedb"
+	"github.com/bottos-project/bottos/db/platform/kvdb"
+	"github.com/bottos-project/bottos/db/platform/optiondb"
 )
 
 type DBService struct {

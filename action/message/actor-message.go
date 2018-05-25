@@ -2,8 +2,8 @@ package message
 
 
 import (
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 type TrxSenderType uint8

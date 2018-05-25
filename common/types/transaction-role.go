@@ -2,7 +2,7 @@ package types
 
 import (
 	"crypto/sha256"
-	"github.com/bottos-project/core/common"
+	"github.com/bottos-project/bottos/common"
 	"github.com/golang/protobuf/proto"
 )
 

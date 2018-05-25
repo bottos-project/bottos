@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "github.com/bottos-project/core/api/transaction.proto";
+import "github.com/bottos-project/bottos/api/transaction.proto";
 
 package api;
 
-option go_package = "github.com/bottos-project/core/api";
+option go_package = "github.com/bottos-project/bottos/api";
 
 service CoreApi{
 	rpc PushTrx(Transaction)returns (PushTrxResponse){}
@@ -13,6 +13,7 @@ service CoreApi{
 	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
 	rpc QueryObject(QueryObjectReq)returns (QueryObjectResponse){}
+	rpc QueryAbi(QueryAbiReq)returns (QueryAbiResponse){}
 } 
 
 
@@ -109,4 +110,14 @@ message QueryObjectResponse{
 		string 			key					= 3;
 		string 			value				= 4;
 	}
+}
+
+message QueryAbiReq{
+	string 				contract			= 1;
+}
+
+message QueryAbiResponse{
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	string 				result				= 3;
 }

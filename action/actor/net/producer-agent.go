@@ -26,8 +26,8 @@
 package netactor
 
 import (
-	"github.com/bottos-project/core/producer"
-	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/bottos/producer"
+	"github.com/bottos-project/bottos/role"
 )
 
 type ProducerActor struct {

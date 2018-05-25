@@ -32,8 +32,10 @@
 package p2pserver
 
 const (
-	CONF_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\p2p\\config.json"
-	//CONF_FILE     = "config.json"
+	CONF_FILE     = "C:\\Users\\stewa\\go\\src\\github.com\\bottos-project\\core\\p2p\\config.json"
+	//CONF_FILE   = "config.json"
 	TIME_INTERVAL = 10
+	//*WRAN* set the variable as "true" before starting test
+	TST           = 0
 
 )

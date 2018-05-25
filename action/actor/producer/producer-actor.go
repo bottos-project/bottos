@@ -31,13 +31,13 @@ import (
 	//	"unsafe"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/action/env"
-	//	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/producer"
-	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/bottos/action/env"
+	//	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/producer"
+	"github.com/bottos-project/bottos/role"
 )
 
 type ProducerActor struct {

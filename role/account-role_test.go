@@ -30,8 +30,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/db"
 )
 
 func TestAccount_writedb(t *testing.T) {

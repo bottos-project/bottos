@@ -13,8 +13,9 @@ import (
 	"github.com/micro/go-micro"
 	"golang.org/x/net/context"
 
-	coreapi "github.com/bottos-project/core/api"
-	"github.com/bottos-project/core/contract/msgpack"
+	coreapi "github.com/bottos-project/bottos/api"
+	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/contract"
 )
 
 // CLI responsible for processing command line arguments
@@ -215,6 +216,13 @@ func (cli *CLI) deploycode(name string, path string) {
 	cli.jsonPrint(b)
 }
 
+func check_abi(abiRaw []byte) error {
+	_, err := contract.ParseAbi(abiRaw)
+	if err != nil {
+		return fmt.Errorf("ABI Parse error: %v", err) 
+	}
+	return nil
+}
 
 func (cli *CLI) deployabi(name string, path string) {
 	chainInfo, err := cli.queryChainInfo()
@@ -251,8 +259,20 @@ func (cli *CLI) deployabi(name string, path string) {
 	dcp := &DeployAbiParam{
 		Name: name,
 	}
-	dcp.ContractAbi = make([]byte, fi.Size())
-	f.Read(dcp.ContractAbi)
+	tempAbi := make([]byte, fi.Size())
+	f.Read(tempAbi)
+	abi, err := contract.ParseAbi(tempAbi)
+	if err != nil {
+		fmt.Printf("Abi Parse Error Hex: %x, Str: %v", tempAbi, string(tempAbi))
+		return
+	}
+
+	dcp.ContractAbi, err = json.Marshal(abi)
+	if err != nil {
+		fmt.Printf("Abi Reformat Error: %v", abi)
+		return
+	}
+
 	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
 	param, _ := msgpack.Marshal(dcp)
 

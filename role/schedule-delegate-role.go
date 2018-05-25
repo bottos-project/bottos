@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/db"
 )
 
 const ScheduleDelegateObjectName string = "scheduledelegate"
