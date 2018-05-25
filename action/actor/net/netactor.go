@@ -36,7 +36,6 @@ import (
 var NetActorPid *actor.PID
 var p2p *p2pserv.P2PServer = nil
 
-var
 
 type NetActor struct {
 	props *actor.Props

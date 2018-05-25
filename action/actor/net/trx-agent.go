@@ -45,6 +45,7 @@ func SetChainActorPid(cpid *actor.PID) {
 //Get Trx from TxPool , and the trx will be boardcasted by p2p component
 //func ReceiveNewTrx() []*types.Transaction {
 func GetAllPendingTrx() []*types.Transaction {
+	/*
 	getTrxsReq := &message.GetAllPendingTrxReq{}
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 	if nil == getTrxsErr {
@@ -63,6 +64,8 @@ func GetAllPendingTrx() []*types.Transaction {
 	}
 
 	return trxs
+	*/
+	return nil
 }
 
 //Send new Trx from other peers
