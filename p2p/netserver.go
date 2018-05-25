@@ -72,6 +72,7 @@ func NewNetServer() *NetServer {
 	return &NetServer{
 		//config:        config,
 		//addr:          config.Param.P //config.Param.ServAddr,
+		seed_peer:     config.Param.PeerList,
 		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
 		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
@@ -87,6 +88,7 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 
 	return &NetServer{
 		config:        config,
+		seed_peer:     config.PeerLst,
 		addr:          config.ServAddr,
 		port:          config.ServPort,
 		notify:        NewNotifyManager(),
@@ -248,7 +250,7 @@ func  (serv *NetServer) ResetTimer ()  {
 func (serv *NetServer) ConnectSeeds() error {
 
 	fmt.Println("p2pServer::ConnectSeeds()")
-	for _ , peer := range serv.config.PeerLst {
+	for _ , peer := range serv.seed_peer {
 		//check if the new peer is in peer list
 		if serv.notify.IsExist(peer , false) {
 			continue
