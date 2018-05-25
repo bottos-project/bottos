@@ -26,9 +26,9 @@
 package role
 
 import (
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/db"
 )
 
 type Role struct {

@@ -29,10 +29,10 @@ import (
 	"io"
 	"math"
 
-	"github.com/bottos-project/core/vm/wasm/internal/stack"
-	"github.com/bottos-project/core/vm/wasm/wasm"
-	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
-	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	"github.com/bottos-project/bottos/vm/wasm/internal/stack"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
+	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 	log "github.com/cihub/seelog"
 )
 

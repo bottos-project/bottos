@@ -25,7 +25,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bottos-project/core/vm/wasm/wasm"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 func TestNewConversionOp(t *testing.T) {

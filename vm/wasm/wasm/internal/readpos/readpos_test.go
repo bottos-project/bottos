@@ -26,7 +26,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/bottos-project/core/vm/wasm/wasm/internal/readpos"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
 )
 
 func TestRead(t *testing.T) {

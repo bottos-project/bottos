@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/action/actor/transaction"
-	"github.com/bottos-project/core/transaction"
-	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/db"
-	//"github.com/bottos-project/core/config"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/action/actor/transaction"
+	"github.com/bottos-project/bottos/transaction"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/db"
+	//"github.com/bottos-project/bottos/config"
 )
 
 var trxActorPid *actor.PID

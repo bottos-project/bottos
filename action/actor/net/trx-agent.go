@@ -25,10 +25,10 @@
 
 package netactor
 
-//import "github.com/bottos-project/core/transaction"
+//import "github.com/bottos-project/bottos/transaction"
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 var trxActorPid *actor.PID

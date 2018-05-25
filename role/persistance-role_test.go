@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/db"
 )
 
 func TestPersistanceRole_writedb(t *testing.T) {

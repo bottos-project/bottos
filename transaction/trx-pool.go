@@ -7,20 +7,20 @@ import (
 	"sync"
 	"fmt"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/action/env"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/contract/contractdb"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/contract/contractdb"
 
 	proto "github.com/golang/protobuf/proto"
     "github.com/bottos-project/crypto-go/crypto"
     "crypto/sha256"
 	"encoding/hex"
-	bottosErr "github.com/bottos-project/core/common/errors"
+	bottosErr "github.com/bottos-project/bottos/common/errors"
 	
 )
 

@@ -1,9 +1,9 @@
 package contract
 
 import (
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/contract/contractdb"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/contract/contractdb"
 )
 
 type Context struct {

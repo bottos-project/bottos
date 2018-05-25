@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 func StringSliceReflectEqual(a, b []string) bool {

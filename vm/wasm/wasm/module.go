@@ -25,7 +25,7 @@ import (
 	"errors"
 	"io"
 	log "github.com/cihub/seelog"
-	"github.com/bottos-project/core/vm/wasm/wasm/internal/readpos"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
 )
 
 var ErrInvalidMagic = errors.New("wasm: Invalid magic number")

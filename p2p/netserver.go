@@ -43,8 +43,8 @@ import (
 	//"crypto/sha1"
 	//"hash/fnv"
 	"encoding/json"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 type NetServer struct {

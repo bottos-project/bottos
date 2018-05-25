@@ -30,12 +30,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
-    "github.com/bottos-project/core/contract/msgpack"
+    "github.com/bottos-project/bottos/contract/msgpack"
 )
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`

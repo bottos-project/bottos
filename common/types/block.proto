@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "github.com/bottos-project/core/common/types/transaction.proto";
+import "github.com/bottos-project/bottos/common/types/transaction.proto";
 
 package types;
 
-option go_package = "github.com/bottos-project/core/common/types";
+option go_package = "github.com/bottos-project/bottos/common/types";
 
 message Block {
 	Header header = 1;

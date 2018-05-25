@@ -36,7 +36,7 @@ import (
 	"testing"
 	"fmt"
 	"os"
-	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/bottos/config"
 )
 
 

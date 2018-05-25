@@ -29,11 +29,11 @@ import (
 	"math"
 	"bytes"
 	"sync"
-	"github.com/bottos-project/core/vm/wasm/disasm"
-	"github.com/bottos-project/core/vm/wasm/exec/internal/compile"
-	"github.com/bottos-project/core/vm/wasm/wasm"
-	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
-	"github.com/bottos-project/core/contract"
+	"github.com/bottos-project/bottos/vm/wasm/disasm"
+	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
+	"github.com/bottos-project/bottos/contract"
 )
 
 var (

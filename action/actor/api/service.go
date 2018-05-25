@@ -31,13 +31,13 @@ import (
 	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/api"
-	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/api"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/action/env"
 
-	bottosErr "github.com/bottos-project/core/common/errors"
+	bottosErr "github.com/bottos-project/bottos/common/errors"
 )
 
 type ApiService struct {

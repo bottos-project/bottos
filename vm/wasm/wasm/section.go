@@ -28,8 +28,8 @@ import (
 	"io"
 	"io/ioutil"
 	log "github.com/cihub/seelog"
-	"github.com/bottos-project/core/vm/wasm/wasm/internal/readpos"
-	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
 )
 
 // SectionID is a 1-byte code that encodes the section code of both known and custom sections.

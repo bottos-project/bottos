@@ -27,8 +27,8 @@
 package chain
 
 import (
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 type HandledBlockCallback func(*types.Block)

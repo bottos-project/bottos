@@ -31,13 +31,13 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/contract"
-	//trx "github.com/bottos-project/core/transaction"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/contract"
+	//trx "github.com/bottos-project/bottos/transaction"
 )
 
 type BlockChain struct {

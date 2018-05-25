@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/bottos-project/core/vm/wasm/wasm/leb128"
+	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
 )
 
 // ValueType represents the type of a valid value in Wasm

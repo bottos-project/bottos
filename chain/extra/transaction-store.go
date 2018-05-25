@@ -26,10 +26,10 @@
 package txstore
 
 import (
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/chain"
-	"github.com/bottos-project/core/role"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/role"
 )
  
 var (

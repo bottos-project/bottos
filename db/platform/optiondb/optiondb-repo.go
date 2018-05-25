@@ -31,7 +31,7 @@ import (
 	"fmt"
 	//"time"
 
-	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/bottos/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

@@ -5,9 +5,9 @@ import (
 	_ "fmt"
 	//"time"
 
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/db"
 )
 
 type ChainState struct {

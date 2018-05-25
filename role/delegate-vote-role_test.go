@@ -30,7 +30,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/db"
 )
 
 func TestDelegateVotes_writedb(t *testing.T) {

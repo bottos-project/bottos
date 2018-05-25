@@ -29,8 +29,8 @@ import (
 	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/action/message"
-	"github.com/bottos-project/core/transaction"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/transaction"
 )
 
 var TrxActorPid *actor.PID

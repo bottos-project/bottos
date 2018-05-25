@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "github.com/bottos-project/core/api/transaction.proto";
+import "github.com/bottos-project/bottos/api/transaction.proto";
 
 package api;
 
-option go_package = "github.com/bottos-project/core/api";
+option go_package = "github.com/bottos-project/bottos/api";
 
 service CoreApi{
 	rpc PushTrx(Transaction)returns (PushTrxResponse){}

@@ -29,8 +29,8 @@
 	 "encoding/json"
 	 //"fmt"
  
-	 "github.com/bottos-project/core/db"
-	 "github.com/bottos-project/core/common"
+	 "github.com/bottos-project/bottos/db"
+	 "github.com/bottos-project/bottos/common"
  )
  
  const TransactionHistoryObjectName string = "transaction_history"

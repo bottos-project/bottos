@@ -1,20 +1,20 @@
 package transaction
 
 import (
-	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/bottos/action/env"
 	"sync"
 	"fmt"
 	"time"
 
-	"github.com/bottos-project/core/common/types"
-	"github.com/bottos-project/core/role"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/chain"
-	"github.com/bottos-project/core/common"
-	"github.com/bottos-project/core/contract"
-	"github.com/bottos-project/core/contract/contractdb"
-	wasm "github.com/bottos-project/core/vm/wasm/exec"
-	bottosErr "github.com/bottos-project/core/common/errors"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/contract/contractdb"
+	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
+	bottosErr "github.com/bottos-project/bottos/common/errors"
 )
 
 type TrxApplyService struct {

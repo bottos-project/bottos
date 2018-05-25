@@ -30,7 +30,7 @@ import (
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-    "github.com/bottos-project/core/config"
+    "github.com/bottos-project/bottos/config"
 )
 
 type OptionDbRepo interface {

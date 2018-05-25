@@ -27,7 +27,7 @@ package contractdb
 
 import (
 	"fmt"
-	"github.com/bottos-project/core/db"
+	"github.com/bottos-project/bottos/db"
 )
 
 const ContractObjectNamePrefix string = "obj-"

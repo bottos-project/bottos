@@ -13,8 +13,8 @@ import (
 	"github.com/micro/go-micro"
 	"golang.org/x/net/context"
 
-	coreapi "github.com/bottos-project/core/api"
-	"github.com/bottos-project/core/contract/msgpack"
+	coreapi "github.com/bottos-project/bottos/api"
+	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 // CLI responsible for processing command line arguments

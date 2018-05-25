@@ -59,8 +59,8 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/bottos-project/core/vm/wasm/disasm"
-	ops "github.com/bottos-project/core/vm/wasm/wasm/operators"
+	"github.com/bottos-project/bottos/vm/wasm/disasm"
+	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 )
 
 // A small note on the usage of discard instructions:
