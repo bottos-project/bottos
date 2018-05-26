@@ -93,4 +93,23 @@ type RemovePendingTrxsRsp struct {
 
 }
 
+// txactor->p2pactor
+type NotifyTrx struct {
+	Trx *types.Transaction
+}
+
+// producer->p2pactor
+type NotifyBlock struct {
+	Block *types.Block
+}
+
+// p2pactor->trxpool
+type ReceiveTrx struct {
+	Trx *types.Transaction
+}
+
+// p2pactor->chainactor
+type ReceiveBlock struct {
+	Block *types.Block
+}
 	
