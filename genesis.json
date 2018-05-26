@@ -1,10 +1,94 @@
 {
   "genesis_time": 1524801531,
   "chain_id": "0000000000000000000000000000000000000000000000000000000000000000",
-  "init_delegate": 
-  {
-    "name": "delegate",
+  "init_delegates": [{
+    "name": "alpheratz",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "mirach",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "almach",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "delta",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "nembus",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "titawin",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "adhil",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "regor",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "alsephina",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "suhail",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "markeb",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "peregrini",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "marut",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "deneb",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "sadr",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "gienah",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "ruc",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "albireo",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "vega",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "sulafat",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "sheliak",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "satori",
     "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
     "balance": 100000
   }
+]
 }
