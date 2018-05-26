@@ -104,7 +104,7 @@ func (bc *BlockChain) initChain() error {
 	for _, trx := range trxs {
 		ctx := &contract.Context{RoleIntf: bc.roleIntf, Trx: trx}
 		err := bc.nc.ExecuteNativeContract(ctx)
-		if err != nil {
+		if err != contract.ERROR_NONE {
 			fmt.Println("NativeContractInitChain Error: ", trx, err)
 			//return err
 			break
