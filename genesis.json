@@ -89,6 +89,37 @@
     "name": "satori",
     "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
     "balance": 100000
-  }
-]
+  },{
+    "name": "toliman",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "barnard",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "luhman16",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "sirius",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "lalande21185",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "ran",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "procyon",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  },{
+    "name": "wolf359",
+    "public_key": "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+    "balance": 100000
+  }]
 }
