@@ -7,7 +7,7 @@ Package api is a generated protocol buffer package.
 It is generated from these files:
 	github.com/bottos-project/bottos/api/transaction.proto
 	github.com/bottos-project/bottos/api/basic-transaction.proto
-	github.com/bottos-project/bottos/api/bottos-api.proto
+	github.com/bottos-project/bottos/api/core-api.proto
 
 It has these top-level messages:
 	Transaction
@@ -23,6 +23,8 @@ It has these top-level messages:
 	QueryAccountResponse
 	QueryObjectReq
 	QueryObjectResponse
+	QueryAbiReq
+	QueryAbiResponse
 */
 package api
 
