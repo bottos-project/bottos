@@ -40,7 +40,7 @@ var (
 		ErrTrxContractHanldeError : "push trx: "    		+    "process contract error",
 
 		ErrApiTrxNotFound         : "query trx: "   		+    "trx not found",
-		ErrApiBlockNotFound	  : "query block: " 		+    "block not found",
+		ErrApiBlockNotFound	      : "query block: " 		+    "block not found",
 		ErrApiQueryChainInfoError : "query chain info: " 	+    "error",
 		ErrApiAccountNotFound     : "query account: " 		+	 "account not found",
 		ErrApiObjectNotFound      : "query object: " 		+	 "object not found",
