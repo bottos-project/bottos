@@ -225,8 +225,9 @@ func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
 
 func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
-        return true
-	trxToVerify := &types.Transaction {
+	
+	return true
+	trxToVerify := &types.BasicTransaction {
 			Version    :trx.Version    , 
 			CursorNum  :trx.CursorNum  ,
 			CursorLabel:trx.CursorLabel,
@@ -236,7 +237,7 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 			Method     :trx.Method     ,
 			Param      :trx.Param      ,
 			SigAlg     :trx.SigAlg     ,
-			Signature  :[] byte{},
+			//Signature  :[] byte{},
 	}
 
 	serializeData, err := proto.Marshal(trxToVerify)

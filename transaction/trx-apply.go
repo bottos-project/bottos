@@ -123,21 +123,23 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	trxApplyService.SaveTransactionExpiration(trx)
 
 	var exeErr error
+	bottoserr := bottosErr.ErrNoError
 
 	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 
 	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
-		exeErr = trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
+		contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
+		bottoserr = contract.ConvertErrorCode(contErr)
 	} else {
 		/* call evm... */		
 		_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
 	}
 
-    if (nil == exeErr) {
+    if (nil == exeErr) && (bottoserr == bottosErr.ErrNoError) {
 		fmt.Println("trx : ", trx.Hash(),trx,"apply success")
 		return true, bottosErr.ErrNoError
 	}else {
 		fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
-		return false, bottosErr.ErrTrxContractHanldeError
+		return false, bottoserr
 	}
 }

@@ -3,7 +3,7 @@ package contract
 import (
 	"fmt"
 	"math/big"
-	"strconv"
+	//"strconv"
 	//"time"
 
 	"github.com/bottos-project/bottos/common/types"
@@ -42,15 +42,14 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 	var trxs []*types.Transaction
 
 	// construct trxs
-	var i uint32
-	for i = 1; i <= config.INIT_DELEGATE_NUM; i++ {
-		name := config.Genesis.InitDelegate.Name
-		name = name + strconv.Itoa(int(i))
+	var i int
+	for i = 0; i < len(config.Genesis.InitDelegates); i++ {
+		name := config.Genesis.InitDelegates[i].Name
 
 		// 1, new account trx
 		nps := &NewAccountParam{
 			Name:   name,
-			Pubkey: config.Genesis.InitDelegate.PublicKey,
+			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
 		nparam, _ := msgpack.Marshal(nps)
 		trx := newTransaction(config.BOTTOS_CONTRACT_NAME, "newaccount", nparam)
@@ -60,7 +59,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 		tps := &TransferParam{
 			From:  config.BOTTOS_CONTRACT_NAME,
 			To:    name,
-			Value: uint64(config.Genesis.InitDelegate.Balance),
+			Value: uint64(config.Genesis.InitDelegates[i].Balance),
 		}
 		tparam, _ := msgpack.Marshal(tps)
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "transfer", tparam)
@@ -69,7 +68,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 		// 3, set delegate
 		sps := &SetDelegateParam{
 			Name:   name,
-			Pubkey: config.Genesis.InitDelegate.PublicKey,
+			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
 		sparam, _ := msgpack.Marshal(sps)
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
@@ -78,10 +77,8 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 
 	// init CoreState delegates
 	coreState, _ := roleIntf.GetCoreState()
-	i = 1
-	for i = 1; i <= config.BLOCKS_PER_ROUND; i++ {
-		name := config.Genesis.InitDelegate.Name
-		name = name + strconv.Itoa(int(i))
+	for i = 0; i < int(config.BLOCKS_PER_ROUND); i++ {
+		name := config.Genesis.InitDelegates[i].Name
 
 		coreState.CurrentDelegates = append(coreState.CurrentDelegates, name)
 	}

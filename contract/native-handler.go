@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/role"
@@ -9,93 +10,28 @@ import (
 	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
-type NativeContractMethod func(*Context) error
 
-type NativeContract struct {
-	Handler map[string]NativeContractMethod
-}
-
-func NewNativeContractHandler() (NativeContractInterface, error) {
-	nc := &NativeContract{
-		Handler: make(map[string]NativeContractMethod),
-	}
-
-	nc.Handler["newaccount"] = newaccount
-	nc.Handler["transfer"] = transfer
-	nc.Handler["setdelegate"] = setdelegate
-	nc.Handler["deploycode"] = deploycode
-	nc.Handler["deployabi"] = deployabi
-
-	return nc, nil
-}
-
-func (nc *NativeContract) IsNativeContract(contract string, method string) bool {
-	if contract == config.BOTTOS_CONTRACT_NAME {
-		if _, ok := nc.Handler[method]; ok {
-			return true
-		}
-	}
-	return false
-}
-
-func (nc *NativeContract) ExecuteNativeContract(ctx *Context) error {
-	contract := ctx.Trx.Contract
-	method := ctx.Trx.Method
-	if !nc.IsNativeContract(contract, method) {
-		return fmt.Errorf("No Native Contract Method")
-	}
-
-	if handler, ok := nc.Handler[method]; ok {
-		err := handler(ctx)
-		return err
-	}
-
-	// TODO
-	return fmt.Errorf("No Native Contract Method")
-}
-
-func check_account_name(name string) error {
-	if len(name) == 0 || len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
-		return fmt.Errorf("Invalid Account Name")
-	}
-
-	return nil
-}
-
-func check_account(RoleIntf role.RoleInterface, name string) error {
-	err := check_account_name(name)
-	if err != nil {
-		return err
-	}
-
-	_, err = RoleIntf.GetAccount(name)
-	if err != nil {
-		return fmt.Errorf("Account Not Exist")
-	}
-
-	return nil
-}
-
-func newaccount(ctx *Context) error {
+func newAccount(ctx *Context) ContractError {
 	newaccount := &NewAccountParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, newaccount)
 	if err != nil {
-		return err
+		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 	fmt.Println("new account param: ", newaccount)
 
 	// TODO: check auth
 
 	//check account
-	err = check_account_name(newaccount.Name)
-	if err != nil {
-		return err
+	cerr := checkAccountName(newaccount.Name)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
 
-	_, err = ctx.RoleIntf.GetAccount(newaccount.Name)
-	if err == nil {
-		return fmt.Errorf("Account Exist")
+	if isAccountNameExist(ctx.RoleIntf, newaccount.Name) {
+		return ERROR_CONT_ACCOUNT_ALREADY_EXIST
 	}
+
+	// TODO: check pubkey
 
 	chainState, _ := ctx.RoleIntf.GetChainState()
 
@@ -123,14 +59,14 @@ func newaccount(ctx *Context) error {
 
 	fmt.Println(account, balance, staked_balance)
 
-	return nil
+	return ERROR_NONE
 }
 
-func transfer(ctx *Context) error {
+func transfer(ctx *Context) ContractError {
 	transfer := &TransferParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, transfer)
 	if err != nil {
-		return err
+		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
 	fmt.Println("transfer param: ", transfer)
@@ -138,21 +74,23 @@ func transfer(ctx *Context) error {
 	// TODO: check auth
 
 	// check account
-	err = check_account(ctx.RoleIntf, transfer.From)
-	if err != nil {
-		return err
+	cerr := checkAccount(ctx.RoleIntf, transfer.From)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
 
-	err = check_account(ctx.RoleIntf, transfer.To)
-	if err != nil {
-		return err
+	cerr = checkAccount(ctx.RoleIntf, transfer.To)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
+
+	// check Sender
 
 	// check funds
 	// TODO safe math check
 	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
 	if from.Balance < transfer.Value {
-		return fmt.Errorf("Insufficient Funds")
+		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
 
@@ -161,37 +99,85 @@ func transfer(ctx *Context) error {
 
 	err = ctx.RoleIntf.SetBalance(from.AccountName, from)
 	if err != nil {
-		return fmt.Errorf("Transfer Error")
+		return ERROR_CONT_HANDLE_FAIL
 	}
 	err = ctx.RoleIntf.SetBalance(to.AccountName, to)
 	if err != nil {
-		return fmt.Errorf("Transfer Error")
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
 	fmt.Println(from, to)
 
-	return nil
+	return ERROR_NONE
 }
 
-func setdelegate(ctx *Context) error {
+/*
+func setDelegate(ctx *Context) ContractError {
 	param := &SetDelegateParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
-		return err
+		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("setdelegate param: ", param)
+	fmt.Println("setDelegate param: ", param)
 
 	// TODO: check auth
 
 	// check account
-	err = check_account(ctx.RoleIntf, param.Name)
-	if err != nil {
-		return err
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
 
-	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
+	// TODO check pubkey
 
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
+	// create if not exist
+	newdelegate := &role.Delegate{
+		AccountName: param.Name,
+		ReportKey:   param.Pubkey,
+	}
+	ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
+	fmt.Println(newdelegate)
+
+	//create schedule delegate vote role
+	scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
+	newDelegateVotes.OwnerAccount = newdelegate.AccountName
+	err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+	fmt.Println("set delegate vote", newDelegateVotes)
+
+	return ERROR_NONE
+}
+*/
+
+func setDelegate(ctx *Context) ContractError {
+	param := &SetDelegateParam{}
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
+	if err != nil {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	fmt.Println("setDelegate param: ", param)
+
+	// TODO: check auth
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	// TODO check pubkey
+
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
 	if err != nil {
 		// new delegate
 		newdelegate := &role.Delegate{
@@ -204,7 +190,7 @@ func setdelegate(ctx *Context) error {
 		//create schedule delegate vote role
 		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
 		if err != nil {
-			return fmt.Errorf("critical error schedule delegate is not exist")
+			return ERROR_CONT_HANDLE_FAIL
 		}
 		//create delegate vote role
 		ctx.RoleIntf.CreateDelegateVotes()
@@ -213,42 +199,42 @@ func setdelegate(ctx *Context) error {
 		newDelegateVotes.OwnerAccount = newdelegate.AccountName
 		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
 		if err != nil {
-			return fmt.Errorf("set Delegate vote failed")
+			return ERROR_CONT_HANDLE_FAIL
 		}
 		fmt.Println("set delegate vote", newDelegateVotes)
 	} else {
-		return fmt.Errorf("Delegate Already Exist")
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
+	return ERROR_NONE
+}
+
+func checkCode(code []byte) error {
+	// TODO 
 	return nil
 }
 
-func check_code(code []byte) error {
-
-	return nil
-}
-
-func deploycode(ctx *Context) error {
+func deployCode(ctx *Context) ContractError {
 	param := &DeployCodeParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
-		return err
+		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("deploycode param: ", param)
+	fmt.Println("deployCode param: ", param)
 
 	// TODO: check auth
 
 	// check account
-	err = check_account(ctx.RoleIntf, param.Name)
-	if err != nil {
-		return err
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
 
 	// check code
-	err = check_code(param.ContractCode)
+	err = checkCode(param.ContractCode)
 	if err != nil {
-		return err
+		return ERROR_CONT_CODE_INVALID
 	}
 
 	codeHash := common.Sha256(param.ContractCode)
@@ -259,13 +245,13 @@ func deploycode(ctx *Context) error {
 	copy(account.ContractCode, param.ContractCode)
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
-		return fmt.Errorf("Set Code Fail")
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	return nil
+	return ERROR_NONE
 }
 
-func check_abi(abiRaw []byte) error {
+func checkAbi(abiRaw []byte) error {
 	_, err := ParseAbi(abiRaw)
 	if err != nil {
 		return fmt.Errorf("ABI Parse error: %v", err) 
@@ -273,27 +259,27 @@ func check_abi(abiRaw []byte) error {
 	return nil
 }
 
-func deployabi(ctx *Context) error {
+func deployAbi(ctx *Context) ContractError {
 	param := &DeployABIParam{}
 	err := msgpack.Unmarshal(ctx.Trx.Param, param)
 	if err != nil {
-		return err
+		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("deployabi param: ", param)
+	fmt.Println("deployAbi param: ", param)
 
 	// TODO: check auth
 
 	// check account
-	err = check_account(ctx.RoleIntf, param.Name)
-	if err != nil {
-		return err
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
 	}
 
-	// check code
-	err = check_abi(param.ContractAbi)
+	// check abi
+	err = checkAbi(param.ContractAbi)
 	if err != nil {
-		return err
+		return ERROR_CONT_ABI_PARSE_FAIL
 	}
 
 	account, _ := ctx.RoleIntf.GetAccount(param.Name)
@@ -301,8 +287,59 @@ func deployabi(ctx *Context) error {
 	copy(account.ContractAbi, param.ContractAbi)
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
-		return fmt.Errorf("Deploy ABI Fail")
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	return nil
+	return ERROR_NONE
+}
+
+func checkAccountName(name string) ContractError {
+	if len(name) == 0 {
+		return ERROR_CONT_ACCOUNT_NAME_NULL
+	}
+
+	if len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
+		return ERROR_CONT_ACCOUNT_NAME_TOO_LONG
+	}
+
+	if !checkAccountNameContent(name) {
+		return ERROR_CONT_ACCOUNT_NAME_ILLEGAL
+	}
+
+	return ERROR_NONE
+}
+
+func checkAccountNameContent(name string) bool {
+	match, err := regexp.MatchString(config.ACCOUNT_NAME_REGEXP, name)
+	if err != nil {
+		return false
+	}
+	if !match {
+		return false
+	}
+
+	return true
+}
+
+func isAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
+	account, err := RoleIntf.GetAccount(name)
+	if err == nil {
+		if account != nil && account.AccountName == name {
+			return true
+		}
+	}
+	return false
+}
+
+func checkAccount(RoleIntf role.RoleInterface, name string) ContractError {
+	cerr := checkAccountName(name)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	if !isAccountNameExist(RoleIntf, name) {
+		return ERROR_CONT_ACCOUNT_NOT_EXIST
+	}
+
+	return ERROR_NONE
 }

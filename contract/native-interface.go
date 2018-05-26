@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"github.com/bottos-project/bottos/config"
 )
 
 type NewAccountParam struct {
@@ -34,5 +35,49 @@ type DeployABIParam struct {
 
 type NativeContractInterface interface {
 	IsNativeContract(contract string, method string) bool
-	ExecuteNativeContract(*Context) error
+	ExecuteNativeContract(*Context) ContractError
+}
+
+type NativeContractMethod func(*Context) ContractError
+
+type NativeContract struct {
+	Handler map[string]NativeContractMethod
+}
+
+func NewNativeContractHandler() (NativeContractInterface, error) {
+	nc := &NativeContract{
+		Handler: make(map[string]NativeContractMethod),
+	}
+
+	nc.Handler["newaccount"] = newAccount
+	nc.Handler["transfer"] = transfer
+	nc.Handler["setdelegate"] = setDelegate
+	nc.Handler["deploycode"] = deployCode
+	nc.Handler["deployabi"] = deployAbi
+
+	return nc, nil
+}
+
+func (nc *NativeContract) IsNativeContract(contract string, method string) bool {
+	if contract == config.BOTTOS_CONTRACT_NAME {
+		if _, ok := nc.Handler[method]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
+	contract := ctx.Trx.Contract
+	method := ctx.Trx.Method
+	if nc.IsNativeContract(contract, method) {
+		if handler, ok := nc.Handler[method]; ok {
+			contErr := handler(ctx)
+			return contErr
+		} else {
+			return ERROR_CONT_UNKNOWN_METHOD
+		}
+	} else {
+		return ERROR_CONT_UNKNOWN_CONTARCT
+	}
 }
