@@ -124,8 +124,8 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
 	if (nil != err) {
-		resp.Errcode = 100
-		resp.Msg = "message handle failed"    
+		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
 		return nil
 	}
