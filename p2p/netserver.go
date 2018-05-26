@@ -68,10 +68,10 @@ type NetServer struct {
 }
 
 func NewNetServer() *NetServer {
-
+	fmt.Println("NewNetServer config.Param.PeerList = ", config.Param.PeerList)
 	return &NetServer{
 		//config:        config,
-		//addr:          config.Param.P //config.Param.ServAddr,
+		addr:          config.Param.ServAddr,
 		seed_peer:     config.Param.PeerList,
 		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
@@ -233,6 +233,7 @@ func (serv *NetServer) ActiveSeeds() error {
 
 func (serv *NetServer) AppendList(conn net.Conn , msg message) error {
 	//package remote peer info as "peer" struct and add it into peer list
+	fmt.Println("NetServer::AppendList")
 	peer := NewPeer(msg.Src , serv.port , conn)
 	peer.SetPeerState(ESTABLISH)
 	serv.notify.AddPeer(peer)
@@ -249,7 +250,7 @@ func  (serv *NetServer) ResetTimer ()  {
 //connect seed during start p2p server
 func (serv *NetServer) ConnectSeeds() error {
 
-	fmt.Println("p2pServer::ConnectSeeds()")
+	fmt.Println("p2pServer::ConnectSeeds")
 	for _ , peer := range serv.seed_peer {
 		//check if the new peer is in peer list
 		if serv.notify.IsExist(peer , false) {
@@ -276,7 +277,7 @@ func (serv *NetServer) ConnectSeeds() error {
 
 //to connect specified peer
 func (serv *NetServer) ConnectTo (conn net.Conn , msg []byte , isExist bool) error {
-	fmt.Println("p2pServer::ConnectTo()")
+	fmt.Println("p2pServer::ConnectTo")
 	if conn == nil {
 		return errors.New("*ERROR* Invalid parameter !!!")
 	}
@@ -359,7 +360,7 @@ func (serv *NetServer) WatchStatus() {
 	fmt.Println("NetServer::WatchStatus")
 
 	for key, peer := range serv.notify.peerMap {
-		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer)
+		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr)
 	}
 	//serv.notify.BoardcastTrx(nil , false)
 }

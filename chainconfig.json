@@ -4,6 +4,7 @@
     "consensus":"dpos",
     "api_port": 6789,
     "p2p_port": 6890,
+    "serv_addr":"127.0.0.1",
     "peer_list": [
         "127.0.0.1"
     ],

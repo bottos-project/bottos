@@ -47,6 +47,7 @@ type Parameter struct {
 	Consensus         string    `json:"consensus"`
 	APIPort           int       `json:"api_port"`
 	P2PPort           int       `json:"p2p_port"`
+	ServAddr          string    `json:"serv_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
