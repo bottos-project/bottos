@@ -32,6 +32,8 @@ const (
 	ErrApiAccountNotFound			ErrCode = 10204
 	ErrApiObjectNotFound			ErrCode = 10205
 
+	ErrActorHandleError             ErrCode = 10301
+
 	ErrInvalid              ErrCode = 0xFFFFFFFF
 )
 
@@ -66,6 +68,7 @@ var (
 		ErrApiAccountNotFound				: "query account: " 	+	 "account not found",
 		ErrApiObjectNotFound				: "query object: " 		+	 "object not found",
 
+		ErrActorHandleError                 :  "actor: " 	      	+	 "process error",
 	  }
 )
 
