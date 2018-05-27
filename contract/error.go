@@ -23,11 +23,14 @@ const (
 	ERROR_CONT_UNKNOWN_CONTARCT				ContractError				= 110
 	ERROR_CONT_UNKNOWN_METHOD				ContractError				= 111
 	ERROR_CONT_TRANSFER_OVERFLOW			ContractError				= 112
-	
+	ERROR_CONT_ACCOUNT_MISMATCH				ContractError				= 113
+	ERROR_CONT_INSUFFICIENT_CREDITS			ContractError				= 114
 )
 
 func ConvertErrorCode(cerr ContractError) bottosErr.ErrCode {
 	switch cerr {
+	case ERROR_NONE:
+		return bottosErr.ErrNoError
 	case ERROR_CONT_HANDLE_FAIL:
 		return bottosErr.ErrTrxContractHanldeError 
     case ERROR_CONT_ACCOUNT_NAME_NULL:
@@ -55,8 +58,12 @@ func ConvertErrorCode(cerr ContractError) bottosErr.ErrCode {
 	case ERROR_CONT_UNKNOWN_METHOD:
 		return bottosErr.ErrContractUnknownMethod
 	case ERROR_CONT_TRANSFER_OVERFLOW:
-        return bottosErr.ErrContractTransferOverflow
+		return bottosErr.ErrContractTransferOverflow
+	case ERROR_CONT_ACCOUNT_MISMATCH:
+		return bottosErr.ErrContractAccountMismatch
+	case ERROR_CONT_INSUFFICIENT_CREDITS:
+        return bottosErr.ErrContractInsufficientCredits
     }
-	return bottosErr.ErrNoError
+	return bottosErr.ErrTrxContractHanldeError
 }
 

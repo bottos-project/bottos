@@ -21,6 +21,23 @@ type SetDelegateParam struct {
 	// TODO CONFIG
 }
 
+type GrantCreditParam struct {
+	Name		string		`json:"name"`
+	Spender		string 		`json:"spender"`
+	Limit		uint64		`json:"limit"`
+}
+
+type CancelCreditParam struct {
+	Name		string		`json:"name"`
+	Spender		string 		`json:"spender"`
+}
+
+type TransferFromParam struct {
+	From		string		`json:"from"`
+	To			string		`json:"to"`
+	Value		uint64		`json:"value"`
+}
+
 type DeployCodeParam struct {
 	Name		 string		 `json:"name"`
 	VMType       byte        `json:"vm_type"`
@@ -52,6 +69,9 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 	nc.Handler["newaccount"] = newAccount
 	nc.Handler["transfer"] = transfer
 	nc.Handler["setdelegate"] = setDelegate
+	nc.Handler["grantcredit"] = grantCredit
+	nc.Handler["cancelcredit"] = cancelCredit
+	nc.Handler["transferfrom"] = transferFrom
 	nc.Handler["deploycode"] = deployCode
 	nc.Handler["deployabi"] = deployAbi
 

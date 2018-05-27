@@ -26,6 +26,8 @@ const (
 	ErrContractUnknownContract		ErrCode = 10108
 	ErrContractUnknownMethod		ErrCode = 10109
 	ErrContractTransferOverflow		ErrCode = 10110
+	ErrContractAccountMismatch		ErrCode = 10111
+	ErrContractInsufficientCredits	ErrCode = 10112
 
 	ErrApiTrxNotFound				ErrCode = 10201
 	ErrApiBlockNotFound				ErrCode = 10202
@@ -62,6 +64,8 @@ var (
 		ErrContractUnknownContract			: "push trx: "    		+    "unknown contract",
 		ErrContractUnknownMethod			: "push trx: "    		+    "unknown contract method",
 		ErrContractTransferOverflow			: "push trx: "    		+    "transfer overflow",
+		ErrContractAccountMismatch			: "push trx: "    		+    "sender and param account mismatch",
+		ErrContractInsufficientCredits		: "push trx: "    		+    "insufficient credits",
 		
 
 		ErrApiTrxNotFound					: "query trx: "   		+    "trx not found",
