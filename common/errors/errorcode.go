@@ -25,6 +25,7 @@ const (
 	ErrContractInvalidContractAbi	ErrCode = 10107
 	ErrContractUnknownContract		ErrCode = 10108
 	ErrContractUnknownMethod		ErrCode = 10109
+	ErrContractTransferOverflow		ErrCode = 10110
 
 	ErrApiTrxNotFound				ErrCode = 10201
 	ErrApiBlockNotFound				ErrCode = 10202
@@ -60,6 +61,7 @@ var (
 		ErrContractInvalidContractAbi		: "push trx: "    		+    "invalide contract abi",
 		ErrContractUnknownContract			: "push trx: "    		+    "unknown contract",
 		ErrContractUnknownMethod			: "push trx: "    		+    "unknown contract method",
+		ErrContractTransferOverflow			: "push trx: "    		+    "transfer overflow",
 		
 
 		ErrApiTrxNotFound					: "query trx: "   		+    "trx not found",

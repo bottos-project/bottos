@@ -22,6 +22,7 @@ const (
 	ERROR_CONT_ABI_PARSE_FAIL				ContractError				= 109
 	ERROR_CONT_UNKNOWN_CONTARCT				ContractError				= 110
 	ERROR_CONT_UNKNOWN_METHOD				ContractError				= 111
+	ERROR_CONT_TRANSFER_OVERFLOW			ContractError				= 112
 	
 )
 
@@ -52,7 +53,9 @@ func ConvertErrorCode(cerr ContractError) bottosErr.ErrCode {
 	case ERROR_CONT_UNKNOWN_CONTARCT:
 		return bottosErr.ErrContractUnknownContract
 	case ERROR_CONT_UNKNOWN_METHOD:
-        return bottosErr.ErrContractUnknownMethod
+		return bottosErr.ErrContractUnknownMethod
+	case ERROR_CONT_TRANSFER_OVERFLOW:
+        return bottosErr.ErrContractTransferOverflow
     }
 	return bottosErr.ErrNoError
 }

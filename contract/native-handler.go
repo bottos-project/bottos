@@ -87,15 +87,20 @@ func transfer(ctx *Context) ContractError {
 	// check Sender
 
 	// check funds
-	// TODO safe math check
 	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
 	if from.Balance < transfer.Value {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
 
-	from.Balance -= transfer.Value
-	to.Balance += transfer.Value
+	err = from.SafeSub(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	err = to.SafeAdd(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
 
 	err = ctx.RoleIntf.SetBalance(from.AccountName, from)
 	if err != nil {
@@ -110,53 +115,6 @@ func transfer(ctx *Context) ContractError {
 
 	return ERROR_NONE
 }
-
-/*
-func setDelegate(ctx *Context) ContractError {
-	param := &SetDelegateParam{}
-	err := msgpack.Unmarshal(ctx.Trx.Param, param)
-	if err != nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-
-	fmt.Println("setDelegate param: ", param)
-
-	// TODO: check auth
-
-	// check account
-	cerr := checkAccount(ctx.RoleIntf, param.Name)
-	if cerr != ERROR_NONE {
-		return cerr
-	}
-
-	// TODO check pubkey
-
-	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
-	// create if not exist
-	newdelegate := &role.Delegate{
-		AccountName: param.Name,
-		ReportKey:   param.Pubkey,
-	}
-	ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
-	fmt.Println(newdelegate)
-
-	//create schedule delegate vote role
-	scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
-	if err != nil {
-		return ERROR_CONT_HANDLE_FAIL
-	}
-
-	newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
-	newDelegateVotes.OwnerAccount = newdelegate.AccountName
-	err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
-	if err != nil {
-		return ERROR_CONT_HANDLE_FAIL
-	}
-	fmt.Println("set delegate vote", newDelegateVotes)
-
-	return ERROR_NONE
-}
-*/
 
 func setDelegate(ctx *Context) ContractError {
 	param := &SetDelegateParam{}
