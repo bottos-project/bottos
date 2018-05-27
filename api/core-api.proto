@@ -14,6 +14,7 @@ service CoreApi{
 	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
 	rpc QueryObject(QueryObjectReq)returns (QueryObjectResponse){}
 	rpc QueryAbi(QueryAbiReq)returns (QueryAbiResponse){}
+	rpc QueryTransferCredit(QueryTransferCreditRequest)returns (QueryTransferCreditResponse){}
 } 
 
 
@@ -121,3 +122,20 @@ message QueryAbiResponse{
 	string 				msg					= 2;
 	string 				result				= 3;
 }
+
+message QueryTransferCreditRequest{
+	string 				name				= 1;
+	string 				spender				= 2;
+}
+
+message QueryTransferCreditResponse{
+	uint32 				errcode				= 1;
+	string 				msg					= 2;
+	Result 				result				= 3;
+	message Result {
+		string 			name				= 1;
+		string			spender				= 2;
+		uint64 			limit				= 3;
+	}
+}
+

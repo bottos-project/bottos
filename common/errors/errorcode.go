@@ -34,6 +34,7 @@ const (
 	ErrApiQueryChainInfoError		ErrCode = 10203
 	ErrApiAccountNotFound			ErrCode = 10204
 	ErrApiObjectNotFound			ErrCode = 10205
+	ErrTransferCreditNotFound		ErrCode = 10206
 
 	ErrActorHandleError             ErrCode = 10301
 
@@ -73,6 +74,7 @@ var (
 		ErrApiQueryChainInfoError			: "query chain info: " 	+    "error",
 		ErrApiAccountNotFound				: "query account: " 	+	 "account not found",
 		ErrApiObjectNotFound				: "query object: " 		+	 "object not found",
+		ErrTransferCreditNotFound			: "query credit: " 		+	 "credit not found",
 
 		ErrActorHandleError                 :  "actor: " 	      	+	 "process error",
 	  }

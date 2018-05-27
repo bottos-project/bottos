@@ -311,3 +311,21 @@ func (h *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *a
 	
 	return nil
 }
+
+func (h *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTransferCreditRequest, resp *api.QueryTransferCreditResponse) error {
+	name := req.Name
+	spender := req.Spender
+	credit, err := h.env.RoleIntf.GetTransferCredit(name, spender)
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrTransferCreditNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrTransferCreditNotFound)
+		return nil
+	}
+
+	resp.Result = &api.QueryTransferCreditResponse_Result{}
+	resp.Result.Name = credit.Name
+	resp.Result.Spender = credit.Spender
+	resp.Result.Limit = credit.Limit
+	
+	return nil
+}
