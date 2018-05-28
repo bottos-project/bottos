@@ -42,7 +42,7 @@ func TestBlockChain_ConfirmedSort(t *testing.T) {
 
 	fmt.Println(lastConfirmedNums)
 
-	consensusIndex := 8
+	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(lastConfirmedNums) / 100
 	sort.Sort(lastConfirmedNums)
 	fmt.Println(lastConfirmedNums)
 	fmt.Println(lastConfirmedNums[consensusIndex])
