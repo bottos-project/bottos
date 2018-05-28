@@ -32,17 +32,10 @@
 package p2pserver
 
 import (
-	//"io"
 	"fmt"
-	//"net"
 	"sync"
 	"errors"
-	//"crypto"
-	//"crypto/rand"
 	"crypto/rsa"
-	//"log"
-	//"encoding/binary"
-	//"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"github.com/AsynkronIT/protoactor-go/actor"
@@ -122,23 +115,6 @@ func NewServ() *P2PServer{
 func (p2p *P2PServer) Init() error {
 
 	fmt.Println("p2pServer::Init()")
-	/*
-	serv_addr := p2p.serv.addr + ":" + fmt.Sprint(p2p.serv.port)
-	var err error
-
-	p2p.serv.serverAddr, err = net.ResolveUDPAddr("udp4", serv_addr)
-	if err != nil {
-		fmt.Println("*ERROR* Failed to Resolve UDP Address !!!")
-		return errors.New("*ERROR* Failed to Resolve UDP Address !!!")
-	}
-
-	//return (*UDPConn, error)
-	p2p.serv.socket, err = net.ListenUDP("udp4", p2p.serv.serverAddr)
-	if err != nil {
-		fmt.Println("*ERROR* Failed to Listen !!! ", err)
-		return errors.New("*ERROR* Failed to Listen !!! ")
-	}
-	*/
 
 	return nil
 }

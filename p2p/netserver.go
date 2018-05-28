@@ -32,16 +32,11 @@
 package p2pserver
 
 import (
-	//"io"
 	"fmt"
 	"net"
 	"sync"
 	"time"
 	"errors"
-	//"reflect"
-	//"unsafe"
-	//"crypto/sha1"
-	//"hash/fnv"
 	"encoding/json"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/common/types"
@@ -326,32 +321,11 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
-	/*
-	//test connection with remote peer
-	var msg = message {
-		src:      serv.addr,
-		dst:      addr,
-		msg_type: request,
-	}
-
-	req , err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	*/
-
 	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
 		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
-
-	/*
-	//package remote peer info as "peer" struct and add it into peer list
-	peer := NewPeer(addr)
-	peer_identify := Hash(addr_port)
-	serv.peerMap[uint64(peer_identify)] = peer
-	*/
 
 	return nil
 }
@@ -362,5 +336,4 @@ func (serv *NetServer) WatchStatus() {
 	for key, peer := range serv.notify.peerMap {
 		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr)
 	}
-	//serv.notify.BoardcastTrx(nil , false)
 }
