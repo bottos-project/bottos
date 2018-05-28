@@ -459,13 +459,18 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
     }
 
     /* Create bottos account */
+	var initSupply uint64
+    initSupply, err := safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
+    if err != nil {
+        return err
+    }
     _, err := findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
     if err != nil {
 
         bto := &AccountInfo{
             ID:               bson.NewObjectId(),
             AccountName:      config.BOTTOS_CONTRACT_NAME,
-            Balance:          config.BOTTOS_INIT_SUPPLY,//uint32        `bson:"bto_balance"`
+            Balance:          initSupply,//uint32        `bson:"bto_balance"`
             StakedBalance:    0,//uint64        `bson:"staked_balance"`
             UnstakingBalance: "",//             `bson:"unstaking_balance"`
             PublicKey:        "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
