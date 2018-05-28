@@ -7,6 +7,7 @@ import (
 	//"time"
 
 	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/contract/msgpack"
@@ -103,9 +104,15 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	roleIntf.SetAccount(bto.AccountName, bto)
 
 	// balance
+	var initSupply uint64
+	initSupply, err = safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
+	if err != nil {
+		return err
+	}
+
 	balance := &role.Balance{
 		AccountName: bto.AccountName,
-		Balance:     config.BOTTOS_INIT_SUPPLY,
+		Balance:     initSupply,
 	}
 	roleIntf.SetBalance(bto.AccountName, balance)
 

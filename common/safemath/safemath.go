@@ -48,3 +48,17 @@ func Uint64Sub(a uint64, b uint64) (uint64, error) {
 	}
 }
 
+func Uint64Mul(a uint64, b uint64) (uint64, error) {
+	var c uint64
+	c = a * b
+	if a != 0 {
+		var d uint64
+		d = c / a
+		if b != d {
+			return 0, errors.New("uint64 overflow")
+		}
+	}
+	
+	return c, nil
+}
+
