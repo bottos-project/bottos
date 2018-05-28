@@ -36,6 +36,7 @@ import (
 	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
     "github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/common/safemath"
 )
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
@@ -458,13 +459,14 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
         return errors.New("Invalid contract param")
     }
 
-    /* Create bottos account */
 	var initSupply uint64
-    initSupply, err := safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
-    if err != nil {
-        return err
+	var err error
+    initSupply, err = safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
+    if err != nil {
+        return err
     }
-    _, err := findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
+
+    _, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
     if err != nil {
 
         bto := &AccountInfo{
