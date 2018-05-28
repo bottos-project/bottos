@@ -246,7 +246,6 @@ type NodeInfoReq struct {
 }
 
 func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
-    fmt.Println("findAcountInfo 1: accountName: ", accountName)
     return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
@@ -360,14 +359,13 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 }
 
 func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
-	
+    
     if ldb == nil || block == nil {
 	    return errors.New("Error Invalid param")
 	}
 	if len(oids) != len(block.Transactions) {
 		return errors.New("invalid param")
 	}
-    fmt.Printf("insertTxInfoRole:len(block.Transactions): %d\n", len(block.Transactions))
 	for i, trx := range block.Transactions {
 		newtrx := &TxInfo{
 			ID:            oids[i],
@@ -426,22 +424,29 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 }
 
 func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
+    var value2 AccountInfo
     value, err := findAcountInfo(ldb, accountName)
-    if err != nil {
+
+    if value == nil || err != nil {
         return nil, err
     }
-    AccountRec := value.(AccountInfo)
+    
+    // convert bson.M to struct
+    bsonBytes, _ := bson.Marshal(value)
+    bson.Unmarshal(bsonBytes, &value2)
 
-    res := &Balance{    
+    fmt.Println("GetBalanceOp: value2 is: ", value2, ", value2.Balance is: ", value2.Balance)
+    
+    res := &Balance{
                        AccountName: accountName,
-                       Balance:     AccountRec.Balance,
+                       Balance:     value2.Balance,
                    }
     
     return res, nil
 }
 
 func SetBalanceOp(ldb *db.DBService, accountName string, balance uint64) error {
-    return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "balance", balance)
+    return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance)
 }
 
 func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
@@ -452,7 +457,6 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
     if trx.Contract != config.BOTTOS_CONTRACT_NAME {
         return errors.New("Invalid contract param")
     }
-
 
     /* Create bottos account */
     _, err := findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
@@ -472,6 +476,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
     }
 
     if trx.Method == "transfer" {
+        
         data := &transferparam{}
         err :=  msgpack.Unmarshal(trx.Param, data)
         fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
@@ -506,12 +511,18 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
             return err
         }
     } else if (trx.Method == "newaccount") {
+        
         data := &newaccountparam{}
         err  :=  msgpack.Unmarshal(trx.Param, data)
         if err != nil {
             return err
         }
         
+        mesgs, err := findAcountInfo(ldb, data.Name)
+        if mesgs != nil {
+           return nil /* Do not allow insert same account */ 
+        }
+
         NewAccount := &AccountInfo {
             ID:               oid,
             AccountName:      data.Name,
@@ -522,7 +533,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
             CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
             UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
        }
-               
+        
        return ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, NewAccount)
     }
 
