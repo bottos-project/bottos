@@ -70,7 +70,7 @@ type GenesisConfig struct {
 type InitDelegate struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"public_key"`
-	Balance   uint32 `json:"balance"`
+	Balance   uint64 `json:"balance"`
 }
 
 func LoadConfig() error {
