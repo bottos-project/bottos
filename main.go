@@ -62,9 +62,7 @@ func main() {
 		NcIntf:     nc,
 	}
 	cactor.InitActors(actorenv)
-	//caapi.PushTransaction(2876568)
 
-	//caapi.InitTrxActorAgent()
 	var trxPool = transaction.InitTrxPool(actorenv)
 	trxactor.SetTrxPool(trxPool)
 

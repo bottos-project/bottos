@@ -33,6 +33,7 @@ type CoreApiClient interface {
 	QueryAccount(ctx context.Context, in *QueryAccountRequest, opts ...client.CallOption) (*QueryAccountResponse, error)
 	QueryObject(ctx context.Context, in *QueryObjectReq, opts ...client.CallOption) (*QueryObjectResponse, error)
 	QueryAbi(ctx context.Context, in *QueryAbiReq, opts ...client.CallOption) (*QueryAbiResponse, error)
+	QueryTransferCredit(ctx context.Context, in *QueryTransferCreditRequest, opts ...client.CallOption) (*QueryTransferCreditResponse, error)
 }
 
 type coreApiClient struct {
@@ -123,6 +124,16 @@ func (c *coreApiClient) QueryAbi(ctx context.Context, in *QueryAbiReq, opts ...c
 	return out, nil
 }
 
+func (c *coreApiClient) QueryTransferCredit(ctx context.Context, in *QueryTransferCreditRequest, opts ...client.CallOption) (*QueryTransferCreditResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "CoreApi.QueryTransferCredit", in)
+	out := new(QueryTransferCreditResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for CoreApi service
 
 type CoreApiHandler interface {
@@ -133,6 +144,7 @@ type CoreApiHandler interface {
 	QueryAccount(context.Context, *QueryAccountRequest, *QueryAccountResponse) error
 	QueryObject(context.Context, *QueryObjectReq, *QueryObjectResponse) error
 	QueryAbi(context.Context, *QueryAbiReq, *QueryAbiResponse) error
+	QueryTransferCredit(context.Context, *QueryTransferCreditRequest, *QueryTransferCreditResponse) error
 }
 
 func RegisterCoreApiHandler(s server.Server, hdlr CoreApiHandler, opts ...server.HandlerOption) {
@@ -169,4 +181,8 @@ func (h *CoreApi) QueryObject(ctx context.Context, in *QueryObjectReq, out *Quer
 
 func (h *CoreApi) QueryAbi(ctx context.Context, in *QueryAbiReq, out *QueryAbiResponse) error {
 	return h.CoreApiHandler.QueryAbi(ctx, in, out)
+}
+
+func (h *CoreApi) QueryTransferCredit(ctx context.Context, in *QueryTransferCreditRequest, out *QueryTransferCreditResponse) error {
+	return h.CoreApiHandler.QueryTransferCredit(ctx, in, out)
 }

@@ -25,12 +25,16 @@ const (
 	ErrContractInvalidContractAbi	ErrCode = 10107
 	ErrContractUnknownContract		ErrCode = 10108
 	ErrContractUnknownMethod		ErrCode = 10109
+	ErrContractTransferOverflow		ErrCode = 10110
+	ErrContractAccountMismatch		ErrCode = 10111
+	ErrContractInsufficientCredits	ErrCode = 10112
 
 	ErrApiTrxNotFound				ErrCode = 10201
 	ErrApiBlockNotFound				ErrCode = 10202
 	ErrApiQueryChainInfoError		ErrCode = 10203
 	ErrApiAccountNotFound			ErrCode = 10204
 	ErrApiObjectNotFound			ErrCode = 10205
+	ErrTransferCreditNotFound		ErrCode = 10206
 
 	ErrActorHandleError             ErrCode = 10301
 
@@ -60,6 +64,9 @@ var (
 		ErrContractInvalidContractAbi		: "push trx: "    		+    "invalide contract abi",
 		ErrContractUnknownContract			: "push trx: "    		+    "unknown contract",
 		ErrContractUnknownMethod			: "push trx: "    		+    "unknown contract method",
+		ErrContractTransferOverflow			: "push trx: "    		+    "transfer overflow",
+		ErrContractAccountMismatch			: "push trx: "    		+    "sender and param account mismatch",
+		ErrContractInsufficientCredits		: "push trx: "    		+    "insufficient credits",
 		
 
 		ErrApiTrxNotFound					: "query trx: "   		+    "trx not found",
@@ -67,6 +74,7 @@ var (
 		ErrApiQueryChainInfoError			: "query chain info: " 	+    "error",
 		ErrApiAccountNotFound				: "query account: " 	+	 "account not found",
 		ErrApiObjectNotFound				: "query object: " 		+	 "object not found",
+		ErrTransferCreditNotFound			: "query credit: " 		+	 "credit not found",
 
 		ErrActorHandleError                 :  "actor: " 	      	+	 "process error",
 	  }

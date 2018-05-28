@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 
 	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/common/safemath"
 )
 
 const BalanceObjectName string = "balance"
@@ -75,6 +76,48 @@ func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 	return res, nil
 }
 
+func safeAdd(a uint64, b uint64) (uint64, error) {
+	var c uint64
+	c, err := safemath.Uint64Add(a, b)
+	if err != nil {
+		return 0, err
+	}
+	return c, nil
+}
+
+func safeSub(a uint64, b uint64) (uint64, error) {
+	var c uint64
+	c, err := safemath.Uint64Sub(a, b)
+	if err != nil {
+		return 0, err
+	}
+	return c, nil
+}
+
+func (balance *Balance) SafeAdd(amount uint64) error {
+	var a,c uint64
+	a = balance.Balance
+	c, err := safeAdd(a, amount)
+	if err != nil {
+		return err
+	} else {
+		balance.Balance = c
+		return nil
+	}
+}
+
+func (balance *Balance) SafeSub(amount uint64) error {
+	var a,c uint64
+	a = balance.Balance
+	c, err := safeSub(a, amount)
+	if err != nil {
+		return err
+	} else {
+		balance.Balance = c
+		return nil
+	}
+}
+
 func CreateStakedBalanceRole(ldb *db.DBService) error {
 	return nil
 }
@@ -103,4 +146,28 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 	}
 
 	return res, nil
+}
+
+func (balance *StakedBalance) SafeAdd(amount uint64) error {
+	var a,c uint64
+	a = balance.StakedBalance
+	c, err := safeAdd(a, amount)
+	if err != nil {
+		return err
+	} else {
+		balance.StakedBalance = c
+		return nil
+	}
+}
+
+func (balance *StakedBalance) SafeSub(amount uint64) error {
+	var a,c uint64
+	a = balance.StakedBalance
+	c, err := safeSub(a, amount)
+	if err != nil {
+		return err
+	} else {
+		balance.StakedBalance = c
+		return nil
+	}
 }

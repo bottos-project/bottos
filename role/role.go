@@ -48,6 +48,9 @@ type RoleInterface interface {
 	GetBalance(accountName string) (*Balance, error)
 	SetStakedBalance(accountName string, value *StakedBalance) error
 	GetStakedBalance(accountName string) (*StakedBalance, error)
+	SetTransferCredit(name string, value *TransferCredit) error
+	GetTransferCredit(name string, spender string) (*TransferCredit, error)
+	DeleteTransferCredit(name string, spender string) error
 
 	SetDelegate(accountName string, value *Delegate) error
 	GetDelegateByAccountName(name string) (*Delegate, error)
@@ -131,6 +134,18 @@ func (r *Role) GetStakedBalance(accountName string) (*StakedBalance, error) {
 	return GetStakedBalanceRoleByName(r.Db, accountName)
 }
 
+func (r *Role) SetTransferCredit(name string, value *TransferCredit) error {
+	return SetTransferCreditRole(r.Db, name, value)
+}
+
+func (r *Role) GetTransferCredit(name string, spender string) (*TransferCredit, error) {
+	return GetTransferCreditRole(r.Db, name, spender)
+}
+
+func (r *Role) DeleteTransferCredit(name string, spender string) error {
+	return DeleteTransferCreditRole(r.Db, name, spender)
+}
+
 func (r *Role) SetDelegate(accountName string, value *Delegate) error {
 	return SetDelegateRole(r.Db, accountName, value)
 }
@@ -212,6 +227,7 @@ func (r *Role) initRole() {
 	CreateAccountRole(r.Db)
 	CreateBalanceRole(r.Db)
 	CreateStakedBalanceRole(r.Db)
+	CreateTransferCreditRole(r.Db)
 
 	CreateDelegateRole(r.Db)
 

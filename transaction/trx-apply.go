@@ -41,9 +41,6 @@ func GetTrxApplyService() *TrxApplyService {
 
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
 	
-	//curTime := trxApplyService.core.HeadBlockTime()
-	//for test:
-	return true
 	curTime := common.Now()
 
 	if (curTime >= trx.Lifetime) {
@@ -72,7 +69,6 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Transaction) bool {
-        return true 
 	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
 	if (nil != err || nil == blockHistory) {
 		return false

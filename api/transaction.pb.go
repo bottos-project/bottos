@@ -25,6 +25,8 @@ It has these top-level messages:
 	QueryObjectResponse
 	QueryAbiReq
 	QueryAbiResponse
+	QueryTransferCreditRequest
+	QueryTransferCreditResponse
 */
 package api
 

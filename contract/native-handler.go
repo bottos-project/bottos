@@ -87,15 +87,20 @@ func transfer(ctx *Context) ContractError {
 	// check Sender
 
 	// check funds
-	// TODO safe math check
 	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
 	if from.Balance < transfer.Value {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
 
-	from.Balance -= transfer.Value
-	to.Balance += transfer.Value
+	err = from.SafeSub(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	err = to.SafeAdd(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
 
 	err = ctx.RoleIntf.SetBalance(from.AccountName, from)
 	if err != nil {
@@ -110,53 +115,6 @@ func transfer(ctx *Context) ContractError {
 
 	return ERROR_NONE
 }
-
-/*
-func setDelegate(ctx *Context) ContractError {
-	param := &SetDelegateParam{}
-	err := msgpack.Unmarshal(ctx.Trx.Param, param)
-	if err != nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-
-	fmt.Println("setDelegate param: ", param)
-
-	// TODO: check auth
-
-	// check account
-	cerr := checkAccount(ctx.RoleIntf, param.Name)
-	if cerr != ERROR_NONE {
-		return cerr
-	}
-
-	// TODO check pubkey
-
-	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
-	// create if not exist
-	newdelegate := &role.Delegate{
-		AccountName: param.Name,
-		ReportKey:   param.Pubkey,
-	}
-	ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
-	fmt.Println(newdelegate)
-
-	//create schedule delegate vote role
-	scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
-	if err != nil {
-		return ERROR_CONT_HANDLE_FAIL
-	}
-
-	newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
-	newDelegateVotes.OwnerAccount = newdelegate.AccountName
-	err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
-	if err != nil {
-		return ERROR_CONT_HANDLE_FAIL
-	}
-	fmt.Println("set delegate vote", newDelegateVotes)
-
-	return ERROR_NONE
-}
-*/
 
 func setDelegate(ctx *Context) ContractError {
 	param := &SetDelegateParam{}
@@ -205,6 +163,177 @@ func setDelegate(ctx *Context) ContractError {
 	} else {
 		return ERROR_CONT_HANDLE_FAIL
 	}
+
+	return ERROR_NONE
+}
+
+func grantCredit(ctx *Context) ContractError {
+	param := &GrantCreditParam{}
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
+	if err != nil {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	fmt.Println("grantcredit param: ", param)
+
+	// TODO: check auth
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	cerr = checkAccount(ctx.RoleIntf, param.Spender)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	cerr = checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	// sender must be from
+	if ctx.Trx.Sender != param.Name {
+		return ERROR_CONT_ACCOUNT_MISMATCH
+	}
+
+	// check limit
+	balance, err := ctx.RoleIntf.GetBalance(param.Name)
+	if balance.Balance < param.Limit {
+		return ERROR_CONT_INSUFFICIENT_FUNDS
+	}
+
+	credit := &role.TransferCredit{
+		Name: param.Name,
+		Spender: param.Spender,
+		Limit: param.Limit,
+	}
+	err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	fmt.Println(credit)
+
+	return ERROR_NONE
+}
+
+func cancelCredit(ctx *Context) ContractError {
+	param := &CancelCreditParam{}
+	err := msgpack.Unmarshal(ctx.Trx.Param, param)
+	if err != nil {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	fmt.Println("cancelcredit param: ", param)
+
+	// TODO: check auth
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	cerr = checkAccount(ctx.RoleIntf, param.Spender)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	_, err = ctx.RoleIntf.GetTransferCredit(param.Name, param.Spender)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	err = ctx.RoleIntf.DeleteTransferCredit(param.Name, param.Spender)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	return ERROR_NONE
+}
+
+func transferFrom(ctx *Context) ContractError {
+	transfer := &TransferFromParam{}
+	err := msgpack.Unmarshal(ctx.Trx.Param, transfer)
+	if err != nil {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	fmt.Println("transferfrom param: ", transfer)
+
+	// TODO: check auth
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, transfer.From)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	cerr = checkAccount(ctx.RoleIntf, transfer.To)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	cerr = checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	// Note: sender is the spender
+	// check limit
+	credit, err := ctx.RoleIntf.GetTransferCredit(transfer.From, ctx.Trx.Sender)
+	if err != nil {
+		return ERROR_CONT_INSUFFICIENT_CREDITS
+	}
+	if transfer.Value > credit.Limit {
+		return ERROR_CONT_INSUFFICIENT_CREDITS
+	}
+
+	// check funds
+	from, _ := ctx.RoleIntf.GetBalance(transfer.From)
+	if from.Balance < transfer.Value {
+		return ERROR_CONT_INSUFFICIENT_FUNDS
+	}
+	to, _ := ctx.RoleIntf.GetBalance(transfer.To)
+
+	err = from.SafeSub(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	err = credit.SafeSub(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	err = to.SafeAdd(transfer.Value)
+	if err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+
+	err = ctx.RoleIntf.SetBalance(from.AccountName, from)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+	err = ctx.RoleIntf.SetBalance(to.AccountName, to)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	if credit.Limit > 0 {
+		err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
+		if err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else {
+		err = ctx.RoleIntf.DeleteTransferCredit(credit.Name, ctx.Trx.Sender)
+		if err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	}
+
+	fmt.Println(from, to, credit)
 
 	return ERROR_NONE
 }
