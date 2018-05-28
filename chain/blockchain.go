@@ -82,6 +82,11 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 	return bc, nil
 }
 
+func (bc *BlockChain) Close() {
+	fmt.Println("BlockChain: Close")
+	bc.blockCache.Reset()
+}
+
 func (bc *BlockChain) initChain() error {
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock != nil {
@@ -223,15 +228,17 @@ func (bc *BlockChain) LoadBlockDb() error {
 		return fmt.Errorf("Loading block database fail, try recovering")
 	}
 
-	bc.updateChainState(lastBlock)
-
-	fmt.Printf("current block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
-
-	// TODO replay
-	if bc.HeadBlockNum() < lastBlock.GetNumber() {
-		// LoadAndExcuteBlocks()
+	if lastBlock.GetNumber() == 0 {
+		bc.updateChainState(lastBlock)
+	}
+	
+	if bc.HeadBlockHash() != lastBlock.Hash() {
+		return fmt.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=x", bc.HeadBlockHash(), lastBlock.Hash())
 	}
 
+	fmt.Printf("Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
+
+	// TODO replay
 	return nil
 }
 
@@ -363,7 +370,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 		for i := lastBlockNum + 1; i <= newLastConsensusBlockNum; i++ {
 			block := bc.GetBlockByNumber(i)
 			if block != nil {
-				bc.WriteBlock(block)
+				//bc.WriteBlock(block)
 			} else {
 				fmt.Printf("block num = %v not found\n", i)
 			}
@@ -407,6 +414,7 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	if bc.handledBlockCB != nil {
 		bc.handledBlockCB(block)
 	}
+	bc.WriteBlock(block)
 	bc.roleIntf.ApplyPersistance(block)
 	return nil
 }

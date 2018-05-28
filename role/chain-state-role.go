@@ -32,11 +32,15 @@ func getGenesisTime() uint64 {
 }
 
 func CreateChainStateRole(ldb *db.DBService) error {
-	object := &ChainState{
-		LastBlockTime:    getGenesisTime(),
-		RecentSlotFilled: ^uint64(0),
+	_, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
+	if err != nil {
+		object := &ChainState{
+			LastBlockTime:    getGenesisTime(),
+			RecentSlotFilled: ^uint64(0),
+		}
+		return SetChainStateRole(ldb, object)
 	}
-	return SetChainStateRole(ldb, object)
+	return nil
 }
 
 func SetChainStateRole(ldb *db.DBService, value *ChainState) error {
