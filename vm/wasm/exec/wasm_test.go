@@ -48,7 +48,7 @@ func TestWasmRecursiveCall (t *testing.T) {
 		return
 	}
 
-	fmt.Println("*SUCCESS* res = ",res, " , err = ",err)
+	fmt.Println("<================ *SUCCESS* res = ",res, " , err = ",err," ================>")
 
 
 	res , err = GetInstance().Start(ctx, 1, false)
