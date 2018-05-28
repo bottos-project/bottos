@@ -2,8 +2,8 @@
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
     "consensus":"dpos",
-    "api_port": 6789,
-    "p2p_port": 6890,
+    "api_port": 8689,
+    "p2p_port": 9868,
     "peer_list": [
         "127.0.0.1"
     ],
