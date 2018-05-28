@@ -24,19 +24,21 @@
  */
  package chain
 
- import (
-	 "fmt"
-	 "sort"
-	 "testing"
- 
- )
+import (
+	"fmt"
+	"sort"
+	"testing"
+
+	"github.com/bottos-project/bottos/config"
+)
 
 func TestBlockChain_ConfirmedSort(t *testing.T) {
-	lastConfirmedNums := make(ConfirmedNum, 19)
-	for i := 0; i < 19; i++  {
-		lastConfirmedNums[i] = uint32(19-i)
+	delegateNum := config.BLOCKS_PER_ROUND
+	lastConfirmedNums := make(ConfirmedNum, delegateNum)
+	var i uint32 
+	for i = 0; i < delegateNum; i++  {
+		lastConfirmedNums[i] = delegateNum - i
 	}
-
 
 	fmt.Println(lastConfirmedNums)
 
@@ -45,4 +47,3 @@ func TestBlockChain_ConfirmedSort(t *testing.T) {
 	fmt.Println(lastConfirmedNums)
 	fmt.Println(lastConfirmedNums[consensusIndex])
 }
- 
