@@ -136,12 +136,14 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	}
 	//pool.stateDb.StartUndoSession()
 
-	result , err := trxApplyServiceInst.ApplyTransaction(trx)
+	result , err , handleTrx := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
 		fmt.Println("apply trx  error, trx: ", trx.Hash())
 		context.Respond(err)	
 		return
 	}
+
+	fmt.Println("handle trx, detail: ", handleTrx)
 
 	self.addTransaction(trx)
 	//pool.stateDb.Rollback()
