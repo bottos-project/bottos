@@ -435,7 +435,7 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	}
 
 	if (block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL)) && bc.HeadBlockNum() != 0 {
-		fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		//fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 		//return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
@@ -487,7 +487,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 	//bc.stateDb.Commit()
 
-	fmt.Printf("Insert Block: number:%v, trxn:%v, delegate: %v\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()))
+	fmt.Printf("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 
 	return nil
 }

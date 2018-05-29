@@ -214,16 +214,15 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 	cli.jsonPrint(b)
 }
 
-
 func (cli *CLI) getaccount(name string) {
 	accountRsp, err := cli.client.QueryAccount(context.TODO(), &coreapi.QueryAccountRequest{AccountName:name})
 	if err != nil || accountRsp == nil {
-		
 		return
 	}
 
 	if accountRsp.Errcode == 10204 {
 		fmt.Printf("Account: %s Not Exist\n", name)
+		return
 	}
 
 	account := accountRsp.GetResult()

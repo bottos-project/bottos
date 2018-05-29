@@ -51,6 +51,8 @@ type Parameter struct {
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
+	ApiServiceName	  string    `json:"api_service_name"`
+	ApiServiceVersion string    `json:"api_service_version"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
