@@ -89,7 +89,7 @@ func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 func (self *TrxActor) Receive(context actor.Context) {
 
-	fmt.Println("trxactor received msg: ", context)
+	//fmt.Println("trxactor received msg: ", context)
 
 	if self.handleSystemMsg(context) {
 		return
@@ -111,13 +111,13 @@ func (self *TrxActor) Receive(context actor.Context) {
 
 	case *message.GetAllPendingTrxReq:
 
-		fmt.Println("trx actor Rcv get all trx req")
+		//	fmt.Println("trx actor Rcv get all trx req")
 
 		trxPool.GetAllPendingTransactions(context)
 
 	case *message.RemovePendingTrxsReq:
 
-		fmt.Println("trx actor Rcv remove trxs req")
+		//	fmt.Println("trx actor Rcv remove trxs req")
 
 		trxPool.RemoveTransactions(msg.Trxs)
 

@@ -1,7 +1,7 @@
 package contract
 
 import (
-	"fmt"
+	//"fmt"
 	"math/big"
 	//"strconv"
 	//"time"
@@ -85,7 +85,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 	}
 	roleIntf.SetCoreState(coreState)
 
-	fmt.Println("NativeContractInitChain: ", coreState)
+	//fmt.Println("NativeContractInitChain: ", coreState)
 
 	return trxs, nil
 }

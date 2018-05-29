@@ -70,8 +70,8 @@ func main() {
 		repo := caapi.NewApiService(actorenv)
 
 		service := micro.NewService(
-			micro.Name("core"),
-			micro.Version("2.0.0"),
+			micro.Name(config.Param.ApiServiceName),
+			micro.Version(config.Param.ApiServiceVersion),
 		)
 
 		service.Init()

@@ -27,29 +27,28 @@ package db
 
 import (
 	"errors"
-	"fmt"
 )
 
 func (d *DBService) Insert(collection string, value interface{}) error {
 	if d.optDbRepo == nil {
-		fmt.Println("error optiondb is not init")
+		//fmt.Println("error optiondb is not init")
 		return nil
 	}
 	return d.optDbRepo.InsertOptionDb(collection, value)
 }
 func (d *DBService) Find(collection string, key string, value interface{}) (interface{}, error) {
 	if d.optDbRepo == nil {
-		fmt.Println("error optiondb is not init")
+		//fmt.Println("error optiondb is not init")
 		return nil, errors.New("error optiondb is not init")
 	}
 	return d.optDbRepo.OptionDbFind(collection, key, value)
 }
 
 func (d *DBService) Update(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
-    if d.optDbRepo == nil {
-        fmt.Println("error optiondb is not init")
-        return errors.New("error optiondb is not init")
-    }
-    
-    return d.optDbRepo.OptionDbUpdate(collection, key, value, updatekey, updatevalue)
+	if d.optDbRepo == nil {
+		//fmt.Println("error optiondb is not init")
+		return errors.New("error optiondb is not init")
+	}
+
+	return d.optDbRepo.OptionDbUpdate(collection, key, value, updatekey, updatevalue)
 }

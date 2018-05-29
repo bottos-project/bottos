@@ -34,9 +34,9 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-	"github.com/bottos-project/bottos/contract"
 	//trx "github.com/bottos-project/bottos/transaction"
 )
 
@@ -63,7 +63,7 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 		blockDb:    dbInstance,
 		blockCache: blockCache,
 		roleIntf:   roleIntf,
-		nc:			nc,
+		nc:         nc,
 	}
 
 	err = bc.initChain()
@@ -93,11 +93,11 @@ func (bc *BlockChain) initChain() error {
 		return nil
 	}
 
-	header := &types.Header {
-		Version: 1,
-		Number: 0,
+	header := &types.Header{
+		Version:   1,
+		Number:    0,
 		Timestamp: config.Genesis.GenesisTime,
-		Delegate: []byte(config.BOTTOS_CONTRACT_NAME),
+		Delegate:  []byte(config.BOTTOS_CONTRACT_NAME),
 	}
 	trxs, err := contract.NativeContractInitChain(bc.roleIntf, bc.nc)
 	if err != nil {
@@ -118,7 +118,7 @@ func (bc *BlockChain) initChain() error {
 
 	err = WriteGenesisBlock(bc.blockDb, block)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	bc.genesisBlock = block
@@ -231,7 +231,7 @@ func (bc *BlockChain) LoadBlockDb() error {
 	if lastBlock.GetNumber() == 0 {
 		bc.updateChainState(lastBlock)
 	}
-	
+
 	if bc.HeadBlockHash() != lastBlock.Hash() {
 		return fmt.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=%x", bc.HeadBlockHash(), lastBlock.Hash())
 	}
@@ -435,7 +435,7 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	}
 
 	if (block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL)) && bc.HeadBlockNum() != 0 {
-		fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		//fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 		//return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
@@ -487,7 +487,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 	//bc.stateDb.Commit()
 
-	fmt.Printf("Insert Block: number:%v, trxn:%v, delegate: %v\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()))
+	fmt.Printf("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 
 	return nil
 }

@@ -262,7 +262,7 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         } else if Method == "deploycode" {
             decodedParam = &DeployCodeParam {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
             return nil, errors.New("Not supported")
         } 
     } else if Contract == "usermng" {
@@ -271,14 +271,14 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         } else if Method == "userlogin" {
             decodedParam = &UserLogin{}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         } 
     } else if Contract == "assetmng" {
          if Method == "assetreg" {
             decodedParam = &RegAssetReq {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         } 
     } else if Contract == "datadealmng" {
@@ -287,7 +287,7 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         } else if Method == "presale" {
             decodedParam = &PresaleReq {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         }
     } else if Contract == "datafilemng" {
@@ -296,39 +296,39 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
         } else if Method == "fileauthreg" {
             decodedParam = &DataFileAuthReq {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         }
     } else if Contract == "datareqmng" {
        if Method == "datareqreg" {
            decodedParam = &RegDataReqReq {}
        } else {
-           fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+           //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
            return nil, errors.New("Not supported")
        }
     } else if Contract == "favoritemng" {
         if Method == "favoritepro" {
             decodedParam = &GoodsProReq {}
         } else {
-           fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+           //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
            return nil, errors.New("Not supported")
        }
     } else if Contract == "nodeclustermng" {
         if Method == "reg" {
             decodedParam = &NodeClusterReg {}
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         }
     } else if Contract == "nodemng" {
         if Method == "nodeinforeg" {
             decodedParam = &NodeInfoReq {}       
         } else {
-            fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+            //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
             return nil, errors.New("Not supported")
         }
     } else {
-        fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
+        //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract)
         return nil, errors.New("Not supported")
     }
     
@@ -353,7 +353,7 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
     }
     
     if err != nil {
-        fmt.Println("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+        //fmt.Println("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
         return nil, err
     }
     return decodedParam, nil
@@ -407,7 +407,7 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 	if ldb == nil || block == nil {
 		return errors.New("Error Invalid param")
 	}
-    fmt.Println("insertBlockInfoRole: len(oids):", len(oids), ", len(block.Transactions):", len(block.Transactions), ", block.Header.MerkleRoot: ", block.Header.MerkleRoot, " | ", common.BytesToHex(block.Header.MerkleRoot) )
+    //fmt.Println("insertBlockInfoRole: len(oids):", len(oids), ", len(block.Transactions):", len(block.Transactions), ", block.Header.MerkleRoot: ", block.Header.MerkleRoot, " | ", common.BytesToHex(block.Header.MerkleRoot) )
 
 	newBlockInfo := &BlockInfo{
 		bson.NewObjectId(),
@@ -486,7 +486,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
         
         data := &transferparam{}
         err :=  msgpack.Unmarshal(trx.Param, data)
-        fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
+        //fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
          
         FromAccountName := data.From
         ToAccountName   := data.To
@@ -555,7 +555,7 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 	insertBlockInfoRole(ldb, block, oids)
     insertTxInfoRole(r, ldb, block, oids)
     
-    fmt.Printf("apply to mongodb block hash %x, block number %d", block.Hash(), block.Header.Number)
+    //fmt.Printf("apply to mongodb block hash %x, block number %d", block.Hash(), block.Header.Number)
 	return nil
 }
 

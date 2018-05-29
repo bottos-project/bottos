@@ -69,7 +69,6 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
-		fmt.Println("\n\n ")
 		p.working()
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
@@ -92,7 +91,6 @@ func (p *ProducerActor) Receive(context actor.Context) {
 func (p *ProducerActor) working() {
 
 	if p.ins.IsReady() {
-		fmt.Println("begin to producer block ")
 		start := common.MeasureStart()
 		trxs := GetAllPendingTrx()
 		if len(trxs) == 0 {
@@ -137,10 +135,10 @@ func (p *ProducerActor) working() {
 		//fmt.Println("start package block")
 		block = p.ins.Woker(trxs)
 		if block != nil {
-			fmt.Printf("Apply block: hash: %x, delegate: %s, number:%v, trxn:%v\n,blockTime:%s ", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			fmt.Printf("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
 
 			ApplyBlock(block)
-			//TODO brocast
+			fmt.Printf("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", block.GetNumber(), len(block.Transactions), block.Header.Delegate, block.Hash())
 		}
 	}
 }

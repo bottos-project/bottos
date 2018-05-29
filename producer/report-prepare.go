@@ -34,7 +34,8 @@ func (r *Reporter) IsReady() bool {
 	if err != nil {
 		return false
 	}
-	if (now <= object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
+	if (now < object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
+		//	fmt.Println("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
 		return false
 	}
 	if r.IsMyTurn(now, slot) == false {
@@ -90,10 +91,10 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		return false
 	}
 	// TODO check   delegate.SigningKey
-	fmt.Println("todo check delegate sign key", delegate.ReportKey)
+	//	fmt.Println("todo check delegate sign key", delegate.ReportKey)
 
 	prate := r.roleIntf.GetDelegateParticipationRate()
-	fmt.Println("delegate participation rate ", prate)
+	//	fmt.Println("delegate participation rate ", prate)
 
 	if prate < config.DELEGATE_PATICIPATION {
 		fmt.Println("delegate paticipate rate is too low")
