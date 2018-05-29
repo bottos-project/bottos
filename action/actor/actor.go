@@ -38,10 +38,10 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 )
 
-var apiActorPid *actor.PID
-var netActorPid *actor.PID
-var trxActorPid *actor.PID
-var chainActorPid *actor.PID
+//var apiActorPid *actor.PID
+//var netActorPid *actor.PID
+//var trxActorPid *actor.PID
+//var chainActorPid *actor.PID
 
 type MultiActor struct {
 	apiActorPid      *actor.PID
@@ -68,7 +68,7 @@ func registerActorMsgTbl(m *MultiActor) {
 
 	fmt.Println("RegisterActorMsgTbl")
 
-	apiactor.SetTrxActorPid(m.trxActorPid)          // api --> trx
+	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid)
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
@@ -81,4 +81,13 @@ func registerActorMsgTbl(m *MultiActor) {
 
 func (m *MultiActor) GetTrxActorPID() *actor.PID {
 	return m.trxActorPid
+}
+
+func (m *MultiActor) ActorsStop() {
+	m.chainActorPid.Stop()
+	m.producerActorPid.Stop()
+	m.apiActorPid.Stop()
+	m.netActorPid.Stop()
+	m.trxActorPid.Stop()
+
 }

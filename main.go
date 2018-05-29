@@ -54,14 +54,14 @@ func main() {
 
 	txStore := txstore.NewTransactionStore(chain, roleIntf)
 
-	actorenv := &actionenv.ActorEnv {
+	actorenv := &actionenv.ActorEnv{
 		RoleIntf:   roleIntf,
 		ContractDB: contractDB,
 		Chain:      chain,
 		TxStore:    txStore,
 		NcIntf:     nc,
 	}
-	cactor.InitActors(actorenv)
+	multiActors := cactor.InitActors(actorenv)
 
 	var trxPool = transaction.InitTrxPool(actorenv)
 	trxactor.SetTrxPool(trxPool)
@@ -81,10 +81,10 @@ func main() {
 		}
 	}
 
-	WaitSystemDown(chain)
+	WaitSystemDown(chain, multiActors)
 }
 
-func WaitSystemDown(chain chain.BlockChainInterface) {
+func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) {
 	exit := make(chan bool, 0)
 
 	sigc := make(chan os.Signal, 1)
@@ -93,6 +93,7 @@ func WaitSystemDown(chain chain.BlockChainInterface) {
 
 	go func() {
 		<-sigc
+		actors.ActorsStop()
 		chain.Close()
 		fmt.Println("System shutdown")
 		close(exit)
