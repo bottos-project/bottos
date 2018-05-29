@@ -66,19 +66,7 @@ func NewNotifyManager() *NotifyManager {
 func (notify *NotifyManager) Start() {
 	fmt.Println("NotifyManager::Start")
 
-	/*
-	for {
-		//signal from actor
-		go notify.BoardcastTrx(nil , false)
-		//signal from actor
-		go notify.BoradcastBlk()
-
-		go notify.SyncHash()
-		go notify.SyncPeer()
-
-		//receive
-	}
-	*/
+	//for{}
 }
 
 func (notify *NotifyManager) BroadcastTrx (buf []byte, isSync bool) {

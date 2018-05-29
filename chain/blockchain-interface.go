@@ -34,6 +34,8 @@ import (
 type HandledBlockCallback func(*types.Block)
 
 type BlockChainInterface interface {
+	Close()
+	
 	HasBlock(hash common.Hash) bool
 	GetBlockByHash(hash common.Hash) *types.Block
 	GetBlockByNumber(number uint32) *types.Block

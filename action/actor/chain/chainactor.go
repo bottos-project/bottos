@@ -89,7 +89,9 @@ func (self *ChainActor) Receive(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 	case *message.InsertBlockReq:
-		self.HandleBlockMessage(context, msg)
+		self.HandleNewProducedBlock(context, msg)
+	case *message.ReceiveBlock:
+		self.HandleReceiveBlock(context, msg)
 	case *message.QueryTrxReq:
 		self.HandleQueryTrxReq(context, msg)
 	case *message.QueryBlockReq:
@@ -99,7 +101,22 @@ func (self *ChainActor) Receive(context actor.Context) {
 	}
 }
 
-func (self *ChainActor) HandleBlockMessage(ctx actor.Context, req *message.InsertBlockReq) {
+func (self *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
+	err := actorEnv.Chain.InsertBlock(req.Block)
+	if ctx.Sender() != nil {
+		resp := &message.InsertBlockRsp{
+			Hash:  req.Block.Hash(),
+			Error: err,
+		}
+		ctx.Sender().Request(resp, ctx.Self())
+	}
+	if err == nil {
+		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+		trxactorPid.Tell(req)
+	}
+}
+
+func (self *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{

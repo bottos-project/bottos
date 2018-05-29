@@ -54,7 +54,7 @@ func main() {
 
 	txStore := txstore.NewTransactionStore(chain, roleIntf)
 
-	actorenv := &actionenv.ActorEnv{
+	actorenv := &actionenv.ActorEnv {
 		RoleIntf:   roleIntf,
 		ContractDB: contractDB,
 		Chain:      chain,
@@ -81,10 +81,10 @@ func main() {
 		}
 	}
 
-	WaitSystemDown()
+	WaitSystemDown(chain)
 }
 
-func WaitSystemDown() {
+func WaitSystemDown(chain chain.BlockChainInterface) {
 	exit := make(chan bool, 0)
 
 	sigc := make(chan os.Signal, 1)
@@ -93,6 +93,7 @@ func WaitSystemDown() {
 
 	go func() {
 		<-sigc
+		chain.Close()
 		fmt.Println("System shutdown")
 		close(exit)
 	}()

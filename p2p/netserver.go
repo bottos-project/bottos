@@ -32,16 +32,11 @@
 package p2pserver
 
 import (
-	//"io"
 	"fmt"
 	"net"
 	"sync"
 	"time"
 	"errors"
-	//"reflect"
-	//"unsafe"
-	//"crypto/sha1"
-	//"hash/fnv"
 	"encoding/json"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/common/types"
@@ -68,10 +63,10 @@ type NetServer struct {
 }
 
 func NewNetServer() *NetServer {
-
+	fmt.Println("NewNetServer config.Param.PeerList = ", config.Param.PeerList)
 	return &NetServer{
 		//config:        config,
-		//addr:          config.Param.P //config.Param.ServAddr,
+		addr:          config.Param.ServAddr,
 		seed_peer:     config.Param.PeerList,
 		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
@@ -195,7 +190,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		serv.AppendList(remote_conn , msg)
 
 	case CRX_BROADCAST:
-		//Todo receive crx_boardcast from other peer , and set it to txpool
+		//Receive crx_boardcast from other peer , and set it to txpool
 		fmt.Println("NetServer::HandleMessage()")
 
 		var new_crx types.Transaction
@@ -206,14 +201,25 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		}
 
 		if serv.notify.trxActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx: ",new_crx)
+			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ",new_crx)
 			serv.notify.trxActorPid.Tell(new_crx)
 		}
 
 	case BLK_BROADCAST:
-		//Todo receive blk_boardcast from other peer
+		//Receive blk_boardcast from other peer
 		fmt.Println("NetServer::HandleMessage()")
 
+		var new_blk types.Block
+		err = json.Unmarshal(msg.Content , &new_blk)
+		if err != nil {
+			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+			return
+		}
+
+		if serv.notify.chainActorPid != nil {
+			fmt.Println("NetServer::HandleMessage() send new_crx to chainActor: ",new_blk)
+			serv.notify.chainActorPid.Tell(new_blk)
+		}
 	}
 
 	return
@@ -233,6 +239,7 @@ func (serv *NetServer) ActiveSeeds() error {
 
 func (serv *NetServer) AppendList(conn net.Conn , msg message) error {
 	//package remote peer info as "peer" struct and add it into peer list
+	fmt.Println("NetServer::AppendList")
 	peer := NewPeer(msg.Src , serv.port , conn)
 	peer.SetPeerState(ESTABLISH)
 	serv.notify.AddPeer(peer)
@@ -249,7 +256,7 @@ func  (serv *NetServer) ResetTimer ()  {
 //connect seed during start p2p server
 func (serv *NetServer) ConnectSeeds() error {
 
-	fmt.Println("p2pServer::ConnectSeeds()")
+	fmt.Println("p2pServer::ConnectSeeds")
 	for _ , peer := range serv.seed_peer {
 		//check if the new peer is in peer list
 		if serv.notify.IsExist(peer , false) {
@@ -276,7 +283,7 @@ func (serv *NetServer) ConnectSeeds() error {
 
 //to connect specified peer
 func (serv *NetServer) ConnectTo (conn net.Conn , msg []byte , isExist bool) error {
-	fmt.Println("p2pServer::ConnectTo()")
+	fmt.Println("p2pServer::ConnectTo")
 	if conn == nil {
 		return errors.New("*ERROR* Invalid parameter !!!")
 	}
@@ -325,32 +332,11 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
-	/*
-	//test connection with remote peer
-	var msg = message {
-		src:      serv.addr,
-		dst:      addr,
-		msg_type: request,
-	}
-
-	req , err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	*/
-
 	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
 		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
-
-	/*
-	//package remote peer info as "peer" struct and add it into peer list
-	peer := NewPeer(addr)
-	peer_identify := Hash(addr_port)
-	serv.peerMap[uint64(peer_identify)] = peer
-	*/
 
 	return nil
 }
@@ -359,7 +345,6 @@ func (serv *NetServer) WatchStatus() {
 	fmt.Println("NetServer::WatchStatus")
 
 	for key, peer := range serv.notify.peerMap {
-		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer)
+		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr)
 	}
-	//serv.notify.BoardcastTrx(nil , false)
 }

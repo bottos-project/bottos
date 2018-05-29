@@ -49,16 +49,20 @@ const (
 )
 
 func CreateCoreStateRole(ldb *db.DBService) error {
-	dgp := &CoreState{
-		Config: ChainConfig{
-			MaxBlockSize:   5242880,
-			MaxTrxLifetime: 3600,
-			MaxTrxRuntime:  10000,
-			InDepthLeimit:  4,
-		},
-		CurrentDelegates: []string{},
+	_, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
+	if err != nil {
+		dgp := &CoreState{
+			Config: ChainConfig{
+				MaxBlockSize:   5242880,
+				MaxTrxLifetime: 3600,
+				MaxTrxRuntime:  10000,
+				InDepthLeimit:  4,
+			},
+			CurrentDelegates: []string{},
+		}
+		return SetCoreStateRole(ldb, dgp)
 	}
-	return SetCoreStateRole(ldb, dgp)
+	return nil
 }
 
 func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {

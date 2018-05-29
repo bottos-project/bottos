@@ -230,6 +230,7 @@ func (r *Role) initRole() {
 	CreateTransferCreditRole(r.Db)
 
 	CreateDelegateRole(r.Db)
+	CreateDelegateVotesRole(r.Db)
 
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)

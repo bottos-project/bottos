@@ -29,6 +29,7 @@ import (
 	"math"
 	"bytes"
 	"sync"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/vm/wasm/disasm"
 	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
@@ -98,7 +99,10 @@ type VM struct {
 	vm_channel    chan []byte
 
 	//record sub-trx for recursive call[wid]
-	sub_trx_lst   []*contract.Context
+	sub_trx_lst   []*types.Transaction
+	sub_ctn_lst   []*contract.Context
+
+	codeVersion   uint32
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory

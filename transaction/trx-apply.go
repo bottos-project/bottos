@@ -40,7 +40,6 @@ func GetTrxApplyService() *TrxApplyService {
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
-	
 	curTime := common.Now()
 
 	if (curTime >= trx.Lifetime) {
@@ -89,53 +88,121 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
 
-func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, bottosErr.ErrCode) {
+func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, bottosErr.ErrCode, *types.HandledTransaction) {
 	
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if(nil != getAccountErr || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
 		//return false, fmt.Errorf("check account error")
-		return false, bottosErr.ErrTrxAccountError		
+		return false, bottosErr.ErrTrxAccountError, nil
 	}
 
 	if !trxApplyService.CheckTransactionLifeTime(trx) {
 		fmt.Println("check lift time error, trx: ", trx.Hash())
 		//return false, fmt.Errorf("check lift time error")
-		return false, bottosErr.ErrTrxLifeTimeError		
+		return false, bottosErr.ErrTrxLifeTimeError, nil	
 	}
 
 	if !trxApplyService.CheckTransactionUnique(trx) {
 		fmt.Println("check trx unique error, trx: ", trx.Hash())
 		//return false, fmt.Errorf("check trx unique error")
-		return false, bottosErr.ErrTrxUniqueError		
+		return false, bottosErr.ErrTrxUniqueError, nil		
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
 		fmt.Println("check chain match error, trx: ", trx.Hash())
 		//return false, fmt.Errorf("check chain match error")
-		return false, bottosErr.ErrTrxChainMathError		
+		return false, bottosErr.ErrTrxChainMathError, nil		
 	}
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
-	var exeErr error
-	bottoserr := bottosErr.ErrNoError
+    result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
+
+	if (false == result){
+		return false, bottosError , nil
+	}
+	
+	handleTrx := &types.HandledTransaction {
+		Transaction    :trx    , 
+		DerivedTrx  : derivedTrxList ,
+	}
+
+	return true, bottosErr.ErrNoError, handleTrx
+
+	// var exeErr error
+	// bottoserr := bottosErr.ErrNoError
+
+	// applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
+
+	// if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
+	// 	contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
+	// 	bottoserr = contract.ConvertErrorCode(contErr)
+	// } else {
+	// 	/* call evm... */		
+	// 	_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
+	// }
+
+    // if (nil == exeErr) && (bottoserr == bottosErr.ErrNoError) {
+	// 	fmt.Println("trx : ", trx.Hash(),trx,"apply success")
+	// 	return true, bottosErr.ErrNoError
+	// }else {
+	// 	fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
+	// 	return false, bottoserr
+	// }
+}
+
+
+func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transaction, deepLimit uint32) (bool, bottosErr.ErrCode, [] *types.DerivedTransaction) {
+
+	var derivedTrx []*types.DerivedTransaction
+
+	fmt.Println("process trx, contract: ", trx.Contract)
+	fmt.Println("process trx, method  : ", trx.Method)
+
+	//var exeErr error
+    bottoserr := bottosErr.ErrNoError
 
 	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 
 	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 		contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 		bottoserr = contract.ConvertErrorCode(contErr)
+        if (bottosErr.ErrNoError == bottoserr){		       
+			return true, bottosErr.ErrNoError, nil
+		}else {
+			fmt.Println("process trx, failed  bottos error: ", bottosErr.ErrNoError)   
+			return false, bottoserr, nil
+		}		
+
 	} else {
 		/* call evm... */		
-		_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
-	}
+		trxList,  exeErr := wasm.GetInstance().Start(applyContext, 1, false)
 
-    if (nil == exeErr) && (bottoserr == bottosErr.ErrNoError) {
-		fmt.Println("trx : ", trx.Hash(),trx,"apply success")
-		return true, bottosErr.ErrNoError
-	}else {
-		fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
-		return false, bottoserr
-	}
+		if ( nil != exeErr) {
+            fmt.Println("process trx failed")
+			return false , bottosErr.ErrTrxContractHanldeError, nil
+		}
+
+		fmt.Println("derived trx list len is ", len(trxList))
+		for _, subTrx := range trxList {
+			fmt.Println(subTrx)
+		}
+
+		for _, subTrx := range trxList {
+			result, bottosErr, subDerivedTrx := trxApplyService.ProcessTransaction(subTrx, deepLimit + 1)
+			if (false == result) {
+				return false, bottosErr, nil
+			}
+
+			handleTrx := &types.DerivedTransaction {
+				Transaction    :subTrx    , 
+				DerivedTrx  :subDerivedTrx ,
+			}
+
+			derivedTrx = append (derivedTrx, handleTrx)
+		}
+		
+		return true, bottosErr.ErrNoError, derivedTrx		
+	}	
 }

@@ -39,22 +39,13 @@
  )
  
  type BlockChainCache struct {
-	 //memdb		*db.MemDb
 	 headBlock		 *types.Block
 	 startBlock		 *types.Block
 	 cache           *lru.Cache
  }
  
  func CreateBlockChainCache() (*BlockChainCache, error) {
-	 /*
-	 memdb, err := db.NewMemDatabase()
-	 if err != nil {
-		 return nil, err
-	 }
-	 */
- 
 	 bcCache := BlockChainCache {
-		 //memdb: memdb,
 		 headBlock: nil,
 		 startBlock: nil,
 	 }
@@ -62,6 +53,10 @@
  
 	 return &bcCache, nil
  }
+
+func (self *BlockChainCache) Reset() {
+	self.cache.Purge()
+}
  
  func (self *BlockChainCache) GetBlock(hash common.Hash) *types.Block {
 	 if block, ok := self.cache.Get(hash); ok {

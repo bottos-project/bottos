@@ -35,13 +35,16 @@ package p2pserver
 import (
 	"testing"
 	"fmt"
+	"net"
 	"os"
+	"encoding/json"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 
 func TestP2PServ(t *testing.T)  {
-	fmt.Println("p2p_server::Test1")
+	fmt.Println("p2p_server::TestP2PServ")
 
 	if TST == 0 {
 		err := config.LoadConfig()
@@ -57,4 +60,73 @@ func TestP2PServ(t *testing.T)  {
 	for{}
 
 	return
+}
+
+
+func TestTrxSend(t *testing.T) {
+	fmt.Println("p2p_server::TestTrxSend")
+
+	p2pconfig := ReadFile(CONF_FILE)
+
+	addr_port := p2pconfig.PeerLst[0]+":"+fmt.Sprint(p2pconfig.ServPort)
+	conn , err := net.Dial("tcp", addr_port)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		return
+	}
+
+	type message struct {
+		Src       string
+		Dst       string
+		MsgType   uint8
+		Content   []byte
+	}
+
+	trx := &types.Transaction{
+		Version        : 1,
+		CursorNum      : 1,
+		CursorLabel    : 1,
+		Lifetime       : 1,
+		Sender         : "Trump",
+		Contract       : "Check",
+		Method         : "Func1",
+		Param          : nil,
+		SigAlg         : 1,
+		Signature      : []byte{},
+	}
+
+	byte_trx , err := json.Marshal(trx)
+	if err != nil{
+		fmt.Println("*ERROR* Failed to package the message : ", err)
+		return
+	}
+
+	msg := message {
+		Src:           p2pconfig.ServAddr,
+		Dst:           p2pconfig.PeerLst[0],
+		MsgType:       CRX_BROADCAST,
+		Content:       byte_trx,
+	}
+
+	byte_msg , err := json.Marshal(msg)
+	if err != nil{
+		fmt.Println("*ERROR* Failed to package the message : ", err)
+	}
+
+
+	len , err := conn.Write(byte_msg)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return
+	} else if len < 0 {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return
+	}
+
+	return
+}
+
+
+func TestBlkSend(t *testing.T) {
+	//
 }

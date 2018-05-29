@@ -47,6 +47,7 @@ type Parameter struct {
 	Consensus         string    `json:"consensus"`
 	APIPort           int       `json:"api_port"`
 	P2PPort           int       `json:"p2p_port"`
+	ServAddr          string    `json:"serv_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
@@ -69,7 +70,7 @@ type GenesisConfig struct {
 type InitDelegate struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"public_key"`
-	Balance   uint32 `json:"balance"`
+	Balance   uint64 `json:"balance"`
 }
 
 func LoadConfig() error {
@@ -103,7 +104,7 @@ func LoadConfig() error {
 	}
 	Genesis = &genesisConfig
 
-	fmt.Println(Param, Genesis)
+	//fmt.Println(Param, Genesis)
 
 	return nil
 }
