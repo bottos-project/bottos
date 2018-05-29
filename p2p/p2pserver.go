@@ -60,21 +60,21 @@ type P2PConfig struct {
 func ReadFile(filename string) *P2PConfig{
 
 	if filename == "" {
-		fmt.Println("*ERROR* parmeter is null")
+		//fmt.Println("*ERROR* parmeter is null")
 		return &P2PConfig{}
 	}
 	var pc P2PConfig
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to read the config: ",filename)
+		//fmt.Println("*ERROR* Failed to read the config: ",filename)
 		return  &P2PConfig{}
 	}
 
 	str:=string(bytes)
 
 	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
-		fmt.Println("Unmarshal: ", err.Error())
+		//fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
 
@@ -83,7 +83,7 @@ func ReadFile(filename string) *P2PConfig{
 
 //
 func NewServ() *P2PServer{
-	fmt.Println("NewServ()")
+	//fmt.Println("NewServ()")
 
 	p2pconfig := ReadFile(CONF_FILE)
 
@@ -114,7 +114,7 @@ func NewServ() *P2PServer{
 
 func (p2p *P2PServer) Init() error {
 
-	fmt.Println("p2pServer::Init()")
+	//fmt.Println("p2pServer::Init()")
 
 	return nil
 }
@@ -122,7 +122,7 @@ func (p2p *P2PServer) Init() error {
 
 //it is the entry of p2p
 func (p2p *P2PServer) Start() error {
-	fmt.Println("p2pServer::Start()")
+	//fmt.Println("p2pServer::Start()")
 
 	if p2p.p2pConfig == nil {
 		return errors.New("*ERROR* P2P Configuration hadn't been inited yet !!!")
@@ -148,7 +148,7 @@ func (p2p *P2PServer) Start() error {
 
 //run a heart beat to watch the network status
 func  (p2p *P2PServer) RunHeartBeat() error {
-	fmt.Println("p2pServer::RunHeartBeat()")
+	//fmt.Println("p2pServer::RunHeartBeat()")
 	return nil
 }
 
@@ -164,7 +164,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 	content_byte , err := json.Marshal(m)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		//fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -176,7 +176,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 	msg_byte , err := json.Marshal(msg)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		//fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -187,7 +187,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 //A interface for call from other component
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
-	fmt.Println("p2pServer::RunHeartBeat()")
+	//fmt.Println("p2pServer::RunHeartBeat()")
 	var res error
 	switch call_type{
 	case TRANSACTION:

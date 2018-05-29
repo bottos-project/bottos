@@ -64,7 +64,7 @@ func NewNotifyManager() *NotifyManager {
 }
 
 func (notify *NotifyManager) Start() {
-	fmt.Println("NotifyManager::Start")
+	//fmt.Println("NotifyManager::Start")
 
 	//for{}
 }
@@ -74,7 +74,7 @@ func (notify *NotifyManager) BroadcastByte (buf []byte, isSync bool) {
 	defer notify.RUnlock()
 
 	for _ , peer := range notify.peerMap {
-		fmt.Println("NotifyManager::BroadcastByte() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
+		//fmt.Println("NotifyManager::BroadcastByte() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
 		if peer.GetPeerState() == ESTABLISH {
 			peer.SendTo(buf , false)
 		}
@@ -95,17 +95,17 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 
 //sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
-	fmt.Println("NotifyManager::BroadcastBlk")
+	//fmt.Println("NotifyManager::BroadcastBlk")
 }
 
 //sync blk's hash info with other peer
 func (notify *NotifyManager) SyncHash() {
-	fmt.Println("NotifyManager::SyncHash")
+	//fmt.Println("NotifyManager::SyncHash")
 }
 
 //sync peer info with other peer
 func (notify *NotifyManager) SyncPeer() {
-	fmt.Println("NotifyManager::SyncPeer")
+	//fmt.Println("NotifyManager::SyncPeer")
 }
 
 func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {

@@ -85,14 +85,12 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 
 	//case types.Transaction:
 	case message.NotifyTrx:
-		fmt.Printf("NetActor received Transaction msg")
-		//BroadCastTrx
+		//fmt.Printf("NetActor received Transaction msg")
 		go p2p.BroadCast(msg.Trx , p2pserv.TRANSACTION)
 
 	//case types.Block:
 	case message.NotifyBlock:
-		fmt.Printf("NetActor received Block msg")
-		//BroadCastBlk
+		//fmt.Printf("NetActor received Block msg")
 		go p2p.BroadCast(msg.Block , p2pserv.BLOCK)
 	}
 
