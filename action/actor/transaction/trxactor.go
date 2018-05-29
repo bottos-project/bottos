@@ -89,7 +89,7 @@ func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 
 func (self *TrxActor) Receive(context actor.Context) {
 
-	fmt.Println("trxactor received msg: ", context)
+	//fmt.Println("trxactor received msg: ", context)
 
 	if self.handleSystemMsg(context) {
 		return
