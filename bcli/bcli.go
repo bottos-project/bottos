@@ -51,7 +51,7 @@ func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
 	service.Init()
-	cli.client = coreapi.NewCoreApiClient("core", service.Client())
+	cli.client = coreapi.NewCoreApiClient("bottos", service.Client())
 
 	return cli
 }
