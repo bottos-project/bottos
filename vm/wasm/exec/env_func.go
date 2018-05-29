@@ -795,9 +795,8 @@ func prints(vm *VM) (bool, error) {
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos : pos+len])
-	param := string(value)
-
-	fmt.Printf("VM: prints: %v\n", param);
+	//param := string(value)
+	//fmt.Printf("VM: prints: %v\n", param);
 	return true , nil
 
 }
@@ -826,7 +825,7 @@ func get_param(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(paramLen))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
+	//fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
 
 	return true , nil
 }
@@ -834,7 +833,7 @@ func get_param(vm *VM) (bool, error) {
 
 func call_trx (vm *VM) (bool, error) {
 
-	fmt.Println("VM::call_trx")
+	//fmt.Println("VM::call_trx")
 	envFunc := vm.envFunc
 	params  := envFunc.envFuncParam
 
@@ -923,7 +922,7 @@ func recv_trx (vm *VM) (bool, error) {
 
 func parse_param (vm *VM) (bool, error) {
 
-	fmt.Println("VM::parse_param")
+	//fmt.Println("VM::parse_param")
 	envFunc := vm.envFunc
 	params  := envFunc.envFuncParam
 
@@ -943,8 +942,8 @@ func parse_param (vm *VM) (bool, error) {
 	var tf transferparam
 	msgpack.Unmarshal(param , &tf)
 
-	fmt.Println("VM::parse_param() param from contract param: ", param)
-	fmt.Println("VM::parse_param() param from contract tf:    ", tf)
+	//fmt.Println("VM::parse_param() param from contract param: ", param)
+	//fmt.Println("VM::parse_param() param from contract tf:    ", tf)
 
 	return true , nil
 }
