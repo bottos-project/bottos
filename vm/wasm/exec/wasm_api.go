@@ -207,7 +207,7 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 //Search the CTX infor at the database according to apply_context
 func NewWASM ( ctx *contract.Context ) *VM {
 
-	fmt.Println("NewWASM")
+	//fmt.Println("NewWASM")
 
 	var err       error
 	var wasm_code []byte
@@ -319,7 +319,6 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 
-	fmt.Println("WASM_ENGINE::startSubCrx sub_crx = ",sub_crx)
 	//check recursion limit
 	/*
 	if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
@@ -336,7 +335,7 @@ func (engine *WASM_ENGINE) startSubCrx (event []byte) error {
 //the function is called as a goruntine and to handle new vm request or other request
 func (engine *WASM_ENGINE) StartHandler () error {
 
-	fmt.Println("WASM_ENGINE::StartHandler")
+	//fmt.Println("WASM_ENGINE::StartHandler")
 	var event []byte  //it means a MSG struct from ctx execution
 	var ok    bool
 
@@ -361,7 +360,7 @@ func (engine *WASM_ENGINE) StopHandler () error {
 }
 
 func (engine *WASM_ENGINE) Init() error {
-	fmt.Println("Init")
+	//fmt.Println("Init")
 	//ToDo load some initial operation
 	return nil
 }
@@ -369,7 +368,7 @@ func (engine *WASM_ENGINE) Init() error {
 //the function is to be used for json parameter
 func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32, received_block bool ) (interface{} , error){
 
-	fmt.Println("WASM_ENGINE::Apply() ")
+	//fmt.Println("WASM_ENGINE::Apply() ")
 
 	var divisor  time.Duration
 	var deadline time.Time
@@ -445,7 +444,7 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 	func_params[0] = vm.funcInfo.act_index
 	func_params[1] = vm.funcInfo.arg_index
 
-	fmt.Println("VM::VM_Call() ")
+	//fmt.Println("VM::VM_Call() ")
 
 	res, err := vm.ExecCode( vm.funcInfo.func_index , func_params ...)
 	if err != nil {
@@ -472,14 +471,14 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 }
 
 func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,  execution_time uint32, received_block bool ) ([]*types.Transaction , error) {
-	fmt.Println("WASM_ENGINE::Start")
+	//fmt.Println("WASM_ENGINE::Start")
 	return engine.Process(ctx , 1 ,execution_time , received_block )
 }
 
 //the function is to be used for direct parameter insert
 func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) ([]*types.Transaction , error) {
 
-	fmt.Println("WASM_ENGINE::Process")
+	//fmt.Println("WASM_ENGINE::Process")
 
 	var pos      int
 	var err      error
