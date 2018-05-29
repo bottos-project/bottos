@@ -132,8 +132,8 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 
 	var derivedTrx []*types.DerivedTransaction
 
-	fmt.Println("process trx, contract: ", trx.Contract)
-	fmt.Println("process trx, method  : ", trx.Method)
+	//fmt.Println("process trx, contract: ", trx.Contract)
+	//fmt.Println("process trx, method  : ", trx.Method)
 
     bottoserr := bottosErr.ErrNoError
 
