@@ -17,3 +17,13 @@ message Transaction {
 	uint32 		    sig_alg						= 9;
 	bytes   	    signature 					= 10;
 }
+
+message DerivedTransaction {
+	Transaction transaction						= 1;
+	repeated DerivedTransaction derived_trx		= 2;
+}
+
+message HandledTransaction {
+	Transaction transaction						= 1;
+	repeated DerivedTransaction derived_trx 	= 2;
+}
