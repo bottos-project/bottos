@@ -851,33 +851,40 @@ func call_trx (vm *VM) (bool, error) {
 	method   := BytesToString(vm.memory[m_pos:m_pos+vm.memType[uint64(m_pos)].Len-1])
 	//the bytes after msgpack.Marshal
 	param    := vm.memory[p_pos:p_pos + p_len]
+	value    := make([]byte , len(param))
+	copy(value , param)
 
 	trx := &types.Transaction{
-		Version        : 1,
-		CursorNum      : 1,
-		CursorLabel    : 1,
-		Lifetime       : 1,
-		Sender         : vm.GetContract().Trx.Sender,
+		Version        : vm.contract.Trx.Version,
+		CursorNum      : vm.contract.Trx.CursorNum,
+		CursorLabel    : vm.contract.Trx.CursorLabel,
+		Lifetime       : vm.contract.Trx.Lifetime,
+		Sender         : vm.contract.Trx.Contract,
 		Contract       : contrx,
 		Method         : method,
-		Param          : param,       //the bytes after msgpack.Marshal
-		SigAlg         : 1,
+		Param          : value,       //the bytes after msgpack.Marshal
+		SigAlg         : vm.contract.Trx.SigAlg,
 		Signature      : []byte{},
 	}
 	//ctx := &contract.Context{ Trx:trx}
 	ctx := &contract.Context{RoleIntf:vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx:trx}
 
 	/*
-	b_ctx , err := json.Marshal(ctx)
-	if err != nil {
-		return false , err
+	type transferparam struct {
+		To			string
+		Amount		uint32
 	}
+
+	var tf transferparam
+	msgpack.Unmarshal(trx.Param , &tf)
+	fmt.Println("VM::call_trx trx.Param = ",trx.Param," , tf = ",tf)
 	*/
 
 	//Todo thread synchronization
 	vm.callWid++
 
-	vm.sub_trx_lst = append(vm.sub_trx_lst, ctx)
+	vm.sub_ctn_lst = append(vm.sub_ctn_lst, ctx)
+	vm.sub_trx_lst = append(vm.sub_trx_lst, trx)
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(0))

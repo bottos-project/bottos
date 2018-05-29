@@ -37,6 +37,7 @@ import (
 	"sync"
 	"time"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	"github.com/bottos-project/bottos/vm/wasm/validate"
 	"github.com/bottos-project/bottos/contract"
@@ -193,6 +194,15 @@ func importer ( name string ) (*wasm.Module, error) {
 	return m, nil
 }
 
+func GetWasmVersion(ctx *contract.Context) uint32 {
+	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
+		return 0
+	}
+
+	return binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
+}
 
 //Search the CTX infor at the database according to apply_context
 func NewWASM ( ctx *contract.Context ) *VM {
@@ -204,6 +214,7 @@ func NewWASM ( ctx *contract.Context ) *VM {
 
 	TST := false
 	//if non-Test condition , get wasm_code from Accout
+	var codeVersion uint32 = 0
 	if !TST {
 		//db handler will be invoked from Msg struct
 		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
@@ -220,8 +231,8 @@ func NewWASM ( ctx *contract.Context ) *VM {
 			return nil
 		}
 		*/
-
-		wasm_code = accountObj.ContractCode
+		codeVersion = binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
+		wasm_code   = accountObj.ContractCode
 	} else {
 		var wasm_file string
 		if ctx.Trx.Contract == "sub" {
@@ -252,6 +263,8 @@ func NewWASM ( ctx *contract.Context ) *VM {
 	if err != nil {
 		return nil
 	}
+
+	vm.codeVersion = codeVersion
 
 	return vm
 }
@@ -380,7 +393,16 @@ func (engine *WASM_ENGINE) Apply ( ctx *contract.Context  ,execution_time uint32
 		vm.SetChannel(engine.vm_channel)
 
 	}else{
-		vm = vm_instance.vm
+
+		version := GetWasmVersion(ctx)
+		//if version in local memory is different with the latest version in db , it need to update a new vm
+		if version != vm.codeVersion {
+			//create a new vm instance because of different code version
+			vm = NewWASM(ctx)
+		} else {
+			vm = vm_instance.vm
+		}
+
 		//to set a new context for a existing VM instance
 		vm.SetContract(ctx)
 	}
@@ -449,13 +471,13 @@ func (vm *VM) VM_Call() ([]byte , error)  {
 	}
 }
 
-func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,  execution_time uint32, received_block bool ) (uint32 , error) {
+func (engine *WASM_ENGINE) Start ( ctx *contract.Context ,  execution_time uint32, received_block bool ) ([]*types.Transaction , error) {
 	fmt.Println("WASM_ENGINE::Start")
 	return engine.Process(ctx , 1 ,execution_time , received_block )
 }
 
 //the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) (uint32 , error) {
+func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execution_time uint32, received_block bool ) ([]*types.Transaction , error) {
 
 	fmt.Println("WASM_ENGINE::Process")
 
@@ -493,21 +515,21 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 	method := ENTRY_FUNCTION
 	func_entry , ok := vm.module.Export.Entries[method]
 	if ok == false {
-		return BOT_INVALID_CODE , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+		return nil , errors.New("*ERROR* Failed to find the method from the wasm module !!!")
 	}
 
 	findex := func_entry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
-	func_params    := make([]interface{}, 1)
+	func_params     := make([]interface{}, 1)
 	//Get function's string first char
 	func_params[0]  = int([]byte(ctx.Trx.Method)[0])
 
-	param_length := len(func_params)
-	parameters   := make([]uint64, param_length)
+	param_length    := len(func_params)
+	parameters      := make([]uint64, param_length)
 
 	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return BOT_INVALID_CODE , errors.New("*ERROR* Parameters count is not right")
+		return nil , errors.New("*ERROR* Parameters count is not right")
 	}
 
 	// just handle parameter for entry function
@@ -518,22 +540,22 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 		case []byte:
 			offset, err := vm.storageMemory(param.([]byte) , Int8)
 			if err != nil {
-				return BOT_INVALID_CODE, err
+				return nil , err
 			}
 			parameters[i] = uint64(offset)
 		case string:
 			if pos , err = vm.StorageData(param.(string)); err != nil {
-				return BOT_INVALID_CODE , errors.New("*ERROR* Failed to storage data to memory !!!")
+				return nil , errors.New("*ERROR* Failed to storage data to memory !!!")
 			}
 			parameters[i] = uint64(pos)
 		default:
-			return BOT_INVALID_CODE , errors.New("*ERROR* parameter is unsupport type !!!")
+			return nil , errors.New("*ERROR* parameter is unsupport type !!!")
 		}
 	}
 
 	res, err := vm.ExecCode(int64(findex), parameters...)
 	if err != nil {
-		return BOT_INVALID_CODE , errors.New("*ERROR* Invalid result !" + err.Error())
+		return nil , errors.New("*ERROR* Invalid result !" + err.Error())
 	}
 
 	var result uint32
@@ -541,22 +563,25 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 	case uint32:
 		result = val
 	default:
-		return BOT_INVALID_CODE , errors.New("*ERROR* unsupported type !!!")
+		return nil , errors.New("*ERROR* unsupported type !!!")
 	}
 
 	if result != 0 {
 		//Todo failed to execute the crx , any handle operation
-		return result , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
+		return nil , errors.New("*ERROR* Failed to execute the contract !!! contract name: "+vm.contract.Trx.Contract)
 	}
 
+	/*
 	if len(vm.sub_trx_lst) == 0 {
 		return result , nil
 	}
 
 
+
 	if depth + 1 >= CALL_DEP_LIMIT {
 		return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(dep) !!!")
 	}
+
 
 	//recursive call sub-trx
 	for i , sub_trx := range vm.sub_trx_lst {
@@ -569,12 +594,16 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 			return result , err
 		}
 	}
+	*/
 
 	//clean
-	vm.sub_trx_lst = vm.sub_trx_lst[:0]
+	//vm.sub_trx_lst = vm.sub_trx_lst[:0]
 	//vm.vm_lock.Unlock()
+	value := make([]*types.Transaction , len(vm.sub_trx_lst))
+	copy(value , vm.sub_trx_lst)
+	vm.sub_trx_lst = vm.sub_trx_lst[:0]
 
-	return result , nil
+	return value , nil
 }
 
 
