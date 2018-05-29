@@ -2,8 +2,8 @@
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
     "consensus":"dpos",
-    "api_port": 6789,
-    "p2p_port": 6890,
+    "api_port": 8689,
+    "p2p_port": 9868,
     "serv_addr":"127.0.0.1",
     "peer_list": [
         "127.0.0.1"
@@ -14,6 +14,8 @@
         }
     ],
     "api_service_enable": false,
+    "api_service_name": "bottos",
+    "api_service_version": "3.0.0",
 	"enable_stale_report": true,
 	"option_db":"",
     "log_config":"log.xml"
