@@ -40,6 +40,7 @@ import (
 	"encoding/json"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/common/types"
+	msgDef "github.com/bottos-project/bottos/action/message"
 )
 
 type NetServer struct {
@@ -200,9 +201,14 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 			return
 		}
 
+		//build a new message struct (ReceiveTrx) to send to trxpool
+		recvTrx := msgDef.ReceiveTrx{
+			Trx:   &new_crx,
+		}
+
 		if serv.notify.trxActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ",new_crx)
-			serv.notify.trxActorPid.Tell(new_crx)
+			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ",recvTrx)
+			serv.notify.trxActorPid.Tell(recvTrx)
 		}
 
 	case BLK_BROADCAST:
@@ -216,9 +222,14 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 			return
 		}
 
+		//build a new message struct (ReceiveBlock) to send to chainactor
+		recvBlk := msgDef.ReceiveBlock{
+			Block:   &new_blk,
+		}
+
 		if serv.notify.chainActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx to chainActor: ",new_blk)
-			serv.notify.chainActorPid.Tell(new_blk)
+			fmt.Println("NetServer::HandleMessage() send new_crx to chainActor: ",recvBlk)
+			serv.notify.chainActorPid.Tell(recvBlk)
 		}
 	}
 

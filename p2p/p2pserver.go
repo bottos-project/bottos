@@ -160,7 +160,7 @@ func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
-//A interface for
+//A interface for call from other component
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 	fmt.Println("p2pServer::RunHeartBeat()")
 	switch call_type{

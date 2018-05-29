@@ -28,7 +28,8 @@ package netactor
 import (
 	"fmt"
 	//"encoding/json"
-	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/action/message"
+	//"github.com/bottos-project/bottos/common/types"
 	p2pserv "github.com/bottos-project/bottos/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
@@ -47,10 +48,10 @@ func ContructNetActor() *NetActor {
 
 func NewNetActor() *actor.PID {
 
-	/*
+
 	p2p = p2pserv.NewServ()
 	go p2p.Start()
-	*/
+
 	props := actor.FromProducer(func() actor.Actor { return ContructNetActor() })
 
 	var err error
@@ -82,14 +83,17 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 	case *actor.Restarting:
 		fmt.Printf("NetActor received restarting msg")
 
-	case types.Transaction:
+	//case types.Transaction:
+	case message.NotifyTrx:
 		fmt.Printf("NetActor received Transaction msg")
 		//BroadCastTrx
-		go p2p.BroadCast(msg , p2pserv.TRANSACTION)
+		go p2p.BroadCast(msg.Trx , p2pserv.TRANSACTION)
 
-	case types.Block:
+	//case types.Block:
+	case message.NotifyBlock:
 		fmt.Printf("NetActor received Block msg")
 		//BroadCastBlk
+		go p2p.BroadCast(msg.Block , p2pserv.BLOCK)
 	}
 
 }
