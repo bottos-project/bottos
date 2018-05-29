@@ -25,7 +25,7 @@
 
 package config
 
-const DEFAULT_BLOCK_INTERVAL uint32 = 3
+const DEFAULT_BLOCK_INTERVAL uint32 = 1
 const BLOCKS_PER_ROUND uint32 = 29
 const VOTED_DELEGATES_PER_ROUND uint32 = 28
 const CONSENSUS_BLOCKS_PERCENT uint32 = 80
@@ -39,7 +39,7 @@ const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
 const MAX_ACCOUNT_NAME_LENGTH int = 16
-const ACCOUNT_NAME_REGEXP string  = "^[a-z][a-z0-9]{2,15}$"
+const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
 
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
 
