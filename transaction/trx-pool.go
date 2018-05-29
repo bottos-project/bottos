@@ -91,7 +91,7 @@ func (self *TrxPool) addTransaction(trx *types.Transaction) {
 	trxHash := trx.Hash()
 	self.pending[trxHash] = trx
 
-	fmt.Println("add trx to pool succ, hash is: ",trx.Hash())
+	//fmt.Println("add trx to pool succ, hash is: ",trx.Hash())
 }
 
 func (self *TrxPool) Stop() {	
@@ -125,9 +125,7 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Println("receive trx, detail: ",trx)
-
-	fmt.Println("trx hash is: ",trx.Hash())
+	fmt.Println("receive trx, detail: \n",trx)
 	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
@@ -143,15 +141,13 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 		return
 	}
 
-	fmt.Println("handle trx, detail: ", handleTrx)
+	fmt.Println("handle trx succ, result: \n", handleTrx)
 
 	self.addTransaction(trx)
 	//pool.stateDb.Rollback()
 
 	//tell P2P actor to notify trx	
 
-
-	fmt.Printf("handle trx finished\n")
 	context.Respond(bottosErr.ErrNoError)
 }
 
@@ -168,7 +164,6 @@ func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.T
 }
 
 func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
-	
 	
 	if (message.TrxSenderTypeFront == TrxSender){ 
 		self.HandleTransactionFromFront(context, trx)
