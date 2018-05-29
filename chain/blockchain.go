@@ -233,10 +233,10 @@ func (bc *BlockChain) LoadBlockDb() error {
 	}
 	
 	if bc.HeadBlockHash() != lastBlock.Hash() {
-		return fmt.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=x", bc.HeadBlockHash(), lastBlock.Hash())
+		return fmt.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=%x", bc.HeadBlockHash(), lastBlock.Hash())
 	}
 
-	fmt.Printf("Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
+	fmt.Printf("Loading block database, Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
 	// TODO replay
 	return nil
@@ -327,12 +327,12 @@ func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block
 	blockTime := block.GetTimestamp()
 	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime))
 
-	oldNum := delegate.LastConfirmedBlockNum
+	//oldNum := delegate.LastConfirmedBlockNum
 	delegate.LastSlot = newSlot
 	delegate.LastConfirmedBlockNum = block.GetNumber()
 	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
 
-	fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", delegate.AccountName, oldNum, delegate.LastConfirmedBlockNum)
+	//fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", delegate.AccountName, oldNum, delegate.LastConfirmedBlockNum)
 }
 
 // TODO
@@ -487,7 +487,7 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	}
 	//bc.stateDb.Commit()
 
-	fmt.Printf("InsertBlock: hash: %x, number:%v, trxn:%v\n", block.Hash(), block.GetNumber(), len(block.Transactions))
+	fmt.Printf("Insert Block: number:%v, trxn:%v, delegate: %v\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()))
 
 	return nil
 }
