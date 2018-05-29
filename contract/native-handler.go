@@ -159,7 +159,7 @@ func setDelegate(ctx *Context) ContractError {
 		if err != nil {
 			return ERROR_CONT_HANDLE_FAIL
 		}
-		fmt.Println("set delegate vote", newDelegateVotes)
+		//fmt.Println("set delegate vote", newDelegateVotes)
 	} else {
 		return ERROR_CONT_HANDLE_FAIL
 	}
