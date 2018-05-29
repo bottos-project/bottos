@@ -505,11 +505,13 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 		vm.SetChannel(engine.vm_channel)
 
 	} else {
+
 		version := GetWasmVersion(ctx)
 		//if version in local memory is different with the latest version in db , it need to update a new vm
-		if version != vm.codeVersion {
+		if version != vm_instance.vm.codeVersion {
 			//create a new vm instance because of different code version
 			vm = NewWASM(ctx)
+			vm_instance.vm = vm
 		} else {
 			vm = vm_instance.vm
 		}
