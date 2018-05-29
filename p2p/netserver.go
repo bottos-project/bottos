@@ -190,7 +190,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		serv.AppendList(remote_conn , msg)
 
 	case CRX_BROADCAST:
-		//Todo receive crx_boardcast from other peer , and set it to txpool
+		//Receive crx_boardcast from other peer , and set it to txpool
 		fmt.Println("NetServer::HandleMessage()")
 
 		var new_crx types.Transaction
@@ -201,14 +201,25 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		}
 
 		if serv.notify.trxActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx: ",new_crx)
+			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ",new_crx)
 			serv.notify.trxActorPid.Tell(new_crx)
 		}
 
 	case BLK_BROADCAST:
-		//Todo receive blk_boardcast from other peer
+		//Receive blk_boardcast from other peer
 		fmt.Println("NetServer::HandleMessage()")
 
+		var new_blk types.Block
+		err = json.Unmarshal(msg.Content , &new_blk)
+		if err != nil {
+			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+			return
+		}
+
+		if serv.notify.chainActorPid != nil {
+			fmt.Println("NetServer::HandleMessage() send new_crx to chainActor: ",new_blk)
+			serv.notify.chainActorPid.Tell(new_blk)
+		}
 	}
 
 	return
