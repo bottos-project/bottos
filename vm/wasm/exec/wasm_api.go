@@ -51,6 +51,8 @@ const (
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
 	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
 
+	TST = false
+
 	VM_PERIOD_OF_VALIDITY     = "1h"
 	WAIT_TIME                 = 4
 
@@ -212,7 +214,6 @@ func NewWASM ( ctx *contract.Context ) *VM {
 	var err       error
 	var wasm_code []byte
 
-	TST := false
 	//if non-Test condition , get wasm_code from Accout
 	var codeVersion uint32 = 0
 	if !TST {
@@ -504,7 +505,15 @@ func (engine *WASM_ENGINE) Process ( ctx *contract.Context , depth uint8 , execu
 		vm.SetChannel(engine.vm_channel)
 
 	} else {
-		vm = vm_instance.vm
+		version := GetWasmVersion(ctx)
+		//if version in local memory is different with the latest version in db , it need to update a new vm
+		if version != vm.codeVersion {
+			//create a new vm instance because of different code version
+			vm = NewWASM(ctx)
+		} else {
+			vm = vm_instance.vm
+		}
+
 		//to set a new context for a existing VM instance
 		vm.SetContract(ctx)
 	}
