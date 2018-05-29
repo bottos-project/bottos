@@ -23,12 +23,27 @@ type CLI struct {
 	client coreapi.CoreApiClient
 }
 
+type Transaction struct {
+	Version     uint32 `json:"version"`
+	CursorNum   uint32 `json:"cursor_num"`
+	CursorLabel uint32 `json:"cursor_label"`
+	Lifetime    uint64 `json:"lifetime"`
+	Sender      string `json:"sender"`
+	Contract    string `json:"contract"`
+	Method      string `json:"method"`
+	Param       interface{} `json:"param"`
+	ParamBin    string `json:"param_bin"`
+	SigAlg      uint32 `json:"sig_alg"`
+	Signature   string `json:"signature"`
+}
+
 func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("  newaccount -name NAME -pubkey PUBKEY - Create a New account")
-	fmt.Println("  transfer -from FROM -to TO -amount AMOUNT - transfer bottos from FROM account to TO")
-	fmt.Println("  deploycode -contract NAME -wasm PATH - deploy contract NAME from .wasm file")
-	fmt.Println("  deployabi -contract NAME -abi PATH - deploy contract NAME from .abi file")
+	fmt.Println("  newaccount -name NAME -pubkey PUBKEY         - Create a New account")
+	fmt.Println("  getaccount -name NAME                        - Get account balance")
+	fmt.Println("  transfer -from FROM -to TO -amount AMOUNT    - Transfer BTO from FROM account to TO")
+	fmt.Println("  deploycode -contract NAME -wasm PATH         - Deploy contract NAME from .wasm file")
+	fmt.Println("  deployabi -contract NAME -abi PATH           - Deploy contract ABI from .abi file")
 	fmt.Println("")
 }
 
@@ -66,15 +81,18 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		return
 	}
 
+	
 	type TransferParam struct {
-		From string
-		To string
-		Value uint64
+		From		string		`json:"from"`
+		To			string		`json:"to"`
+		Amount		uint64		`json:"amount"`
 	}
+	var value uint64
+	value = uint64(amount) * uint64(100000000)
 	tp := &TransferParam{
 		From: from,
 		To: to,
-		Value: uint64(amount),
+		Amount: value,
 	}
 	param, _ := msgpack.Marshal(tp)
 
@@ -83,21 +101,45 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		CursorNum: chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
 		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
-		Contract:"bottos",
-		Method:"transfer",
+		Sender: from,
+		Contract: "bottos",
+		Method: "transfer",
 		Param: BytesToHex(param),
 		SigAlg:1,
 		Signature:string(""),
 	}
 
 	newAccountRsp, err := cli.client.PushTrx(context.TODO(), trx)
-	if err != nil {
+	if err != nil || newAccountRsp == nil {
 		fmt.Println(err)
 		return
 	}
 
-	b, _ := json.Marshal(newAccountRsp)
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %v\n", newAccountRsp.Msg)
+		return
+	}
+
+	fmt.Printf("Transfer from %v to %v Success\n", from, to)
+	fmt.Printf("Transaction: \n")
+
+	tp.Amount = uint64(amount)
+	printTrx := Transaction{
+		Version: trx.Version,
+		CursorNum: trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime: trx.Lifetime,
+		Sender: trx.Sender,
+		Contract: trx.Contract,
+		Method: trx.Method,
+		Param: tp,
+		ParamBin: trx.Param,
+		SigAlg: trx.SigAlg,
+		Signature: trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
 }
 
@@ -140,13 +182,53 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 	}
 
 	rsp, err := cli.client.PushTrx(context.TODO(), trx)
-	if err != nil {
+	if err != nil || rsp == nil {
 		fmt.Println(err)
 		return
 	}
 
-	b, _ := json.Marshal(rsp)
+	if rsp.Errcode != 0 {
+		fmt.Printf("Newaccount error:\n")
+		fmt.Printf("    %v\n", rsp.Msg)
+		return
+	}
+
+	fmt.Printf("Create account %v Success\n", name)
+	fmt.Printf("Transaction: \n")
+
+	printTrx := Transaction{
+		Version: trx.Version,
+		CursorNum: trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime: trx.Lifetime,
+		Sender: trx.Sender,
+		Contract: trx.Contract,
+		Method: trx.Method,
+		Param: nps,
+		ParamBin: trx.Param,
+		SigAlg: trx.SigAlg,
+		Signature: trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+}
+
+
+func (cli *CLI) getaccount(name string) {
+	accountRsp, err := cli.client.QueryAccount(context.TODO(), &coreapi.QueryAccountRequest{AccountName:name})
+	if err != nil || accountRsp == nil {
+		
+		return
+	}
+
+	if accountRsp.Errcode == 10204 {
+		fmt.Printf("Account: %s Not Exist\n", name)
+	}
+
+	account := accountRsp.GetResult()
+	fmt.Printf("    Account: %s\n", account.AccountName)
+	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
 
 
@@ -311,6 +393,9 @@ func (cli *CLI) Run() {
 	newAccountName := NewAccountCmd.String("name", "", "account name")
 	newAccountPubkey := NewAccountCmd.String("pubkey", "", "pubkey")
 
+	GetAccountCmd := flag.NewFlagSet("getaccount", flag.ExitOnError)
+	getAccountName := GetAccountCmd.String("name", "", "account name")
+
 	deployCodeCmd := flag.NewFlagSet("deploycode", flag.ExitOnError)
 	deployCodeName := deployCodeCmd.String("contract", "", "contract name")
 	deployCodePath := deployCodeCmd.String("wasm", "", ".wasm file path")
@@ -327,6 +412,11 @@ func (cli *CLI) Run() {
 		}
 	case "newaccount":
 		err := NewAccountCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "getaccount":
+		err := GetAccountCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -361,6 +451,15 @@ func (cli *CLI) Run() {
 		}
 
 		cli.newaccount(*newAccountName, *newAccountPubkey)
+	}
+
+	if GetAccountCmd.Parsed() {
+		if *getAccountName == "" {
+			GetAccountCmd.Usage()
+			os.Exit(1)
+		}
+
+		cli.getaccount(*getAccountName)
 	}
 
 	if deployCodeCmd.Parsed() {
