@@ -40,9 +40,6 @@ func main() {
 	roleIntf := role.NewRole(dbInst)
 	contractDB := contractdb.NewContractDB(dbInst)
 
-	coreState, _ := roleIntf.GetChainState()
-	fmt.Println(coreState)
-
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
 		fmt.Println("Create Native Contract error: ", err)

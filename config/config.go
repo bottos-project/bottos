@@ -104,7 +104,7 @@ func LoadConfig() error {
 	}
 	Genesis = &genesisConfig
 
-	fmt.Println(Param, Genesis)
+	//fmt.Println(Param, Genesis)
 
 	return nil
 }

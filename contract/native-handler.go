@@ -17,7 +17,7 @@ func newAccount(ctx *Context) ContractError {
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	fmt.Println("new account param: ", newaccount)
+	//fmt.Println("new account param: ", newaccount)
 
 	// TODO: check auth
 
@@ -57,7 +57,7 @@ func newAccount(ctx *Context) ContractError {
 	}
 	ctx.RoleIntf.SetStakedBalance(newaccount.Name, staked_balance)
 
-	fmt.Println(account, balance, staked_balance)
+	//fmt.Println(account, balance, staked_balance)
 
 	return ERROR_NONE
 }
@@ -69,7 +69,7 @@ func transfer(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("transfer param: ", transfer)
+	//fmt.Println("transfer param: ", transfer)
 
 	// TODO: check auth
 
@@ -111,7 +111,7 @@ func transfer(ctx *Context) ContractError {
 		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	fmt.Println(from, to)
+	//fmt.Println(from, to)
 
 	return ERROR_NONE
 }
@@ -123,7 +123,7 @@ func setDelegate(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("setDelegate param: ", param)
+	//fmt.Println("setDelegate param: ", param)
 
 	// TODO: check auth
 
@@ -143,7 +143,7 @@ func setDelegate(ctx *Context) ContractError {
 			ReportKey:   param.Pubkey,
 		}
 		ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
-		fmt.Println(newdelegate)
+		//fmt.Println(newdelegate)
 
 		//create schedule delegate vote role
 		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
@@ -174,7 +174,7 @@ func grantCredit(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("grantcredit param: ", param)
+	//fmt.Println("grantcredit param: ", param)
 
 	// TODO: check auth
 
@@ -215,7 +215,7 @@ func grantCredit(ctx *Context) ContractError {
 		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	fmt.Println(credit)
+	//fmt.Println(credit)
 
 	return ERROR_NONE
 }
@@ -227,7 +227,7 @@ func cancelCredit(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("cancelcredit param: ", param)
+	//fmt.Println("cancelcredit param: ", param)
 
 	// TODO: check auth
 
@@ -262,7 +262,7 @@ func transferFrom(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("transferfrom param: ", transfer)
+	//fmt.Println("transferfrom param: ", transfer)
 
 	// TODO: check auth
 
@@ -333,7 +333,7 @@ func transferFrom(ctx *Context) ContractError {
 		}
 	}
 
-	fmt.Println(from, to, credit)
+	//fmt.Println(from, to, credit)
 
 	return ERROR_NONE
 }
@@ -350,7 +350,7 @@ func deployCode(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("deployCode param: ", param)
+	//fmt.Println("deployCode param: ", param)
 
 	// TODO: check auth
 
@@ -395,7 +395,7 @@ func deployAbi(ctx *Context) ContractError {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	fmt.Println("deployAbi param: ", param)
+	//fmt.Println("deployAbi param: ", param)
 
 	// TODO: check auth
 
