@@ -93,25 +93,21 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if(nil != getAccountErr || nil == account) {
 		fmt.Println("check account error, trx: ", trx.Hash())		
-		//return false, fmt.Errorf("check account error")
 		return false, bottosErr.ErrTrxAccountError, nil
 	}
 
 	if !trxApplyService.CheckTransactionLifeTime(trx) {
 		fmt.Println("check lift time error, trx: ", trx.Hash())
-		//return false, fmt.Errorf("check lift time error")
 		return false, bottosErr.ErrTrxLifeTimeError, nil	
 	}
 
 	if !trxApplyService.CheckTransactionUnique(trx) {
 		fmt.Println("check trx unique error, trx: ", trx.Hash())
-		//return false, fmt.Errorf("check trx unique error")
 		return false, bottosErr.ErrTrxUniqueError, nil		
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
 		fmt.Println("check chain match error, trx: ", trx.Hash())
-		//return false, fmt.Errorf("check chain match error")
 		return false, bottosErr.ErrTrxChainMathError, nil		
 	}
 
@@ -129,27 +125,6 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	}
 
 	return true, bottosErr.ErrNoError, handleTrx
-
-	// var exeErr error
-	// bottoserr := bottosErr.ErrNoError
-
-	// applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
-
-	// if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
-	// 	contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
-	// 	bottoserr = contract.ConvertErrorCode(contErr)
-	// } else {
-	// 	/* call evm... */		
-	// 	_, exeErr = wasm.GetInstance().Start(applyContext, 1, false)
-	// }
-
-    // if (nil == exeErr) && (bottoserr == bottosErr.ErrNoError) {
-	// 	fmt.Println("trx : ", trx.Hash(),trx,"apply success")
-	// 	return true, bottosErr.ErrNoError
-	// }else {
-	// 	fmt.Println("trx : ", trx.Hash(),trx,"apply failed")
-	// 	return false, bottoserr
-	// }
 }
 
 
@@ -157,10 +132,9 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 
 	var derivedTrx []*types.DerivedTransaction
 
-	fmt.Println("process trx, contract: ", trx.Contract)
-	fmt.Println("process trx, method  : ", trx.Method)
+	//fmt.Println("process trx, contract: ", trx.Contract)
+	//fmt.Println("process trx, method  : ", trx.Method)
 
-	//var exeErr error
     bottoserr := bottosErr.ErrNoError
 
 	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}

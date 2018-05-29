@@ -28,7 +28,6 @@ package apiactor
 import (
 	"time"
 	"context"
-	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/common"
@@ -130,7 +129,6 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		return nil
 	}
 
-	fmt.Println("handle result is ",handlerErr)
 
 	if (bottosErr.ErrNoError == handlerErr) {
 		resp.Result = &api.PushTrxResponse_Result{}

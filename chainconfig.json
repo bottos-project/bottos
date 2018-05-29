@@ -14,6 +14,8 @@
         }
     ],
     "api_service_enable": false,
+    "api_service_name": "bottos",
+    "api_service_version": "3.0.0",
 	"enable_stale_report": true,
 	"option_db":"",
     "log_config":"log.xml"
