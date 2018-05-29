@@ -69,12 +69,12 @@ func (notify *NotifyManager) Start() {
 	//for{}
 }
 
-func (notify *NotifyManager) BroadcastTrx (buf []byte, isSync bool) {
+func (notify *NotifyManager) BroadcastByte (buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
 	for _ , peer := range notify.peerMap {
-		fmt.Println("NotifyManager::BoardcastTrx() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
+		fmt.Println("NotifyManager::BroadcastByte() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
 		if peer.GetPeerState() == ESTABLISH {
 			peer.SendTo(buf , false)
 		}
@@ -92,10 +92,6 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 	}
 }
 
-//sync trx info with other peer
-func (notify *NotifyManager) BoradcastBlk() {
-	fmt.Println("NotifyManager::BroadcastTrx")
-}
 
 //sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {

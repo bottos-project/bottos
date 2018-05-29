@@ -160,35 +160,45 @@ func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
+func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
+
+	content_byte , err := json.Marshal(m)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return err
+	}
+
+	msg := message {
+		Src:     p2p.p2pConfig.ServAddr,
+		MsgType: msg_type, // the type to notify other peers new crx
+		Content: content_byte,
+	}
+
+	msg_byte , err := json.Marshal(msg)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return err
+	}
+
+	p2p.serv.notify.BroadcastByte(msg_byte , false)
+
+	return nil
+}
+
 //A interface for call from other component
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 	fmt.Println("p2pServer::RunHeartBeat()")
+	var res error
 	switch call_type{
 	case TRANSACTION:
-
-		trx_byte , err := json.Marshal(m)
-		if err != nil{
-			fmt.Println("*WRAN* Failed to package the response message : ", err)
-		}
-
-		msg := message {
-			Src:     p2p.p2pConfig.ServAddr,
-			MsgType: CRX_BROADCAST, // the type to notify other peers new crx
-			Content: trx_byte,
-		}
-
-		msg_byte , err := json.Marshal(msg)
-		if err != nil{
-			fmt.Println("*WRAN* Failed to package the response message : ", err)
-		}
-
-		p2p.serv.notify.BroadcastTrx(msg_byte , false)
+		res = p2p.BroadCastImpl(m , CRX_BROADCAST)
 
 	case BLOCK:
-		p2p.serv.notify.BoradcastBlk()
+		res = p2p.BroadCastImpl(m , BLK_BROADCAST)
 
 	}
-	return nil
+
+	return res
 }
 
 
