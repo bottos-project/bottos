@@ -1,4 +1,4 @@
-package msgpack
+﻿package msgpack
 
 import (
 	"fmt"
@@ -7,19 +7,15 @@ import (
 	"encoding/hex"
 )
 
-
 func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
 }
-
 
 func HexToBytes(str string) ([]byte, error) {
 	h, err := hex.DecodeString(str)
 
 	return h, err
 }
-
-
 
 func TestMarshalStruct(t *testing.T) {
 	type TestStruct struct{
@@ -41,7 +37,6 @@ func TestMarshalStruct(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1)
 }
-
 
 func TestMarshalNestStruct1(t *testing.T) {
 	type TestSubStruct struct{
@@ -160,9 +155,9 @@ func TestTransfer(t *testing.T) {
 
 	// marshal
 	ts := Transfer {
-		From: "delegate1",
-		To: "delegate2",
-		Value: 9999,
+		From:  "bottos",
+		To:    "bot",
+		Value: 100000000000,
 	}
 	b, err := Marshal(ts)
 	
@@ -171,6 +166,9 @@ func TestTransfer(t *testing.T) {
 
 	ts1 := &Transfer{}
 	err = Unmarshal(b, ts1)
+	fmt.Println("ts1: ", ts1)
+	cc, _ := HexToBytes("dc0004da00057474747474da000461666166cf000000003b9aca00da000c417072696c27732072656e74")
+	err = Unmarshal(cc, ts1)
 	fmt.Println("ts1: ", ts1)
 }
 
@@ -194,8 +192,6 @@ func TestNewAccount(t *testing.T) {
 	err = Unmarshal(b, param1)
 	fmt.Println("param1: ", param1)
 }
-
-
 
 func TestDatafileReg(t *testing.T) {
 	type TestSubStruct struct{
@@ -233,41 +229,35 @@ func TestAssetfileReg(t *testing.T) {
 	type TestSubStruct struct {
 		UserName    string
 		AssetName   string
-		AssetType   string
+		AssetType   uint64
 		FeatureTag  string
-		SamplePath  string
 		SampleHash  string
-		StoragePath string
 		StorageHash string
 		ExpireTime  uint32
+		OpType      uint32
 		Price       uint64
 		Description string
-		UploadDate  uint32
-		Signature   string
 	}
 
 	type TestStruct struct {
-		V1 string
-		V2 *TestSubStruct
+		AssetId string
+		V2      TestSubStruct
 	}
 	fmt.Println("TestAssetfileReg...")
 
 	ts := TestStruct{
-		V1: "assethashtest",
-		V2: &TestSubStruct{
+		AssetId: "98e0b84063b311e8a5e3d1b3c579b67f",
+		V2: TestSubStruct{
 			UserName:    "btd121",
 			AssetName:   "assetnametest",
-			AssetType:   "1231",
-			FeatureTag:   "1231",
-			SamplePath:  "pathtest",
-			SampleHash:  "samplehasttest",
-			StoragePath: "stpathtest",
-			StorageHash: "sthashtest",
-			ExpireTime:  345,
-			Price:       345,
+			AssetType:   12,
+			FeatureTag:  "FeatureTag",
+			SampleHash:  "43162f44ff5565b317ef3904c93ca525f0d739a86823bb5c1d08dbfcabbcde8c",
+			StorageHash: "43162f44ff5565b317ef3904c93ca525f0d739a86823bb5c1d08dbfcabbcde8c",
+			ExpireTime:  1527478061,
+			OpType:      1,
+			Price:       999999900000000,
 			Description: "destest",
-			UploadDate:  100,
-			Signature:   "sigtest",
 		},
 	}
 	b, err := Marshal(ts)
@@ -277,6 +267,9 @@ func TestAssetfileReg(t *testing.T) {
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1, err)
+	cc, _ := HexToBytes("dc0002da00206230356563613430363362363131653861313164623763303833663930643061dc000ada0003626f74da00046e616d65cf000000000000000eda0005312d312d31da0000da004066636336386466646632316639343432616134306361363062313262396639653332383239663332346566343532653730656533623434313465363164396434ce5b195680ce00000001cf00038d7e9ed09f00da0003313233")
+	err = Unmarshal(cc, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
 
@@ -300,8 +293,6 @@ func TestUserReg(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
-
-
 
 func TestAssetReg(t *testing.T) {
 	type TestSubStruct struct{
@@ -377,12 +368,6 @@ func TestDataReqReg(t *testing.T) {
 	fmt.Println("ts1 ", ts1, err)
 }
 
-
-
-
-
-
-
 func TestGoodsProReq(t *testing.T) {
 	type TestStruct struct{
 		V1 string
@@ -390,7 +375,6 @@ func TestGoodsProReq(t *testing.T) {
 		V3 string
 		V4 string
 	}
-
 
 	fmt.Println("TestGoodsProReq...")
 
@@ -405,10 +389,6 @@ func TestGoodsProReq(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
-
-
-
-
 
 func TestDataDeal_PreSaleReq(t *testing.T) {
 	type TestSubStruct struct{
@@ -439,7 +419,6 @@ func TestDataDeal_PreSaleReq(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
-
 
 func TestDataDeal_BuyAssetReq(t *testing.T) {
 	type TestSubStruct struct{
