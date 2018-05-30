@@ -157,8 +157,11 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		return
 	}
 
-	fmt.Printf("Transfer from %v to %v Success\n", from, to)
-	fmt.Printf("Transaction: \n")
+	fmt.Printf("Transfer Succeed\n")
+	fmt.Printf("    From: %v\n", from)
+	fmt.Printf("    To: %v\n", to)
+	fmt.Printf("    Amount: %v\n", amount)
+	fmt.Printf("Trx: \n")
 
 	tp.Amount = uint64(amount)
 	printTrx := Transaction{
@@ -177,6 +180,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %x\n", newAccountRsp.Result.TrxHash)
 }
 
 func (cli *CLI) jsonPrint(data []byte) {
@@ -235,8 +239,8 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		return
 	}
 
-	fmt.Printf("Create account %v Success\n", name)
-	fmt.Printf("Transaction: \n")
+	fmt.Printf("Create account: %v Succeed\n", name)
+	fmt.Printf("Trx: \n")
 
 	printTrx := Transaction{
 		Version: trx.Version,
@@ -254,6 +258,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %x\n", rsp.Result.TrxHash)
 }
 
 func (cli *CLI) getaccount(name string) {
@@ -317,7 +322,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	//fmt.Printf("Code %x", dcp.ContractCode)
 	param, _ := msgpack.Marshal(dcp)
 
-	trx1 := &coreapi.Transaction{
+	trx := &coreapi.Transaction{
 		Version:1,
 		CursorNum: chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
@@ -329,21 +334,61 @@ func (cli *CLI) deploycode(name string, path string) {
 		SigAlg:1,
 	}
 
-	sign, err := cli.signTrx(trx1, param)
+	sign, err := cli.signTrx(trx, param)
 	if err != nil {
 		return
 	}
 
-	trx1.Signature = sign
+	trx.Signature = sign
 
-	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx1)
+	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	b, _ := json.Marshal(deployCodeRsp)
+	if deployCodeRsp.Errcode != 0 {
+		fmt.Printf("Deploy contract error:\n")
+		fmt.Printf("    %v\n", deployCodeRsp.Msg)
+		return
+	}
+
+	fmt.Printf("Deploy contract: %v Succeed\n", name)
+	fmt.Printf("Trx: \n")
+
+	type PrintDeployCodeParam struct {
+		Name		 string		 `json:"name"`
+		VMType       byte        `json:"vm_type"`
+		VMVersion    byte        `json:"vm_version"`
+		ContractCode string      `json:"contract_code"`
+	}
+
+	pdcp := &PrintDeployCodeParam{}
+	pdcp.Name = dcp.Name
+	pdcp.VMType = dcp.VMType
+	pdcp.VMVersion = dcp.VMVersion
+	codeHex := BytesToHex(dcp.ContractCode[0:100])
+	pdcp.ContractCode = codeHex + "..."
+	//pdcp.ContractCode = BytesToHex(dcp.ContractCode)
+
+	printTrx := Transaction{
+		Version: trx.Version,
+		CursorNum: trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime: trx.Lifetime,
+		Sender: trx.Sender,
+		Contract: trx.Contract,
+		Method: trx.Method,
+		Param: pdcp,
+		ParamBin: string([]byte(trx.Param)[0:200])+"...",
+		//ParamBin: trx.Param,
+		SigAlg: trx.SigAlg,
+		Signature: trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %x\n", deployCodeRsp.Result.TrxHash)
 }
 
 func check_abi(abiRaw []byte) error {
