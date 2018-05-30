@@ -1,11 +1,13 @@
-# cmd
+# bcli
 
 ```
-$ cmd
+$ bcli
 Usage:
-  newaccount -name NAME -pubkey PUBKEY - Create a New account
-  transfer -from FROM -to TO -amount AMOUNT - transfer bottos from FROM account to TO
-  deploycode -contract NAME -wasm PATH - deploy contract NAME from .wasm file
+  newaccount -name NAME -pubkey PUBKEY         - Create a New account
+  getaccount -name NAME                        - Get account balance
+  transfer -from FROM -to TO -amount AMOUNT    - Transfer BTO from FROM account to TO
+  deploycode -contract NAME -wasm PATH         - Deploy contract NAME from .wasm file
+  deployabi -contract NAME -abi PATH           - Deploy contract ABI from .abi file
 
 ```
 
