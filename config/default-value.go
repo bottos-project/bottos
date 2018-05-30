@@ -41,7 +41,7 @@ const BOTTOS_SUPPLY_MUL uint64 = 100000000
 const MAX_ACCOUNT_NAME_LENGTH int = 16
 const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
 
-const DEFAULT_BLOCK_TIME_LIMIT uint64 = 200
+const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 
 const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
 
