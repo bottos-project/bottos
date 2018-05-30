@@ -97,6 +97,23 @@ type SetDelegateParam struct {
     Pubkey      string  `json: pubkey`
 }
 
+type GrantCreditParam struct {
+	Name		string		`json:"name"`
+	Spender		string 		`json:"spender"`
+	Limit		uint64		`json:"limit"`
+}
+
+type CancelCreditParam struct {
+	Name		string		`json:"name"`
+	Spender		string 		`json:"spender"`
+}
+
+type TransferFromParam struct {
+	From		string		`json:"from"`
+	To			string		`json:"to"`
+	Value		uint64		`json:"value"`
+}
+
 type TParam interface {
     //Accountparam
     //Transferparam transferpa
@@ -261,6 +278,12 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
             decodedParam = &transferparam {}
         } else if Method == "deploycode" {
             decodedParam = &DeployCodeParam {}
+        } else if Method == "grantcredit" {
+            decodedParam = &GrantCreditParam {}
+        } else if Method == "cancelcredit" {
+            decodedParam = &CancelCreditParam {}
+        } else if Method == "transferfrom" {
+            decodedParam = &TransferFromParam {}
         } else {
             //fmt.Println("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
             return nil, errors.New("Not supported")
@@ -475,7 +498,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
             Balance:          initSupply,//uint32        `bson:"bto_balance"`
             StakedBalance:    0,//uint64        `bson:"staked_balance"`
             UnstakingBalance: "",//             `bson:"unstaking_balance"`
-            PublicKey:        "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
+            PublicKey:        config.Param.KeyPairs[0].PublicKey,
             CreateTime:       time.Unix(int64(config.Genesis.GenesisTime), 0), //time.Time     `bson:"create_time"`
             UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
         }
