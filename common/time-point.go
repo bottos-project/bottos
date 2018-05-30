@@ -54,7 +54,7 @@ func MeasureStart() uint64 {
 func Elapsed(t uint64) uint64 {
 	nanoElapse := MeasureStart() - t
 	microElapse := nanoElapse / 1000
-	fmt.Println(microElapse)
+	//	fmt.Println(microElapse)
 	return microElapse
 
 }
