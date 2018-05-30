@@ -103,9 +103,9 @@ func (self *TrxActor) Receive(context actor.Context) {
 
 	case *message.PushTrxReq:
 
-		fmt.Println("==========")
-		fmt.Println(">>>>>>>>>>trx actor Rcv trx, sendType: ", msg.TrxSender, "<<<<<<<<<<<")
-		fmt.Println("==========")
+		//fmt.Println("==========")
+		//fmt.Println(">>>>>>>>>>trx actor Rcv trx, sendType: ", msg.TrxSender, "<<<<<<<<<<<")
+		//fmt.Println("==========")
 
 		trxPool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
 

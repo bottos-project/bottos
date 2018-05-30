@@ -27,7 +27,7 @@ package role
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"time"
 
 	"github.com/bottos-project/bottos/common"
@@ -436,7 +436,7 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
     bsonBytes, _ := bson.Marshal(value)
     bson.Unmarshal(bsonBytes, &value2)
 
-    fmt.Println("GetBalanceOp: value2 is: ", value2, ", value2.Balance is: ", value2.Balance)
+    //fmt.Println("GetBalanceOp: value2 is: ", value2, ", value2.Balance is: ", value2.Balance)
     
     res := &Balance{
                        AccountName: accountName,

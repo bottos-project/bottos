@@ -143,7 +143,7 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 // HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	fmt.Println("receive trx, detail: \n",trx)
+	//fmt.Println("receive trx, detail: \n",trx)
 	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
@@ -152,14 +152,14 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	}
 	//pool.stateDb.StartUndoSession()
 
-	result , err , handleTrx := trxApplyServiceInst.ApplyTransaction(trx)
+	result , err , _ := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
 		fmt.Println("apply trx  error, trx: ", trx.Hash())
 		context.Respond(err)	
 		return
 	}
 
-	fmt.Println("handle trx succ, result: \n", handleTrx)
+	//fmt.Println("handle trx succ, result: \n", handleTrx)
 
 	self.addTransaction(trx)
 	//pool.stateDb.Rollback()
@@ -197,7 +197,7 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 	rsp := &message.GetAllPendingTrxRsp{}
 	for trxHash := range self.pending {
-        fmt.Println("get all trx, add trx to rsp, hash is: ", self.pending[trxHash].Hash())
+        //fmt.Println("get all trx, add trx to rsp, hash is: ", self.pending[trxHash].Hash())
 		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])		
 	}
 
@@ -207,13 +207,13 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
 	for _, trx := range trxs {
-		fmt.Println("remove trx, hash is: ", trx.Hash())
+		//fmt.Println("remove trx, hash is: ", trx.Hash())
 		delete(self.pending, trx.Hash())
 	}
 }
 
 func (self *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
-    fmt.Println("remove single trx, hash is: ", trx.Hash())
+    //fmt.Println("remove single trx, hash is: ", trx.Hash())
 	delete(self.pending, trx.Hash())
 }
 
@@ -271,7 +271,7 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
 		
-	fmt.Println("VerifySignature, result",verifyResult)
+	//fmt.Println("VerifySignature, result",verifyResult)
 
 	return verifyResult
        
