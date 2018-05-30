@@ -180,7 +180,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %x\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
 func (cli *CLI) jsonPrint(data []byte) {
@@ -258,7 +258,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %x\n", rsp.Result.TrxHash)
+	fmt.Printf("TrxHash: %v\n", rsp.Result.TrxHash)
 }
 
 func (cli *CLI) getaccount(name string) {
@@ -388,7 +388,7 @@ func (cli *CLI) deploycode(name string, path string) {
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %x\n", deployCodeRsp.Result.TrxHash)
+	fmt.Printf("TrxHash: %v\n", deployCodeRsp.Result.TrxHash)
 }
 
 func check_abi(abiRaw []byte) error {
