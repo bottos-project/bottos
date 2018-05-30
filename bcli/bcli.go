@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"bytes"
+	"crypto/sha256"
 
 	"github.com/micro/go-micro"
 	"golang.org/x/net/context"
@@ -16,6 +17,9 @@ import (
 	coreapi "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/common/types"
+	proto "github.com/golang/protobuf/proto"
+	"github.com/bottos-project/crypto-go/crypto"
 )
 
 // CLI responsible for processing command line arguments
@@ -51,7 +55,7 @@ func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
 	service.Init()
-	cli.client = coreapi.NewCoreApiClient("core", service.Client())
+	cli.client = coreapi.NewCoreApiClient("bottos", service.Client())
 
 	return cli
 }
@@ -74,6 +78,33 @@ func (cli *CLI) queryChainInfo() (*coreapi.QueryChainInfoResponse_Result, error)
 	return chainInfo, nil
 }
 
+func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) {
+	ctrx := &types.BasicTransaction {
+		Version    :trx.Version    , 
+		CursorNum  :trx.CursorNum  ,
+		CursorLabel:trx.CursorLabel,
+		Lifetime   :trx.Lifetime   ,
+		Sender     :trx.Sender     ,
+		Contract   :trx.Contract   ,
+		Method     :trx.Method     ,
+		Param      :param          ,
+		SigAlg     :trx.SigAlg     ,
+	}
+
+	data, err := proto.Marshal(ctrx)
+	if nil != err {
+		return "", err
+	}
+
+	h := sha256.New()
+	h.Write([]byte(hex.EncodeToString(data)))
+	hashData := h.Sum(nil)
+	seckey, err := GetDefaultKey()
+	signdata, err := crypto.Sign(hashData, seckey)
+
+	return BytesToHex(signdata), err
+}
+
 func (cli *CLI) transfer(from, to string, amount int) {
 	chainInfo, err := cli.queryChainInfo()
 	if err != nil {
@@ -81,7 +112,6 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		return
 	}
 
-	
 	type TransferParam struct {
 		From		string		`json:"from"`
 		To			string		`json:"to"`
@@ -106,8 +136,14 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		Method: "transfer",
 		Param: BytesToHex(param),
 		SigAlg:1,
-		Signature:string(""),
 	}
+
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+		return
+	}
+
+	trx.Signature = sign
 
 	newAccountRsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil || newAccountRsp == nil {
@@ -178,8 +214,14 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		Method:"newaccount",
 		Param: BytesToHex(param),
 		SigAlg:1,
-		Signature:string(""),
 	}
+
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+		return
+	}
+
+	trx.Signature = sign
 
 	rsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil || rsp == nil {
@@ -285,8 +327,15 @@ func (cli *CLI) deploycode(name string, path string) {
 		Method:"deploycode",
 		Param: BytesToHex(param),
 		SigAlg:1,
-		Signature:string(""),
 	}
+
+	sign, err := cli.signTrx(trx1, param)
+	if err != nil {
+		return
+	}
+
+	trx1.Signature = sign
+
 	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx1)
 	if err != nil {
 		fmt.Println(err)
@@ -367,8 +416,15 @@ func (cli *CLI) deployabi(name string, path string) {
 		Method:"deployabi",
 		Param: BytesToHex(param),
 		SigAlg:1,
-		Signature:string(""),
 	}
+
+	sign, err := cli.signTrx(trx1, param)
+	if err != nil {
+		return
+	}
+
+	trx1.Signature = sign
+
 	deployAbiRsp, err := cli.client.PushTrx(context.TODO(), trx1)
 	if err != nil {
 		fmt.Println(err)
