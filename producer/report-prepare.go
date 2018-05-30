@@ -94,7 +94,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 	//	fmt.Println("todo check delegate sign key", delegate.ReportKey)
 
 	prate := r.roleIntf.GetDelegateParticipationRate()
-	//	fmt.Println("delegate participation rate ", prate)
+	fmt.Println("delegate participation rate ", prate)
 
 	if prate < config.DELEGATE_PATICIPATION {
 		fmt.Println("delegate paticipate rate is too low")
