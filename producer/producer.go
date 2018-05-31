@@ -25,7 +25,7 @@
 package producer
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
