@@ -36,9 +36,10 @@ func newAccount(ctx *Context) ContractError {
 	chainState, _ := ctx.RoleIntf.GetChainState()
 
 	// 1, create account
+	pubkey, _ := common.HexToBytes(newaccount.Pubkey)
 	account := &role.Account{
 		AccountName: newaccount.Name,
-		PublicKey:   []byte(newaccount.Pubkey),
+		PublicKey:   pubkey,
 		CreateTime:  chainState.LastBlockTime,
 	}
 	ctx.RoleIntf.SetAccount(account.AccountName, account)
