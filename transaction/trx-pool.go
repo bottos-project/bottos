@@ -35,8 +35,8 @@ import (
 	"github.com/bottos-project/bottos/contract/contractdb"
 
 	proto "github.com/golang/protobuf/proto"
-    "github.com/bottos-project/crypto-go/crypto"
-    "crypto/sha256"
+	"github.com/bottos-project/crypto-go/crypto"
+	"crypto/sha256"
 	"encoding/hex"
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	
@@ -108,8 +108,6 @@ func (self *TrxPool) addTransaction(trx *types.Transaction) {
 
 	trxHash := trx.Hash()
 	self.pending[trxHash] = trx
-
-	//fmt.Println("add trx to pool succ, hash is: ",trx.Hash())
 }
 
 func (self *TrxPool) Stop() {	
@@ -122,7 +120,6 @@ func (self *TrxPool) Stop() {
 func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode){
 
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
-		//return false, fmt.Errorf("check max pending trx num error")
 		return false, bottosErr.ErrTrxPendingNumLimit		
 	}
 
@@ -158,8 +155,6 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 		context.Respond(err)	
 		return
 	}
-
-	//fmt.Println("handle trx succ, result: \n", handleTrx)
 
 	self.addTransaction(trx)
 	//pool.stateDb.Rollback()
@@ -197,7 +192,6 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 
 	rsp := &message.GetAllPendingTrxRsp{}
 	for trxHash := range self.pending {
-        //fmt.Println("get all trx, add trx to rsp, hash is: ", self.pending[trxHash].Hash())
 		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])		
 	}
 
@@ -207,13 +201,11 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
 
 	for _, trx := range trxs {
-		//fmt.Println("remove trx, hash is: ", trx.Hash())
 		delete(self.pending, trx.Hash())
 	}
 }
 
 func (self *TrxPool)RemoveSingleTransaction(trx *types.Transaction){
-    //fmt.Println("remove single trx, hash is: ", trx.Hash())
 	delete(self.pending, trx.Hash())
 }
 
@@ -231,10 +223,6 @@ func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 	} else {
 		return nil, fmt.Errorf("get account failed")
 	}
-	
-	//for debug
-	//pub_key, _ := hex.DecodeString("0488c8087c7fd0e1f0281c025902a444364a15e6732c65ff1c8b6673da977097447c1fd0c529482521a9883b0d1ce37e151b4572d4ecd996fefedcf0f6901508aa") 
-	//return pub_key, nil
 }
 
 
@@ -252,7 +240,6 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 			Method     :trx.Method     ,
 			Param      :trx.Param      ,
 			SigAlg     :trx.SigAlg     ,
-			//Signature  :[] byte{},
 	}
 
 	serializeData, err := proto.Marshal(trxToVerify)
@@ -270,8 +257,6 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 	hashData := h.Sum(nil)
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
-		
-	//fmt.Println("VerifySignature, result",verifyResult)
 
 	return verifyResult
        
