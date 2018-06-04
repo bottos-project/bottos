@@ -90,16 +90,20 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 		Param      :param          ,
 		SigAlg     :trx.SigAlg     ,
 	}
+        pub_key,pri_key := crypto.GenerateKey()
+        fmt.Println("test:pub key is ", pub_key ,"\n",pri_key)
 
 	data, err := proto.Marshal(ctrx)
 	if nil != err {
 		return "", err
 	}
+        fmt.Println("marshal result: \n", data)
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(data)))
 	hashData := h.Sum(nil)
 	seckey, err := GetDefaultKey()
+        fmt.Println("seckey is : \n", hex.EncodeToString(seckey))
 	signdata, err := crypto.Sign(hashData, seckey)
 
 	return BytesToHex(signdata), err
@@ -213,7 +217,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		CursorNum: chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
 		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
+		Sender:"delta",
 		Contract:"bottos",
 		Method:"newaccount",
 		Param: BytesToHex(param),
@@ -327,7 +331,7 @@ func (cli *CLI) deploycode(name string, path string) {
 		CursorNum: chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
 		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
+		Sender:name,
 		Contract:"bottos",
 		Method:"deploycode",
 		Param: BytesToHex(param),
@@ -456,7 +460,7 @@ func (cli *CLI) deployabi(name string, path string) {
 		CursorNum: chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
 		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
+		Sender:name,
 		Contract:"bottos",
 		Method:"deployabi",
 		Param: BytesToHex(param),
