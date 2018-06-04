@@ -60,6 +60,7 @@ func GetTrxApplyService() *TrxApplyService {
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
+
 	curTime := common.Now()
 
 	if (curTime >= trx.Lifetime) {
@@ -76,6 +77,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transaction) bool {
+
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
 		fmt.Println("check unique error ", trx.Hash())
@@ -88,6 +90,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 }
 
 func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Transaction) bool {
+
 	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
 	if (nil != err || nil == blockHistory) {
 		return false
@@ -104,6 +107,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 }
 
 func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Transaction) {
+	
 	var transactionExpiration = &role.TransactionExpiration{TrxHash: trx.Hash(), Expiration: trx.Lifetime}
 	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
