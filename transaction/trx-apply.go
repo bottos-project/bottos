@@ -132,8 +132,8 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	}
 
 	trxApplyService.SaveTransactionExpiration(trx)
-
-    result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
+	
+	result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
 
 	if (false == result){
 		return false, bottosError , nil
