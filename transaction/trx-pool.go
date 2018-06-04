@@ -100,7 +100,6 @@ func (self *TrxPool) expirationCheckLoop() {
 }
 
 func (self *TrxPool) addTransaction(trx *types.Transaction) {		
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -116,7 +115,6 @@ func (self *TrxPool) Stop() {
 }
 
 func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode){
-
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
 		return false, bottosErr.ErrTrxPendingNumLimit		
 	}
@@ -152,7 +150,6 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 }
 
 func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-
 	self.CheckTransactionBaseConditionFromP2P()
 
 	trxApplyServiceInst.ApplyTransaction(trx)	
@@ -160,8 +157,7 @@ func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.T
 	self.addTransaction(trx)
 }
 
-func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
-	
+func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){	
 	if (message.TrxSenderTypeFront == TrxSender){ 
 		self.HandleTransactionFromFront(context, trx)
 	} else if (message.TrxSenderTypeP2P == TrxSender) {
@@ -170,7 +166,6 @@ func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender me
 }
 
 func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -183,7 +178,6 @@ func (self *TrxPool)GetAllPendingTransactions(context actor.Context) {
 }
 
 func (self *TrxPool)RemoveTransactions(trxs []*types.Transaction){
-
 	for _, trx := range trxs {
 		delete(self.pending, trx.Hash())
 	}
@@ -200,7 +194,6 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 
 
 func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
-
 	account ,err := self.roleIntf.GetAccount(accountName)
 	if (nil != err) {
 		return account.PublicKey, nil
@@ -211,8 +204,7 @@ func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
 
 
-func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
-	
+func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {	
 	return true
 	trxToVerify := &types.BasicTransaction {
 			Version    :trx.Version    , 
@@ -242,7 +234,6 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
 
-	return verifyResult
-       
+	return verifyResult       
 }
 
