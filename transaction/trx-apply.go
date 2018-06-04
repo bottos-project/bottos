@@ -152,32 +152,27 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 
 	var derivedTrx []*types.DerivedTransaction
 
-	//fmt.Println("process trx, contract: ", trx.Contract)
-	//fmt.Println("process trx, method  : ", trx.Method)
-
-    bottoserr := bottosErr.ErrNoError
+	bottoserr := bottosErr.ErrNoError
 
 	applyContext := &contract.Context{RoleIntf:trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
 
 	if (trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) ) {
 		contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 		bottoserr = contract.ConvertErrorCode(contErr)
-        if (bottosErr.ErrNoError == bottoserr){		       
+		if (bottosErr.ErrNoError == bottoserr) {
 			return true, bottosErr.ErrNoError, nil
-		}else {
+		}else{
 			fmt.Println("process trx, failed  bottos error: ", bottosErr.ErrNoError)   
 			return false, bottoserr, nil
-		}		
-
+		}
 	} else {
-		/* call evm... */		
+		/* call evm... */
 		trxList,  exeErr := wasm.GetInstance().Start(applyContext, 1, false)
-
 		if ( nil != exeErr) {
-            fmt.Println("process trx failed")
+			fmt.Println("process trx failed")
 			return false , bottosErr.ErrTrxContractHanldeError, nil
 		}
-
+		
 		fmt.Println("derived trx list len is ", len(trxList))
 		for _, subTrx := range trxList {
 			fmt.Println(subTrx)
@@ -188,15 +183,13 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 			if (false == result) {
 				return false, bottosErr, nil
 			}
-
+			
 			handleTrx := &types.DerivedTransaction {
 				Transaction    :subTrx    , 
 				DerivedTrx  :subDerivedTrx ,
 			}
-
 			derivedTrx = append (derivedTrx, handleTrx)
 		}
-		
-		return true, bottosErr.ErrNoError, derivedTrx		
+		return true, bottosErr.ErrNoError, derivedTrx
 	}	
 }
