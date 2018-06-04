@@ -203,8 +203,9 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		}
 
 		//build a new message struct (ReceiveTrx) to send to trxpool
-		recvTrx := msgDef.ReceiveTrx{
+		recvTrx := msgDef.PushTrxReq{
 			Trx:   &new_crx,
+			TrxSender: msgDef.TrxSenderTypeP2P,
 		}
 
 		if serv.notify.trxActorPid != nil {
