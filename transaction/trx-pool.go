@@ -59,7 +59,6 @@ type TrxPool struct {
 }
 
 func InitTrxPool(env *env.ActorEnv) *TrxPool {	
-	// Create the transaction pool
 	TrxPoolInst := &TrxPool{
 		pending:      make(map[common.Hash]*types.Transaction),
 		roleIntf:     env.RoleIntf,
@@ -75,7 +74,6 @@ func InitTrxPool(env *env.ActorEnv) *TrxPool {
 	return TrxPoolInst
 }
 
-// expirationCheckLoop is periodically check exceed time transaction, then remove it
 func (self *TrxPool) expirationCheckLoop() {	
 	expire := time.NewTicker(trxExpirationCheckInterval)
 	defer expire.Stop()
@@ -122,11 +120,8 @@ func (self *TrxPool)CheckTransactionBaseConditionFromFront(trx *types.Transactio
 	if (config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending))) {
 		return false, bottosErr.ErrTrxPendingNumLimit		
 	}
-
-	/* check account validate,include contract account */
 	
 	if (!self.VerifySignature(trx)) {
-		//return false, fmt.Errorf("check signature error")
 		return false, bottosErr.ErrTrxSignError		
 	}
 
@@ -137,17 +132,12 @@ func (self *TrxPool)CheckTransactionBaseConditionFromP2P(){
 
 }
 
-// HandlTransactionFromFront handles a transaction from front
 func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-
-	//fmt.Println("receive trx, detail: \n",trx)
-	
 	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)		
 		return
 	}
-	//pool.stateDb.StartUndoSession()
 
 	result , err , _ := trxApplyServiceInst.ApplyTransaction(trx)
 	if (!result) {
@@ -157,23 +147,17 @@ func (self *TrxPool)HandleTransactionFromFront(context actor.Context, trx *types
 	}
 
 	self.addTransaction(trx)
-	//pool.stateDb.Rollback()
-
-	//tell P2P actor to notify trx	
 
 	context.Respond(bottosErr.ErrNoError)
 }
 
-// HandlTransactionFromP2P handles a transaction from P2P
 func (self *TrxPool)HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
 
 	self.CheckTransactionBaseConditionFromP2P()
-	// start db session
+
 	trxApplyServiceInst.ApplyTransaction(trx)	
 
 	self.addTransaction(trx)
-
-	//revert db session	
 }
 
 func (self *TrxPool)HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction){
