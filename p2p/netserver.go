@@ -195,8 +195,8 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		//Receive crx_boardcast from other peer , and set it to txpool
 		//fmt.Println("NetServer::HandleMessage()")
 
-		var new_crx types.Transaction
-		err = json.Unmarshal(msg.Content , &new_crx)
+		var rcvTrx msgDef.ReceiveTrx
+		err = json.Unmarshal(msg.Content , &rcvTrx)
 		if err != nil {
 			//fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
 			return
@@ -204,7 +204,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 
 		//build a new message struct (ReceiveTrx) to send to trxpool
 		recvTrx := msgDef.PushTrxReq{
-			Trx:   &new_crx,
+			Trx:   rcvTrx.Trx,
 			TrxSender: msgDef.TrxSenderTypeP2P,
 		}
 
