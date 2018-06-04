@@ -206,7 +206,7 @@ func (self *TrxPool)GetPendingTransaction(trxHash common.Hash) *types.Transactio
 func (self *TrxPool)getPubKey(accountName string) ([]byte, error) {
 
 	account ,err := self.roleIntf.GetAccount(accountName)
-	if (nil != err) {
+	if (nil == err) {
 		return account.PublicKey, nil
 	} else {
 		return nil, fmt.Errorf("get account failed")
