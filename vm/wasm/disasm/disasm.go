@@ -44,6 +44,7 @@ import (
 	log "github.com/cihub/seelog"
 )
 
+
 // Instr describes an instruction, consisting of an operator, with its
 // appropriate immediate value(s).
 type Instr struct {
