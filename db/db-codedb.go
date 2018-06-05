@@ -25,41 +25,59 @@
 
 package db
 
+//StartUndoSession is to start undo session
 func (d *DBService) StartUndoSession() {
 	d.codeRepo.CallStartUndoSession(true)
 }
 
+//CreatObjectIndex is to create object index when one object's attributed is going to
+//search or sort.
 func (d *DBService) CreatObjectIndex(objectName string, indexName string, indexJson string) error {
 	return d.codeRepo.CallCreatObjectIndex(objectName, indexName, indexJson)
 }
+
+//SetObject is to set object by key and value. which should have key has create index.
 func (d *DBService) SetObject(objectName string, key string, objectValue string) error {
 	return d.codeRepo.CallSetObject(objectName, key, objectValue)
 }
+
+//GetObject is to get object by key and return value. which should have key has create index.
 func (d *DBService) GetObject(objectName string, key string) (string, error) {
 	return d.codeRepo.CallGetObject(objectName, key)
 }
+
+//GetObjectByIndex is to get object by index name and index value,
+//which index name has create object index in the db
 func (d *DBService) GetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
 	return d.codeRepo.CallGetObjectByIndex(objectName, indexName, indexValue)
 }
+
+//GetAllObjectKeys is to get all objects by object name
 func (d *DBService) GetAllObjectKeys(objectName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjectKeys(objectName)
 }
+
+//GetAllObjects is to get all objects by keyName
 func (d *DBService) GetAllObjects(keyName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjects(keyName)
 }
+
+//GetAllObjectsSortByIndex is to get all objects by sorted index
 func (d *DBService) GetAllObjectsSortByIndex(indexName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjectsSortByIndex(indexName)
 }
+
+//DeleteObject is to delete object by object and key
 func (d *DBService) DeleteObject(objectName string, key string) (string, error) {
 	return d.codeRepo.CallDeleteObject(objectName, key)
 }
+
+//Commit is to commit object
 func (d *DBService) Commit() error {
 	return d.codeRepo.CallCommit()
 }
+
+//Rollback is to rollback object
 func (d *DBService) Rollback() error {
 	return d.codeRepo.CallRollback()
-}
-func (d *DBService) Reset() {
-	//TODO
-	d.codeRepo.CallStartUndoSession(false)
 }
