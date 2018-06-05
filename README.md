@@ -1,4 +1,7 @@
 # Bottos blockchain
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/bottos-project/bottos)](https://goreportcard.com/report/github.com/bottos-project/bottos)
+
 This repository of Bottos is to build an blockchain infrastructure.
 
 Bottos blockchain architecture is shown below.
@@ -30,7 +33,7 @@ Following the instructions below, you can build and deploy your own test node.
 
 
 ## Bottos Node Environment Deployment
-<font color="#dd0000">One-Click Deployment script is coming in the following day</font><br /> 
+**One-Click Deployment script is coming in the following day**
 
 
    To build a Bottos single node environment originally, following steps need to be done.
@@ -93,7 +96,7 @@ Packages to be installed include:
 
     echo "MINIO_OPTS=\"-C "$MINIO_COF" --address "10.10.10.189":"9000"\"" >> /etc/default/minio
 
-    echo "MINIO_OPTS=\"-C "$MINIO_COF" --address “10.10.10.189":"9000"\"" >> /etc/default/minio
+    echo "MINIO_OPTS=\"-C "$MINIO_COF" --address "10.10.10.189":"9000"\"" >> /etc/default/minio
 
     source /etc/default/minio
 
@@ -274,3 +277,7 @@ Commands list
 
 **NOTE**
     The node program will bring all the services in “servLst” that configured in config.json.
+    
+## License
+GPLv3 licensed.
+
