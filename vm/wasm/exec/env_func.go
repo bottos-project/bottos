@@ -56,14 +56,6 @@ func NewEnvFunc() *EnvFunc {
 		envFuncParamIdx: 0,
 	}
 
-	envFunc.Register("strcmp", stringcmp)
-	envFunc.Register("malloc", malloc)
-	envFunc.Register("arrayLen", arrayLen)
-	envFunc.Register("memcpy", memcpy)
-	envFunc.Register("JsonUnmashal", jsonUnmashal)
-	envFunc.Register("JsonMashal", jsonMashal)
-	envFunc.Register("memset", memset)
-
 	envFunc.Register("printi", printi)
 	envFunc.Register("prints", prints)
 	envFunc.Register("getStrValue", getStrValue)
