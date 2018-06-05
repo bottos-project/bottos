@@ -22,9 +22,10 @@
  * @Last Modified by:
  * @Last Modified time:
  */
- 
+
 package common
 
+// Filter filter string
 func Filter(sources []string, filters []string) []string {
 	var tmpList []string
 	var has bool

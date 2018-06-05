@@ -32,25 +32,33 @@ import (
 	"github.com/aristanetworks/goarista/monotime"
 )
 
-//current system time seconds
+// Now current system time seconds
 func Now() uint64 {
 	return uint64(time.Now().Unix())
 }
+
+// NowToSeconds return seconds of now
 func NowToSeconds() uint64 {
 	return uint64(time.Now().UnixNano() / 1000 / 1000000)
 }
+
+// NowToMicroseconds return microseconds of now
 func NowToMicroseconds() uint64 {
 	return uint64(time.Now().UnixNano() / 1000)
 }
+
+// ToNanoseconds return nanoseconds of now
 func ToNanoseconds(current time.Time) uint64 {
 	cur := current.UnixNano()
 	return uint64(cur)
 }
 
-//current monotonic clock time use to measure time
+// MeasureStart current monotonic clock time use to measure time
 func MeasureStart() uint64 {
 	return monotime.Now()
 }
+
+// Elapsed calculate elapsed microseconds
 func Elapsed(t uint64) uint64 {
 	nanoElapse := MeasureStart() - t
 	microElapse := nanoElapse / 1000
@@ -59,15 +67,18 @@ func Elapsed(t uint64) uint64 {
 
 }
 
+// NanoToMicroSec convert nanosecond to microsecond
 func NanoToMicroSec(src uint64) uint64 {
 	return uint64(src / 1000)
 }
 
+// MicrosecondsAddToSec add seconds
 func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
 	addNew := src + des
 	return uint64(addNew / 1000000)
 }
 
+// NowToSlotSec convert now seconds to slot second
 func NowToSlotSec(current time.Time, loopMicroSec uint64) uint64 {
 	cur := ToMicroseconds(current)
 	value := MicrosecondsAddToSec(cur, loopMicroSec)
