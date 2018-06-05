@@ -55,17 +55,15 @@ func TestP2PServ(t *testing.T) {
 	p2p := NewServ()
 	p2p.Start()
 
-	for {}
-
-	return
+	
 }
 
 func TestTrxSend(t *testing.T) {
 
 	p2pconfig := ReadFile(CONF_FILE)
 
-	addr_port := p2pconfig.PeerLst[0] + ":" + fmt.Sprint(p2pconfig.ServPort)
-	conn, err := net.Dial("tcp", addr_port)
+	addrPort := p2pconfig.PeerLst[0] + ":" + fmt.Sprint(p2pconfig.ServPort)
+	conn, err := net.Dial("tcp", addrPort)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 		return
@@ -91,7 +89,7 @@ func TestTrxSend(t *testing.T) {
 		Signature:   []byte{},
 	}
 
-	byte_trx, err := json.Marshal(trx)
+	byteTrx, err := json.Marshal(trx)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to package the message : ", err)
 		return
@@ -101,15 +99,15 @@ func TestTrxSend(t *testing.T) {
 		Src:     p2pconfig.ServAddr,
 		Dst:     p2pconfig.PeerLst[0],
 		MsgType: CRX_BROADCAST,
-		Content: byte_trx,
+		Content: byteTrx,
 	}
 
-	byte_msg, err := json.Marshal(msg)
+	byteMsg, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to package the message : ", err)
 	}
 
-	len, err := conn.Write(byte_msg)
+	len, err := conn.Write(byteMsg)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
 		return
@@ -119,8 +117,4 @@ func TestTrxSend(t *testing.T) {
 	}
 
 	return
-}
-
-func TestBlkSend(t *testing.T) {
-	//
 }
