@@ -119,63 +119,63 @@ type FuncInfo struct {
 	funcType  wasm.FunctionSig
 }
 
-type SUB_CRX_MSG struct {
+type subCrxMsg struct {
 	ctx      *contract.Context
-	callDep int
+	callDep  int
 }
 
-var wasmEngine *WASM_ENGINE
+var wasmEng *wasmEngine
 
 // VM_INSTANCE it means a VM instance , include its created time , end time and status
-type VM_INSTANCE struct {
+type vmInstance struct {
 	vm          *VM       //it means a vm , it is a WASM module/file
 	createTime time.Time //vm instance's created time
 	endTime    time.Time //vm instance's deadline
 }
 
 // WASM_ENGINE struct wasm is a executable environment for other caller
-type WASM_ENGINE struct {
+type wasmEngine struct {
 	//the string type need be modified
-	vmMap         map[string]*VM_INSTANCE
+	vmMap         map[string]*vmInstance
 	vmEngineLock  *sync.Mutex
 
 	//the channel is to communicate with each vm
 	vmChannel chan []byte
 }
 
-type wasm_interface interface {
+type wasmInterface interface {
 	Init() error
 	//　a wrap for VM_Call
-	Apply(ctx ApplyContext, execution_time uint32, received_block bool) interface{}
-	Start(ctx *contract.Context, execution_time uint32, received_block bool) (uint32, error)
-	Process(ctx *contract.Context, depth uint8, execution_time uint32, received_block bool) (uint32, error)
+	Apply(ctx ApplyContext, executionTime uint32, receivedBlock bool) interface{}
+	Start(ctx *contract.Context, executionTime uint32, receivedBlock bool) (uint32, error)
+	Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) (uint32, error)
 	GetFuncInfo(module wasm.Module, entry wasm.ExportEntry) error
 }
 
-type VM_RUNTIME struct {
-	vm_list []VM_INSTANCE
+type vmRuntime struct {
+	vmList []vmInstance
 }
 
-func GetInstance() *WASM_ENGINE {
+func GetInstance() *wasmEngine {
 
-	if wasmEngine == nil {
-		wasmEngine = &WASM_ENGINE{
-			vmMap:         make(map[string]*VM_INSTANCE),
+	if wasmEng == nil {
+		wasmEng = &wasmEngine{
+			vmMap:         make(map[string]*vmInstance),
 			vmEngineLock:  new(sync.Mutex),
 			vmChannel:     make(chan []byte, 10),
 		}
-		wasmEngine.Init()
+		wasmEng.Init()
 	}
 
-	return wasmEngine
+	return wasmEng
 }
 
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
 	index      := vm.funcInfo.funcEntry.Index
-	type_index := vm.module.Function.Types[int(index)]
+	typeIndex  := vm.module.Function.Types[int(index)]
 
-	vm.funcInfo.funcType = vm.module.Types.Entries[int(type_index)]
+	vm.funcInfo.funcType = vm.module.Types.Entries[int(typeIndex)]
 	vm.funcInfo.funcIndex = int64(index)
 
 	var err error
@@ -224,13 +224,13 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 	return binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
 }
 
-// NewWASM Search the CTX infor at the database according to apply_context
+// NewWASM Search the CTX infor at the database according to applyContext
 func NewWASM(ctx *contract.Context) *VM {
 
 	var err error
 	var wasmCode []byte
 
-	//if non-Test condition , get wasm_code from Accout
+	//if non-Test condition , get wasmCode from Accout
 	var codeVersion uint32 = 0
 	if !TST {
 		//db handler will be invoked from Msg struct
@@ -287,17 +287,13 @@ func NewWASM(ctx *contract.Context) *VM {
 }
 
 //as a goruntine to watch vm instance in wasm engine , it will be called by outer
-func (engine *WASM_ENGINE) watchVm() error {
+func (engine *wasmEngine) watchVm() error {
 
 	for {
-		for contractName, vmInstance := range engine.vmMap {
+		for contractName,  vmInst := range engine.vmMap {
 
-			if time.Now().After(vmInstance.endTime) {
-				//engine.vm_engine_lock.Lock()
-
+			if time.Now().After(vmInst.endTime) {
 				delete(engine.vmMap, contractName)
-
-				//engine.vm_engine_lock.Unlock()
 			}
 		}
 
@@ -307,20 +303,20 @@ func (engine *WASM_ENGINE) watchVm() error {
 	return nil
 }
 
-func (engine *WASM_ENGINE) Find(contractName string) (*VM_INSTANCE, error) {
+func (engine *wasmEngine) Find(contractName string) (*vmInstance, error) {
 	if len(engine.vmMap) == 0 {
 		return nil, errors.New("*WARN* Can't find the vm instance !!!")
 	}
 
-	vmInstance, ok := engine.vmMap[contractName]
+	vmInst, ok := engine.vmMap[contractName]
 	if !ok {
 		return nil, errors.New("*WARN* Can't find the vm instance !!!")
 	}
 
-	return vmInstance, nil
+	return vmInst, nil
 }
 
-func (engine *WASM_ENGINE) startSubCrx(event []byte) error {
+func (engine *wasmEngine) startSubCrx(event []byte) error {
 	if event == nil {
 		return errors.New("*ERROR* empty parameter !!!")
 	}
@@ -338,7 +334,7 @@ func (engine *WASM_ENGINE) startSubCrx(event []byte) error {
 
 	//check recursion limit
 	/*
-		if sub_crx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
+		if subCrx.Trx.RecursionLayer > RECURSION_CALL_LIMIT {
 			return errors.New("*ERROR* Exceeds maximum call number !!!")
 		}
 	*/
@@ -350,7 +346,7 @@ func (engine *WASM_ENGINE) startSubCrx(event []byte) error {
 }
 
 //the function is called as a goruntine and to handle new vm request or other request
-func (engine *WASM_ENGINE) StartHandler() error {
+func (engine *wasmEngine) StartHandler() error {
 
 	var event []byte //it means a MSG struct from ctx execution
 	var ok    bool
@@ -370,32 +366,32 @@ func (engine *WASM_ENGINE) StartHandler() error {
 	return nil
 }
 
-func (engine *WASM_ENGINE) StopHandler() error {
+func (engine *wasmEngine) StopHandler() error {
 	engine.vmChannel <- []byte{0}
 	return nil
 }
 
-func (engine *WASM_ENGINE) Init() error {
+func (engine *wasmEngine) Init() error {
 	//ToDo load some initial operation
 	return nil
 }
 
 // Apply the function is to be used for json parameter
-func (engine *WASM_ENGINE) Apply(ctx *contract.Context, executionTime uint32, receivedBlock bool) (interface{}, error) {
+func (engine *wasmEngine) Apply(ctx *contract.Context, executionTime uint32, receivedBlock bool) (interface{}, error) {
 
 	var divisor  time.Duration
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
 	var vm *VM = nil
-	vmInstance, ok := engine.vmMap[ctx.Trx.Contract]
+	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
 		deadline   = time.Now().Add(divisor)
 
-		engine.vmMap[ctx.Trx.Contract] = &VM_INSTANCE{
+		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
 			vm:          vm,
 			createTime:  time.Now(),
 			endTime:     deadline,
@@ -412,7 +408,7 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, executionTime uint32, re
 			//create a new vm instance because of different code version
 			vm = NewWASM(ctx)
 		} else {
-			vm = vmInstance.vm
+			vm = vmInst.vm
 		}
 
 		//to set a new context for a existing VM instance
@@ -428,7 +424,7 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, executionTime uint32, re
 		return nil, err
 	}
 
-	output, err := vm.VM_Call()
+	output, err := vm.vmCall()
 	if err != nil {
 		return nil, err
 	}
@@ -446,13 +442,13 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, executionTime uint32, re
 	return nil, nil
 }
 
-func (vm *VM) VM_Call() ([]byte, error) {
+func (vm *VM) vmCall() ([]byte, error) {
 
-	func_params   := make([]uint64, 2)
-	func_params[0] = vm.funcInfo.actIndex
-	func_params[1] = vm.funcInfo.argIndex
+	funcParams   := make([]uint64, 2)
+	funcParams[0] = vm.funcInfo.actIndex
+	funcParams[1] = vm.funcInfo.argIndex
 
-	res, err := vm.ExecCode(vm.funcInfo.funcIndex, func_params...)
+	res, err := vm.ExecCode(vm.funcInfo.funcIndex, funcParams...)
 	if err != nil {
 		return nil, err
 	}
@@ -476,12 +472,12 @@ func (vm *VM) VM_Call() ([]byte, error) {
 	}
 }
 
-func (engine *WASM_ENGINE) Start(ctx *contract.Context, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
+func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
 	return engine.Process(ctx, 1, executionTime, receivedBlock)
 }
 
 // Process the function is to be used for direct parameter insert
-func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
+func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
 
 	var pos int
 	var err error
@@ -490,14 +486,14 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 
 	//search matched VM struct according to CTX
 	var vm *VM = nil
-	vmInstance, ok := engine.vmMap[ctx.Trx.Contract]
+	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
 		deadline   = time.Now().Add(divisor)
 
-		engine.vmMap[ctx.Trx.Contract] = &VM_INSTANCE{
+		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
 			vm:          vm,
 			createTime:  time.Now(),
 			endTime:     deadline,
@@ -510,13 +506,13 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 		/*
 			version := GetWasmVersion(ctx)
 			//if version in local memory is different with the latest version in db , it need to update a new vm
-			if version != vm_instance.vm.codeVersion {
+			if version != vmInst.vm.codeVersion {
 				//create a new vm instance because of different code version
 				vm = NewWASM(ctx)
-				vm_instance.vm = vm
+				vmInst.vm = vm
 			} else {
 		*/
-		vm = vmInstance.vm
+		vm = vmInst.vm
 		//}
 
 		//to set a new context for a existing VM instance
@@ -536,10 +532,10 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 	//Get function's string first char
 	funcParams[0] = int([]byte(ctx.Trx.Method)[0])
 
-	param_length := len(funcParams)
-	parameters := make([]uint64, param_length)
+	paramLength := len(funcParams)
+	parameters := make([]uint64, paramLength)
 
-	if param_length != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
+	if paramLength != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
 		return nil, errors.New("*ERROR* Parameters count is not right")
 	}
 
