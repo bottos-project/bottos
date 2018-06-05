@@ -27,6 +27,7 @@ package role
 
 import (
 	"errors"
+	"fmt"
 	//"fmt"
 	"time"
 
@@ -585,6 +586,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		if mesgs != nil {
 			return nil /* Do not allow insert same account */
 		}
+		fmt.Println(err)
 
 		NewAccount := &AccountInfo{
 			ID:               oid,
