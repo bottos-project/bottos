@@ -51,7 +51,7 @@ func TestWasmRecursiveCall(t *testing.T) {
 	}
 
 	bf, err := msgpack.Marshal(param)
-	fmt.Println(" TestWasmRecursiveCall() bf = ", bf, " , err = ", err)
+	fmt.Println("TestWasmRecursiveCall() bf = ", bf, " , err = ", err)
 
 	trx := &types.Transaction{
 		Version:     1,

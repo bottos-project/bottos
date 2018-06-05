@@ -19,8 +19,8 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2017-12-04
- * @Last Modified by:
- * @Last Modified time:
+ * @Last Modified by:   Stewart Li
+ * @Last Modified time: 2017-05-15
  */
 
 package exec
@@ -210,8 +210,6 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 //Search the CTX infor at the database according to apply_context
 func NewWASM(ctx *contract.Context) *VM {
 
-	//fmt.Println("NewWASM")
-
 	var err error
 	var wasm_code []byte
 
@@ -337,7 +335,6 @@ func (engine *WASM_ENGINE) startSubCrx(event []byte) error {
 //the function is called as a goruntine and to handle new vm request or other request
 func (engine *WASM_ENGINE) StartHandler() error {
 
-	//fmt.Println("WASM_ENGINE::StartHandler")
 	var event []byte //it means a MSG struct from ctx execution
 	var ok bool
 
@@ -362,15 +359,12 @@ func (engine *WASM_ENGINE) StopHandler() error {
 }
 
 func (engine *WASM_ENGINE) Init() error {
-	//fmt.Println("Init")
 	//ToDo load some initial operation
 	return nil
 }
 
 //the function is to be used for json parameter
 func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, received_block bool) (interface{}, error) {
-
-	//fmt.Println("WASM_ENGINE::Apply() ")
 
 	var divisor time.Duration
 	var deadline time.Time
@@ -408,9 +402,6 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, r
 		vm.SetContract(ctx)
 	}
 
-	//avoid that vm instance is deleted because of deadline
-	//vm.vm_lock.Lock()
-
 	vm.funcInfo.func_entry, ok = vm.module.Export.Entries[INVOKE_FUNCTION]
 	if ok == false {
 		return nil, errors.New("*ERROR* Failed to find invoke method from wasm module !!!")
@@ -433,7 +424,6 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, r
 	result := &Rtn{}
 	json.Unmarshal(res, result)
 
-	//vm.vm_lock.Unlock()
 
 	fmt.Println("result = ", result.Val)
 
@@ -445,8 +435,6 @@ func (vm *VM) VM_Call() ([]byte, error) {
 	func_params := make([]uint64, 2)
 	func_params[0] = vm.funcInfo.act_index
 	func_params[1] = vm.funcInfo.arg_index
-
-	//fmt.Println("VM::VM_Call() ")
 
 	res, err := vm.ExecCode(vm.funcInfo.func_index, func_params...)
 	if err != nil {
@@ -473,14 +461,11 @@ func (vm *VM) VM_Call() ([]byte, error) {
 }
 
 func (engine *WASM_ENGINE) Start(ctx *contract.Context, execution_time uint32, received_block bool) ([]*types.Transaction, error) {
-	//fmt.Println("WASM_ENGINE::Start")
 	return engine.Process(ctx, 1, execution_time, received_block)
 }
 
 //the function is to be used for direct parameter insert
 func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution_time uint32, received_block bool) ([]*types.Transaction, error) {
-
-	//fmt.Println("WASM_ENGINE::Process")
 
 	var pos int
 	var err error
@@ -522,8 +507,6 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 		vm.SetContract(ctx)
 	}
 
-	//avoid that vm instance is deleted because of deadline
-	//vm.vm_lock.Lock()
 	method := ENTRY_FUNCTION
 	func_entry, ok := vm.module.Export.Entries[method]
 	if ok == false {
@@ -583,34 +566,6 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 		return nil, errors.New("*ERROR* Failed to execute the contract !!! contract name: " + vm.contract.Trx.Contract)
 	}
 
-	/*
-		if len(vm.sub_trx_lst) == 0 {
-			return result , nil
-		}
-
-
-
-		if depth + 1 >= CALL_DEP_LIMIT {
-			return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(dep) !!!")
-		}
-
-
-		//recursive call sub-trx
-		for i , sub_trx := range vm.sub_trx_lst {
-
-			if i + 1 > CALL_WID_LIMIT {
-				return BOT_INVALID_CODE , errors.New("*ERROR* Too much the number of new contract execution(wid) !!!")
-			}
-
-			if result , err = engine.Process(sub_trx , depth + 1 ,  execution_time , received_block); err != nil {
-				return result , err
-			}
-		}
-	*/
-
-	//clean
-	//vm.sub_trx_lst = vm.sub_trx_lst[:0]
-	//vm.vm_lock.Unlock()
 	value := make([]*types.Transaction, len(vm.sub_trx_lst))
 	copy(value, vm.sub_trx_lst)
 	vm.sub_trx_lst = vm.sub_trx_lst[:0]
