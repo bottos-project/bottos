@@ -145,7 +145,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
 		//resp.Msg = handlerErr.(string)GetCodeString
-		//resp.Msg = "to be add detail error describtion"
+		//resp.Msg = "to be add detail error description"
 		var tempErr bottosErr.ErrCode
 		tempErr = handlerErr.(bottosErr.ErrCode)
 

@@ -44,24 +44,28 @@ type ImportEntry struct {
 	Type Import
 }
 
+// FuncImport define import type
 type FuncImport struct {
 	Type uint32
 }
 
 func (FuncImport) isImport() {}
 
+// TableImport define table type
 type TableImport struct {
 	Type Table
 }
 
 func (TableImport) isImport() {}
 
+// MemoryImport define memory type
 type MemoryImport struct {
 	Type Memory
 }
 
 func (MemoryImport) isImport() {}
 
+// GlobalVarImport define global var
 type GlobalVarImport struct {
 	Type GlobalVar
 }
@@ -69,21 +73,27 @@ type GlobalVarImport struct {
 func (GlobalVarImport) isImport() {}
 
 var (
-	ErrImportMutGlobal           = errors.New("wasm: cannot import global mutable variable")
+	// ErrImportMutGlobal import global mutable variable
+	ErrImportMutGlobal = errors.New("wasm: cannot import global mutable variable")
+	// ErrNoExportsInImportedModule imported module has no exportsß
 	ErrNoExportsInImportedModule = errors.New("wasm: imported module has no exports")
 )
 
+// InvalidExternalError define invalid external type
 type InvalidExternalError uint8
 
+// Error define invalid external error
 func (e InvalidExternalError) Error() string {
 	return fmt.Sprintf("wasm: invalid external_kind value %d", uint8(e))
 }
 
+// ExportNotFoundError defind export not found error
 type ExportNotFoundError struct {
 	ModuleName string
 	FieldName  string
 }
 
+// KindMismatchError define mismatch type error
 type KindMismatchError struct {
 	ModuleName string
 	FieldName  string
@@ -99,6 +109,7 @@ func (e ExportNotFoundError) Error() string {
 	return fmt.Sprintf("wasm: couldn't find export with name %s in module %s", e.FieldName, e.ModuleName)
 }
 
+// InvalidFunctionIndexError define invalid function index
 type InvalidFunctionIndexError uint32
 
 func (e InvalidFunctionIndexError) Error() string {

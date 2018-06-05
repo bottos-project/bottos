@@ -32,9 +32,13 @@ import (
 type ValueType int8
 
 const (
+	// ValueTypeI32 int32 type
 	ValueTypeI32 ValueType = -0x01
+	// ValueTypeI64 int64 type
 	ValueTypeI64 ValueType = -0x02
+	// ValueTypeF32 float32 type
 	ValueTypeF32 ValueType = -0x03
+	// ValueTypeF64 float64 type
 	ValueTypeF64 ValueType = -0x04
 )
 
@@ -63,6 +67,8 @@ func readValueType(r io.Reader) (ValueType, error) {
 
 // BlockType represents the signature of a structured block
 type BlockType ValueType // varint7
+
+// BlockTypeEmpty block type empty
 const BlockTypeEmpty BlockType = -0x40
 
 func readBlockType(r io.Reader) (BlockType, error) {
@@ -108,6 +114,7 @@ func (f FunctionSig) String() string {
 	return fmt.Sprintf("<func %v -> %v>", f.ParamTypes, f.ReturnTypes)
 }
 
+// InvalidTypeConstructorError invalid type contructor
 type InvalidTypeConstructorError struct {
 	Wanted int
 	Got    int
@@ -207,6 +214,7 @@ func readTable(r io.Reader) (*Table, error) {
 	return &t, err
 }
 
+// Memory defind memory type
 type Memory struct {
 	Limits ResizableLimits
 }
@@ -224,10 +232,14 @@ func readMemory(r io.Reader) (*Memory, error) {
 type External uint8
 
 const (
+	// ExternalFunction external function type
 	ExternalFunction External = 0
-	ExternalTable    External = 1
-	ExternalMemory   External = 2
-	ExternalGlobal   External = 3
+	// ExternalTable external table type
+	ExternalTable External = 1
+	// ExternalMemory external memory type
+	ExternalMemory External = 2
+	// ExternalGlobal external global type
+	ExternalGlobal External = 3
 )
 
 func (e External) String() string {

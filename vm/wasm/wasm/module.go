@@ -23,15 +23,19 @@ package wasm
 
 import (
 	"errors"
+	"io"
+
 	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
 	log "github.com/cihub/seelog"
-	"io"
 )
 
+// ErrInvalidMagic invalid magic
 var ErrInvalidMagic = errors.New("wasm: Invalid magic number")
 
 const (
-	Magic   uint32 = 0x6d736100
+	// Magic magic number
+	Magic uint32 = 0x6d736100
+	// Version version number
 	Version uint32 = 0x1
 )
 
@@ -78,11 +82,13 @@ type Module struct {
 	}
 }
 
+// EnvGlobal global environment
 type EnvGlobal struct {
 	Env bool
 	Val uint64
 }
 
+// NewEnvGlobal new global environment
 func NewEnvGlobal(env bool, val uint64) *EnvGlobal {
 	e := &EnvGlobal{
 		Env: env,

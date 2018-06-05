@@ -67,7 +67,7 @@ func GetAllPendingTrx() []*types.Transaction {
 // VerifyTransactions is to verify local and received transactons
 func VerifyTransactions(trx *types.Transaction) (bool, error) {
 	return true, nil
-	/* 	fmt.Println("start apply transation trx one by one")
+	/* 	fmt.Println("start apply transaction trx one by one")
 	   	trxApply := transaction.NewTrxApplyService()
 	   	pass, _, _ := trxApply.ApplyTransaction(trx)
 	   	return pass, nil */

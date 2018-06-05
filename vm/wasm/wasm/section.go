@@ -37,18 +37,30 @@ import (
 type SectionID uint8
 
 const (
-	SectionIDCustom   SectionID = 0
-	SectionIDType     SectionID = 1
-	SectionIDImport   SectionID = 2
+	// SectionIDCustom customed section id
+	SectionIDCustom SectionID = 0
+	// SectionIDType type id
+	SectionIDType SectionID = 1
+	// SectionIDImport import id
+	SectionIDImport SectionID = 2
+	// SectionIDFunction function id
 	SectionIDFunction SectionID = 3
-	SectionIDTable    SectionID = 4
-	SectionIDMemory   SectionID = 5
-	SectionIDGlobal   SectionID = 6
-	SectionIDExport   SectionID = 7
-	SectionIDStart    SectionID = 8
-	SectionIDElement  SectionID = 9
-	SectionIDCode     SectionID = 10
-	SectionIDData     SectionID = 11
+	// SectionIDTable table id
+	SectionIDTable SectionID = 4
+	// SectionIDMemory memory id
+	SectionIDMemory SectionID = 5
+	// SectionIDGlobal global id
+	SectionIDGlobal SectionID = 6
+	// SectionIDExport export id
+	SectionIDExport SectionID = 7
+	// SectionIDStart  start id
+	SectionIDStart SectionID = 8
+	// SectionIDElement element id
+	SectionIDElement SectionID = 9
+	// SectionIDCode code id
+	SectionIDCode SectionID = 10
+	// SectionIDData data id
+	SectionIDData SectionID = 11
 )
 
 func (s SectionID) String() string {
@@ -85,20 +97,24 @@ type Section struct {
 	Bytes []byte
 }
 
+// InvalidSectionIDError invalid section id
 type InvalidSectionIDError SectionID
 
 func (e InvalidSectionIDError) Error() string {
 	return fmt.Sprintf("wasm: invalid section ID %d", e)
 }
 
+// InvalidCodeIndexError invalid code index
 type InvalidCodeIndexError int
 
 func (e InvalidCodeIndexError) Error() string {
 	return fmt.Sprintf("wasm: invalid index to code section: %d", int(e))
 }
 
+// ErrUnsupportedSection unsupported section
 var ErrUnsupportedSection = errors.New("wasm: unsupported section")
 
+// MissingSectionError missing section error
 type MissingSectionError SectionID
 
 func (e MissingSectionError) Error() string {
@@ -360,7 +376,7 @@ func readImportEntry(r io.Reader) (ImportEntry, error) {
 	return i, err
 }
 
-// SectionFunction declares the signature of all functions defined in the module (in the code section)
+// SectionFunctions declares the signature of all functions defined in the module (in the code section)
 type SectionFunctions struct {
 	Section
 	// Sequences of indices into (FunctionSignatues).Entries
@@ -497,6 +513,7 @@ type SectionExports struct {
 	Entries map[string]ExportEntry
 }
 
+// DuplicateExportError duplicated export
 type DuplicateExportError string
 
 func (e DuplicateExportError) Error() string {
@@ -669,8 +686,10 @@ func (m *Module) readSectionCode(r io.Reader) error {
 	return nil
 }
 
+// ErrFunctionNoEnd function no end error
 var ErrFunctionNoEnd = errors.New("Function body does not end with 0x0b (end)")
 
+// FunctionBody define the function body
 type FunctionBody struct {
 	Module *Module // The parent module containing this function body, for execution purposes
 	Locals []LocalEntry
@@ -719,6 +738,7 @@ func readFunctionBody(r io.Reader) (FunctionBody, error) {
 	return f, nil
 }
 
+// LocalEntry define the local entry format
 type LocalEntry struct {
 	Count uint32    // The total number of local variables of the given Type used in the function body
 	Type  ValueType // The type of value stored by the variable

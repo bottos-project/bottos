@@ -40,14 +40,17 @@ const (
 	end       byte = 0x0b
 )
 
+// ErrEmptyInitExpr new empty init error
 var ErrEmptyInitExpr = errors.New("wasm: Initializer expression produces no value")
 
+// InvalidInitExprOpError invalid init exprOpError
 type InvalidInitExprOpError byte
 
 func (e InvalidInitExprOpError) Error() string {
 	return fmt.Sprintf("wasm: Invalid opcode in initializer expression: %#x", byte(e))
 }
 
+// InvalidGlobalIndexError invalid global index
 type InvalidGlobalIndexError uint32
 
 func (e InvalidGlobalIndexError) Error() string {

@@ -23,16 +23,19 @@ package wasm
 
 import (
 	"fmt"
-	log "github.com/cihub/seelog"
 	"reflect"
+
+	log "github.com/cihub/seelog"
 )
 
+// InvalidTableIndexError invalid table index type
 type InvalidTableIndexError uint32
 
 func (e InvalidTableIndexError) Error() string {
 	return fmt.Sprintf("wasm: Invalid table to table index space: %d", uint32(e))
 }
 
+// InvalidValueTypeInitExprError invalid value type init expire
 type InvalidValueTypeInitExprError struct {
 	Wanted reflect.Kind
 	Got    reflect.Kind
@@ -42,6 +45,7 @@ func (e InvalidValueTypeInitExprError) Error() string {
 	return fmt.Sprintf("wasm: Wanted initializer expression to return %v value, got %v", e.Wanted, e.Got)
 }
 
+// InvalidLinearMemoryIndexError invalid linear memory index
 type InvalidLinearMemoryIndexError uint32
 
 func (e InvalidLinearMemoryIndexError) Error() string {
@@ -188,6 +192,7 @@ func (m *Module) populateLinearMemory() error {
 	return nil
 }
 
+// GetLinearMemoryData function to get linear memory data
 func (m *Module) GetLinearMemoryData(index int) (byte, error) {
 	if index >= len(m.LinearMemoryIndexSpace[0]) {
 		return 0, InvalidLinearMemoryIndexError(uint32(index))
