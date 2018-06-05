@@ -25,27 +25,34 @@
 
 package db
 
+//Put is to put record by key and value.
 func (d *DBService) Put(key []byte, value []byte) error {
 	return d.kvRepo.CallPut(key, value)
 }
 
+//Get is to get record by key and return value.
 func (d *DBService) Get(key []byte) ([]byte, error) {
 	return d.kvRepo.CallGet(key)
 }
 
+//Delete is to delete record by key.
 func (d *DBService) Delete(key []byte) error {
 
 	return d.kvRepo.CallDelete(key)
 }
 
+//Flush is to flush record to db.
 func (d *DBService) Flush() error {
 	return d.kvRepo.CallFlush()
 }
 
+//Close is to close db.
 func (d *DBService) Close() {
 
 	d.kvRepo.CallClose()
 }
+
+//Seek is to seek record by prefix
 func (d *DBService) Seek(prefixKey []byte) ([]interface{}, error) {
 
 	return d.kvRepo.CallSeek(prefixKey)

@@ -31,12 +31,14 @@ import (
 	"github.com/bottos-project/bottos/db/platform/optiondb"
 )
 
+//DBService is db service struct for other package
 type DBService struct {
 	kvRepo    kvdb.KvDBRepo
 	codeRepo  codedb.CodeDbRepo
 	optDbRepo optiondb.OptionDbRepo
 }
 
+//NewDbService is to create a new db service with kv databse, codedb, and option db for optionally
 func NewDbService(path string, codedbPath string, optPath string) *DBService {
 	kv, err := kvdb.NewKVDatabase(path)
 	if err != nil {
@@ -51,6 +53,7 @@ func NewDbService(path string, codedbPath string, optPath string) *DBService {
 
 }
 
+//DBApi is listing all the interface that DBService provides.
 type DBApi interface {
 	Lock()
 	UnLock()
