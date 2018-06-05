@@ -31,11 +31,13 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+// CoreState is definition of core state
 type CoreState struct {
 	Config           ChainConfig `json:"chain_config"`
 	CurrentDelegates []string    `json:"current_delegates"`
 }
 
+// ChainConfig is definition of chain config
 type ChainConfig struct {
 	MaxBlockSize   uint32 `json:"max_block_size"`
 	MaxTrxLifetime uint32 `json:"max_trx_lifetime"`
@@ -44,10 +46,13 @@ type ChainConfig struct {
 }
 
 const (
+	// CoreStateName is definition of core state name
 	CoreStateName       string = "core_state"
+	// CoreStateDefaultKey is definition of core state default key
 	CoreStateDefaultKey string = "core_state_defkey"
 )
 
+// CreateCoreStateRole is to save init core state
 func CreateCoreStateRole(ldb *db.DBService) error {
 	_, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
 	if err != nil {
@@ -65,6 +70,7 @@ func CreateCoreStateRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetCoreStateRole is to save core state
 func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -74,6 +80,7 @@ func SetCoreStateRole(ldb *db.DBService, value *CoreState) error {
 	return ldb.SetObject(CoreStateName, CoreStateDefaultKey, string(jsonvalue))
 }
 
+// GetCoreStateRole is to get core state
 func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
 	value, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
 	if err != nil {
