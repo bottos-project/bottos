@@ -24,11 +24,12 @@ package validate
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
+
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 	log "github.com/cihub/seelog"
-	"io"
 )
 
 // mockVM is a minimal implementation of a virtual machine to

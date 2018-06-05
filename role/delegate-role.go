@@ -31,10 +31,14 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+// DelegateObjectName is definition of delegate object name
 const DelegateObjectName string = "delegate"
+// DelegateObjectKeyName is definition of delegate object key name
 const DelegateObjectKeyName string = "account_name"
+// DelegateObjectIndexName is definition of delegate object index name
 const DelegateObjectIndexName string = "signing_key"
 
+// Delegate is definition of delegate
 type Delegate struct {
 	AccountName           string `json:"account_name"`
 	LastSlot              uint64 `json:"last_slot"`
@@ -43,6 +47,7 @@ type Delegate struct {
 	LastConfirmedBlockNum uint32 `json:"last_confirmed_block_num"`
 }
 
+// CreateDelegateRole is to save initial delegate
 func CreateDelegateRole(ldb *db.DBService) error {
 	err := ldb.CreatObjectIndex(DelegateObjectName, DelegateObjectKeyName, DelegateObjectKeyName)
 	if err != nil {
@@ -55,6 +60,7 @@ func CreateDelegateRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetDelegateRole is to save delegate
 func SetDelegateRole(ldb *db.DBService, key string, value *Delegate) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -64,6 +70,7 @@ func SetDelegateRole(ldb *db.DBService, key string, value *Delegate) error {
 	return ldb.SetObject(DelegateObjectName, key, string(jsonvalue))
 }
 
+// GetDelegateRoleByAccountName is to get delegate by account name
 func GetDelegateRoleByAccountName(ldb *db.DBService, key string) (*Delegate, error) {
 	value, err := ldb.GetObject(DelegateObjectName, key)
 	if err != nil {
@@ -79,6 +86,8 @@ func GetDelegateRoleByAccountName(ldb *db.DBService, key string) (*Delegate, err
 	return res, nil
 
 }
+
+// GetDelegateRoleBySignKey is to get delegate by sign key
 func GetDelegateRoleBySignKey(ldb *db.DBService, keyValue string) (*Delegate, error) {
 
 	value, err := ldb.GetObjectByIndex(DelegateObjectName, DelegateObjectIndexName, keyValue)
@@ -94,6 +103,8 @@ func GetDelegateRoleBySignKey(ldb *db.DBService, keyValue string) (*Delegate, er
 
 	return res, nil
 }
+
+// GetAllDelegates is to get all delegates
 func GetAllDelegates(ldb *db.DBService) []*Delegate {
 	objects, err := ldb.GetAllObjects(DelegateObjectName)
 	if err != nil {
@@ -112,6 +123,7 @@ func GetAllDelegates(ldb *db.DBService) []*Delegate {
 
 }
 
+// FilterOutgoingDelegate is to filter outgoing delegate
 func FilterOutgoingDelegate(ldb *db.DBService) []string {
 	objects, err := ldb.GetAllObjects(DelegateObjectName)
 	if err != nil {

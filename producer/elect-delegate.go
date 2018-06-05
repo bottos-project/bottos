@@ -22,6 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package producer
 
 import (
@@ -34,9 +35,12 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 )
 
+//StringSliceReflectEqual is reflecting equal to two slices
 func StringSliceReflectEqual(a, b []string) bool {
 	return reflect.DeepEqual(a, b)
 }
+
+//ShuffleEelectCandidateList is to shuffle the candidates in one round
 func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, error) {
 	newSchedule := r.roleIntf.ElectNextTermDelegates()
 	currentState, err := r.roleIntf.GetCoreState()
@@ -47,7 +51,6 @@ func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, erro
 	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
 	if equal == false {
 		fmt.Println("invalid block changes")
-		panic(1)
 		return nil, errors.New("Unexpected round changes in new block header")
 	}
 	for i := range newSchedule {

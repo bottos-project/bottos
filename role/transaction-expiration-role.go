@@ -34,11 +34,13 @@ import (
 
 const transactionExpirationName string = "transaction_expiration"
 
+//TransactionExpiration is transaction expiration struct
 type TransactionExpiration struct {
 	TrxHash    common.Hash `json:"trx_hash"`
 	Expiration uint64      `json:"expiration"`
 }
 
+//CreateTransactionExpirationRole is creating transaction expiration role
 func CreateTransactionExpirationRole(ldb *db.DBService) error {
 	return nil
 }
@@ -47,6 +49,7 @@ func hashToKey(hash common.Hash) string {
 	return hash.ToString()
 }
 
+//SetTransactionExpirationRole is setting transaction expiration role
 func SetTransactionExpirationRole(ldb *db.DBService, hash common.Hash, value *TransactionExpiration) error {
 	key := hashToKey(hash)
 	jsonvalue, err := json.Marshal(value)
@@ -57,6 +60,7 @@ func SetTransactionExpirationRole(ldb *db.DBService, hash common.Hash, value *Tr
 	return ldb.SetObject(transactionExpirationName, key, string(jsonvalue))
 }
 
+//GetTransactionExpirationRoleByHash is getting transaction expiration role hash
 func GetTransactionExpirationRoleByHash(ldb *db.DBService, hash common.Hash) (*TransactionExpiration, error) {
 	key := hashToKey(hash)
 	value, err := ldb.GetObject(transactionExpirationName, key)

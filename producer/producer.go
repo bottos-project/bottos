@@ -22,11 +22,10 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package producer
 
 import (
-	//"fmt"
-
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -34,21 +33,26 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+//Reporter is the producer
 type Reporter struct {
 	core     chain.BlockChainInterface
 	roleIntf role.RoleInterface
 	state    ReportState
 }
+
+//ReporterRepo is the interface of reporters
 type ReporterRepo interface {
 	Woker(Trxs []*types.Transaction) *types.Block
 	IsReady() bool
 }
 
+//New is to create new reporter
 func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo {
 	stat := ReportState{0, "", "", false, 0, false}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 
+//Woker is an actor of repoter
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	now := common.NowToSeconds()
@@ -62,7 +66,6 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 		return nil // errors.New("report Block failed")
 	}
 
-	//fmt.Println("brocasting block", block)
 	return block
 }
 func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*types.Transaction) (*types.Block, error) {

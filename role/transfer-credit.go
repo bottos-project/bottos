@@ -31,14 +31,17 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+//TransferCreditObjectName is credit name
 const TransferCreditObjectName string = "credit"
 
+//TransferCredit is the struct for transfering credit
 type TransferCredit struct {
 	Name    string `json:"name"`
 	Spender string `json:"spender"`
 	Limit   uint64 `json:"limit"`
 }
 
+//CreateTransferCreditRole is create transfer credits
 func CreateTransferCreditRole(ldb *db.DBService) error {
 	return nil
 }
@@ -47,18 +50,20 @@ func generateKey(name string, spender string) string {
 	return name + string("-") + spender
 }
 
+//SafeSub is safe sub
 func (credit *TransferCredit) SafeSub(amount uint64) error {
 	var a, c uint64
 	a = credit.Limit
 	c, err := safeSub(a, amount)
 	if err != nil {
 		return err
-	} else {
-		credit.Limit = c
-		return nil
 	}
+	credit.Limit = c
+	return nil
+
 }
 
+//SetTransferCreditRole is setting transfer credit role
 func SetTransferCreditRole(ldb *db.DBService, name string, value *TransferCredit) error {
 	key := generateKey(name, value.Spender)
 	jsonvalue, err := json.Marshal(value)
@@ -68,6 +73,7 @@ func SetTransferCreditRole(ldb *db.DBService, name string, value *TransferCredit
 	return ldb.SetObject(TransferCreditObjectName, key, string(jsonvalue))
 }
 
+//GetTransferCreditRole is geting transfer credit role
 func GetTransferCreditRole(ldb *db.DBService, name string, spender string) (*TransferCredit, error) {
 	key := generateKey(name, spender)
 	value, err := ldb.GetObject(TransferCreditObjectName, key)
@@ -84,6 +90,7 @@ func GetTransferCreditRole(ldb *db.DBService, name string, spender string) (*Tra
 	return res, nil
 }
 
+//DeleteTransferCreditRole is deleting transfer credit role
 func DeleteTransferCreditRole(ldb *db.DBService, name string, spender string) error {
 	key := generateKey(name, spender)
 	_, err := ldb.DeleteObject(TransferCreditObjectName, key)
