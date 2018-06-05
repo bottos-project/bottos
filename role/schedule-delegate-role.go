@@ -12,13 +12,15 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+//ScheduleDelegateObjectName is scheduledelegate
 const ScheduleDelegateObjectName string = "scheduledelegate"
 
-//singleton role
+//ScheduleDelegate is singleton role
 type ScheduleDelegate struct {
 	CurrentTermTime *big.Int
 }
 
+//SetScheduleDelegateRole is seting scheduled delegate role
 func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -29,6 +31,7 @@ func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	return ldb.SetObject(ScheduleDelegateObjectName, "my", string(jsonvalue))
 }
 
+//GetScheduleDelegateRole is to get schedulated delegate role
 func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	value, err := ldb.GetObject(ScheduleDelegateObjectName, "my")
 	if err != nil {
@@ -45,6 +48,8 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	return res, nil
 
 }
+
+//GetCandidateBySlot is to get candidate by slot
 func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
@@ -69,17 +74,21 @@ func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 
 }
 
+//ResetCandidatesTerm is reseting candidates term
 func ResetCandidatesTerm(ldb *db.DBService) {
 	sch := &ScheduleDelegate{big.NewInt(0)}
 	SetScheduleDelegateRole(ldb, sch)
 	ResetAllDelegateNewTerm(ldb)
 }
+
+//SetCandidatesTerm is setting candidates term
 func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 	sch := &ScheduleDelegate{termTime}
 	SetScheduleDelegateRole(ldb, sch)
 	SetDelegateListNewTerm(ldb, termTime, list)
 }
 
+//ElectNextTermDelegatesRole is to elect next term delegates
 func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	var tmpList []string
 	var eligibleList []string
@@ -89,11 +98,8 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	if err != nil {
 		return nil
 	}
-	//fmt.Println("sortedDelegates", sortedDelegates)
 
 	filterDgates := FilterOutgoingDelegate(ldb)
-
-	//fmt.Println("filterDgates", filterDgates)
 
 	if len(filterDgates) == 0 {
 		tmpList = sortedDelegates
@@ -101,16 +107,16 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 		tmpList = common.Filter(sortedDelegates, filterDgates)
 	}
 	if uint32(len(tmpList)) < config.BLOCKS_PER_ROUND {
-		panic("Not enough active producers registered to schedule a round")
+		//panic("Not enough active producers registered to schedule a round")
 		return nil
 	}
 
 	candidates := tmpList[0:config.VOTED_DELEGATES_PER_ROUND]
-	//fmt.Println("candidates", candidates)
+
 	//sort candidates by account name
 	sort.Strings(candidates)
 
-	//TODO Check exist ownername
+	//Check exist ownername
 	finishdelegates, err := GetAllSortFinishTimeDelegates(ldb)
 	if err != nil {
 		return nil
@@ -122,19 +128,17 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 		eligibleList = common.Filter(finishdelegates, filterDgates)
 	}
 
-	//fmt.Println("eligibleList", eligibleList)
 	//filter from candidates with number config.VOTED_DELEGATES_PER_ROUND
 
 	eligibles = common.Filter(eligibleList, candidates)
 
-	//fmt.Println("eligibles", eligibles)
 	count := config.BLOCKS_PER_ROUND - config.VOTED_DELEGATES_PER_ROUND
 	if count != 1 {
-		panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")
+		//panic("invalid configuration BLOCKS_PER_ROUND and VOTED_DELEGATES_PER_ROUND")
 		return nil
 	}
 	if len(eligibles) == 0 {
-		panic("not enough eligible delegates")
+		//panic("not enough eligible delegates")
 		return nil
 	}
 	lastTermUp := eligibles[0] //count -1 = 0

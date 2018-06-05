@@ -126,10 +126,6 @@ type RemovePendingTrxsReq struct {
 	Trxs []*types.Transaction
 }
 
-//RemovePendingTrxsRsp the response of remove trx
-type RemovePendingTrxsRsp struct {
-}
-
 //NotifyTrx txactor->p2pactor
 type NotifyTrx struct {
 	Trx *types.Transaction

@@ -25,58 +25,13 @@
 
 package netactor
 
-//import "github.com/bottos-project/bottos/transaction"
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/common/types"
 )
 
 var trxActorPid *actor.PID
 
 //SetTrxActorPid set actor pid
 func SetTrxActorPid(tpid *actor.PID) {
-	//trxActorPid = tpid
 	p2p.SetTrxActor(tpid)
-}
-
-/*
-func SetChainActorPid(cpid *actor.PID) {
-	p2p.SetChainActor(cpid)
-}
-*/
-
-//GetAllPendingTrx Get Trx from TxPool , and the trx will be boardcasted by p2p component
-func GetAllPendingTrx() []*types.Transaction {
-	/*
-		getTrxsReq := &message.GetAllPendingTrxReq{}
-		getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
-		if nil == getTrxsErr {
-		} else {
-			fmt.Println("get all trx req exec error") //TODO
-		}
-
-		mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-		fmt.Println("pending transaction number ", len(mesg.Trxs))
-		var trxs = []*types.Transaction{}
-		for i := 0; i < len(mesg.Trxs); i++ {
-			dbtag := new(types.Transaction)
-			dbtag = mesg.Trxs[i]
-
-			trxs = append(trxs, dbtag)
-		}
-
-		return trxs
-	*/
-	return nil
-}
-
-//SendNewTrx Send new Trx from other peers
-func SendNewTrx(trx *types.Transaction) (bool, error) {
-	/*
-		if trx == nil {
-			return false , errors.New("*ERROR* Failed to send the data from netactor !!!")
-		}
-		trxActorPid.Tell(trx)
-	*/
-	return true, nil
 }
