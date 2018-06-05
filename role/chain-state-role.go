@@ -8,6 +8,7 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+// ChainState is definition of chain state
 type ChainState struct {
 	LastBlockNum          uint32      `json:"last_block_num"`
 	LastBlockHash         common.Hash `json:"last_block_hash"`
@@ -19,7 +20,9 @@ type ChainState struct {
 }
 
 const (
+	// ChainStateName is definition of chain state name
 	ChainStateName       string = "chain_state"
+	// ChainStateDefaultKey is definition of chain stake default key
 	ChainStateDefaultKey string = "chain_state_defkey"
 )
 
@@ -28,6 +31,7 @@ func getGenesisTime() uint64 {
 	return uint64(t)
 }
 
+// CreateChainStateRole is to save init chain state
 func CreateChainStateRole(ldb *db.DBService) error {
 	_, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
 	if err != nil {
@@ -40,6 +44,7 @@ func CreateChainStateRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetChainStateRole is to save chain state
 func SetChainStateRole(ldb *db.DBService, value *ChainState) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -49,6 +54,7 @@ func SetChainStateRole(ldb *db.DBService, value *ChainState) error {
 	return ldb.SetObject(ChainStateName, ChainStateDefaultKey, string(jsonvalue))
 }
 
+//GetChainStateRole is to get chain state
 func GetChainStateRole(ldb *db.DBService) (*ChainState, error) {
 	value, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
 	if err != nil {
