@@ -915,8 +915,8 @@ func callTrx(vm *VM) (bool, error) {
 	//Todo thread synchronization
 	vm.callWid++
 
-	vm.sub_ctn_lst = append(vm.sub_ctn_lst, ctx)
-	vm.sub_trx_lst = append(vm.sub_trx_lst, trx)
+	vm.subCtnLst = append(vm.subCtnLst, ctx)
+	vm.subTrxLst = append(vm.subTrxLst, trx)
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(0))
@@ -946,7 +946,7 @@ func recvTrx(vm *VM) (bool, error) {
 		return false, nil
 	}
 
-	vm.vm_channel <- bCrx
+	vm.vmChannel <- bCrx
 	fmt.Println("Send Sem !!!")
 
 	return true, nil

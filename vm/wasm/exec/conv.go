@@ -119,7 +119,7 @@ func (vm *VM) f64PromoteF32() {
 	vm.pushFloat64(float64(vm.popFloat32()))
 }
 
-
+// BytesToString convert bytes to string
 func BytesToString(bytes []byte) string {
 
 	for i, b := range bytes {
