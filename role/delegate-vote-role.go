@@ -15,10 +15,13 @@ import (
 
 // DelegateVotesObjectName is definition of delegate vote object name
 const DelegateVotesObjectName string = "delegatevotes"
+
 // DelegateVotesObjectKeyName is definition of delegate vote object key name
 const DelegateVotesObjectKeyName string = "owner_account"
+
 // DelegateVotesObjectIndexVote is definition of delegate vote object index name
 const DelegateVotesObjectIndexVote string = "votes"
+
 // DelegateVotesObjectIndexFinishTime is definition of delegate vote object index finish time
 const DelegateVotesObjectIndexFinishTime string = "term_finish_time"
 

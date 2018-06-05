@@ -52,7 +52,6 @@ func (m *MultiActor) GetNetActor() *actor.PID {
 	return m.netActorPid
 }
 
-
 //InitActors init all actor
 func InitActors(env *env.ActorEnv) *MultiActor {
 

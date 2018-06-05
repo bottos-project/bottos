@@ -33,8 +33,10 @@ import (
 
 // DelegateObjectName is definition of delegate object name
 const DelegateObjectName string = "delegate"
+
 // DelegateObjectKeyName is definition of delegate object key name
 const DelegateObjectKeyName string = "account_name"
+
 // DelegateObjectIndexName is definition of delegate object index name
 const DelegateObjectIndexName string = "signing_key"
 

@@ -93,11 +93,11 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 }
 
 // DelPeer is to del peer from local
-func (notify *NotifyManager) DelPeer(peer *Peer)  {
+func (notify *NotifyManager) DelPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+	if _, ok := notify.peerMap[peer.GetId()]; !ok {
 		delete(notify.peerMap, peer.GetId())
 	}
 }
@@ -129,4 +129,3 @@ func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
 func (notify *NotifyManager) GetPeerMap() map[uint64]*Peer {
 	return notify.peerMap
 }
-

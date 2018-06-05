@@ -62,17 +62,17 @@ type NetServer struct {
 	publicKey string
 
 	timeInterval *time.Timer
-	netLock       sync.RWMutex
+	netLock      sync.RWMutex
 }
 
 //NewNetServer new a p2p server
 func NewNetServer() *NetServer {
 
 	return &NetServer{
-		addr:          config.Param.ServAddr,
+		addr:         config.Param.ServAddr,
 		seedPeer:     config.Param.PeerList,
-		port:          config.Param.P2PPort,
-		notify:        NewNotifyManager(),
+		port:         config.Param.P2PPort,
+		notify:       NewNotifyManager(),
 		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
@@ -85,12 +85,12 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 	}
 
 	return &NetServer{
-		config:        config,
-		seedPeer:      config.PeerLst,
-		addr:          config.ServAddr,
-		port:          config.ServPort,
-		notify:        NewNotifyManager(),
-		timeInterval:  time.NewTimer(TIME_INTERVAL * time.Second),
+		config:       config,
+		seedPeer:     config.PeerLst,
+		addr:         config.ServAddr,
+		port:         config.ServPort,
+		notify:       NewNotifyManager(),
+		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 

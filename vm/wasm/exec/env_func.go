@@ -835,13 +835,13 @@ func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	bufPos   := int(params[0])
-	bufLen   := int(params[1])
+	bufPos := int(params[0])
+	bufLen := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
