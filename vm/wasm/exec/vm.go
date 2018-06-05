@@ -152,12 +152,12 @@ func NewVM(module *wasm.Module) (*VM, error) {
 			}
 
 			// if it contains multi-function(splited by '0')
-			if bytes.Contains(funcList.Data, []byte{byte(0)}) != true { //if it just contains one function
+			if bytes.Contains(funcList.Data, []byte{byte(0)}) != true {
 				vm.memType[uint64(index)] = &typeInfo{Type: String, Len: len(funcList.Data)}
 			} else {
 				var idx = int(index)
 				funcArray := bytes.Split(funcList.Data, []byte{byte(0)})
-				for _, function := range funcArray { //record parm's storage address and its type info
+				for _, function := range funcArray {
 					vm.memType[uint64(idx)] = &typeInfo{Type: String, Len: len(function) + 1}
 					idx += len(function) + 1
 				}
