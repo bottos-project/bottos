@@ -53,6 +53,7 @@ const (
 	maxFindnodeFailures = 5
 )
 
+// Table is definition of node table
 type Table struct {
 	mutex   sync.Mutex        
 	buckets [nBuckets]*bucket 
@@ -109,12 +110,12 @@ func newTableInfo(t transport, ourID NodeID, ourAddr *net.UDPAddr, nodeDBPath st
 	return tab
 }
 
-
+// Self is to get table it self
 func (tab *Table) Self() *Node {
 	return tab.self
 }
 
-
+// ReadRandomNodes is to get random nodes
 func (tab *Table) ReadRandomNodes(buf []*Node,buckets [][]*Node) (n int) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
@@ -156,14 +157,14 @@ func randUint(max uint64) uint64 {
 	return binary.BigEndian.Uint64(b[:]) % max
 }
 
-
+// Close is to stop p2p when system stop
 func (tab *Table) Close() {
 	tab.net.close()
 	tab.db.close()
 }
 
 
-
+// Bootstrap is to boost trap
 func (tab *Table) Bootstrap(nodes []*Node) {
 	tab.mutex.Lock()
 	
@@ -176,7 +177,7 @@ func (tab *Table) Bootstrap(nodes []*Node) {
 	tab.refresh()
 }
 
-
+// Lookup is to get node talbe by node id
 func (tab *Table) Lookup(targetID NodeID) []*Node {
 	var (
 		target         = string(targetID[:])

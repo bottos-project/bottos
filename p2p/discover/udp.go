@@ -43,6 +43,7 @@ import (
 )
 
 const (
+	// Version is version num definition
 	Version = 3
 	macSize  = 256 / 8
 	sigSize  = 520 / 8
@@ -155,12 +156,12 @@ func newNodeFromRPC(rn rpcNode) (n *Node, valid bool) {
 	return newNodeInfo(rn.ID, rn.IP, rn.UDP, rn.TCP), true
 }
 
+// RPCNode is to get rpc node struct 
 func RPCNode(n *Node) rpcNode {
 	return rpcNode{ID: n.ID, IP: n.IP, UDP: n.UDP, TCP: n.TCP}
 }
 
-
-
+// ListenUDP is to start udp to listen
 func ListenUDP(priv *ecdsa.PrivateKey, laddr string, natm nat.Interface, nodeDBPath string) (*Table, error) {
 	addr, err := net.ResolveUDPAddr("udp", laddr)
 	if err != nil {
