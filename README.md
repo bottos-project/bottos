@@ -6,31 +6,32 @@ Bottos blockchain architecture is shown below.
 
 ## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
-```
-    *  Hybrid Consensus
-    *  High-Performance Transactions
-    *  Microservices Chain Core
-    *  Horizontally Scalable Node (Cluster Nodes)
-    *  One-Click Deployment Script
-    *  Dynamic Node Model
-    *  Multi-Value System
-    *  Smart Contracts Domain
-```
+
+-  **Hybrid Consensus**
+-  **High-Performance Transactions**
+-  **Microservices Chain Core**
+-  **Horizontally Scalable Node (Cluster Nodes)**
+-  **One-Click Deployment Script**
+-  **Dynamic Node Model**
+-  **Multi-Value System**
+-  **Smart Contracts Domain**
+
 
 And you also have multiple services below which are dedicated designed for AI ecosystem
-```
-    *  Multi-Data Service
-    *  Adaptive Distributed Storage
-    *  Distributed Digital Identification
-    *  Hierarchical Qos Service
-    *  Agile DApps Deployment
-    *  Contracts Management Service
-```
+
+-  **Multi-Data Service**
+-  **Adaptive Distributed Storage**
+-  **Distributed Digital Identification**
+-  **Hierarchical Qos Service**
+-  **Agile DApps Deployment**
+-  **Contracts Management Service**
+
 Following the instructions below, you can build and deploy your own test node.
 
 
 ## Bottos Node Environment Deployment
-**One-Click Deployment script is coming in the following day**
+<font color="#dd0000">One-Click Deployment script is coming in the following day</font><br /> 
+
 
    To build a Bottos single node environment originally, following steps need to be done.
 *	Precondition
