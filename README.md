@@ -4,8 +4,6 @@ This repository of Bottos is to build an blockchain infrastructure.
 Bottos blockchain architecture is shown below.
 ![](BottosArchitecture.png)
 
-&nbsp;
-
 ## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
 ```
@@ -51,9 +49,7 @@ Packages to be installed include:
     gcc
 ```
 
-&nbsp;
-
-###Installation commands
+### Installation commands
 ```
     apt-get update
     apt-get install gcc
