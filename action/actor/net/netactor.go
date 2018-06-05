@@ -84,14 +84,6 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 
 	case *actor.Restarting:
 		fmt.Printf("NetActor received restarting msg")
-
-	//case types.Transaction:
-	case message.NotifyTrx:
-		go p2p.BroadCast(msg.Trx, p2pserv.TRANSACTION)
-
-	//case types.Block:
-	case message.NotifyBlock:
-		go p2p.BroadCast(msg.Block, p2pserv.BLOCK)
 	}
 
 }
@@ -102,8 +94,11 @@ func (NetActor *NetActor) Receive(context actor.Context) {
 	NetActor.handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
-
-	//case *types.Transaction:
-
+	//case types.Transaction:
+	case message.NotifyTrx:
+		go p2p.BroadCast(msg.Trx, p2pserv.TRANSACTION)
+	//case types.Block:
+	case message.NotifyBlock:
+		go p2p.BroadCast(msg.Block, p2pserv.BLOCK)
 	}
 }
