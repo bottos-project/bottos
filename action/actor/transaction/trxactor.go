@@ -33,18 +33,22 @@ import (
 	"github.com/bottos-project/bottos/transaction"
 )
 
+//TrxActorPid trx actor pid
 var TrxActorPid *actor.PID
 
 var trxPool *transaction.TrxPool
 
+//TrxActor trx actor props
 type TrxActor struct {
 	props *actor.Props
 }
 
+//ContructTrxActor new a trx actor
 func ContructTrxActor() *TrxActor {
 	return &TrxActor{}
 }
 
+//NewTrxActor spawn a named actor
 func NewTrxActor() *actor.PID {
 
 	props := actor.FromProducer(func() actor.Actor { return ContructTrxActor() })
@@ -52,18 +56,19 @@ func NewTrxActor() *actor.PID {
 	var err error
 	TrxActorPid, err = actor.SpawnNamed(props, "TrxActor")
 
-	if err == nil {
-		return TrxActorPid
-	} else {
+	if err != nil {
 		panic(fmt.Errorf("TrxActor SpawnNamed error: ", err))
+	} else {
+		return TrxActorPid
 	}
 }
 
+//SetTrxPool set trx pool
 func SetTrxPool(pool *transaction.TrxPool) {
 	trxPool = pool
 }
 
-func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
+func handleSystemMsg(context actor.Context) bool {
 
 	switch msg := context.Message().(type) {
 
@@ -86,9 +91,10 @@ func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 	return true
 }
 
-func (self *TrxActor) Receive(context actor.Context) {
+//Receive process message
+func (t *TrxActor) Receive(context actor.Context) {
 
-	if self.handleSystemMsg(context) {
+	if handleSystemMsg(context) {
 		return
 	}
 

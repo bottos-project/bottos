@@ -31,51 +31,51 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
+//ApiActorPid is actor pid
 var ApiActorPid *actor.PID
 
+//ApiActor is actor props
 type ApiActor struct {
 	props *actor.Props
 }
 
+//ContructApiActor new an actor
 func ContructApiActor() *ApiActor {
 	return &ApiActor{}
 }
 
+//NewApiActor spawn a named actor
 func NewApiActor() *actor.PID {
-
 	props := actor.FromProducer(func() actor.Actor { return ContructApiActor() })
 
 	var err error
 	ApiActorPid, err = actor.SpawnNamed(props, "ApiActor")
 
-	if err == nil {
-		return ApiActorPid
-	} else {
+	if err != nil {
 		panic(fmt.Errorf("ApiActor SpawnNamed error: ", err))
+	} else {
+		return ApiActorPid
 	}
 }
 
-func (ApiActor *ApiActor) handleSystemMsg(context actor.Context) {
+func handleSystemMsg(context actor.Context) {
 
 	switch msg := context.Message().(type) {
-
 	case *actor.Started:
 		fmt.Printf("ApiActor received started msg", msg)
-
 	case *actor.Stopping:
 		fmt.Printf("ApiActor received stopping msg")
-
 	case *actor.Restart:
 		fmt.Printf("ApiActor received restart msg")
-
 	case *actor.Restarting:
 		fmt.Printf("ApiActor received restarting msg")
 	}
 }
 
+//Receive process msg
 func (apiActor *ApiActor) Receive(context actor.Context) {
 
-	apiActor.handleSystemMsg(context)
+	handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 
@@ -83,3 +83,4 @@ func (apiActor *ApiActor) Receive(context actor.Context) {
 
 	}
 }
+

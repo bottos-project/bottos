@@ -39,10 +39,12 @@ import (
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 )
 
+//ApiService is actor service
 type ApiService struct {
 	env *env.ActorEnv
 }
 
+//NewApiService new api service
 func NewApiService(env *env.ActorEnv) api.CoreApiHandler {
 	apiService := &ApiService{env: env}
 	return apiService
@@ -50,12 +52,14 @@ func NewApiService(env *env.ActorEnv) api.CoreApiHandler {
 
 var chainActorPid *actor.PID
 
+//SetChainActorPid set chain actor pid
 func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
 var trxactorPid *actor.PID
 
+//SetTrxActorPid set trx actor pid
 func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
@@ -104,6 +108,7 @@ func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	return apiTrx
 }
 
+//PushTrx push trx
 func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *api.PushTrxResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
@@ -151,6 +156,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	return nil
 }
 
+//QueryTrx query trx
 func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
 	msgReq := &message.QueryTrxReq{
 		TrxHash: common.HexToHash(req.TrxHash),
@@ -173,6 +179,7 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 	return nil
 }
 
+//QueryBlock query block
 func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
 	msgReq := &message.QueryBlockReq{
 		BlockHash:   common.HexToHash(req.BlockHash),
@@ -207,7 +214,8 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 	return nil
 }
 
-func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfoRequest, resp *api.QueryChainInfoResponse) error {
+//QueryChainInfo query chain info
+func (a *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfoRequest, resp *api.QueryChainInfoResponse) error {
 	msgReq := &message.QueryChainInfoReq{}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
@@ -234,23 +242,24 @@ func (h *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 	return nil
 }
 
-func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequest, resp *api.QueryAccountResponse) error {
+//QueryAccount query account info
+func (a *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequest, resp *api.QueryAccountResponse) error {
 	name := req.AccountName
-	account, err := h.env.RoleIntf.GetAccount(name)
+	account, err := a.env.RoleIntf.GetAccount(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
-	balance, err := h.env.RoleIntf.GetBalance(name)
+	balance, err := a.env.RoleIntf.GetBalance(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
-	stakedBalance, err := h.env.RoleIntf.GetStakedBalance(name)
+	stakedBalance, err := a.env.RoleIntf.GetStakedBalance(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -267,11 +276,12 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 	return nil
 }
 
-func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, resp *api.QueryObjectResponse) error {
+//QueryObject query contract object
+func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, resp *api.QueryObjectResponse) error {
 	contract := req.Contract
 	object := req.Object
 	key := req.Key
-	value, err := h.env.ContractDB.GetStrValue(contract, object, key)
+	value, err := a.env.ContractDB.GetStrValue(contract, object, key)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
@@ -288,9 +298,10 @@ func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 	return nil
 }
 
-func (h *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *api.QueryAbiResponse) error {
+//QueryAbi query contract abi info
+func (a *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *api.QueryAbiResponse) error {
 	contract := req.Contract
-	account, err := h.env.RoleIntf.GetAccount(contract)
+	account, err := a.env.RoleIntf.GetAccount(contract)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -307,10 +318,11 @@ func (h *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *a
 	return nil
 }
 
-func (h *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTransferCreditRequest, resp *api.QueryTransferCreditResponse) error {
+//QueryTransferCredit query trx credit info
+func (a *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTransferCreditRequest, resp *api.QueryTransferCreditResponse) error {
 	name := req.Name
 	spender := req.Spender
-	credit, err := h.env.RoleIntf.GetTransferCredit(name, spender)
+	credit, err := a.env.RoleIntf.GetTransferCredit(name, spender)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrTransferCreditNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrTransferCreditNotFound)

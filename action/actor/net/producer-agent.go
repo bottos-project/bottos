@@ -30,6 +30,7 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+//ProducerActor producer actor struct
 type ProducerActor struct {
 	roleIntf role.RoleInterface
 	ins      producer.ReporterRepo

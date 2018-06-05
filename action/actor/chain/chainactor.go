@@ -33,22 +33,27 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 )
 
+//ChainActorPid is chain actor pid
 var ChainActorPid *actor.PID
 var actorEnv *env.ActorEnv
 var trxactorPid *actor.PID
 
+//ChainActor is actor props
 type ChainActor struct {
 	props *actor.Props
 }
 
+//ContructChainActor new and actor
 func ContructChainActor() *ChainActor {
 	return &ChainActor{}
 }
 
+//SetTrxActorPid set trx actor pid
 func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
 
+//NewChainActor spawn a named actor
 func NewChainActor(env *env.ActorEnv) *actor.PID {
 	var err error
 
@@ -57,14 +62,14 @@ func NewChainActor(env *env.ActorEnv) *actor.PID {
 	ChainActorPid, err = actor.SpawnNamed(props, "ChainActor")
 	actorEnv = env
 
-	if err == nil {
-		return ChainActorPid
-	} else {
+	if err != nil {
 		panic(fmt.Errorf("ChainActor SpawnNamed error: ", err))
+	} else {
+		return ChainActorPid
 	}
 }
 
-func (self *ChainActor) handleSystemMsg(context actor.Context) {
+func handleSystemMsg(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 
@@ -83,25 +88,27 @@ func (self *ChainActor) handleSystemMsg(context actor.Context) {
 
 }
 
-func (self *ChainActor) Receive(context actor.Context) {
+//Receive process chain msg
+func (c *ChainActor) Receive(context actor.Context) {
 
-	self.handleSystemMsg(context)
+	handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
 	case *message.InsertBlockReq:
-		self.HandleNewProducedBlock(context, msg)
+		c.HandleNewProducedBlock(context, msg)
 	case *message.ReceiveBlock:
-		self.HandleReceiveBlock(context, msg)
+		c.HandleReceiveBlock(context, msg)
 	case *message.QueryTrxReq:
-		self.HandleQueryTrxReq(context, msg)
+		c.HandleQueryTrxReq(context, msg)
 	case *message.QueryBlockReq:
-		self.HandleQueryBlockReq(context, msg)
+		c.HandleQueryBlockReq(context, msg)
 	case *message.QueryChainInfoReq:
-		self.HandleQueryChainInfoReq(context, msg)
+		c.HandleQueryChainInfoReq(context, msg)
 	}
 }
 
-func (self *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
+//HandleNewProducedBlock new block msg
+func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
 	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
@@ -116,7 +123,8 @@ func (self *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.I
 	}
 }
 
-func (self *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
+//HandleReceiveBlock receive block
+func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
@@ -131,7 +139,8 @@ func (self *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.Recei
 	}
 }
 
-func (self *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
+//HandleQueryTrxReq query trx
+func (c *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
 	tx := actorEnv.TxStore.GetTransaction(req.TrxHash)
 	if ctx.Sender() != nil {
 		resp := &message.QueryTrxResp{}
@@ -144,7 +153,8 @@ func (self *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryT
 	}
 }
 
-func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBlockReq) {
+//HandleQueryBlockReq query block
+func (c *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBlockReq) {
 	block := actorEnv.Chain.GetBlockByHash(req.BlockHash)
 	if block == nil {
 		block = actorEnv.Chain.GetBlockByNumber(req.BlockNumber)
@@ -160,7 +170,8 @@ func (self *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.Quer
 	}
 }
 
-func (self *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.QueryChainInfoReq) {
+//HandleQueryChainInfoReq query chain info
+func (c *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.QueryChainInfoReq) {
 	if ctx.Sender() != nil {
 		resp := &message.QueryChainInfoResp{}
 		resp.HeadBlockNum = actorEnv.Chain.HeadBlockNum()

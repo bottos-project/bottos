@@ -8,6 +8,7 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+//ActorEnv actor external interface
 type ActorEnv struct {
 	RoleIntf   role.RoleInterface
 	ContractDB *contractdb.ContractDB

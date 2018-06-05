@@ -38,6 +38,7 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 )
 
+//MultiActor actor group
 type MultiActor struct {
 	apiActorPid      *actor.PID
 	netActorPid      *actor.PID
@@ -51,6 +52,8 @@ func (m *MultiActor) GetNetActor() *actor.PID {
 	return m.netActorPid
 }
 
+
+//InitActors init all actor
 func InitActors(env *env.ActorEnv) *MultiActor {
 
 	mActor := &MultiActor{
@@ -79,10 +82,12 @@ func registerActorMsgTbl(m *MultiActor) {
 	netactor.SetChainActorPid(m.chainActorPid)
 }
 
+//GetTrxActorPID get trx actor pid
 func (m *MultiActor) GetTrxActorPID() *actor.PID {
 	return m.trxActorPid
 }
 
+//ActorsStop stop all actor
 func (m *MultiActor) ActorsStop() {
 	m.chainActorPid.Stop()
 	m.producerActorPid.Stop()

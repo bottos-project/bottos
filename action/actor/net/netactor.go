@@ -34,17 +34,21 @@ import (
 	p2pserv "github.com/bottos-project/bottos/p2p"
 )
 
+//NetActorPid net actor pid
 var NetActorPid *actor.PID
-var p2p *p2pserv.P2PServer = nil
+var p2p *p2pserv.P2PServer
 
+//NetActor is net actor props
 type NetActor struct {
 	props *actor.Props
 }
 
+//ContructNetActor new a net actor
 func ContructNetActor() *NetActor {
 	return &NetActor{}
 }
 
+//NewNetActor spawn a named actor
 func NewNetActor() *actor.PID {
 
 	p2p = p2pserv.NewServ()
@@ -55,10 +59,10 @@ func NewNetActor() *actor.PID {
 	var err error
 	NetActorPid, err = actor.SpawnNamed(props, "NetActor")
 
-	if err == nil {
-		return NetActorPid
-	} else {
+	if err != nil {
 		panic(fmt.Errorf("NetActor SpawnNamed error: ", err))
+	} else {
+		return NetActorPid
 	}
 
 	return nil
@@ -92,6 +96,7 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 
 }
 
+//Receive process msg
 func (NetActor *NetActor) Receive(context actor.Context) {
 
 	NetActor.handleSystemMsg(context)

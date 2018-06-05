@@ -31,6 +31,7 @@ import (
 
 var apiactorPid *actor.PID
 
+//SetApiActorPid set actor pid
 func SetApiActorPid(apid *actor.PID) {
 	apiactorPid = apid
 }
