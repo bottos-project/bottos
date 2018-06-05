@@ -13,6 +13,7 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+//NewNativeContract is to create a new native contract
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
 	intf, err := NewNativeContractHandler()
 	if err != nil {
@@ -34,6 +35,7 @@ func newTransaction(contract string, method string, param []byte) *types.Transac
 	return trx
 }
 
+//NativeContractInitChain is to init
 func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractInterface) ([]*types.Transaction, error) {
 	err := CreateNativeContractAccount(roleIntf)
 	if err != nil {
@@ -90,6 +92,7 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 	return trxs, nil
 }
 
+//CreateNativeContractAccount is to create native contract account
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
 	_, err := roleIntf.GetAccount(config.BOTTOS_CONTRACT_NAME)
@@ -117,10 +120,10 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	roleIntf.SetBalance(bto.AccountName, balance)
 
 	// staked_balance
-	staked_balance := &role.StakedBalance{
+	stakedBalance := &role.StakedBalance{
 		AccountName: bto.AccountName,
 	}
-	roleIntf.SetStakedBalance(bto.AccountName, staked_balance)
+	roleIntf.SetStakedBalance(bto.AccountName, stakedBalance)
 
 	return nil
 }

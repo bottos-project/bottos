@@ -27,22 +27,26 @@ package contractdb
 
 import (
 	"fmt"
+
 	"github.com/bottos-project/bottos/db"
 )
 
+//ContractObjectNamePrefix is the contract object name prefix
 const ContractObjectNamePrefix string = "obj-"
 
+//ContractDB is struct for contract
 type ContractDB struct {
 	Db *db.DBService
 }
 
+//NewContractDB create a new contractDB
 func NewContractDB(db *db.DBService) *ContractDB {
 	cdb := &ContractDB{Db: db}
 
 	return cdb
 }
 
-// create a record if key not exsit
+//SetStrValue is to create a record if key not exsit
 func (cdb *ContractDB) SetStrValue(contract string, object string, key string, value string) error {
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.setStrValue(objName, key, value)
@@ -54,6 +58,7 @@ func (cdb *ContractDB) SetStrValue(contract string, object string, key string, v
 	return nil
 }
 
+//GetStrValue is to get contract by object and return contract value
 func (cdb *ContractDB) GetStrValue(contract string, object string, key string) (string, error) {
 	objName := cdb.getObjectName(contract, object)
 	value, err := cdb.getStrValue(objName, key)
@@ -66,6 +71,7 @@ func (cdb *ContractDB) GetStrValue(contract string, object string, key string) (
 	return string(value), nil
 }
 
+//RemoveStrValue is to Remove contrace value by object
 func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string) error {
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.removeStrValue(objName, key)

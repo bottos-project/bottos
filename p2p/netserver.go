@@ -190,23 +190,25 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 	case CRX_BROADCAST:
 		//Receive crx_boardcast from other peer , and set it to txpool
 
-		var rcvTrx msgDef.ReceiveTrx
-		err = json.Unmarshal(msg.Content, &rcvTrx)
+		var newCrx types.Transaction
+		err = json.Unmarshal(msg.Content , &newCrx)
 		if err != nil {
 			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
 			return
 		}
 
-		//build a new message struct (ReceiveTrx) to send to trxpool
 		recvTrx := msgDef.PushTrxReq{
-			Trx:       rcvTrx.Trx,
+			Trx:       &newCrx,
 			TrxSender: msgDef.TrxSenderTypeP2P,
 		}
 
+		fmt.Printf("%c[%d;%d;%dm%s %v %v %v %c[0m ", 0x1B, 123 , 40 , 33, "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:",msg.Src," new_crx = ",newCrx, 0x1B)
+
 		if serv.notify.trxActorPid != nil {
 			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ",recvTrx)
-			serv.notify.trxActorPid.Tell(recvTrx)
+			serv.notify.trxActorPid.Tell(&recvTrx)
 		}
+
 
 	case BLK_BROADCAST:
 		//Receive blk_boardcast from other peer
