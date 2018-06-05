@@ -22,6 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package contract
 
 import (
@@ -40,7 +41,7 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 	if err != nil {
 		return nil, err
 	}
-	roleIntf.SetScheduleDelegate(&role.ScheduleDelegate{big.NewInt(2)})
+	roleIntf.SetScheduleDelegate(&role.ScheduleDelegate{CurrentTermTime: big.NewInt(2)})
 
 	return intf, nil
 }

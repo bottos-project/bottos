@@ -41,7 +41,6 @@ import (
 	"time"
 )
 
-
 func (tab *Table) bondall(nodes []*Node) (result []*Node) {
 	rc := make(chan *Node, len(nodes))
 	for i := range nodes {
@@ -58,16 +57,14 @@ func (tab *Table) bondall(nodes []*Node) (result []*Node) {
 	return result
 }
 
-
 func (tab *Table) bond(pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint64) (*Node, error) {
-	
+
 	node, fails := tab.db.node(id), 0
 	if node != nil {
 		fails = tab.db.failFind(id)
 	}
 	var result error
 	if node == nil || fails > 0 {
-		
 
 		tab.bondmu.Lock()
 		w := tab.bonding[id]
@@ -110,10 +107,10 @@ func (tab *Table) pingpong(w *bondproc, pinged bool, id NodeID, addr *net.UDPAdd
 		return
 	}
 	if !pinged {
-		
+
 		tab.net.waitping(id)
 	}
-	
+
 	w.n = newNodeInfo(id, addr.IP, uint64(addr.Port), tcpPort)
 	tab.db.updNode(w.n)
 	close(w.done)
@@ -123,11 +120,11 @@ func (tab *Table) pingreplace(new *Node, b *bucket) {
 	if len(b.entries) == bucketSize {
 		oldest := b.entries[bucketSize-1]
 		if err := tab.ping(oldest.ID, oldest.addr()); err == nil {
-			
+
 			return
 		}
 	} else {
-		
+
 		b.entries = append(b.entries, nil)
 	}
 	copy(b.entries[1:], b.entries)
@@ -136,7 +133,6 @@ func (tab *Table) pingreplace(new *Node, b *bucket) {
 		tab.nodeAddedHook(new)
 	}
 }
-
 
 func (tab *Table) ping(id NodeID, addr *net.UDPAddr) error {
 
@@ -150,7 +146,6 @@ func (tab *Table) ping(id NodeID, addr *net.UDPAddr) error {
 
 	return nil
 }
-
 
 func (tab *Table) add(entries []*Node) {
 outer:
@@ -191,7 +186,7 @@ func (tab *Table) del(node *Node) {
 func (b *bucket) bump(n *Node) bool {
 	for i := range b.entries {
 		if b.entries[i].ID == n.ID {
-			
+
 			copy(b.entries[1:], b.entries[:i])
 			b.entries[0] = n
 			return true
@@ -205,7 +200,6 @@ type nodesByDistance struct {
 	target  string
 }
 
-
 func (h *nodesByDistance) push(n *Node, maxElems int) {
 	ix := sort.Search(len(h.entries), func(i int) bool {
 		return distancecmp(h.target, h.entries[i].hash, n.hash) > 0
@@ -214,9 +208,9 @@ func (h *nodesByDistance) push(n *Node, maxElems int) {
 		h.entries = append(h.entries, n)
 	}
 	if ix == len(h.entries) {
-		
+
 	} else {
-		
+
 		copy(h.entries[ix+1:], h.entries[ix:])
 		h.entries[ix] = n
 	}

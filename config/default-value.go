@@ -25,29 +25,49 @@
 
 package config
 
+// DEFAULT_BLOCK_INTERVAL define defalut interval of block production
 const DEFAULT_BLOCK_INTERVAL uint32 = 1
+// BLOCKS_PER_ROUND define block num per round
 const BLOCKS_PER_ROUND uint32 = 29
+// VOTED_DELEGATES_PER_ROUND define voted delegates per round
 const VOTED_DELEGATES_PER_ROUND uint32 = 28
+// CONSENSUS_BLOCKS_PERCENT define consensus rate
 const CONSENSUS_BLOCKS_PERCENT uint32 = 80
+// MAX_DELEGATE_VOTES define max delegate votes
 const MAX_DELEGATE_VOTES uint32 = 40
+// DELEGATE_PATICIPATION define delegate paticipation
 const DELEGATE_PATICIPATION uint64 = 33
+// MAX_BLOCK_SIZE define max block size
 const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
+// DEFALT_SLOT_CHECK_INTERVAL define default slot check interval
 const DEFALT_SLOT_CHECK_INTERVAL = 500000
 
+
+// BOTTOS_CONTRACT_NAME define system contract name
 const BOTTOS_CONTRACT_NAME string = "bottos"
+// BOTTOS_INIT_SUPPLY define bto total supply
 const BOTTOS_INIT_SUPPLY uint64 = 1000000000
+// BOTTOS_SUPPLY_MUL define dot num of bto
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
+// MAX_ACCOUNT_NAME_LENGTH define max account name length
 const MAX_ACCOUNT_NAME_LENGTH int = 16
+// ACCOUNT_NAME_REGEXP define account name format
 const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
-
+// DEFAULT_BLOCK_TIME_LIMIT define default block time limit when producing block
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 
+// DEFAULT_MAX_LIFE_TIME define max life time for a transaction
 const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
 
+// DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
 const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
 
+// DEFAULT_OPTIONDB_NAME define default option db name
 const DEFAULT_OPTIONDB_NAME string = "bottos"
+// DEFAULT_OPTIONDB_TABLE_BLOCK_NAME define default option db table name of block
 const DEFAULT_OPTIONDB_TABLE_BLOCK_NAME string = "Blocks"
+// DEFAULT_OPTIONDB_TABLE_TRX_NAME define default option db table name of trx
 const DEFAULT_OPTIONDB_TABLE_TRX_NAME string = "Transactions"
+// DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME define default option db table name of account
 const DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME string = "Accounts"
