@@ -108,7 +108,6 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 		Param:       param,
 		SigAlg:      trx.SigAlg,
 	}
-	pubKey, priKey := crypto.GenerateKey()
 
 	data, err := proto.Marshal(ctrx)
 	if nil != err {
