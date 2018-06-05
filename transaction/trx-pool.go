@@ -122,8 +122,8 @@ func (trxPool *TrxPool) Stop() {
 	fmt.Println("Transaction pool stopped")
 }
 
-// CheckTransactionBaseConditionFromFront is checking trx from front
-func (trxPool *TrxPool) CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode) {
+// CheckTransactionBaseCondition is checking trx
+func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
 		return false, bottosErr.ErrTrxPendingNumLimit
@@ -132,25 +132,14 @@ func (trxPool *TrxPool) CheckTransactionBaseConditionFromFront(trx *types.Transa
 	if !trxPool.VerifySignature(trx) {
 		return false, bottosErr.ErrTrxSignError
 	}
-
-	notify := &message.NotifyTrx {
-		Trx:  trx,
-	}
-	trxPool.netActorPid.Tell(notify)		
-
+	
 	return true, bottosErr.ErrNoError
 }
 
+// HandleTransactionCommon is processing trx
+func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *types.Transaction) {
 
-// CheckTransactionBaseConditionFromP2P is checking trx from P2P
-func (trxPool *TrxPool) CheckTransactionBaseConditionFromP2P() {
-
-}
-
-// HandleTransactionFromFront is processing trx from front
-func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-
-	if checkResult, err := trxPool.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
+	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
@@ -165,18 +154,27 @@ func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *t
 
 	trxPool.addTransaction(trx)
 
+	notify := &message.NotifyTrx {
+		Trx:  trx,
+	}
+	trxPool.netActorPid.Tell(notify)		
+
 	context.Respond(bottosErr.ErrNoError)
 }
 
-// HandleTransactionFromP2P is processing trx from P2P
-func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
+// HandleTransactionFromFront is handling trx from front
+func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	trxPool.CheckTransactionBaseConditionFromP2P()
-
-	trxApplyServiceInst.ApplyTransaction(trx)
-
-	trxPool.addTransaction(trx)
+	trxPool.HandleTransactionCommon(context, trx)
 }
+
+// HandleTransactionFromP2P is handling trx from P2P
+func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
+	
+	trxPool.HandleTransactionCommon(context, trx)
+}
+
+
 
 // HandlePushTransactionReq is entry of trx req
 func (trxPool *TrxPool) HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction) {
