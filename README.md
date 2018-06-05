@@ -96,7 +96,7 @@ Packages to be installed include:
 
     echo "MINIO_OPTS=\"-C "$MINIO_COF" --address "10.10.10.189":"9000"\"" >> /etc/default/minio
 
-    echo "MINIO_OPTS=\"-C "$MINIO_COF" --address “10.10.10.189":"9000"\"" >> /etc/default/minio
+    echo "MINIO_OPTS=\"-C "$MINIO_COF" --address "10.10.10.189":"9000"\"" >> /etc/default/minio
 
     source /etc/default/minio
 
