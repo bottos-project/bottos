@@ -33,6 +33,7 @@ import (
 
 var trxActorPid *actor.PID
 
+//SetTrxActorPid set actor pid
 func SetTrxActorPid(tpid *actor.PID) {
 	//trxActorPid = tpid
 	p2p.SetTrxActor(tpid)
@@ -44,8 +45,7 @@ func SetChainActorPid(cpid *actor.PID) {
 }
 */
 
-//Get Trx from TxPool , and the trx will be boardcasted by p2p component
-//func ReceiveNewTrx() []*types.Transaction {
+//GetAllPendingTrx Get Trx from TxPool , and the trx will be boardcasted by p2p component
 func GetAllPendingTrx() []*types.Transaction {
 	/*
 		getTrxsReq := &message.GetAllPendingTrxReq{}
@@ -70,7 +70,7 @@ func GetAllPendingTrx() []*types.Transaction {
 	return nil
 }
 
-//Send new Trx from other peers
+//SendNewTrx Send new Trx from other peers
 func SendNewTrx(trx *types.Transaction) (bool, error) {
 	/*
 		if trx == nil {

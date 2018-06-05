@@ -31,6 +31,7 @@ import (
 
 var chainActorPid *actor.PID
 
+//SetChainActorPid set chain actor pid
 func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }

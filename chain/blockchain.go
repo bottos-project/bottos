@@ -40,6 +40,7 @@ import (
 	//trx "github.com/bottos-project/bottos/transaction"
 )
 
+//BlockChain the chain info
 type BlockChain struct {
 	blockDb    *db.DBService
 	roleIntf   role.RoleInterface
@@ -53,6 +54,7 @@ type BlockChain struct {
 	chainmu sync.RWMutex
 }
 
+//CreateBlockChain create a chain
 func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
 	blockCache, err := CreateBlockChainCache()
 	if err != nil {
@@ -82,6 +84,7 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 	return bc, nil
 }
 
+//Close close chain cache
 func (bc *BlockChain) Close() {
 	fmt.Println("BlockChain: Close")
 	bc.blockCache.Reset()
@@ -127,14 +130,17 @@ func (bc *BlockChain) initChain() error {
 	return nil
 }
 
+//RegisterHandledBlockCallback call back register
 func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
 	bc.handledBlockCB = cb
 }
 
+//GetGenesisBlock get the first block
 func (bc *BlockChain) GetGenesisBlock() *types.Block {
 	return bc.genesisBlock
 }
 
+//HasBlock check block
 func (bc *BlockChain) HasBlock(hash common.Hash) bool {
 	if bc.blockCache.HasBlock(hash) {
 		return true
@@ -143,6 +149,7 @@ func (bc *BlockChain) HasBlock(hash common.Hash) bool {
 	return HasBlock(bc.blockDb, hash)
 }
 
+//GetBlock get block from cache and chain by hash
 func (bc *BlockChain) GetBlock(hash common.Hash) *types.Block {
 	// cache
 	block := bc.blockCache.GetBlock(hash)
@@ -153,10 +160,12 @@ func (bc *BlockChain) GetBlock(hash common.Hash) *types.Block {
 	return GetBlock(bc.blockDb, hash)
 }
 
+//GetBlockByHash get block from chain by hash
 func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
 
+//GetBlockByNumber get block from cache and chain by number
 func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 	block := bc.blockCache.GetBlockByNum(number)
 	if block != nil {
@@ -170,39 +179,47 @@ func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 	return bc.GetBlock(hash)
 }
 
+//GetBlockHashByNumber get block hash from chain by number
 func (bc *BlockChain) GetBlockHashByNumber(number uint32) common.Hash {
 	return GetBlockHashByNumber(bc.blockDb, number)
 }
 
+//WriteBlock write block to chain
 func (bc *BlockChain) WriteBlock(block *types.Block) error {
 	return WriteBlock(bc.blockDb, block)
 }
 
+//HeadBlockTime get lastest block time
 func (bc *BlockChain) HeadBlockTime() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockTime
 }
 
+//HeadBlockNum get lastest block number
 func (bc *BlockChain) HeadBlockNum() uint32 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockNum
 }
 
+//HeadBlockHash get lastest block hash
 func (bc *BlockChain) HeadBlockHash() common.Hash {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockHash
 }
 
+//HeadBlockDelegate get current delegator
 func (bc *BlockChain) HeadBlockDelegate() string {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.CurrentDelegate
 }
 
+//LastConsensusBlockNum get lastest consensus block numnber
 func (bc *BlockChain) LastConsensusBlockNum() uint32 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastConsensusBlockNum
 }
 
+//GenesisTimestamp get genesis time
 func (bc *BlockChain) GenesisTimestamp() uint64 {
 	return config.Genesis.GenesisTime
 }
@@ -222,6 +239,7 @@ func (bc *BlockChain) initBlockCache() error {
 	return nil
 }
 
+//LoadBlockDb load block from db
 func (bc *BlockChain) LoadBlockDb() error {
 	lastBlock := GetLastBlock(bc.blockDb)
 	if lastBlock == nil {
@@ -390,6 +408,7 @@ func (bc *BlockChain) addBlockHistory(block *types.Block) {
 	bc.roleIntf.SetBlockHistory(block.GetNumber(), block.Hash())
 }
 
+//HandleBlock update state when new a block
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	delegate, _ := bc.roleIntf.GetDelegateByAccountName(string(block.GetDelegate()))
 
@@ -419,6 +438,7 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	return nil
 }
 
+//ValidateBlock verify a block
 func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	prevBlockHash := block.GetPrevBlockHash()
 	if prevBlockHash != bc.HeadBlockHash() {
@@ -458,6 +478,7 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	return nil
 }
 
+//InsertBlock write a new block
 func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
