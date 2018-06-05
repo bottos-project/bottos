@@ -78,9 +78,5 @@ func (apiActor *ApiActor) Receive(context actor.Context) {
 	handleSystemMsg(context)
 
 	switch msg := context.Message().(type) {
-
-	//case *types.Transaction:
-
 	}
 }
-
