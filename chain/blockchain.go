@@ -258,19 +258,12 @@ func (bc *BlockChain) LoadBlockDb() error {
 }
 
 func (bc *BlockChain) updateCoreState(block *types.Block) {
-
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
 		schedule := bc.roleIntf.ElectNextTermDelegates()
-
-		newCoreState, err := bc.roleIntf.GetCoreState()
-		if err != nil {
-			fmt.Errorf("Loading block database fail, try recovering")
-			return
-		}
+		newCoreState, _ := bc.roleIntf.GetCoreState()
 		newCoreState.CurrentDelegates = schedule
 		bc.roleIntf.SetCoreState(newCoreState)
 	}
-
 }
 
 func (bc *BlockChain) updateChainState(block *types.Block) {
@@ -289,7 +282,6 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 	if missBlocks == 0 {
 		fmt.Println("missBlocks", missBlocks)
 		panic(1)
-		return
 	}
 	missBlocks--
 

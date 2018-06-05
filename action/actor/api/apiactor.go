@@ -60,9 +60,9 @@ func NewApiActor() *actor.PID {
 
 func handleSystemMsg(context actor.Context) {
 
-	switch msg := context.Message().(type) {
+	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("ApiActor received started msg", msg)
+		fmt.Printf("ApiActor received started msg")
 	case *actor.Stopping:
 		fmt.Printf("ApiActor received stopping msg")
 	case *actor.Restart:
@@ -74,9 +74,5 @@ func handleSystemMsg(context actor.Context) {
 
 //Receive process msg
 func (apiActor *ApiActor) Receive(context actor.Context) {
-
 	handleSystemMsg(context)
-
-	switch msg := context.Message().(type) {
-	}
 }
