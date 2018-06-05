@@ -60,6 +60,7 @@ func TestMarshalStruct(t *testing.T) {
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
 }
 
 func TestMarshalNestStruct1(t *testing.T) {
@@ -194,6 +195,7 @@ func TestTransfer(t *testing.T) {
 	cc, _ := HexToBytes("dc0004da00057474747474da000461666166cf000000003b9aca00da000c417072696c27732072656e74")
 	err = Unmarshal(cc, ts1)
 	fmt.Println("ts1: ", ts1)
+	fmt.Println(err)
 }
 
 func TestNewAccount(t *testing.T) {
@@ -215,6 +217,7 @@ func TestNewAccount(t *testing.T) {
 	param1 := &newaccountparam{}
 	err = Unmarshal(b, param1)
 	fmt.Println("param1: ", param1)
+	fmt.Println(err)
 }
 
 func TestDatafileReg(t *testing.T) {
