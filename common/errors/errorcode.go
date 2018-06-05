@@ -1,42 +1,96 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  provide common error type
+ * @Author: Gong Zibin
+ * @Date:   2017-12-05
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package errors
 
 // import "fmt"
 
+// ErrCode define the type of error
 type ErrCode uint32
 
 const (
+	// ErrNoError no error
 	ErrNoError ErrCode = 0
 
-	ErrTrxPendingNumLimit     ErrCode = 10001
-	ErrTrxSignError           ErrCode = 10002
-	ErrTrxAccountError        ErrCode = 10003
-	ErrTrxLifeTimeError       ErrCode = 10004
-	ErrTrxUniqueError         ErrCode = 10005
-	ErrTrxChainMathError      ErrCode = 10006
+	// ErrTrxPendingNumLimit limit of pending trx number
+	ErrTrxPendingNumLimit ErrCode = 10001
+	// ErrTrxSignError invalid trx sign
+	ErrTrxSignError ErrCode = 10002
+	// ErrTrxAccountError invalid trx account
+	ErrTrxAccountError ErrCode = 10003
+	// ErrTrxLifeTimeError invalid trx life time
+	ErrTrxLifeTimeError ErrCode = 10004
+	// ErrTrxUniqueError trx does not unique
+	ErrTrxUniqueError ErrCode = 10005
+	// ErrTrxChainMathError invalid trx chain math
+	ErrTrxChainMathError ErrCode = 10006
+	// ErrTrxContractHanldeError handle trx contract error
 	ErrTrxContractHanldeError ErrCode = 10007
 
-	ErrContractAccountNameIllegal  ErrCode = 10101
-	ErrContractAccountNotFound     ErrCode = 10102
+	// ErrContractAccountNameIllegal invalid contract account name
+	ErrContractAccountNameIllegal ErrCode = 10101
+	// ErrContractAccountNotFound contract account not found
+	ErrContractAccountNotFound ErrCode = 10102
+	// ErrContractAccountAlreadyExist contract account already exist
 	ErrContractAccountAlreadyExist ErrCode = 10103
-	ErrContractParamParseError     ErrCode = 10104
-	ErrContractInsufficientFunds   ErrCode = 10105
+	// ErrContractParamParseError parse contract param error
+	ErrContractParamParseError ErrCode = 10104
+	// ErrContractInsufficientFunds insufficient fund
+	ErrContractInsufficientFunds ErrCode = 10105
+	// ErrContractInvalidContractCode invalid contract code
 	ErrContractInvalidContractCode ErrCode = 10106
-	ErrContractInvalidContractAbi  ErrCode = 10107
-	ErrContractUnknownContract     ErrCode = 10108
-	ErrContractUnknownMethod       ErrCode = 10109
-	ErrContractTransferOverflow    ErrCode = 10110
-	ErrContractAccountMismatch     ErrCode = 10111
+	// ErrContractInvalidContractAbi invalid abi
+	ErrContractInvalidContractAbi ErrCode = 10107
+	// ErrContractUnknownContract unknown contract
+	ErrContractUnknownContract ErrCode = 10108
+	// ErrContractUnknownMethod unknown method
+	ErrContractUnknownMethod ErrCode = 10109
+	// ErrContractTransferOverflow transfer overflow
+	ErrContractTransferOverflow ErrCode = 10110
+	// ErrContractAccountMismatch accoumnt mismatch
+	ErrContractAccountMismatch ErrCode = 10111
+	// ErrContractInsufficientCredits insufficient credit
 	ErrContractInsufficientCredits ErrCode = 10112
 
-	ErrApiTrxNotFound         ErrCode = 10201
-	ErrApiBlockNotFound       ErrCode = 10202
+	// ErrApiTrxNotFound api trx not found
+	ErrApiTrxNotFound ErrCode = 10201
+	// ErrApiBlockNotFound abi block not found
+	ErrApiBlockNotFound ErrCode = 10202
+	// ErrApiQueryChainInfoError query chain info error
 	ErrApiQueryChainInfoError ErrCode = 10203
-	ErrApiAccountNotFound     ErrCode = 10204
-	ErrApiObjectNotFound      ErrCode = 10205
+	// ErrApiAccountNotFound api account not found
+	ErrApiAccountNotFound ErrCode = 10204
+	// ErrApiObjectNotFound ap object not found
+	ErrApiObjectNotFound ErrCode = 10205
+	// ErrTransferCreditNotFound transfer crredit not found
 	ErrTransferCreditNotFound ErrCode = 10206
 
+	// ErrActorHandleError actor handle error
 	ErrActorHandleError ErrCode = 10301
 
+	// ErrInvalid max invalid enum
 	ErrInvalid ErrCode = 0xFFFFFFFF
 )
 
@@ -74,6 +128,7 @@ var (
 	}
 )
 
+// GetCodeString get code string
 func GetCodeString(errorCode ErrCode) string {
 	return aaa[errorCode]
 }
