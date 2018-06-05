@@ -25,7 +25,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
-	"unsafe"
 )
 
 func (vm *VM) i32Wrapi64() {
@@ -110,10 +109,6 @@ func (vm *VM) f64ConvertUI64() {
 
 func (vm *VM) f64PromoteF32() {
 	vm.pushFloat64(float64(vm.popFloat32()))
-}
-
-func BytesToStr(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
 }
 
 func BytesToString(bytes []byte) string {
