@@ -259,7 +259,7 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 
 	resp.Result = &api.QueryAccountResponse_Result{}
 	resp.Result.AccountName = name
-	resp.Result.Pubkey = string(account.PublicKey)
+	resp.Result.Pubkey = common.BytesToHex(account.PublicKey)
 	resp.Result.Balance = balance.Balance
 	resp.Result.StakedBalance = stakedBalance.StakedBalance
 	resp.Errcode = 0

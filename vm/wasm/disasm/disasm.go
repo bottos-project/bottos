@@ -19,6 +19,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/*
+ * file description:  producer actor
+ * @Author: Stewart Li
+ * @Date:   2017-12-07
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 // Package disasm provides functions for disassembling WebAssembly bytecode.
 package disasm
 
@@ -102,6 +110,7 @@ func isInstrReachable(indexStack [][]int) bool {
 	return len(indexStack[len(indexStack)-1]) == 0
 }
 
+// ErrStackUnderflow defines an error
 var ErrStackUnderflow = errors.New("disasm: stack underflow")
 
 // Disassemble disassembles the given function. It also takes the function's
