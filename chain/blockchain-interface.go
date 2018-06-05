@@ -30,8 +30,10 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 )
 
+//HandledBlockCallback call back
 type HandledBlockCallback func(*types.Block)
 
+//BlockChainInterface the interface of chain
 type BlockChainInterface interface {
 	Close()
 

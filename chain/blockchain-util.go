@@ -36,11 +36,15 @@ import (
 )
 
 var (
-	BlockHashPrefix   = []byte("bh-")
+	//BlockHashPrefix prefix of block hash
+	BlockHashPrefix = []byte("bh-")
+	//BlockNumberPrefix prefix of block number
 	BlockNumberPrefix = []byte("bn-")
-	LastBlockKey      = []byte("lb")
+	//LastBlockKey prefix of block key
+	LastBlockKey = []byte("lb")
 )
 
+//HasBlock check block in db
 func HasBlock(db *db.DBService, hash common.Hash) bool {
 	data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
 	if len(data) != 0 {
@@ -50,6 +54,7 @@ func HasBlock(db *db.DBService, hash common.Hash) bool {
 	return false
 }
 
+//GetBlock get block from db by hash
 func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 	data, _ := db.Get(append(BlockHashPrefix, hash[:]...))
 	if len(data) == 0 {
@@ -65,6 +70,8 @@ func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 
 	return &block
 }
+
+//GetBlockHashByNumber get block from db by number
 func GetBlockHashByNumber(db *db.DBService, number uint32) common.Hash {
 	hash, _ := db.Get(append(BlockNumberPrefix, common.NumberToBytes(number, 32)...))
 	if len(hash) == 0 {
@@ -73,6 +80,7 @@ func GetBlockHashByNumber(db *db.DBService, number uint32) common.Hash {
 	return common.BytesToHash(hash)
 }
 
+//GetLastBlock get lastest block from db
 func GetLastBlock(db *db.DBService) *types.Block {
 	data, _ := db.Get(LastBlockKey)
 	if len(data) == 0 {
@@ -82,6 +90,7 @@ func GetLastBlock(db *db.DBService) *types.Block {
 	return GetBlock(db, common.BytesToHash(data))
 }
 
+//WriteGenesisBlock write the first block in db
 func WriteGenesisBlock(db *db.DBService, block *types.Block) error {
 	if err := WriteBlock(db, block); err != nil {
 		return err
@@ -104,6 +113,7 @@ func writeHead(db *db.DBService, block *types.Block) error {
 	return nil
 }
 
+//WriteBlock write block in db
 func WriteBlock(db *db.DBService, block *types.Block) error {
 	key := append(BlockHashPrefix, block.Hash().Bytes()...)
 	data, _ := proto.Marshal(block)

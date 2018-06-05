@@ -33,14 +33,17 @@ import (
 )
 
 var (
+	//TrxBlockHashPrefix trx block hash prefix
 	TrxBlockHashPrefix = []byte("txbh-")
 )
 
+//TransactionStore transaction store
 type TransactionStore struct {
 	roleIntf role.RoleInterface
 	bc       chain.BlockChainInterface
 }
 
+//NewTransactionStore new a transaction store
 func NewTransactionStore(bc chain.BlockChainInterface, roleIntf role.RoleInterface) *TransactionStore {
 	ts := &TransactionStore{
 		roleIntf: roleIntf,
@@ -50,6 +53,7 @@ func NewTransactionStore(bc chain.BlockChainInterface, roleIntf role.RoleInterfa
 	return ts
 }
 
+//GetTransaction get trx from block
 func (t *TransactionStore) GetTransaction(txhash common.Hash) *types.Transaction {
 	blockHash, err := t.roleIntf.GetTransactionHistory(txhash)
 	if err != nil {
@@ -74,6 +78,7 @@ func (t *TransactionStore) delTx(txhash common.Hash) error {
 	return nil
 }
 
+//ReceiveHandledBlock receive a block
 func (t *TransactionStore) ReceiveHandledBlock(block *types.Block) {
 	blockHash := block.Hash()
 
@@ -83,6 +88,7 @@ func (t *TransactionStore) ReceiveHandledBlock(block *types.Block) {
 	}
 }
 
+//RemoveBlock remove block
 func (t *TransactionStore) RemoveBlock(block *types.Block) {
 	for _, tx := range block.Transactions {
 		txHash := tx.Hash()
