@@ -1,4 +1,7 @@
 # Bottos blockchain
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/bottos-project/bottos)](https://goreportcard.com/report/github.com/bottos-project/bottos)
+
 This repository of Bottos is to build an blockchain infrastructure.
 
 Bottos blockchain architecture is shown below.
@@ -274,3 +277,7 @@ Commands list
 
 **NOTE**
     The node program will bring all the services in “servLst” that configured in config.json.
+    
+## License
+GPLv3 licensed.
+
