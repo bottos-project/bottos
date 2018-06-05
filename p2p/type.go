@@ -34,6 +34,7 @@ package p2pserver
 import (
 	"unsafe"
 	"hash/fnv"
+	"crypto/rsa"
 )
 
 //message type
@@ -65,8 +66,6 @@ type message struct {
 	Content   []byte
 }
 
-
-
 func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
@@ -77,5 +76,24 @@ func Hash(str string) uint32 {
 	return h.Sum32()
 }
 
+type RsaKeyPair struct {
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+}
 
+type Key interface {
+	Bytes() ([]byte, error)
+	Equals(Key) bool
+}
+
+type PrivKey interface {
+	Key
+	Sign([]byte) ([]byte, error)
+	GetPublicKey() PubKey
+}
+
+type PubKey interface {
+	Key
+	VerifyKey(data []byte, sig []byte) (bool, error)
+}
 

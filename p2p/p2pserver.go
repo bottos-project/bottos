@@ -25,17 +25,16 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by:
- * @Last Modified time:
+ * @Last Modified by: Stewart Li
+ * @Last Modified time: 2018-06-04
  */
 
 package p2pserver
 
 import (
-	//"fmt"
+	"fmt"
 	"sync"
 	"errors"
-	"crypto/rsa"
 	"encoding/json"
 	"io/ioutil"
 	"github.com/AsynkronIT/protoactor-go/actor"
@@ -60,30 +59,29 @@ type P2PConfig struct {
 func ReadFile(filename string) *P2PConfig{
 
 	if filename == "" {
-		//fmt.Println("*ERROR* parmeter is null")
+		fmt.Println("*ERROR* parmeter is null")
 		return &P2PConfig{}
 	}
 	var pc P2PConfig
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		//fmt.Println("*ERROR* Failed to read the config: ",filename)
+		fmt.Println("*ERROR* Failed to read the config: ",filename)
 		return  &P2PConfig{}
 	}
 
 	str:=string(bytes)
 
 	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
-		//fmt.Println("Unmarshal: ", err.Error())
+		fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
 
 	return &pc
 }
 
-//
+
 func NewServ() *P2PServer{
-	//fmt.Println("NewServ()")
 
 	p2pconfig := ReadFile(CONF_FILE)
 
@@ -113,16 +111,12 @@ func NewServ() *P2PServer{
 }
 
 func (p2p *P2PServer) Init() error {
-
-	//fmt.Println("p2pServer::Init()")
-
 	return nil
 }
 
 
 //it is the entry of p2p
 func (p2p *P2PServer) Start() error {
-	//fmt.Println("p2pServer::Start()")
 
 	if p2p.p2pConfig == nil {
 		return errors.New("*ERROR* P2P Configuration hadn't been inited yet !!!")
@@ -137,10 +131,10 @@ func (p2p *P2PServer) Start() error {
 		p2p.serv.Start()
 	}
 
-	//Todo connect to other seed nodes
+	//connect to other seed nodes
 	go p2p.serv.ActiveSeeds()
 
-	// Todo ping/pong
+	//ping/pong
 	go p2p.RunHeartBeat()
 
 	return nil
@@ -148,7 +142,6 @@ func (p2p *P2PServer) Start() error {
 
 //run a heart beat to watch the network status
 func  (p2p *P2PServer) RunHeartBeat() error {
-	//fmt.Println("p2pServer::RunHeartBeat()")
 	return nil
 }
 
@@ -164,7 +157,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 	content_byte , err := json.Marshal(m)
 	if err != nil{
-		//fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -176,7 +169,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 	msg_byte , err := json.Marshal(msg)
 	if err != nil{
-		//fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -187,7 +180,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 
 //A interface for call from other component
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
-	//fmt.Println("p2pServer::RunHeartBeat()")
+
 	var res error
 	switch call_type{
 	case TRANSACTION:
@@ -202,54 +195,7 @@ func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 }
 
 
-type RsaKeyPair struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
-}
 
-// Key represents a crypto key that can be compared to another key
-type Key interface {
-	// Bytes returns a serialized, storeable representation of this key
-	Bytes() ([]byte, error)
-
-	// Equals checks whether two PubKeys are the same
-	Equals(Key) bool
-}
-
-// PrivKey represents a private key that can be used to generate a public key,
-// sign data, and decrypt data that was encrypted with a public key
-type PrivKey interface {
-	Key
-
-	// Cryptographically sign the given bytes
-	Sign([]byte) ([]byte, error)
-
-	// Return a public key paired with this private key
-	GetPublic() PubKey
-}
-
-type PubKey interface {
-	Key
-
-	// Verify that 'sig' is the signed hash of 'data'
-	Verify(data []byte, sig []byte) (bool, error)
-}
-
-
-/*
-// Generates a keypair
-func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, error) {
-
-	privateKey, err := rsa.GenerateKey(src, bits)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	publicKey := &privateKey.PublicKey
-
-	return &RsaKeyPair{privateKey:privateKey}, &RsaKeyPair{ publicKey:publicKey}, nil
-}
-*/
 
 
 

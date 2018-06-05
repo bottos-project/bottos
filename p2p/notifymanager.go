@@ -25,8 +25,8 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by:
- * @Last Modified time:
+ * @Last Modified by: Stewart Li
+ * @Last Modified time:2018-05-29
  */
 
 package p2pserver
@@ -63,18 +63,11 @@ func NewNotifyManager() *NotifyManager {
 	}
 }
 
-func (notify *NotifyManager) Start() {
-	//fmt.Println("NotifyManager::Start")
-
-	//for{}
-}
-
 func (notify *NotifyManager) BroadcastByte (buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
 	for _ , peer := range notify.peerMap {
-		//fmt.Println("NotifyManager::BroadcastByte() - node: ",peer.conn , "node's type = ",reflect.TypeOf(peer))
 		if peer.GetPeerState() == ESTABLISH {
 			peer.SendTo(buf , false)
 		}
@@ -92,20 +85,26 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 	}
 }
 
+func (notify *NotifyManager) DelPeer(peer *Peer)  {
+	notify.Lock()
+	defer notify.Unlock()
+
+	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+		delete(notify.peerMap, peer.GetId())
+	}
+}
+
 
 //sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
-	//fmt.Println("NotifyManager::BroadcastBlk")
 }
 
 //sync blk's hash info with other peer
 func (notify *NotifyManager) SyncHash() {
-	//fmt.Println("NotifyManager::SyncHash")
 }
 
 //sync peer info with other peer
 func (notify *NotifyManager) SyncPeer() {
-	//fmt.Println("NotifyManager::SyncPeer")
 }
 
 func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {
@@ -118,8 +117,9 @@ func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {
 	return false
 }
 
-
-
+func (notify *NotifyManager) GetPeerMap() map[uint64]*Peer {
+	return notify.peerMap
+}
 
 
 

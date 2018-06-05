@@ -26,8 +26,8 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by:
- * @Last Modified time:
+ * @Last Modified by: Stewart Li
+ * @Last Modified time: 2018-05-30
  */
 
 package p2pserver
@@ -64,7 +64,6 @@ func TestP2PServ(t *testing.T)  {
 
 
 func TestTrxSend(t *testing.T) {
-	fmt.Println("p2p_server::TestTrxSend")
 
 	p2pconfig := ReadFile(CONF_FILE)
 
