@@ -136,7 +136,7 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
 		} else {
 			return ERROR_CONT_UNKNOWN_METHOD
 		}
-	} else {
-		return ERROR_CONT_UNKNOWN_CONTARCT
 	}
+	return ERROR_CONT_UNKNOWN_CONTARCT
+
 }

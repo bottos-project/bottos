@@ -22,6 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package contract
 
 import (
