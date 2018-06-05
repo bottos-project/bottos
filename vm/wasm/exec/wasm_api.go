@@ -143,6 +143,7 @@ type wasmInterface interface {
 type vmRuntime struct {
 	vmList []vmInstance
 }
+
 //GetInstance is to get instance of wasm engine
 func GetInstance() *wasmEngine {
 
@@ -157,6 +158,7 @@ func GetInstance() *wasmEngine {
 
 	return wasmEng
 }
+
 //GetFuncInfo is to get function information
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
@@ -201,6 +203,7 @@ func importer(name string) (*wasm.Module, error) {
 	}
 	return m, nil
 }
+
 //GetWasmVersion is to get wasm version
 func GetWasmVersion(ctx *contract.Context) uint32 {
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
@@ -218,13 +221,13 @@ func NewWASM(ctx *contract.Context) *VM {
 	var wasmCode []byte
 
 	var codeVersion uint32 = 0
-		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
-		if err != nil {
-			fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
-			return nil
-		}
-		codeVersion = binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
-		wasmCode = accountObj.ContractCode
+	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
+		return nil
+	}
+	codeVersion = binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
+	wasmCode = accountObj.ContractCode
 
 	module, err := wasm.ReadModule(bytes.NewBuffer(wasmCode), importer)
 	if err != nil {
