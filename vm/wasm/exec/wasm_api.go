@@ -43,49 +43,66 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
-var account_name uint64
+var accountName uint64
 
 const (
+	// INVOKE_FUNCTION config the function name
 	INVOKE_FUNCTION = "invoke"
-	ENTRY_FUNCTION  = "start"
+	// ENTRY_FUNCTION config the entry name
+	ENTRY_FUNCTION = "start"
 
+	// CTX_WASM_FILE config ctx wasm file
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	// SUB_WASM_FILE config sub wasm file
 	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
 
+	// TST Test status
 	TST = false
 
+	// VM_PERIOD_OF_VALIDITY config the VM period of validity
 	VM_PERIOD_OF_VALIDITY = "1h"
-	WAIT_TIME             = 4
 
-	BOT_INVALID_CODE = 1
+	// WAIT_TIME config the wait times
+	WAIT_TIME = 4
 
+	// BOTTOS_INVALID_CODE config the status of code
+	BOTTOS_INVALID_CODE = 1
+
+	// CALL_DEP_LIMIT config the max depth of call
 	CALL_DEP_LIMIT = 5
+	// CALL_WID_LIMIT config the max width of call
 	CALL_WID_LIMIT = 10
 )
 
+// ParamList define param array
 type ParamList struct {
 	Params []ParamInfo
 }
 
+// ParamInfo define param info
 type ParamInfo struct {
 	Type string
 	Val  string
 }
 
+// Rtn define the return type
 type Rtn struct {
 	Type string
 	Val  string
 }
 
-type Apply_context struct {
+// ApplyContext define the apply context
+type ApplyContext struct {
 	Msg Message
 }
 
+// Authorization define the struct of authorization
 type Authorization struct {
 	Accout      string
 	CodeVersion common.Hash
 }
 
+// Message define the message info
 type Message struct {
 	Wasm_name    string //crx name
 	Method_name  string //method name
@@ -109,27 +126,27 @@ type SUB_CRX_MSG struct {
 
 var wasm_engine *WASM_ENGINE
 
-//it means a VM instance , include its created time , end time and status
+// VM_INSTANCE it means a VM instance , include its created time , end time and status
 type VM_INSTANCE struct {
 	vm          *VM       //it means a vm , it is a WASM module/file
 	create_time time.Time //vm instance's created time
 	end_time    time.Time //vm instance's deadline
 }
 
-//struct wasm is a executable environment for other caller
+// WASM_ENGINE struct wasm is a executable environment for other caller
 type WASM_ENGINE struct {
 	//the string type need be modified
 	vm_map         map[string]*VM_INSTANCE
 	vm_engine_lock *sync.Mutex
 
 	//the channel is to communicate with each vm
-	vm_channel chan []byte
+	vmChannel chan []byte
 }
 
 type wasm_interface interface {
 	Init() error
 	//　a wrap for VM_Call
-	Apply(ctx Apply_context, execution_time uint32, received_block bool) interface{}
+	Apply(ctx ApplyContext, execution_time uint32, received_block bool) interface{}
 	Start(ctx *contract.Context, execution_time uint32, received_block bool) (uint32, error)
 	Process(ctx *contract.Context, depth uint8, execution_time uint32, received_block bool) (uint32, error)
 	GetFuncInfo(module wasm.Module, entry wasm.ExportEntry) error
@@ -145,7 +162,7 @@ func GetInstance() *WASM_ENGINE {
 		wasm_engine = &WASM_ENGINE{
 			vm_map:         make(map[string]*VM_INSTANCE),
 			vm_engine_lock: new(sync.Mutex),
-			vm_channel:     make(chan []byte, 10),
+			vmChannel:      make(chan []byte, 10),
 		}
 		wasm_engine.Init()
 	}
@@ -207,7 +224,7 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 	return binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
 }
 
-//Search the CTX infor at the database according to apply_context
+// NewWASM Search the CTX infor at the database according to apply_context
 func NewWASM(ctx *contract.Context) *VM {
 
 	var err error
@@ -339,7 +356,7 @@ func (engine *WASM_ENGINE) StartHandler() error {
 	var ok bool
 
 	for {
-		event, ok = <-engine.vm_channel
+		event, ok = <-engine.vmChannel
 		if !ok {
 			continue
 		}
@@ -354,7 +371,7 @@ func (engine *WASM_ENGINE) StartHandler() error {
 }
 
 func (engine *WASM_ENGINE) StopHandler() error {
-	engine.vm_channel <- []byte{0}
+	engine.vmChannel <- []byte{0}
 	return nil
 }
 
@@ -363,7 +380,7 @@ func (engine *WASM_ENGINE) Init() error {
 	return nil
 }
 
-//the function is to be used for json parameter
+// Apply the function is to be used for json parameter
 func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, received_block bool) (interface{}, error) {
 
 	var divisor time.Duration
@@ -385,7 +402,7 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, r
 		}
 
 		vm.SetContract(ctx)
-		vm.SetChannel(engine.vm_channel)
+		vm.SetChannel(engine.vmChannel)
 
 	} else {
 
@@ -423,7 +440,6 @@ func (engine *WASM_ENGINE) Apply(ctx *contract.Context, execution_time uint32, r
 
 	result := &Rtn{}
 	json.Unmarshal(res, result)
-
 
 	fmt.Println("result = ", result.Val)
 
@@ -464,7 +480,7 @@ func (engine *WASM_ENGINE) Start(ctx *contract.Context, execution_time uint32, r
 	return engine.Process(ctx, 1, execution_time, received_block)
 }
 
-//the function is to be used for direct parameter insert
+// Process the function is to be used for direct parameter insert
 func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution_time uint32, received_block bool) ([]*types.Transaction, error) {
 
 	var pos int
@@ -488,7 +504,7 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 		}
 
 		vm.SetContract(ctx)
-		vm.SetChannel(engine.vm_channel)
+		vm.SetChannel(engine.vmChannel)
 
 	} else {
 		/*
@@ -566,9 +582,9 @@ func (engine *WASM_ENGINE) Process(ctx *contract.Context, depth uint8, execution
 		return nil, errors.New("*ERROR* Failed to execute the contract !!! contract name: " + vm.contract.Trx.Contract)
 	}
 
-	value := make([]*types.Transaction, len(vm.sub_trx_lst))
-	copy(value, vm.sub_trx_lst)
-	vm.sub_trx_lst = vm.sub_trx_lst[:0]
+	value := make([]*types.Transaction, len(vm.subTrxLst))
+	copy(value, vm.subTrxLst)
+	vm.subTrxLst = vm.subTrxLst[:0]
 
 	return value, nil
 }

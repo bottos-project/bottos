@@ -27,12 +27,10 @@ package role
 
 import (
 	"encoding/json"
-	//"fmt"
 
 	"github.com/bottos-project/bottos/db"
 )
 
-//TODO type
 const DelegateObjectName string = "delegate"
 const DelegateObjectKeyName string = "account_name"
 const DelegateObjectIndexName string = "signing_key"

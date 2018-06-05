@@ -19,6 +19,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/*
+ * file description:  memory instructions
+ * @Author: Stewart Li
+ * @Date:   2017-12-07
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package exec
 
 import (
@@ -28,17 +36,27 @@ import (
 	"reflect"
 )
 
+// Type define one variable type
 type Type int
 
 const (
+	// Int8 type enum
 	Int8 Type = iota
+	// Int16 type enum
 	Int16
+	// Int32 type enum
 	Int32
+	// Int64 type enum
 	Int64
+	// Float32 type enum
 	Float32
+	// Float64 type enum
 	Float64
+	// String type enum
 	String
+	// Struct type enum
 	Struct
+	// Unknown type enum
 	Unknown
 )
 
@@ -250,6 +268,8 @@ func (vm *VM) growMemory() {
 	vm.memory = append(vm.memory, make([]byte, n*wasmPageSize)...)
 	vm.pushInt32(int32(curLen))
 }
+
+// GetData retrieve data
 func (vm *VM) GetData(pos uint64) ([]byte, error) {
 
 	if pos < 0 || pos == uint64(math.MaxInt64) {
@@ -268,6 +288,7 @@ func (vm *VM) GetData(pos uint64) ([]byte, error) {
 	return vm.memory[int(pos) : int(pos)+t.Len], nil
 }
 
+// StorageData store data
 func (vm *VM) StorageData(data interface{}) (int, error) {
 
 	if data == nil {
@@ -282,13 +303,13 @@ func (vm *VM) StorageData(data interface{}) (int, error) {
 		case []byte:
 			return vm.storageMemory(data.([]byte), String)
 		case []int:
-			byte_array := make([]byte, len(data.([]int))*4)
+			byteArray := make([]byte, len(data.([]int))*4)
 			for i, v := range data.([]int) {
 				array := make([]byte, 4)
 				binary.LittleEndian.PutUint32(array, uint32(v))
-				copy(byte_array[i*4:(i+1)*4], array)
+				copy(byteArray[i*4:(i+1)*4], array)
 			}
-			return vm.storageMemory(byte_array, Int32)
+			return vm.storageMemory(byteArray, Int32)
 
 		default:
 			return 0, errors.New("*ERROR* Parameter's type can't be supported !!! ")

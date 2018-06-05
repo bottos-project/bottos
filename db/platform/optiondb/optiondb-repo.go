@@ -29,13 +29,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	//"time"
 
 	"github.com/bottos-project/bottos/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
+//OptionDbRepository is the option db struct
 type OptionDbRepository struct {
 	mgoEndpoint string
 }
@@ -45,10 +45,12 @@ func NewOptionDbRepository(endpoint string) *OptionDbRepository {
 	return &OptionDbRepository{mgoEndpoint: endpoint}
 }
 
+//MongoContext is a plugin db for option db, you can chose different db if you like.
 type MongoContext struct {
 	mgoSession *mgo.Session
 }
 
+//GetSession is to create session to mongodb
 func GetSession(url string) (*MongoContext, error) {
 	if url == "" {
 		return nil, errors.New("invalid para url")
@@ -74,12 +76,16 @@ func GetSession(url string) (*MongoContext, error) {
 	}
 	return &MongoContext{mgoSession.Clone()}, nil
 }
+
+//GetCollection is to get mongodb collection
 func (c *MongoContext) GetCollection(db string, collection string) *mgo.Collection {
 	session := c.mgoSession
 	//defer session.Close()
 	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return collects
 }
+
+//SetCollection is to set mongodb collection
 func (c *MongoContext) SetCollection(collection string, s func(*mgo.Collection) error) error {
 	session := c.mgoSession
 	//defer session.Close()
@@ -87,12 +93,15 @@ func (c *MongoContext) SetCollection(collection string, s func(*mgo.Collection) 
 	return s(collects)
 }
 
+//SetCollectionCount is to set mongodb collection by returning records number
 func (c *MongoContext) SetCollectionCount(collection string, s func(*mgo.Collection) (int, error)) (int, error) {
 	session := c.mgoSession
 	defer session.Close()
 	collects := session.DB(config.DEFAULT_OPTIONDB_NAME).C(collection)
 	return s(collects)
 }
+
+//SetCollectionByDB is to set mongodb collection by specific database
 func (c *MongoContext) SetCollectionByDB(db string, collection string, s func(*mgo.Collection) error) error {
 	session := c.mgoSession
 	defer session.Close()
@@ -100,6 +109,7 @@ func (c *MongoContext) SetCollectionByDB(db string, collection string, s func(*m
 	return s(collects)
 }
 
+//Close is to close mongodb session
 func (c *MongoContext) Close() {
 	c.mgoSession.Close()
 }

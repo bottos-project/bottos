@@ -48,8 +48,6 @@ type Balance struct {
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
 	StakedBalance uint64 `json:"staked_balance"`
-
-	// TODO
 }
 
 // CreateBalanceRole is to create balance role

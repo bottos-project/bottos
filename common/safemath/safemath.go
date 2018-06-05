@@ -16,12 +16,13 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  general Hash type
+ * file description:  safe math
  * @Author: Gong Zibin
- * @Date:   2017-12-05
+ * @Date:   2017-01-20
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package safemath
 
 import (

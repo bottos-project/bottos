@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  general Hash type
+ * file description:  block
  * @Author: Gong Zibin
  * @Date:   2017-12-07
  * @Last Modified by:
@@ -26,10 +26,6 @@
 package types
 
 import (
-	//"math/big"
-	//"fmt"
-	//"bytes"
-	//"io"
 	"crypto/sha256"
 	"github.com/bottos-project/bottos/common"
 	"github.com/golang/protobuf/proto"
@@ -38,9 +34,7 @@ import (
 func NewBlock(h *Header, txs []*Transaction) *Block {
 	b := Block{Header: copyHeader(h)}
 
-	if len(txs) == 0 {
-		// TODO
-	} else {
+	if len(txs) > 0 {
 		b.Transactions = make([]*Transaction, len(txs))
 		copy(b.Transactions, txs)
 	}
@@ -69,9 +63,6 @@ func (h *Header) Hash() common.Hash {
 
 func copyHeader(h *Header) *Header {
 	cpy := *h
-
-	// TODO
-
 	return &cpy
 }
 
@@ -109,14 +100,9 @@ func (b *Block) Sign(signkey string) common.Hash {
 	return common.Hash{}
 }
 
-// TODO AccountName Type
 func (b *Block) GetDelegate() []byte {
 	return b.GetHeader().GetDelegate()
 }
-
-//func (b *Block) GetProducerChange() AccountName {
-//	return b.header.Producer
-//}
 
 func (b *Block) GetDelegateSign() common.Hash {
 	bh := b.GetHeader().GetDelegateSign()

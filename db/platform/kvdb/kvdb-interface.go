@@ -22,8 +22,10 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package kvdb
 
+//KvDBRepo is interface for leveldb
 type KvDBRepo interface {
 	CallPut(key []byte, value []byte) error
 	CallGet(key []byte) ([]byte, error)

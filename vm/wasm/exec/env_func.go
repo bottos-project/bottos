@@ -210,8 +210,6 @@ func arrayLen(vm *VM) (bool, error) {
 
 func memcpy(vm *VM) (bool, error) {
 
-	fmt.Println("VM::memcpy")
-
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 3 {
@@ -541,7 +539,6 @@ func jsonUnmashal(vm *VM) (bool, error) {
 
 	bytes := buff.Bytes()
 	if len(bytes) != size {
-		//return false ,errors.New("")
 		//todo this case is not an error, sizeof doesn't means actual memory length,so the size parameter should be removed.
 	}
 	//todo add more check
@@ -829,8 +826,7 @@ func prints(vm *VM) (bool, error) {
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
-	//param := string(value)
-	//fmt.Printf("VM: prints: %v\n", param);
+
 	return true, nil
 
 }
@@ -839,13 +835,13 @@ func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	bufPos := int(params[0])
-	bufLen := int(params[1])
+	bufPos   := int(params[0])
+	bufLen   := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
@@ -859,14 +855,11 @@ func getParam(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(paramLen))
 	}
 
-	//fmt.Printf("VM: from contract:%v, method:%v, func getParam:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
-
 	return true, nil
 }
 
 func callTrx(vm *VM) (bool, error) {
 
-	//fmt.Println("VM::callTrx")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 
@@ -898,25 +891,13 @@ func callTrx(vm *VM) (bool, error) {
 		SigAlg:      vm.contract.Trx.SigAlg,
 		Signature:   []byte{},
 	}
-	//ctx := &contract.Context{ Trx:trx}
 	ctx := &contract.Context{RoleIntf: vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx: trx}
-
-	/*
-		type transferparam struct {
-			To			string
-			Amount		uint32
-		}
-
-		var tf transferparam
-		msgpack.Unmarshal(trx.Param , &tf)
-		fmt.Println("VM::callTrx trx.Param = ",trx.Param," , tf = ",tf)
-	*/
 
 	//Todo thread synchronization
 	vm.callWid++
 
-	vm.sub_ctn_lst = append(vm.sub_ctn_lst, ctx)
-	vm.sub_trx_lst = append(vm.sub_trx_lst, trx)
+	vm.subCtnLst = append(vm.subCtnLst, ctx)
+	vm.subTrxLst = append(vm.subTrxLst, trx)
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(0))
@@ -927,7 +908,6 @@ func callTrx(vm *VM) (bool, error) {
 
 func recvTrx(vm *VM) (bool, error) {
 
-	fmt.Println("VM::recvTrx")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 2 {
@@ -946,8 +926,7 @@ func recvTrx(vm *VM) (bool, error) {
 		return false, nil
 	}
 
-	vm.vm_channel <- bCrx
-	fmt.Println("Send Sem !!!")
+	vm.vmChannel <- bCrx
 
 	return true, nil
 }
@@ -973,9 +952,6 @@ func parseParam(vm *VM) (bool, error) {
 
 	var tf transferparam
 	msgpack.Unmarshal(param, &tf)
-
-	//fmt.Println("VM::parseParam() param from contract param: ", param)
-	//fmt.Println("VM::parseParam() param from contract tf:    ", tf)
 
 	return true, nil
 }

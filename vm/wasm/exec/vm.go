@@ -27,14 +27,15 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
+	"sync"
+
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/vm/wasm/disasm"
 	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
-	"math"
-	"sync"
 )
 
 var (
@@ -94,13 +95,13 @@ type VM struct {
 
 	contract *contract.Context
 
-	vm_lock *sync.Mutex
+	vmLock *sync.Mutex
 	//the channel be used to communcate with vm_engine
-	vm_channel chan []byte
+	vmChannel chan []byte
 
 	//record sub-trx for recursive call[wid]
-	sub_trx_lst []*types.Transaction
-	sub_ctn_lst []*contract.Context
+	subTrxLst []*types.Transaction
+	subCtnLst []*contract.Context
 
 	codeVersion uint32
 }
@@ -123,7 +124,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		memType:  make(map[uint64]*typeInfo),
 		memory:   make([]byte, wasmPageSize),
 		contract: nil,
-		vm_lock:  new(sync.Mutex),
+		vmLock:   new(sync.Mutex),
 		callDep:  0,
 		callWid:  0,
 	}
@@ -449,10 +450,13 @@ outer:
 
 	return 0
 }
+
+// GetMemory get memory
 func (vm *VM) GetMemory() []byte {
 	return vm.memory
 }
 
+// GetFuncParams get param
 func (vm *VM) GetFuncParams() []uint64 {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -460,6 +464,7 @@ func (vm *VM) GetFuncParams() []uint64 {
 	return params
 }
 
+// ExecEnvFunc exec function
 func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 
 	vm.envFunc.envFuncParam = vm.ctx.locals
@@ -489,12 +494,14 @@ func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 	return nil
 }
 
+// GetMsgBytes get message bytes
 func (vm *VM) GetMsgBytes() ([]byte, error) {
 
 	bytesbuf := bytes.NewBuffer(nil)
 	return bytesbuf.Bytes(), nil
 }
 
+// SetContract set contract param
 func (vm *VM) SetContract(contract *contract.Context) error {
 
 	if contract == nil {
@@ -505,11 +512,13 @@ func (vm *VM) SetContract(contract *contract.Context) error {
 	return nil
 }
 
+// GetContract get contract
 func (vm *VM) GetContract() *contract.Context {
 	return vm.contract
 }
 
+// SetChannel set channel
 func (vm *VM) SetChannel(channel chan []byte) error {
-	vm.vm_channel = channel
+	vm.vmChannel = channel
 	return nil
 }
