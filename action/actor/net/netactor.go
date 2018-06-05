@@ -60,32 +60,25 @@ func NewNetActor() *actor.PID {
 	NetActorPid, err = actor.SpawnNamed(props, "NetActor")
 
 	if err != nil {
-		panic(fmt.Errorf("NetActor SpawnNamed error: ", err))
+		panic(fmt.Errorf("NetActor SpawnNamed error: %v", err))
 	} else {
 		return NetActorPid
 	}
-
-	return nil
 }
 
 //main loop
 func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 
-	switch msg := context.Message().(type) {
-
+	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("NetActor received started msg", msg)
-
+		fmt.Printf("NetActor received started msg")
 	case *actor.Stopping:
 		fmt.Printf("NetActor received stopping msg")
-
 	case *actor.Restart:
 		fmt.Printf("NetActor received restart msg")
-
 	case *actor.Restarting:
 		fmt.Printf("NetActor received restarting msg")
 	}
-
 }
 
 //Receive process msg

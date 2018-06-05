@@ -63,7 +63,7 @@ func NewChainActor(env *env.ActorEnv) *actor.PID {
 	actorEnv = env
 
 	if err != nil {
-		panic(fmt.Errorf("ChainActor SpawnNamed error: ", err))
+		panic(fmt.Errorf("ChainActor SpawnNamed error: %v", err))
 	} else {
 		return ChainActorPid
 	}
@@ -71,21 +71,16 @@ func NewChainActor(env *env.ActorEnv) *actor.PID {
 
 func handleSystemMsg(context actor.Context) {
 
-	switch msg := context.Message().(type) {
-
+	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("BlockActor received started msg", msg)
-
+		fmt.Println("BlockActor received started msg")
 	case *actor.Stopping:
-		fmt.Printf("BlockActor received stopping msg")
-
+		fmt.Println("BlockActor received stopping msg")
 	case *actor.Restart:
-		fmt.Printf("BlockActor received restart msg")
-
+		fmt.Println("BlockActor received restart msg")
 	case *actor.Restarting:
-		fmt.Printf("BlockActor received restarting msg")
+		fmt.Println("BlockActor received restarting msg")
 	}
-
 }
 
 //Receive process chain msg

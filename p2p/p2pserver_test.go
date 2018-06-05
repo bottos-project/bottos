@@ -34,11 +34,12 @@ package p2pserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/config"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
 )
 
 func TestP2PServ(t *testing.T) {
@@ -54,8 +55,6 @@ func TestP2PServ(t *testing.T) {
 
 	p2p := NewServ()
 	p2p.Start()
-
-	
 }
 
 func TestTrxSend(t *testing.T) {
@@ -110,11 +109,7 @@ func TestTrxSend(t *testing.T) {
 	len, err := conn.Write(byteMsg)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
-		return
 	} else if len < 0 {
 		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
-		return
 	}
-
-	return
 }
