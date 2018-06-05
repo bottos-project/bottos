@@ -255,7 +255,7 @@ func (r *Role) ElectNextTermDelegates() []string {
 	return ElectNextTermDelegatesRole(r.Db)
 }
 
-//ApplyPersistance is to apply persistance blocks to option db
+//ApplyPersistance is to apply persistence blocks to option db
 func (r *Role) ApplyPersistance(block *types.Block) error {
 	return ApplyPersistanceRole(r, r.Db, block)
 }

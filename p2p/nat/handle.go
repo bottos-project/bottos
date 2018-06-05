@@ -19,24 +19,64 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package exec provides functions for executing WebAssembly bytecode.
-
 /*
- * file description: the interface for WASM execution
- * @Author: Stewart Li
- * @Date:   2018-02-08
+ * file description:  nat handle
+ * @Author: eripi
+ * @Date:   2017-12-07
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package p2pserver
+package nat
 
-const (
-	// CONF_FILE is definition of config file name
-	CONF_FILE     = "config.json"
-	// TIME_INTERVAL is definition of time interval
-	TIME_INTERVAL = 10
-	// TST is switch for test
-	//*WRAN* set the variable as "true" before starting test
-	TST = 0
+import (
+	"net"
+	"time"
 )
+
+// Handle is definition of interface
+type Handle interface {
+	Mapping(p string, internalPort int, externalPort int, time int) error
+	EIP() (net.IP, error)
+	String() string
+}
+
+// GetHandle is to get handler func by config
+func GetHandle(config string) Handle {
+	switch config {
+	case "pmp":
+		return getPmpClient()
+	case "upnp":
+		return nil
+	default:
+		return nil
+	}
+}
+
+// Map is to handle a struct from intport to extport
+func Map(h Handle, c chan struct{}, p string, intport int, extport int) {
+	update := time.NewTimer(10 * time.Minute)
+	err := h.Mapping(p, intport, extport, 1200)
+	if err != nil {
+	}
+
+	defer func() {
+		update.Stop()
+		h.Mapping(p, intport, 0, 0)
+	}()
+
+	for {
+		select {
+		case _, ok := <-c:
+			if !ok {
+				break
+			}
+		case <-update.C:
+			err := h.Mapping(p, intport, extport, 1200)
+			if err != nil {
+			}
+
+			update.Reset(10 * time.Minute)
+		}
+	}
+}

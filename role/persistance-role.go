@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  persistance role
+ * file description:  persistence role
  * @Author:
  * @Date:   2017-12-12
  * @Last Modified by:
@@ -403,7 +403,7 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 			return mgoParam, nil
 		}
 
-		return nil, errors.New("Decode DeployCodeParam failed.")		
+		return nil, errors.New("Decode DeployCodeParam failed.")
 	}
 
 	if err != nil {
@@ -445,9 +445,9 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 		if err != nil {
 			return err
 		}
-		
+
 		newtrx.Param = decodedParam
-		
+
 		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
 		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
 			insertAccountInfoRole(r, ldb, block, trx, oids[i])
@@ -603,7 +603,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	return nil
 }
 
-// ApplyPersistanceRole is to apply persistance
+// ApplyPersistanceRole is to apply persistence
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {

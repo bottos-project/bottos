@@ -34,7 +34,7 @@ import (
 //TransferCreditObjectName is credit name
 const TransferCreditObjectName string = "credit"
 
-//TransferCredit is the struct for transfering credit
+//TransferCredit is the struct for transferring credit
 type TransferCredit struct {
 	Name    string `json:"name"`
 	Spender string `json:"spender"`

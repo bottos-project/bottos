@@ -37,7 +37,6 @@ import (
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-	//trx "github.com/bottos-project/bottos/transaction"
 )
 
 //BlockChain the chain info
@@ -114,7 +113,6 @@ func (bc *BlockChain) initChain() error {
 		err := bc.nc.ExecuteNativeContract(ctx)
 		if err != contract.ERROR_NONE {
 			fmt.Println("NativeContractInitChain Error: ", trx, err)
-			//return err
 			break
 		}
 	}
@@ -256,11 +254,9 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 	fmt.Printf("Loading block database, Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
-	// TODO replay
 	return nil
 }
 
-// TODO
 func (bc *BlockChain) updateCoreState(block *types.Block) {
 
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
@@ -273,12 +269,10 @@ func (bc *BlockChain) updateCoreState(block *types.Block) {
 		}
 		newCoreState.CurrentDelegates = schedule
 		bc.roleIntf.SetCoreState(newCoreState)
-		//TODO permission object
 	}
 
 }
 
-// TODO
 func (bc *BlockChain) updateChainState(block *types.Block) {
 	var missBlocks uint64
 	var i uint64
@@ -341,19 +335,13 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 
 func (bc *BlockChain) updateDelegate(delegate *role.Delegate, block *types.Block) {
 	chainSate, _ := bc.roleIntf.GetChainState()
-
 	blockTime := block.GetTimestamp()
 	newSlot := chainSate.CurrentAbsoluteSlot + uint64(bc.roleIntf.GetSlotAtTime(blockTime))
-
-	//oldNum := delegate.LastConfirmedBlockNum
 	delegate.LastSlot = newSlot
 	delegate.LastConfirmedBlockNum = block.GetNumber()
 	bc.roleIntf.SetDelegate(delegate.AccountName, delegate)
-
-	//fmt.Printf("delegate: %v, update last confirmed block num, old:%v, new:%v\n", delegate.AccountName, oldNum, delegate.LastConfirmedBlockNum)
 }
 
-// TODO
 func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 	chainSate, _ := bc.roleIntf.GetChainState()
 	coreState, _ := bc.roleIntf.GetCoreState()
@@ -365,11 +353,9 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 		delegates[i] = delegate
 		lastConfirmedNums[i] = delegates[i].LastConfirmedBlockNum
 	}
-	//fmt.Println(lastConfirmedNums)
 
 	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(delegates) / 100
 	sort.Sort(lastConfirmedNums)
-	//fmt.Println(lastConfirmedNums, consensusIndex)
 	newLastConsensusBlockNum := lastConfirmedNums[consensusIndex]
 	if newLastConsensusBlockNum > chainSate.LastConsensusBlockNum {
 		chainSate.LastConsensusBlockNum = newLastConsensusBlockNum
@@ -382,13 +368,12 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 	if lastBlock != nil {
 		lastBlockNum = lastBlock.GetNumber()
 	}
-	//fmt.Printf("lastBlockNum = %v, newLastConsensusBlockNum = %v\n", lastBlockNum, newLastConsensusBlockNum)
 
 	if lastBlockNum < newLastConsensusBlockNum {
 		for i := lastBlockNum + 1; i <= newLastConsensusBlockNum; i++ {
 			block := bc.GetBlockByNumber(i)
 			if block != nil {
-				//bc.WriteBlock(block)
+				bc.WriteBlock(block)
 			} else {
 				fmt.Printf("block num = %v not found\n", i)
 			}
@@ -408,15 +393,9 @@ func (bc *BlockChain) addBlockHistory(block *types.Block) {
 	bc.roleIntf.SetBlockHistory(block.GetNumber(), block.Hash())
 }
 
-//HandleBlock update state when new a block
+//HandleBlock update state when handle a new block
 func (bc *BlockChain) HandleBlock(block *types.Block) error {
 	delegate, _ := bc.roleIntf.GetDelegateByAccountName(string(block.GetDelegate()))
-
-	// TODO
-	//for _, tx := range block.Transactions {
-	//	trx.ApplyTransaction(tx)
-	//	fmt.Println("BlockChain : Applying transactions")
-	//}
 
 	// update consensus
 	bc.updateCoreState(block)
@@ -454,27 +433,6 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
-	if (block.GetTimestamp() > bc.HeadBlockTime()+uint64(config.DEFAULT_BLOCK_INTERVAL)) && bc.HeadBlockNum() != 0 {
-		//fmt.Printf("Block Timestamp, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
-		//return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
-	}
-
-	//slot := bc.roleIntf.GetSlotAtTime(block.GetTimestamp())
-	//scheduleDelegateName, _ := bc.roleIntf.GetScheduleDelegateRole(slot)
-	//scheduleDelegate, _ := bc.roleIntf.GetDelegateByAccountName(scheduleDelegateName)
-	// TODO delegate signature check
-	if ok := block.ValidateSign( /*producer*/ ); !ok {
-		return fmt.Errorf("Producer Sign Error")
-	}
-
-	// delegate schedule check
-	/*
-		blockDelegate := string(block.GetDelegate())
-		if blockDelegate != scheduleDelegate.AccountName {
-			return fmt.Errorf("Schedule Delegate Error: schedule delegate %v, block delegate %v", scheduleDelegate.AccountName, blockDelegate)
-		}
-	*/
-
 	return nil
 }
 
@@ -483,30 +441,24 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
-	// TODO db lock
-
 	err := bc.ValidateBlock(block)
 	if err != nil {
 		fmt.Println("Validate Block error: ", err)
 		return err
 	}
 
-	// push to cache, block must link now, TODO: fork process
+	// push to cache, block must link now
 	_, err = bc.blockCache.Insert(block)
 	if err != nil {
 		fmt.Println("blockCache insert error: ", err)
 		return err
 	}
 
-	// record stateDb revision
-	//bc.stateDb.StartUndoSession(true)
 	err = bc.HandleBlock(block)
 	if err != nil {
-		//bc.stateDb.Rollback()
 		fmt.Println("InsertBlock error: ", err)
 		return err
 	}
-	//bc.stateDb.Commit()
 
 	fmt.Printf("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 

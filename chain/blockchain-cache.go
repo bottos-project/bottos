@@ -27,7 +27,7 @@ package chain
 
 import (
 	"fmt"
-	//"sync"
+
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/hashicorp/golang-lru"

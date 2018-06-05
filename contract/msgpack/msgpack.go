@@ -77,7 +77,6 @@ func Encode(w io.Writer, structs interface{}) error {
 		val := reflect.ValueOf(values[i])
 
 		kind := t.Kind()
-		//fmt.Println(t, val, kind)
 		switch kind {
 		case reflect.String:
 			PackStr16(w, val.String())
