@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  contract db
+ * @Author: Gong Zibin
+ * @Date:   2017-12-20
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package msgpack
 
 import (
@@ -6,17 +31,26 @@ import (
 )
 
 type (
+	//Bytes1 is first
 	Bytes1 [1]byte
+	//Bytes2 is second
 	Bytes2 [2]byte
+	//Bytes4 is third
 	Bytes4 [4]byte
+	//Bytes8 is forth
 	Bytes8 [8]byte
 )
 
 const (
-	NEGFIXNUM     = 0xe0
-	FIXMAPMAX     = 0x8f
-	FIXARRAYMAX   = 0x9f
-	FIXRAWMAX     = 0xbf
+	//NEGFIXNUM is negfix maxnum
+	NEGFIXNUM = 0xe0
+	//FIXMAPMAX is fixmap maxnum
+	FIXMAPMAX = 0x8f
+	//FIXARRAYMAX is fixarray maxnum
+	FIXARRAYMAX = 0x9f
+	//FIXRAWMAX is fix raw max
+	FIXRAWMAX = 0xbf
+	//FIRSTBYTEMASK is first byte mask
 	FIRSTBYTEMASK = 0xf
 )
 
@@ -29,6 +63,7 @@ func readByte(reader io.Reader) (v uint8, err error) {
 	return data[0], nil
 }
 
+//UnpackUint8 is to unpack message
 func UnpackUint8(reader io.Reader) (v uint8, err error) {
 	c, e := readByte(reader)
 	if e == nil && c == UINT8 {
@@ -50,6 +85,7 @@ func readUint16(reader io.Reader) (v uint16, n int, err error) {
 	return (uint16(data[0]) << 8) | uint16(data[1]), n, nil
 }
 
+//UnpackUint16 is to unpack message
 func UnpackUint16(reader io.Reader) (v uint16, err error) {
 	c, e := readByte(reader)
 	if e == nil && c == UINT16 {
@@ -71,6 +107,7 @@ func readUint32(reader io.Reader) (v uint32, n int, err error) {
 	return (uint32(data[0]) << 24) | (uint32(data[1]) << 16) | (uint32(data[2]) << 8) | uint32(data[3]), n, nil
 }
 
+//UnpackUint32 is to unpack message
 func UnpackUint32(reader io.Reader) (v uint32, err error) {
 	c, e := readByte(reader)
 	if e == nil && c == UINT32 {
@@ -92,6 +129,7 @@ func readUint64(reader io.Reader) (v uint64, n int, err error) {
 	return (uint64(data[0]) << 56) | (uint64(data[1]) << 48) | (uint64(data[2]) << 40) | (uint64(data[3]) << 32) | (uint64(data[4]) << 24) | (uint64(data[5]) << 16) | (uint64(data[6]) << 8) | uint64(data[7]), n, nil
 }
 
+//UnpackUint64 is to unpack message
 func UnpackUint64(reader io.Reader) (v uint64, err error) {
 	c, e := readByte(reader)
 	if e == nil && c == UINT64 {
@@ -104,6 +142,7 @@ func UnpackUint64(reader io.Reader) (v uint64, err error) {
 	return 0, err
 }
 
+//UnpackArraySize is to unpack message
 func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 	c, e := readByte(reader)
 	if e != nil {
@@ -123,6 +162,7 @@ func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 	return size, nil
 }
 
+//UnpackStr16 is to unpack message
 func UnpackStr16(reader io.Reader) (string, error) {
 	c, e := readByte(reader)
 	if e == nil && c == STR16 {
@@ -139,6 +179,7 @@ func UnpackStr16(reader io.Reader) (string, error) {
 	return "", e
 }
 
+//UnpackBin16 is to unpack message
 func UnpackBin16(reader io.Reader) ([]byte, error) {
 	c, e := readByte(reader)
 	if e == nil && c == BIN16 {

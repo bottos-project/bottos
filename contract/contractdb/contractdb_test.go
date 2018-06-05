@@ -39,7 +39,7 @@ type TestParam struct {
 }
 
 func TestCreateAndUpdateStrValue(t *testing.T) {
-	ins := db.NewDbService("./file", "./file/db.db")
+	ins := db.NewDbService("./file", "./file/db.db", "")
 	cdb := NewContractDB(ins)
 
 	var contract string = "testcontract"
@@ -63,7 +63,7 @@ func TestCreateAndUpdateStrValue(t *testing.T) {
 }
 
 func TestDifferentStrValue(t *testing.T) {
-	ins := db.NewDbService("./file1", "./file1/db.db")
+	ins := db.NewDbService("./file1", "./file1/db.db", "")
 	cdb := NewContractDB(ins)
 
 	var contract string = "testcontract"
@@ -94,7 +94,7 @@ func TestDifferentStrValue(t *testing.T) {
 }
 
 func TestRemoveStrValue(t *testing.T) {
-	ins := db.NewDbService("./file2", "./file2/db.db")
+	ins := db.NewDbService("./file2", "./file2/db.db", "")
 	cdb := NewContractDB(ins)
 
 	var contract string = "testcontract"

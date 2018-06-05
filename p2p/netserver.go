@@ -350,7 +350,7 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 
 func (serv *NetServer) WatchStatus() {
 	for key, peer := range serv.notify.peerMap {
-		fmt.Println("<------------ NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr)
+		fmt.Println("*** NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr," ***")
 	}
 
 }

@@ -51,11 +51,11 @@ func newAccount(ctx *Context) ContractError {
 	ctx.RoleIntf.SetBalance(newaccount.Name, balance)
 
 	// 3, create staked_balance
-	staked_balance := &role.StakedBalance{
+	stakedBalance := &role.StakedBalance{
 		AccountName:   newaccount.Name,
 		StakedBalance: 0,
 	}
-	ctx.RoleIntf.SetStakedBalance(newaccount.Name, staked_balance)
+	ctx.RoleIntf.SetStakedBalance(newaccount.Name, stakedBalance)
 
 	//fmt.Println(account, balance, staked_balance)
 

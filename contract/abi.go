@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 )
 
+//ABI struct for contracts
 type ABI struct {
 	Types   []interface{} `json:"types"`
 	Structs []struct {
@@ -19,6 +20,7 @@ type ABI struct {
 	Tables []interface{} `json:"tables"`
 }
 
+//ParseAbi parse abiraw to struct for contracts
 func ParseAbi(abiRaw []byte) (*ABI, error) {
 	abi := &ABI{}
 	err := json.Unmarshal(abiRaw, abi)
@@ -29,6 +31,7 @@ func ParseAbi(abiRaw []byte) (*ABI, error) {
 	return abi, nil
 }
 
+//AbiToJson parse abi to json for contracts
 func AbiToJson(abi *ABI) (string, error) {
 	data, err := json.Marshal(abi)
 	if err != nil {
