@@ -39,6 +39,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// AccountInfo is definition of account
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
 	AccountName      string        `bson:"account_name"`
@@ -49,6 +50,8 @@ type AccountInfo struct {
 	CreateTime       time.Time     `bson:"create_time"`
 	UpdatedTime      time.Time     `bson:"updated_time"`
 }
+
+// BlockInfo is definition of block
 type BlockInfo struct {
 	ID              bson.ObjectId `bson:"_id"`
 	BlockHash       string/*common.Hash*/ `bson:"block_hash"`
@@ -62,6 +65,7 @@ type BlockInfo struct {
 	CreateTime      time.Time       `bson:"create_time"`
 }
 
+// TxInfo is definition of tx
 type TxInfo struct {
 	ID            bson.ObjectId `bson:"_id"`
 	BlockNum      uint32        `bson:"block_number"`
@@ -82,39 +86,46 @@ type TxInfo struct {
 
 /**======Internal Contract struct definition====*/
 
+// transferparam is interface definition of transfer method
 type transferparam struct {
 	From  string `json:"from"`
 	To    string `json:"to"`
 	Value uint64 `json:"value"`
 }
 
+// newaccountparam is interface definition of new account method
 type newaccountparam struct {
 	Name   string `json:"name"`
-	Pubkey string `json: pubkey`
+	Pubkey string `json:"pubkey"`
 }
 
+// SetDelegateParam is interface definition of new set delegate method
 type SetDelegateParam struct {
-	Name   string `json: name`
-	Pubkey string `json: pubkey`
+	Name   string `json:"name"`
+	Pubkey string `json:"pubkey"`
 }
 
+// GrantCreditParam is interface definition of grant credit method
 type GrantCreditParam struct {
 	Name    string `json:"name"`
 	Spender string `json:"spender"`
 	Limit   uint64 `json:"limit"`
 }
 
+// CancelCreditParam is interface definition of cancel credit method
 type CancelCreditParam struct {
 	Name    string `json:"name"`
 	Spender string `json:"spender"`
 }
 
+// TransferFromParam is interface definition of transfer from method
 type TransferFromParam struct {
 	From  string `json:"from"`
 	To    string `json:"to"`
 	Value uint64 `json:"value"`
 }
 
+// TParam is interface definition
 type TParam interface {
 	//Accountparam
 	//Transferparam transferpa
@@ -122,6 +133,7 @@ type TParam interface {
 	//DeployCodeParam
 }
 
+// DeployCodeParam is interface definition of deploy code method
 type DeployCodeParam struct {
 	Name         string `json:"name"`
 	VMType       byte   `json:"vm_type"`
@@ -129,7 +141,8 @@ type DeployCodeParam struct {
 	ContractCode []byte `json:"contract_code"`
 }
 
-type mgo_DeployCodeParam struct {
+// mgo_DeployCodeParam is interface definition of mgo deploy code
+type mgoDeployCodeParam struct {
 	Name         string `json:"name"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
@@ -138,8 +151,9 @@ type mgo_DeployCodeParam struct {
 
 /**======External Contract struct definition====*/
 
+// AssetInfo is definition of asset info
 type AssetInfo struct {
-	UserName    string `json:“username”`
+	UserName    string `json:"username"`
 	AssetName   string `json:"assetname"`
 	AssetType   uint64 `json:"assettype"`
 	FeatureTag  string `json:"featuretag"`
@@ -151,31 +165,37 @@ type AssetInfo struct {
 	Description string `json:"description"`
 }
 
+// RegAssetReq is definition of
 type RegAssetReq struct {
 	AssetId string `json:"assedid"`
 	Info    AssetInfo
 }
 
+// reguser is definition of reg user
 type reguser struct {
 	Didid   string `json:"didid"`
 	Didinfo string `json:"didinfo"`
 }
 
+// UserLogin is definition of user login
 type UserLogin struct {
 	UserName  string `json:"username"`
 	RandomNum uint32 `json:"randomnum"`
 }
 
+// DataDealnfo is definition of data deal info
 type DataDealnfo struct {
 	UserName string `json:"username"`
 	AssetId  string `json:"assetid"`
 }
 
+// DataDealReq is definition of
 type DataDealReq struct {
 	DataExchangeId string `json:"dataexchangeid"`
 	Info           DataDealnfo
 }
 
+// PresaleInfo is definition of pre sale info
 type PresaleInfo struct {
 	UserName  string `json:"username"`
 	AssetId   string `json:"assetid"`
@@ -184,11 +204,13 @@ type PresaleInfo struct {
 	OpType    uint32 `json:"optype"`
 }
 
+// PresaleReq is definition of pre sale req
 type PresaleReq struct {
 	DataPresaleId string `json:"datapresaleid"`
 	Info          PresaleInfo
 }
 
+// DataFileInfo is definition of data file info
 type DataFileInfo struct {
 	UserName   string `json:"username"`
 	FileSize   uint64 `json:"filesize"`
@@ -200,26 +222,31 @@ type DataFileInfo struct {
 	StoreAddr  string `json:"storeaddr"`
 }
 
+// DataFileRegReq is definition of data file req reg
 type DataFileRegReq struct {
 	FileHash string `json:"filehash"`
 	Info     DataFileInfo
 }
 
+// AuthBasicInfo is definition of auth basic info
 type AuthBasicInfo struct {
 	AuthType string `json:"authType"`
 	AuthPath string `json:"authpath"`
 }
 
+// DataFileAuthInfo is definition of data file auth info
 type DataFileAuthInfo struct {
 	HashUserName string `json:"hashusername"`
 	Info         AuthBasicInfo
 }
 
+// DataFileAuthReq is definition of data file auth req
 type DataFileAuthReq struct {
 	StorgeHash string `json:"storagehash"`
 	UserName   string `json:"username"`
 }
 
+// DataReqInfo is definition of data req info
 type DataReqInfo struct {
 	UserName    string `json:"username"`
 	ReqName     string `json:"reqname"`
@@ -230,14 +257,16 @@ type DataReqInfo struct {
 	OpType      uint32 `json:"optype"`
 	Price       uint64 `json:"price"`
 	FavoriFlag  uint32 `json:"favoriflag"`
-	Description string `description`
+	Description string `json:"description"`
 }
 
+// RegDataReqReq is definition of reg data req reg
 type RegDataReqReq struct {
 	DataReqId string `json:"datareqid"`
 	Info      DataReqInfo
 }
 
+// GoodsProReq is definition of goods req
 type GoodsProReq struct {
 	UserName  string `json:"username"`
 	OpType    uint32 `json:"optype"`
@@ -245,17 +274,20 @@ type GoodsProReq struct {
 	GoodsId   string `json:"goodsid"`
 }
 
+// NodeClusterReg is definition for node cluster reg
 type NodeClusterReg struct {
 	NodeIP    string `json:"nodeip"`
 	ClusterIP string `json:"clusterip"`
 }
 
+// NodeBaseInfo is definition for node base info
 type NodeBaseInfo struct {
 	NodeIp      string `json:"nodeip"`
 	NodePort    string `json:"nodeport"`
 	NodeAddress string `json:"nodeaddress"`
 }
 
+// NodeInfoReq is definition for node info req
 type NodeInfoReq struct {
 	NodeId string `json:"nodeid"`
 	Info   NodeBaseInfo
@@ -265,6 +297,7 @@ func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) 
 	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
+// ParseParam is to parase param by method
 func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
 	var decodedParam interface{}
 	if Contract == "bottos" {
@@ -362,15 +395,15 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 		err = msgpack.Unmarshal(Param, tmpval)
 		//if ok {
 		if err == nil {
-			var mgo_param = mgo_DeployCodeParam{}
-			mgo_param.Name = tmpval.Name
-			mgo_param.VMType = tmpval.VMType
-			mgo_param.VMVersion = tmpval.VMVersion
-			mgo_param.ContractCode = common.BytesToHex(tmpval.ContractCode)
-			return mgo_param, nil
-		} else {
-			return nil, errors.New("Decode DeployCodeParam failed.")
+			var mgoParam = mgoDeployCodeParam{}
+			mgoParam.Name = tmpval.Name
+			mgoParam.VMType = tmpval.VMType
+			mgoParam.VMVersion = tmpval.VMVersion
+			mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
+			return mgoParam, nil
 		}
+
+		return nil, errors.New("Decode DeployCodeParam failed.")		
 	}
 
 	if err != nil {
@@ -411,10 +444,10 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 
 		if err != nil {
 			return err
-		} else {
-			newtrx.Param = decodedParam
 		}
-
+		
+		newtrx.Param = decodedParam
+		
 		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
 		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
 			insertAccountInfoRole(r, ldb, block, trx, oids[i])
@@ -445,6 +478,7 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 	return ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_BLOCK_NAME, newBlockInfo)
 }
 
+// GetBalanceOp is to get account balance
 func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 	var value2 AccountInfo
 	value, err := findAcountInfo(ldb, accountName)
@@ -467,6 +501,7 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 	return res, nil
 }
 
+// SetBalanceOp is to save account balance
 func SetBalanceOp(ldb *db.DBService, accountName string, balance uint64) error {
 	return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance)
 }
@@ -568,6 +603,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	return nil
 }
 
+// ApplyPersistanceRole is to apply persistance
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
@@ -580,7 +616,7 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 	return nil
 }
 
-//TODO start retro block when core start
+// StartRetroBlock is to do: start retro block when core start
 func StartRetroBlock(ldb *db.DBService) {
 
 }
