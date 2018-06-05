@@ -22,8 +22,10 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package codedb
 
+//CodeDbRepo is the interface for code db
 type CodeDbRepo interface {
 	CallStartUndoSession(bool)
 	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error

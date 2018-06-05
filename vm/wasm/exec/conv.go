@@ -33,7 +33,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
-	"unsafe"
 )
 
 func (vm *VM) i32Wrapi64() {
@@ -120,12 +119,7 @@ func (vm *VM) f64PromoteF32() {
 	vm.pushFloat64(float64(vm.popFloat32()))
 }
 
-// BytesToStr convert bytes to string
-func BytesToStr(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
 
-// BytesToString convert bytes to string
 func BytesToString(bytes []byte) string {
 
 	for i, b := range bytes {
@@ -134,7 +128,6 @@ func BytesToString(bytes []byte) string {
 		}
 	}
 	return string(bytes)
-
 }
 
 // F32ToBytes convert float32 to bytes
