@@ -19,6 +19,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/*
+ * file description:  convert variable
+ * @Author: Stewart Li
+ * @Date:   2017-12-07
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package exec
 
 import (
@@ -111,6 +119,7 @@ func (vm *VM) f64PromoteF32() {
 	vm.pushFloat64(float64(vm.popFloat32()))
 }
 
+
 func BytesToString(bytes []byte) string {
 
 	for i, b := range bytes {
@@ -119,9 +128,9 @@ func BytesToString(bytes []byte) string {
 		}
 	}
 	return string(bytes)
-
 }
 
+// F32ToBytes convert float32 to bytes
 func F32ToBytes(f32 float32) []byte {
 	bytes := make([]byte, 4)
 	bits := math.Float32bits(f32)
@@ -131,34 +140,40 @@ func F32ToBytes(f32 float32) []byte {
 	return bytes
 }
 
+// BytesToF32 convert bytes to float32
 func BytesToF32(b []byte) float32 {
 	f32 := math.Float32frombits(binary.LittleEndian.Uint32(b))
 	return f32
 }
 
+// F64ToBytes convert float64 to bytes
 func F64ToBytes(f64 float64) []byte {
 	bytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bytes, math.Float64bits(f64))
 	return bytes
 }
 
+// BytesToF64 convert bytes to float64
 func BytesToF64(b []byte) float64 {
 	f64 := math.Float64frombits(binary.LittleEndian.Uint64(b))
 	return f64
 }
 
+// I32ToBytes convert int32 to bytes
 func I32ToBytes(i32 uint32) []byte {
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	binary.Write(bytesBuffer, binary.LittleEndian, i32)
 	return bytesBuffer.Bytes()
 }
 
+// I64ToBytes convert int64 to bytes
 func I64ToBytes(i64 uint64) []byte {
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	binary.Write(bytesBuffer, binary.LittleEndian, i64)
 	return bytesBuffer.Bytes()
 }
 
+// ByteToFloat64 convert byte to float64
 func ByteToFloat64(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
 	return math.Float64frombits(bits)
