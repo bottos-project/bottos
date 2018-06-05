@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  provide a interface such as time to seconds and epoch time etc.
+ * file description:  test time point
  * @Author: May Luo
  * @Date:   2017-12-01
  * @Last Modified by:
