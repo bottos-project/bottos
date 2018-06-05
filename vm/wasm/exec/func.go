@@ -19,14 +19,23 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/*
+ * file description:  main functions
+ * @Author: Stewart Li
+ * @Date:   2017-12-07
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package exec
 
 import (
 	"fmt"
-	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
-	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	"math"
 	"reflect"
+
+	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
+	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
 type function interface {
