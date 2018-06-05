@@ -18,11 +18,11 @@
 /*
  * file description:  context definition
  * @Author: Gong Zibin
- * @Date:   2017-01-20
+ * @Date:   2017-01-15
  * @Last Modified by:
  * @Last Modified time:
  */
- 
+
 package contract
 
 import (

@@ -27,7 +27,6 @@ package role
 
 import (
 	"encoding/json"
-	//"fmt"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
@@ -68,7 +67,6 @@ func GetTransactionHistoryRole(ldb *db.DBService, txhash common.Hash) (common.Ha
 
 func getTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
 	key := hashToKey(hash)
-	//fmt.Println("GetTransactionHistoryByHash key: ", key)
 	value, err := ldb.GetObject(TransactionHistoryObjectName, key)
 	if err != nil {
 		return nil, err

@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  contract db
+ * file description:  msgpack go
  * @Author: Gong Zibin
  * @Date:   2017-12-20
  * @Last Modified by:

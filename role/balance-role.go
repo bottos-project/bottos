@@ -43,8 +43,6 @@ type Balance struct {
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
 	StakedBalance uint64 `json:"staked_balance"`
-
-	// TODO
 }
 
 func CreateBalanceRole(ldb *db.DBService) error {

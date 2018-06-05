@@ -16,9 +16,9 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  context definition
+ * file description:  contract error
  * @Author: Gong Zibin
- * @Date:   2017-01-20
+ * @Date:   2017-01-25
  * @Last Modified by:
  * @Last Modified time:
  */

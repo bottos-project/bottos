@@ -16,13 +16,13 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  blockchain general interface and logic
+ * file description:  safe math
  * @Author: Gong Zibin
  * @Date:   2017-01-20
  * @Last Modified by:
  * @Last Modified time:
  */
- 
+
 package safemath
 
 import (
