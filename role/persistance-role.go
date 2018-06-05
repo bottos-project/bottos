@@ -85,11 +85,11 @@ type TxInfo struct {
 type transferparam struct {
 	From  string `json:"from"`
 	To    string `json:"to"`
-	Value uint64 `json: value`
+	Value uint64 `json:"value"`
 }
 
 type newaccountparam struct {
-	Name   string `json: name`
+	Name   string `json:"name"`
 	Pubkey string `json: pubkey`
 }
 
