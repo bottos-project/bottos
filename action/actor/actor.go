@@ -38,11 +38,6 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 )
 
-//var apiActorPid *actor.PID
-//var netActorPid *actor.PID
-//var trxActorPid *actor.PID
-//var chainActorPid *actor.PID
-
 type MultiActor struct {
 	apiActorPid      *actor.PID
 	netActorPid      *actor.PID

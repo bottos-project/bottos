@@ -790,7 +790,7 @@ func (m *MessageHeader) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.HeaderData) > 0 {
-		for k, _ := range m.HeaderData {
+		for k := range m.HeaderData {
 			dAtA[i] = 0xa
 			i++
 			v := m.HeaderData[k]
@@ -1116,7 +1116,7 @@ func (this *MessageHeader) String() string {
 		return "nil"
 	}
 	keysForHeaderData := make([]string, 0, len(this.HeaderData))
-	for k, _ := range this.HeaderData {
+	for k := range this.HeaderData {
 		keysForHeaderData = append(keysForHeaderData, k)
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForHeaderData)

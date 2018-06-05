@@ -25,8 +25,8 @@
 package types
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -45,14 +45,14 @@ func newTrx(contract string, method string, param []byte) *Transaction {
 func TestDerivedTransaction_onelayer(t *testing.T) {
 	trx := newTrx("test", "testmethod", []byte{})
 
-	trx1 := &DerivedTransaction{Transaction:newTrx("subtest1", "testmethod", []byte{})}
-	trx2 := &DerivedTransaction{Transaction:newTrx("subtest2", "testmethod", []byte{})}
-	trx3 := &DerivedTransaction{Transaction:newTrx("subtest3", "testmethod", []byte{})}
+	trx1 := &DerivedTransaction{Transaction: newTrx("subtest1", "testmethod", []byte{})}
+	trx2 := &DerivedTransaction{Transaction: newTrx("subtest2", "testmethod", []byte{})}
+	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{})}
 	var derivedTrx []*DerivedTransaction
 	derivedTrx = append(derivedTrx, trx1)
 	derivedTrx = append(derivedTrx, trx2)
 	derivedTrx = append(derivedTrx, trx3)
-	handledTrx := &HandledTransaction{Transaction:trx, DerivedTrx:derivedTrx}
+	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
 	data, err := proto.Marshal(handledTrx)
 	fmt.Println(handledTrx)
@@ -67,11 +67,9 @@ func TestDerivedTransaction_onelayer(t *testing.T) {
 func TestDerivedTransaction_twolayer(t *testing.T) {
 	trx := newTrx("test", "testmethod", []byte{})
 
-	
-
-	trx11 := &DerivedTransaction{Transaction:newTrx("subtest11", "testmethod", []byte{5,6,7})}
-	trx12 := &DerivedTransaction{Transaction:newTrx("subtest12", "testmethod", []byte{6,7,8})}
-	trx13 := &DerivedTransaction{Transaction:newTrx("subtest13", "testmethod", []byte{7,8,9})}
+	trx11 := &DerivedTransaction{Transaction: newTrx("subtest11", "testmethod", []byte{5, 6, 7})}
+	trx12 := &DerivedTransaction{Transaction: newTrx("subtest12", "testmethod", []byte{6, 7, 8})}
+	trx13 := &DerivedTransaction{Transaction: newTrx("subtest13", "testmethod", []byte{7, 8, 9})}
 
 	var derivedTrx1 []*DerivedTransaction
 	derivedTrx1 = append(derivedTrx1, trx11)
@@ -80,15 +78,15 @@ func TestDerivedTransaction_twolayer(t *testing.T) {
 	derivedTrx2 = append(derivedTrx2, trx12)
 	derivedTrx2 = append(derivedTrx2, trx13)
 
-	trx1 := &DerivedTransaction{Transaction:newTrx("subtest1", "testmethod", []byte{1,2,3}), DerivedTrx:derivedTrx1}
-	trx2 := &DerivedTransaction{Transaction:newTrx("subtest2", "testmethod", []byte{2,3,4}), DerivedTrx:derivedTrx2}
-	trx3 := &DerivedTransaction{Transaction:newTrx("subtest3", "testmethod", []byte{3,4,5})}
+	trx1 := &DerivedTransaction{Transaction: newTrx("subtest1", "testmethod", []byte{1, 2, 3}), DerivedTrx: derivedTrx1}
+	trx2 := &DerivedTransaction{Transaction: newTrx("subtest2", "testmethod", []byte{2, 3, 4}), DerivedTrx: derivedTrx2}
+	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{3, 4, 5})}
 
 	var derivedTrx []*DerivedTransaction
 	derivedTrx = append(derivedTrx, trx1)
 	derivedTrx = append(derivedTrx, trx2)
 	derivedTrx = append(derivedTrx, trx3)
-	handledTrx := &HandledTransaction{Transaction:trx, DerivedTrx:derivedTrx}
+	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
 	data, err := proto.Marshal(handledTrx)
 	fmt.Println(handledTrx)

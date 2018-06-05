@@ -1,3 +1,27 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer entry
+ * @Author:
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
 package producer
 
 import (
@@ -10,19 +34,16 @@ import (
 
 type ReportState struct {
 	ScheduledTime     uint64
-	ScheduledReporter string //TODO
-	PrivateKey        string //TODO
+	ScheduledReporter string
+	PrivateKey        string
 	IsReporting       bool
-	CheckFlag         uint32 //TODO
+	CheckFlag         uint32
 	ReportEnable      bool
 }
 
 func (r *Reporter) IsReady() bool {
 	now := GetReportTimeNow()
-	r.state.SetCheckFlag(1) //TODO
-	if r.IsSynced(now) == false {
-		//TODO
-	}
+	r.state.SetCheckFlag(1)
 
 	slot := r.roleIntf.GetSlotAtTime(now)
 	if slot == 0 {
@@ -35,7 +56,7 @@ func (r *Reporter) IsReady() bool {
 		return false
 	}
 	if (now < object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
-		//	fmt.Println("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
+		//fmt.Println("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
 		return false
 	}
 	if r.IsMyTurn(now, slot) == false {
@@ -90,19 +111,15 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		fmt.Println("find delegate by account failed", accountName)
 		return false
 	}
-	// TODO check   delegate.SigningKey
-	//	fmt.Println("todo check delegate sign key", delegate.ReportKey)
-
 	prate := r.roleIntf.GetDelegateParticipationRate()
-	//	fmt.Println("delegate participation rate ", prate)
 
 	if prate < config.DELEGATE_PATICIPATION {
-		fmt.Println("delegate paticipate rate is too low")
+		//	fmt.Println("delegate paticipate rate is too low")
 		return false
 	}
 
 	if math.Abs(float64(scheduledTime)-float64(startTime)) > 500 {
-		fmt.Println("delegate  is too slow")
+		//	fmt.Println("delegate  is too slow")
 		return false
 	}
 	r.state.ScheduledTime = scheduledTime

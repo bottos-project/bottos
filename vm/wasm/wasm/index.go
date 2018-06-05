@@ -23,8 +23,8 @@ package wasm
 
 import (
 	"fmt"
-	"reflect"
 	log "github.com/cihub/seelog"
+	"reflect"
 )
 
 type InvalidTableIndexError uint32

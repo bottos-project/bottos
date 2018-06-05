@@ -29,7 +29,6 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
-
 var chainActorPid *actor.PID
 
 func SetChainActorPid(tpid *actor.PID) {

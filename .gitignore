@@ -3,7 +3,7 @@
 *.dll
 *.so
 *.dylib
-core
+bottos
 vendor
 datadir
 

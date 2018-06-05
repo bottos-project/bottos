@@ -35,27 +35,26 @@ import (
 	//"fmt"
 	"sync"
 	//"reflect"
-	"strings"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"strings"
 )
 
 //its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-
-	p2p              *P2PServer
-	stopSync         chan bool
+	p2p      *P2PServer
+	stopSync chan bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
-	peerMap          map[uint64]*Peer
+	peerMap map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
 
 func NewNotifyManager() *NotifyManager {
-	return &NotifyManager {
+	return &NotifyManager{
 		peerMap:          make(map[uint64]*Peer),
 		trxActorPid:      nil,
 		chainActorPid:    nil,
@@ -63,13 +62,17 @@ func NewNotifyManager() *NotifyManager {
 	}
 }
 
-func (notify *NotifyManager) BroadcastByte (buf []byte, isSync bool) {
+func (notify *NotifyManager) Start() {
+	//for{}
+}
+
+func (notify *NotifyManager) BroadcastByte(buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
 
-	for _ , peer := range notify.peerMap {
+	for _, peer := range notify.peerMap {
 		if peer.GetPeerState() == ESTABLISH {
-			peer.SendTo(buf , false)
+			peer.SendTo(buf, false)
 		}
 	}
 
@@ -80,7 +83,7 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+	if _, ok := notify.peerMap[peer.GetId()]; !ok {
 		notify.peerMap[peer.GetId()] = peer
 	}
 }
@@ -94,7 +97,6 @@ func (notify *NotifyManager) DelPeer(peer *Peer)  {
 	}
 }
 
-
 //sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
 }
@@ -107,9 +109,9 @@ func (notify *NotifyManager) SyncHash() {
 func (notify *NotifyManager) SyncPeer() {
 }
 
-func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {
-	for _ , peer := range notify.peerMap {
-		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
+func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
+	for _, peer := range notify.peerMap {
+		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
 			return true
 		}
 	}
@@ -120,23 +122,4 @@ func (notify *NotifyManager) IsExist(addr string , isExist bool) bool {
 func (notify *NotifyManager) GetPeerMap() map[uint64]*Peer {
 	return notify.peerMap
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

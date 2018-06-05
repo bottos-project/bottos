@@ -29,9 +29,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	log "github.com/cihub/seelog"
 	"io/ioutil"
 	"os"
-	log "github.com/cihub/seelog"
 )
 
 const (
@@ -51,7 +51,7 @@ type Parameter struct {
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
-	ApiServiceName	  string    `json:"api_service_name"`
+	ApiServiceName    string    `json:"api_service_name"`
 	ApiServiceVersion string    `json:"api_service_version"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
@@ -64,9 +64,9 @@ type KeyPair struct {
 }
 
 type GenesisConfig struct {
-	GenesisTime  	uint64       		`json:"genesis_time"`
-	ChainId      	string       		`json:"chain_id"`
-	InitDelegates 	[]InitDelegate	 	`json:"init_delegates"`
+	GenesisTime   uint64         `json:"genesis_time"`
+	ChainId       string         `json:"chain_id"`
+	InitDelegates []InitDelegate `json:"init_delegates"`
 }
 
 type InitDelegate struct {
@@ -122,7 +122,7 @@ func loadConfigJson(fn string) ([]byte, error) {
 	return file, nil
 }
 
-func loadLogConfig(log_config_file string)  {
+func loadLogConfig(log_config_file string) {
 	defer log.Flush()
 	logger, err := log.LoggerFromConfigAsFile(log_config_file)
 	if err != nil {

@@ -1,8 +1,8 @@
 package msgpack
 
 import (
-	"io"
 	"fmt"
+	"io"
 )
 
 type (
@@ -31,7 +31,7 @@ func readByte(reader io.Reader) (v uint8, err error) {
 
 func UnpackUint8(reader io.Reader) (v uint8, err error) {
 	c, e := readByte(reader)
-	if e == nil && c == UINT8  {
+	if e == nil && c == UINT8 {
 		v, err = readByte(reader)
 		if err == nil {
 			return v, nil
@@ -52,7 +52,7 @@ func readUint16(reader io.Reader) (v uint16, n int, err error) {
 
 func UnpackUint16(reader io.Reader) (v uint16, err error) {
 	c, e := readByte(reader)
-	if e == nil && c == UINT16  {
+	if e == nil && c == UINT16 {
 		v, _, err = readUint16(reader)
 		if err == nil {
 			return v, nil
@@ -73,7 +73,7 @@ func readUint32(reader io.Reader) (v uint32, n int, err error) {
 
 func UnpackUint32(reader io.Reader) (v uint32, err error) {
 	c, e := readByte(reader)
-	if e == nil && c == UINT32  {
+	if e == nil && c == UINT32 {
 		v, _, err = readUint32(reader)
 		if err == nil {
 			return v, nil
@@ -94,7 +94,7 @@ func readUint64(reader io.Reader) (v uint64, n int, err error) {
 
 func UnpackUint64(reader io.Reader) (v uint64, err error) {
 	c, e := readByte(reader)
-	if e == nil && c == UINT64  {
+	if e == nil && c == UINT64 {
 		v, _, err = readUint64(reader)
 		if err == nil {
 			return v, nil
@@ -125,7 +125,7 @@ func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 
 func UnpackStr16(reader io.Reader) (string, error) {
 	c, e := readByte(reader)
-	if e == nil && c == STR16  {
+	if e == nil && c == STR16 {
 		size, _, e := readUint16(reader)
 		if e == nil {
 			value := make([]byte, size)
@@ -141,7 +141,7 @@ func UnpackStr16(reader io.Reader) (string, error) {
 
 func UnpackBin16(reader io.Reader) ([]byte, error) {
 	c, e := readByte(reader)
-	if e == nil && c == BIN16  {
+	if e == nil && c == BIN16 {
 		size, _, e := readUint16(reader)
 		if e == nil {
 			value := make([]byte, size)
@@ -154,4 +154,3 @@ func UnpackBin16(reader io.Reader) ([]byte, error) {
 
 	return []byte{}, e
 }
-

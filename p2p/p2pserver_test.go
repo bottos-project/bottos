@@ -1,4 +1,3 @@
-
 // Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
@@ -33,17 +32,16 @@
 package p2pserver
 
 import (
-	"testing"
+	"encoding/json"
 	"fmt"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
 	"net"
 	"os"
-	"encoding/json"
-	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/common/types"
+	"testing"
 )
 
-
-func TestP2PServ(t *testing.T)  {
+func TestP2PServ(t *testing.T) {
 	fmt.Println("p2p_server::TestP2PServ")
 
 	if TST == 0 {
@@ -57,74 +55,72 @@ func TestP2PServ(t *testing.T)  {
 	p2p := NewServ()
 	p2p.Start()
 
-	for{}
+	for {
+	}
 
 	return
 }
-
 
 func TestTrxSend(t *testing.T) {
 
 	p2pconfig := ReadFile(CONF_FILE)
 
-	addr_port := p2pconfig.PeerLst[0]+":"+fmt.Sprint(p2pconfig.ServPort)
-	conn , err := net.Dial("tcp", addr_port)
+	addr_port := p2pconfig.PeerLst[0] + ":" + fmt.Sprint(p2pconfig.ServPort)
+	conn, err := net.Dial("tcp", addr_port)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 		return
 	}
 
 	type message struct {
-		Src       string
-		Dst       string
-		MsgType   uint8
-		Content   []byte
+		Src     string
+		Dst     string
+		MsgType uint8
+		Content []byte
 	}
 
 	trx := &types.Transaction{
-		Version        : 1,
-		CursorNum      : 1,
-		CursorLabel    : 1,
-		Lifetime       : 1,
-		Sender         : "Trump",
-		Contract       : "Check",
-		Method         : "Func1",
-		Param          : nil,
-		SigAlg         : 1,
-		Signature      : []byte{},
+		Version:     1,
+		CursorNum:   1,
+		CursorLabel: 1,
+		Lifetime:    1,
+		Sender:      "Trump",
+		Contract:    "Check",
+		Method:      "Func1",
+		Param:       nil,
+		SigAlg:      1,
+		Signature:   []byte{},
 	}
 
-	byte_trx , err := json.Marshal(trx)
-	if err != nil{
+	byte_trx, err := json.Marshal(trx)
+	if err != nil {
 		fmt.Println("*ERROR* Failed to package the message : ", err)
 		return
 	}
 
-	msg := message {
-		Src:           p2pconfig.ServAddr,
-		Dst:           p2pconfig.PeerLst[0],
-		MsgType:       CRX_BROADCAST,
-		Content:       byte_trx,
+	msg := message{
+		Src:     p2pconfig.ServAddr,
+		Dst:     p2pconfig.PeerLst[0],
+		MsgType: CRX_BROADCAST,
+		Content: byte_trx,
 	}
 
-	byte_msg , err := json.Marshal(msg)
-	if err != nil{
+	byte_msg, err := json.Marshal(msg)
+	if err != nil {
 		fmt.Println("*ERROR* Failed to package the message : ", err)
 	}
 
-
-	len , err := conn.Write(byte_msg)
+	len, err := conn.Write(byte_msg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
 		return
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
 		return
 	}
 
 	return
 }
-
 
 func TestBlkSend(t *testing.T) {
 	//

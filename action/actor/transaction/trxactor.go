@@ -84,46 +84,28 @@ func (self *TrxActor) handleSystemMsg(context actor.Context) bool {
 	}
 
 	return true
-
 }
 
 func (self *TrxActor) Receive(context actor.Context) {
-
-	//fmt.Println("trxactor received msg: ", context)
 
 	if self.handleSystemMsg(context) {
 		return
 	}
 
 	switch msg := context.Message().(type) {
-
-	// case *types.Transaction:
-	// 	fmt.Println("transaction action is ", msg.Method.Name)
-	// 	context.Respond("trx rsp from trx actor")
-
 	case *message.PushTrxReq:
-
-		fmt.Println("==========")
-		fmt.Println(">>>>>>>>>>trx actor Rcv trx, sendType: ", msg.TrxSender, "<<<<<<<<<<<")
-		fmt.Println("==========")
 
 		trxPool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
 
 	case *message.GetAllPendingTrxReq:
 
-		//	fmt.Println("trx actor Rcv get all trx req")
-
 		trxPool.GetAllPendingTransactions(context)
 
 	case *message.RemovePendingTrxsReq:
 
-		//	fmt.Println("trx actor Rcv remove trxs req")
-
 		trxPool.RemoveTransactions(msg.Trxs)
 
 	default:
-		//fmt.Println("trx actor: Unknown msg ", msg, "type", reflect.TypeOf(msg))
 		fmt.Println("trx actor: Unknown msg")
-
 	}
 }

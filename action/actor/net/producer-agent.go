@@ -34,11 +34,3 @@ type ProducerActor struct {
 	roleIntf role.RoleInterface
 	ins      producer.ReporterRepo
 }
-
-
-
-
-
-
-
-

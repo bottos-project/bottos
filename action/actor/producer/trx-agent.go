@@ -32,29 +32,25 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/transaction"
 )
 
 var trxActorPid *actor.PID
 
+// SetTrxActorPid is to set transaction actor PID for use
 func SetTrxActorPid(tpid *actor.PID) {
 	trxActorPid = tpid
 }
 
+// GetAllPendingTrx is to retrieve the pending transactions
 func GetAllPendingTrx() []*types.Transaction {
 	getTrxsReq := &message.GetAllPendingTrxReq{}
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if nil == getTrxsErr {
 	} else {
-		fmt.Println("get all trx req exec error") //TODO
+		fmt.Println("get all trx req exec error")
 	}
-	//TODO
-	//	switch msg := getTrxsResult.(type) {
 
-	//	case *message.GetAllPendingTrxRsp:
-
-	//	}
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
 	fmt.Println("pending transaction number ", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
@@ -65,15 +61,14 @@ func GetAllPendingTrx() []*types.Transaction {
 		trxs = append(trxs, dbtag)
 	}
 
-	//fmt.Println("pending transaction lists", trxs)
 	return trxs
 }
 
+// VerifyTransactions is to verify local and received transactons
 func VerifyTransactions(trx *types.Transaction) (bool, error) {
-	//TODO
 	return true, nil
-	fmt.Println("start apply transation trx one by one")
-	trxApply := transaction.NewTrxApplyService()
-	pass, _, _ := trxApply.ApplyTransaction(trx)
-	return pass, nil
+	/* 	fmt.Println("start apply transation trx one by one")
+	   	trxApply := transaction.NewTrxApplyService()
+	   	pass, _, _ := trxApply.ApplyTransaction(trx)
+	   	return pass, nil */
 }

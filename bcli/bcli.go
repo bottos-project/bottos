@@ -1,21 +1,25 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"log"
-	"os"
-	"io/ioutil"
+	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"bytes"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 
 	"github.com/micro/go-micro"
 	"golang.org/x/net/context"
 
 	coreapi "github.com/bottos-project/bottos/api"
-	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/crypto-go/crypto"
+	proto "github.com/golang/protobuf/proto"
 )
 
 // CLI responsible for processing command line arguments
@@ -24,17 +28,17 @@ type CLI struct {
 }
 
 type Transaction struct {
-	Version     uint32 `json:"version"`
-	CursorNum   uint32 `json:"cursor_num"`
-	CursorLabel uint32 `json:"cursor_label"`
-	Lifetime    uint64 `json:"lifetime"`
-	Sender      string `json:"sender"`
-	Contract    string `json:"contract"`
-	Method      string `json:"method"`
+	Version     uint32      `json:"version"`
+	CursorNum   uint32      `json:"cursor_num"`
+	CursorLabel uint32      `json:"cursor_label"`
+	Lifetime    uint64      `json:"lifetime"`
+	Sender      string      `json:"sender"`
+	Contract    string      `json:"contract"`
+	Method      string      `json:"method"`
 	Param       interface{} `json:"param"`
-	ParamBin    string `json:"param_bin"`
-	SigAlg      uint32 `json:"sig_alg"`
-	Signature   string `json:"signature"`
+	ParamBin    string      `json:"param_bin"`
+	SigAlg      uint32      `json:"sig_alg"`
+	Signature   string      `json:"signature"`
 }
 
 func (cli *CLI) printUsage() {
@@ -51,7 +55,7 @@ func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
 	service.Init()
-	cli.client = coreapi.NewCoreApiClient("core", service.Client())
+	cli.client = coreapi.NewCoreApiClient("bottos", service.Client())
 
 	return cli
 }
@@ -74,6 +78,37 @@ func (cli *CLI) queryChainInfo() (*coreapi.QueryChainInfoResponse_Result, error)
 	return chainInfo, nil
 }
 
+func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) {
+	ctrx := &types.BasicTransaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       param,
+		SigAlg:      trx.SigAlg,
+	}
+	pub_key, pri_key := crypto.GenerateKey()
+	fmt.Println("test:pub key is ", pub_key, "\n", pri_key)
+
+	data, err := proto.Marshal(ctrx)
+	if nil != err {
+		return "", err
+	}
+	fmt.Println("marshal result: \n", data)
+
+	h := sha256.New()
+	h.Write([]byte(hex.EncodeToString(data)))
+	hashData := h.Sum(nil)
+	seckey, err := GetDefaultKey()
+	fmt.Println("seckey is : \n", hex.EncodeToString(seckey))
+	signdata, err := crypto.Sign(hashData, seckey)
+
+	return BytesToHex(signdata), err
+}
+
 func (cli *CLI) transfer(from, to string, amount int) {
 	chainInfo, err := cli.queryChainInfo()
 	if err != nil {
@@ -81,33 +116,38 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		return
 	}
 
-	
 	type TransferParam struct {
-		From		string		`json:"from"`
-		To			string		`json:"to"`
-		Amount		uint64		`json:"amount"`
+		From   string `json:"from"`
+		To     string `json:"to"`
+		Amount uint64 `json:"amount"`
 	}
 	var value uint64
 	value = uint64(amount) * uint64(100000000)
 	tp := &TransferParam{
-		From: from,
-		To: to,
+		From:   from,
+		To:     to,
 		Amount: value,
 	}
 	param, _ := msgpack.Marshal(tp)
 
 	trx := &coreapi.Transaction{
-		Version:1,
-		CursorNum: chainInfo.HeadBlockNum,
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
-		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender: from,
-		Contract: "bottos",
-		Method: "transfer",
-		Param: BytesToHex(param),
-		SigAlg:1,
-		Signature:string(""),
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      from,
+		Contract:    "bottos",
+		Method:      "transfer",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
 	}
+
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+		return
+	}
+
+	trx.Signature = sign
 
 	newAccountRsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil || newAccountRsp == nil {
@@ -121,32 +161,36 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		return
 	}
 
-	fmt.Printf("Transfer from %v to %v Success\n", from, to)
-	fmt.Printf("Transaction: \n")
+	fmt.Printf("Transfer Succeed\n")
+	fmt.Printf("    From: %v\n", from)
+	fmt.Printf("    To: %v\n", to)
+	fmt.Printf("    Amount: %v\n", amount)
+	fmt.Printf("Trx: \n")
 
 	tp.Amount = uint64(amount)
 	printTrx := Transaction{
-		Version: trx.Version,
-		CursorNum: trx.CursorNum,
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
-		Lifetime: trx.Lifetime,
-		Sender: trx.Sender,
-		Contract: trx.Contract,
-		Method: trx.Method,
-		Param: tp,
-		ParamBin: trx.Param,
-		SigAlg: trx.SigAlg,
-		Signature: trx.Signature,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       tp,
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
 	}
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
 func (cli *CLI) jsonPrint(data []byte) {
-	var out bytes.Buffer  
+	var out bytes.Buffer
 	json.Indent(&out, data, "", "    ")
-	
+
 	fmt.Println(string(out.Bytes()))
 }
 
@@ -159,27 +203,33 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	// 1, new account trx
 	type NewAccountParam struct {
-		Name string
+		Name   string
 		Pubkey string
 	}
 	nps := &NewAccountParam{
-		Name: name,
+		Name:   name,
 		Pubkey: pubkey,
 	}
 	param, _ := msgpack.Marshal(nps)
 
 	trx := &coreapi.Transaction{
-		Version:1,
-		CursorNum: chainInfo.HeadBlockNum,
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
-		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
-		Contract:"bottos",
-		Method:"newaccount",
-		Param: BytesToHex(param),
-		SigAlg:1,
-		Signature:string(""),
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "newaccount",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
 	}
+
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+		return
+	}
+
+	trx.Signature = sign
 
 	rsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil || rsp == nil {
@@ -193,29 +243,30 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		return
 	}
 
-	fmt.Printf("Create account %v Success\n", name)
-	fmt.Printf("Transaction: \n")
+	fmt.Printf("Create account: %v Succeed\n", name)
+	fmt.Printf("Trx: \n")
 
 	printTrx := Transaction{
-		Version: trx.Version,
-		CursorNum: trx.CursorNum,
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
-		Lifetime: trx.Lifetime,
-		Sender: trx.Sender,
-		Contract: trx.Contract,
-		Method: trx.Method,
-		Param: nps,
-		ParamBin: trx.Param,
-		SigAlg: trx.SigAlg,
-		Signature: trx.Signature,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       nps,
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
 	}
 
 	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", rsp.Result.TrxHash)
 }
 
 func (cli *CLI) getaccount(name string) {
-	accountRsp, err := cli.client.QueryAccount(context.TODO(), &coreapi.QueryAccountRequest{AccountName:name})
+	accountRsp, err := cli.client.QueryAccount(context.TODO(), &coreapi.QueryAccountRequest{AccountName: name})
 	if err != nil || accountRsp == nil {
 		return
 	}
@@ -229,7 +280,6 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Account: %s\n", account.AccountName)
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
-
 
 func (cli *CLI) deploycode(name string, path string) {
 	chainInfo, err := cli.queryChainInfo()
@@ -259,15 +309,15 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	type DeployCodeParam struct {
-		Name		 string		 `json:"name"`
-		VMType       byte        `json:"vm_type"`
-		VMVersion    byte        `json:"vm_version"`
-		ContractCode []byte      `json:"contract_code"`
+		Name         string `json:"name"`
+		VMType       byte   `json:"vm_type"`
+		VMVersion    byte   `json:"vm_version"`
+		ContractCode []byte `json:"contract_code"`
 	}
 
 	dcp := &DeployCodeParam{
-		Name: name,
-		VMType: 1,
+		Name:      name,
+		VMType:    1,
 		VMVersion: 1,
 	}
 	dcp.ContractCode = make([]byte, fi.Size())
@@ -275,32 +325,79 @@ func (cli *CLI) deploycode(name string, path string) {
 	//fmt.Printf("Code %x", dcp.ContractCode)
 	param, _ := msgpack.Marshal(dcp)
 
-	trx1 := &coreapi.Transaction{
-		Version:1,
-		CursorNum: chainInfo.HeadBlockNum,
+	trx := &coreapi.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
-		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
-		Contract:"bottos",
-		Method:"deploycode",
-		Param: BytesToHex(param),
-		SigAlg:1,
-		Signature:string(""),
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      name,
+		Contract:    "bottos",
+		Method:      "deploycode",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
 	}
-	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx1)
+
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+		return
+	}
+
+	trx.Signature = sign
+
+	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	b, _ := json.Marshal(deployCodeRsp)
+	if deployCodeRsp.Errcode != 0 {
+		fmt.Printf("Deploy contract error:\n")
+		fmt.Printf("    %v\n", deployCodeRsp.Msg)
+		return
+	}
+
+	fmt.Printf("Deploy contract: %v Succeed\n", name)
+	fmt.Printf("Trx: \n")
+
+	type PrintDeployCodeParam struct {
+		Name         string `json:"name"`
+		VMType       byte   `json:"vm_type"`
+		VMVersion    byte   `json:"vm_version"`
+		ContractCode string `json:"contract_code"`
+	}
+
+	pdcp := &PrintDeployCodeParam{}
+	pdcp.Name = dcp.Name
+	pdcp.VMType = dcp.VMType
+	pdcp.VMVersion = dcp.VMVersion
+	codeHex := BytesToHex(dcp.ContractCode[0:100])
+	pdcp.ContractCode = codeHex + "..."
+	//pdcp.ContractCode = BytesToHex(dcp.ContractCode)
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       pdcp,
+		ParamBin:    string([]byte(trx.Param)[0:200]) + "...",
+		//ParamBin: trx.Param,
+		SigAlg:    trx.SigAlg,
+		Signature: trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
 	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", deployCodeRsp.Result.TrxHash)
 }
 
 func check_abi(abiRaw []byte) error {
 	_, err := contract.ParseAbi(abiRaw)
 	if err != nil {
-		return fmt.Errorf("ABI Parse error: %v", err) 
+		return fmt.Errorf("ABI Parse error: %v", err)
 	}
 	return nil
 }
@@ -333,8 +430,8 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	type DeployAbiParam struct {
-		Name		 string		 `json:"name"`
-		ContractAbi  []byte      `json:"contract_abi"`
+		Name        string `json:"name"`
+		ContractAbi []byte `json:"contract_abi"`
 	}
 
 	dcp := &DeployAbiParam{
@@ -358,17 +455,24 @@ func (cli *CLI) deployabi(name string, path string) {
 	param, _ := msgpack.Marshal(dcp)
 
 	trx1 := &coreapi.Transaction{
-		Version:1,
-		CursorNum: chainInfo.HeadBlockNum,
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
-		Lifetime: chainInfo.HeadBlockTime+100,
-		Sender:"bottos",
-		Contract:"bottos",
-		Method:"deployabi",
-		Param: BytesToHex(param),
-		SigAlg:1,
-		Signature:string(""),
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      name,
+		Contract:    "bottos",
+		Method:      "deployabi",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
 	}
+
+	sign, err := cli.signTrx(trx1, param)
+	if err != nil {
+		return
+	}
+
+	trx1.Signature = sign
+
 	deployAbiRsp, err := cli.client.PushTrx(context.TODO(), trx1)
 	if err != nil {
 		fmt.Println(err)
@@ -489,4 +593,3 @@ func HexToBytes(str string) ([]byte, error) {
 
 	return h, err
 }
-

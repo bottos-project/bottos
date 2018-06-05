@@ -17,55 +17,55 @@
 
 /*
  * file description:  transaction history role
- * @Author: Gong Zibin 
+ * @Author: Gong Zibin
  * @Date:   2017-12-12
  * @Last Modified by:
  * @Last Modified time:
  */
 
- package role
+package role
 
- import (
-	 "encoding/json"
-	 //"fmt"
- 
-	 "github.com/bottos-project/bottos/db"
-	 "github.com/bottos-project/bottos/common"
- )
- 
- const TransactionHistoryObjectName string = "transaction_history"
-  
- type TransactionHistory struct {
-	TxHash			common.Hash		`json:"trx_hash"`
-	BlockHash		common.Hash		`json:"block_hash"`
- }
-   
- func CreateTransactionHistoryObjectRole(ldb *db.DBService) error {
-	 return nil
- }
+import (
+	"encoding/json"
+	//"fmt"
 
- func AddTransactionHistoryRole(ldb *db.DBService, txhash common.Hash, blockhash common.Hash) error {
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/db"
+)
+
+const TransactionHistoryObjectName string = "transaction_history"
+
+type TransactionHistory struct {
+	TxHash    common.Hash `json:"trx_hash"`
+	BlockHash common.Hash `json:"block_hash"`
+}
+
+func CreateTransactionHistoryObjectRole(ldb *db.DBService) error {
+	return nil
+}
+
+func AddTransactionHistoryRole(ldb *db.DBService, txhash common.Hash, blockhash common.Hash) error {
 	value := &TransactionHistory{
-		TxHash: txhash,
+		TxHash:    txhash,
 		BlockHash: blockhash,
 	}
 	return setTransactionHistoryObjectRole(ldb, txhash, value)
- }
- 
- func setTransactionHistoryObjectRole(ldb *db.DBService, txhash common.Hash, value *TransactionHistory) error {
-	 key := hashToKey(txhash)
-	 jsonvalue, _ := json.Marshal(value)
-	 return ldb.SetObject(TransactionHistoryObjectName, key, string(jsonvalue))
- }
+}
 
- func GetTransactionHistoryRole(ldb *db.DBService, txhash common.Hash) (common.Hash, error) {
-	 history, err := getTransactionHistoryByHash(ldb, txhash)
-	 if err != nil {
-		 return common.Hash{}, err
-	 }
-	 return history.BlockHash, nil
- }
- 
+func setTransactionHistoryObjectRole(ldb *db.DBService, txhash common.Hash, value *TransactionHistory) error {
+	key := hashToKey(txhash)
+	jsonvalue, _ := json.Marshal(value)
+	return ldb.SetObject(TransactionHistoryObjectName, key, string(jsonvalue))
+}
+
+func GetTransactionHistoryRole(ldb *db.DBService, txhash common.Hash) (common.Hash, error) {
+	history, err := getTransactionHistoryByHash(ldb, txhash)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return history.BlockHash, nil
+}
+
 func getTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*TransactionHistory, error) {
 	key := hashToKey(hash)
 	//fmt.Println("GetTransactionHistoryByHash key: ", key)
@@ -77,4 +77,3 @@ func getTransactionHistoryByHash(ldb *db.DBService, hash common.Hash) (*Transact
 	json.Unmarshal([]byte(value), res)
 	return res, err
 }
-   

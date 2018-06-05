@@ -58,7 +58,6 @@ func Uint64Mul(a uint64, b uint64) (uint64, error) {
 			return 0, errors.New("uint64 overflow")
 		}
 	}
-	
+
 	return c, nil
 }
-

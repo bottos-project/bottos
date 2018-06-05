@@ -22,10 +22,10 @@
 package exec
 
 import (
+	"encoding/binary"
 	"errors"
 	"math"
 	"reflect"
-	"encoding/binary"
 )
 
 type Type int
@@ -43,8 +43,8 @@ const (
 )
 
 type typeInfo struct {
-	Type    Type
-	Len     int
+	Type Type
+	Len  int
 }
 
 // ErrOutOfBoundsMemoryAccess is the error value used while trapping the VM
@@ -250,10 +250,10 @@ func (vm *VM) growMemory() {
 	vm.memory = append(vm.memory, make([]byte, n*wasmPageSize)...)
 	vm.pushInt32(int32(curLen))
 }
-func (vm *VM) GetData ( pos uint64 ) ([]byte, error) {
+func (vm *VM) GetData(pos uint64) ([]byte, error) {
 
 	if pos < 0 || pos == uint64(math.MaxInt64) {
-		return nil , errors.New("*EORROR* Invalid parameter , position is out of memory !!! ")
+		return nil, errors.New("*EORROR* Invalid parameter , position is out of memory !!! ")
 	}
 
 	t, ok := vm.memType[pos] //map[uint64]*typeInfo
@@ -261,17 +261,17 @@ func (vm *VM) GetData ( pos uint64 ) ([]byte, error) {
 		return nil, errors.New("*EORROR* Invalid parameter , the specified type can't be found by the parameter !!! ")
 	}
 
-	if int(pos) + t.Len > len(vm.memory) {
+	if int(pos)+t.Len > len(vm.memory) {
 		return nil, errors.New("*EORROR* Invalid parameter , position is out of memory !!!")
 	}
 
-	return vm.memory[int(pos) : int(pos) + t.Len ], nil
+	return vm.memory[int(pos) : int(pos)+t.Len], nil
 }
 
-func (vm *VM) StorageData( data interface{}) (int, error) {
+func (vm *VM) StorageData(data interface{}) (int, error) {
 
 	if data == nil {
-		return 0 , errors.New("*ERROR* Parameter is empty !!! ")
+		return 0, errors.New("*ERROR* Parameter is empty !!! ")
 	}
 
 	switch reflect.TypeOf(data).Kind() {
@@ -298,20 +298,20 @@ func (vm *VM) StorageData( data interface{}) (int, error) {
 	}
 }
 
-func (vm *VM) getStoragePos( size int , t Type ) (int , error) {
+func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 
-	if size <= 0 || vm.memory == nil  {
+	if size <= 0 || vm.memory == nil {
 		return 0, errors.New("*ERROR* Memory had't been initial or data is empty !!!")
 	}
 
-	if vm.memPos + size > len(vm.memory) {
+	if vm.memPos+size > len(vm.memory) {
 		return 0, errors.New("*ERROR* data size is out of the memory's limit !!!")
 	}
 
-	newpos    := vm.memPos + 1
+	newpos := vm.memPos + 1
 	vm.memPos += size
 
-	vm.memType[uint64(newpos)] = &typeInfo{Type: t , Len: size}
+	vm.memType[uint64(newpos)] = &typeInfo{Type: t, Len: size}
 
 	return newpos, nil
 }
@@ -326,4 +326,3 @@ func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
 
 	return index, nil
 }
-

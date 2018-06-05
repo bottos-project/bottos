@@ -111,7 +111,7 @@ func escapeValue(value interface{}, escape EscapeFunc) interface{} {
 func addPathToMap(root map[string]interface{}, path []string, escape EscapeFunc) (
 	map[string]interface{}, error) {
 	parent := root
-	for _, element := range path[:len(path)] {
+	for _, element := range path[:] {
 		k := escape(element)
 		node, found := parent[k]
 		if !found {

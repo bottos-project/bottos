@@ -35,28 +35,27 @@ import (
 	"fmt"
 	"sync"
 	"errors"
-	"encoding/json"
 	"io/ioutil"
+	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
-
 )
 
 //
-type P2PServer struct{
-	serv          *NetServer
-	p2pConfig     *P2PConfig
+type P2PServer struct {
+	serv      *NetServer
+	p2pConfig *P2PConfig
 
-	p2pLock        sync.RWMutex
+	p2pLock sync.RWMutex
 }
 
 type P2PConfig struct {
-	ServAddr    string
-	ServPort    int
-	PeerLst     []string
+	ServAddr string
+	ServPort int
+	PeerLst  []string
 }
 
 //parse json configuration
-func ReadFile(filename string) *P2PConfig{
+func ReadFile(filename string) *P2PConfig {
 
 	if filename == "" {
 		fmt.Println("*ERROR* parmeter is null")
@@ -70,7 +69,7 @@ func ReadFile(filename string) *P2PConfig{
 		return  &P2PConfig{}
 	}
 
-	str:=string(bytes)
+	str := string(bytes)
 
 	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
@@ -80,18 +79,17 @@ func ReadFile(filename string) *P2PConfig{
 	return &pc
 }
 
-
 func NewServ() *P2PServer{
 
 	p2pconfig := ReadFile(CONF_FILE)
 
 	/*
-	prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
-	if err != nil {
-		panic(err)
-	}
+		prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+		if err != nil {
+			panic(err)
+		}
 
-	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
+		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
 	var p2pserv *P2PServer = nil
@@ -100,7 +98,7 @@ func NewServ() *P2PServer{
 			serv:      NewNetServer(),
 			p2pConfig: p2pconfig,
 		}
-	}else{
+	} else {
 		p2pserv = &P2PServer{
 			serv:      NewNetServerTst(p2pconfig),
 			p2pConfig: p2pconfig,
@@ -113,7 +111,6 @@ func NewServ() *P2PServer{
 func (p2p *P2PServer) Init() error {
 	return nil
 }
-
 
 //it is the entry of p2p
 func (p2p *P2PServer) Start() error {
@@ -141,19 +138,20 @@ func (p2p *P2PServer) Start() error {
 }
 
 //run a heart beat to watch the network status
-func  (p2p *P2PServer) RunHeartBeat() error {
+
+func (p2p *P2PServer) RunHeartBeat() error {
 	return nil
 }
 
-func  (p2p *P2PServer) SetTrxActor (trxActorPid *actor.PID)  {
+func (p2p *P2PServer) SetTrxActor(trxActorPid *actor.PID) {
 	p2p.serv.notify.trxActorPid = trxActorPid
 }
 
-func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
+func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
-func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
+func (p2p *P2PServer) BroadCastImpl(m interface{}, msg_type uint8) error {
 
 	content_byte , err := json.Marshal(m)
 	if err != nil{
@@ -161,7 +159,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 		return err
 	}
 
-	msg := message {
+	msg := message{
 		Src:     p2p.p2pConfig.ServAddr,
 		MsgType: msg_type, // the type to notify other peers new crx
 		Content: content_byte,
@@ -173,7 +171,7 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 		return err
 	}
 
-	p2p.serv.notify.BroadcastByte(msg_byte , false)
+	p2p.serv.notify.BroadcastByte(msg_byte, false)
 
 	return nil
 }
@@ -182,24 +180,15 @@ func  (p2p *P2PServer) BroadCastImpl(m interface{} , msg_type uint8) error {
 func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 
 	var res error
-	switch call_type{
+	switch call_type {
 	case TRANSACTION:
-		res = p2p.BroadCastImpl(m , CRX_BROADCAST)
+		res = p2p.BroadCastImpl(m, CRX_BROADCAST)
 
 	case BLOCK:
-		res = p2p.BroadCastImpl(m , BLK_BROADCAST)
+		res = p2p.BroadCastImpl(m, BLK_BROADCAST)
 
 	}
 
 	return res
 }
-
-
-
-
-
-
-
-
-
 

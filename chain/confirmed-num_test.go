@@ -22,7 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
- package chain
+package chain
 
 import (
 	"fmt"
@@ -35,8 +35,8 @@ import (
 func TestBlockChain_ConfirmedSort(t *testing.T) {
 	delegateNum := config.BLOCKS_PER_ROUND
 	lastConfirmedNums := make(ConfirmedNum, delegateNum)
-	var i uint32 
-	for i = 0; i < delegateNum; i++  {
+	var i uint32
+	for i = 0; i < delegateNum; i++ {
 		lastConfirmedNums[i] = delegateNum - i
 	}
 

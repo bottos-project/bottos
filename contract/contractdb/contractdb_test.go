@@ -22,32 +22,32 @@
  * @Last Modified by:
  * @Last Modified time:
  */
- package contractdb
+package contractdb
 
- import (
-	 "encoding/json"
-	 "fmt"
-	 "testing"
- 
-	 "github.com/bottos-project/bottos/db"
- )
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
 
- type TestParam struct {
-	From		string		`json:"from"`
-	To			string		`json:"to"`
-	Value		uint64		`json:"value"`
+	"github.com/bottos-project/bottos/db"
+)
+
+type TestParam struct {
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Value uint64 `json:"value"`
 }
 
 func TestCreateAndUpdateStrValue(t *testing.T) {
 	ins := db.NewDbService("./file", "./file/db.db")
 	cdb := NewContractDB(ins)
-	
+
 	var contract string = "testcontract"
 	var object string = "testobject"
 	var account string = "abc"
 	tp := &TestParam{
-		From: "abc",
-		To: "bcd",
+		From:  "abc",
+		To:    "bcd",
 		Value: 9999,
 	}
 	str, _ := json.Marshal(tp)
@@ -65,17 +65,17 @@ func TestCreateAndUpdateStrValue(t *testing.T) {
 func TestDifferentStrValue(t *testing.T) {
 	ins := db.NewDbService("./file1", "./file1/db.db")
 	cdb := NewContractDB(ins)
-	
+
 	var contract string = "testcontract"
 	var object string = "testobject"
 	tp1 := &TestParam{
-		From: "abc",
-		To: "bcd",
+		From:  "abc",
+		To:    "bcd",
 		Value: 9999,
 	}
 	tp2 := &TestParam{
-		From: "xxx",
-		To: "yyy",
+		From:  "xxx",
+		To:    "yyy",
 		Value: 1234,
 	}
 	str1, err := json.Marshal(tp1)
@@ -96,13 +96,13 @@ func TestDifferentStrValue(t *testing.T) {
 func TestRemoveStrValue(t *testing.T) {
 	ins := db.NewDbService("./file2", "./file2/db.db")
 	cdb := NewContractDB(ins)
-	
+
 	var contract string = "testcontract"
 	var object string = "testobject"
 	var account string = "abc"
 	tp := &TestParam{
-		From: "abc",
-		To: "bcd",
+		From:  "abc",
+		To:    "bcd",
 		Value: 9999,
 	}
 	str, err := json.Marshal(tp)

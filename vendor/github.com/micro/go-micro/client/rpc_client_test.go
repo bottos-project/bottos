@@ -51,7 +51,7 @@ func TestCallWrapper(t *testing.T) {
 		Name:    service,
 		Version: "latest",
 		Nodes: []*registry.Node{
-			&registry.Node{
+			{
 				Id:      id,
 				Address: host,
 				Port:    port,

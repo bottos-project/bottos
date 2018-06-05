@@ -26,15 +26,15 @@
 package apiactor
 
 import (
-	"time"
 	"context"
+	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/api"
-	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/action/env"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 )
@@ -44,17 +44,17 @@ type ApiService struct {
 }
 
 func NewApiService(env *env.ActorEnv) api.CoreApiHandler {
-	apiService := &ApiService{env:env}
+	apiService := &ApiService{env: env}
 	return apiService
 }
 
-var 	chainActorPid *actor.PID
+var chainActorPid *actor.PID
+
 func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
-
-var   trxactorPid *actor.PID
+var trxactorPid *actor.PID
 
 func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
@@ -72,16 +72,16 @@ func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	}
 
 	intTrx := &types.Transaction{
-		Version:		trx.Version,
-		CursorNum:		trx.CursorNum,
-		CursorLabel:	trx.CursorLabel,
-		Lifetime:		trx.Lifetime,
-		Sender:			trx.Sender,
-		Contract:		trx.Contract,
-		Method:			trx.Method,
-		Param:			param,
-		SigAlg:			trx.SigAlg,
-		Signature:		signature,
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       param,
+		SigAlg:      trx.SigAlg,
+		Signature:   signature,
 	}
 
 	return intTrx, nil
@@ -89,16 +89,16 @@ func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 
 func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	apiTrx := &api.Transaction{
-		Version:		trx.Version,
-		CursorNum:		trx.CursorNum,
-		CursorLabel:	trx.CursorLabel,
-		Lifetime:		trx.Lifetime,
-		Sender:			trx.Sender,
-		Contract:		trx.Contract,
-		Method:			trx.Method,
-		Param:			common.BytesToHex(trx.Param),
-		SigAlg:			trx.SigAlg,
-		Signature:		common.BytesToHex(trx.Signature),
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       common.BytesToHex(trx.Param),
+		SigAlg:      trx.SigAlg,
+		Signature:   common.BytesToHex(trx.Signature),
 	}
 
 	return apiTrx
@@ -116,21 +116,20 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	}
 
 	reqMsg := &message.PushTrxReq{
-		Trx: intTrx,
-		TrxSender : message.TrxSenderTypeFront,
+		Trx:       intTrx,
+		TrxSender: message.TrxSenderTypeFront,
 	}
-	
+
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
-	if (nil != err) {
+	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
 		return nil
 	}
 
-
-	if (bottosErr.ErrNoError == handlerErr) {
+	if bottosErr.ErrNoError == handlerErr {
 		resp.Result = &api.PushTrxResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
@@ -151,7 +150,6 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 
 	return nil
 }
-
 
 func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
 	msgReq := &message.QueryTrxReq{
@@ -177,7 +175,7 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 
 func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
 	msgReq := &message.QueryBlockReq{
-		BlockHash: common.HexToHash(req.BlockHash),
+		BlockHash:   common.HexToHash(req.BlockHash),
 		BlockNumber: req.BlockNum,
 	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
@@ -261,14 +259,13 @@ func (h *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 
 	resp.Result = &api.QueryAccountResponse_Result{}
 	resp.Result.AccountName = name
-	resp.Result.Pubkey = string(account.PublicKey);
+	resp.Result.Pubkey = string(account.PublicKey)
 	resp.Result.Balance = balance.Balance
 	resp.Result.StakedBalance = stakedBalance.StakedBalance
 	resp.Errcode = 0
 
 	return nil
 }
-
 
 func (h *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, resp *api.QueryObjectResponse) error {
 	contract := req.Contract
@@ -306,7 +303,7 @@ func (h *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *a
 		// TODO
 		return nil
 	}
-	
+
 	return nil
 }
 
@@ -324,6 +321,6 @@ func (h *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTran
 	resp.Result.Name = credit.Name
 	resp.Result.Spender = credit.Spender
 	resp.Result.Limit = credit.Limit
-	
+
 	return nil
 }

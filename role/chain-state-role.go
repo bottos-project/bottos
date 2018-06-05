@@ -14,7 +14,7 @@ type ChainState struct {
 	LastBlockNum          uint32      `json:"last_block_num"`
 	LastBlockHash         common.Hash `json:"last_block_hash"`
 	LastBlockTime         uint64      `json:"last_block_time"`
-	LastConsensusBlockNum uint32	  `json:"last_consensus_block_num"`
+	LastConsensusBlockNum uint32      `json:"last_consensus_block_num"`
 	CurrentDelegate       string      `json:"current_delegate"`
 	CurrentAbsoluteSlot   uint64      `json:"current_absolute_slot"`
 	RecentSlotFilled      uint64      `json:"recent_slot_filled"`

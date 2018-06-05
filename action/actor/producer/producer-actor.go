@@ -28,11 +28,10 @@ package produceractor
 import (
 	"fmt"
 	"time"
-	//	"unsafe"
+	"unsafe"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
-	//	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
@@ -40,11 +39,13 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+// ProducerActor is to define actor for producer
 type ProducerActor struct {
 	roleIntf role.RoleInterface
 	ins      producer.ReporterRepo
 }
 
+// NewProducerActor is to create actor for producer
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
 	ins := producer.New(env.Chain, env.RoleIntf)
@@ -65,7 +66,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		fmt.Printf("ProducerActor received started msg", msg)
+		fmt.Printf("ProducerActor received started msg: %s", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
@@ -84,20 +85,19 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 
 }
 
+// Receive is to receive and handle message
 func (p *ProducerActor) Receive(context actor.Context) {
 
 	p.handleSystemMsg(context)
 }
+
 func (p *ProducerActor) working() {
 
 	if p.ins.IsReady() {
 		start := common.MeasureStart()
 		trxs := GetAllPendingTrx()
-		if len(trxs) == 0 {
-			//fmt.Println("trxs is null,continue produce block")
-		}
 		block := &types.Block{}
-		pendingBlockSize := uint32(10) //unsafe.Sizeof(block)
+		pendingBlockSize := uint32(unsafe.Sizeof(block))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			fmt.Println("GetGlobalPropertyRole failed")
@@ -114,25 +114,20 @@ func (p *ProducerActor) working() {
 				fmt.Println("Warning reach max size")
 				continue
 			}
-
-			//p.myDB.StartUndoSession()
 			pass, _ := VerifyTransactions(trx)
 			if pass == false {
 				fmt.Println("ApplyTransaction failed")
 				continue
 			}
-			pendingBlockSize += uint32(20) //unsafe.Sizeof(trx)
+			pendingBlockSize += uint32(unsafe.Sizeof(trx))
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				fmt.Println("Warning pending block size reach MaxBlockSize")
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
-			//	p.myDB.Commit()
-
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
-		//fmt.Println("start package block")
 		block = p.ins.Woker(trxs)
 		if block != nil {
 			fmt.Printf("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))

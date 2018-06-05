@@ -1,10 +1,10 @@
 package msgpack
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"reflect"
-	"fmt"
-	"bytes"
 )
 
 func Marshal(v interface{}) ([]byte, error) {
@@ -39,21 +39,21 @@ func Encode(w io.Writer, structs interface{}) error {
 	}
 
 	values := make([]interface{}, v.NumField())
-    for i := 0; i < v.NumField(); i++ {
-        values[i] = v.Field(i).Interface()
-    }
+	for i := 0; i < v.NumField(); i++ {
+		values[i] = v.Field(i).Interface()
+	}
 
 	PackArraySize(w, uint16(len(values)))
-    for i := 0; i < len(values); i++ {
+	for i := 0; i < len(values); i++ {
 		t := reflect.TypeOf(values[i])
 		val := reflect.ValueOf(values[i])
 
 		kind := t.Kind()
 		//fmt.Println(t, val, kind)
-        switch kind {
-        case reflect.String:
-            PackStr16(w, val.String())
-        case reflect.Uint8:
+		switch kind {
+		case reflect.String:
+			PackStr16(w, val.String())
+		case reflect.Uint8:
 			PackUint8(w, uint8(val.Uint()))
 		case reflect.Uint16:
 			PackUint16(w, uint16(val.Uint()))
@@ -71,7 +71,7 @@ func Encode(w io.Writer, structs interface{}) error {
 			Encode(w, val.Interface())
 		case reflect.Ptr:
 			vvt := reflect.TypeOf(val.Elem().Interface())
-			if (vvt.Kind() == reflect.Struct) {
+			if vvt.Kind() == reflect.Struct {
 				Encode(w, val.Elem().Interface())
 			} else {
 				return fmt.Errorf("Unsupported Type: %T", val)
@@ -108,42 +108,42 @@ func Decode(r io.Reader, dst interface{}) error {
 	for i := 0; i < v.Elem().NumField(); i++ {
 		feild := v.Elem().Field(i)
 		feildAddr := feild.Addr().Interface()
-        switch feild.Kind() {
-        case reflect.String:
+		switch feild.Kind() {
+		case reflect.String:
 			val, err := UnpackStr16(r)
 			if err != nil {
 				return err
 			}
-			ptr :=feildAddr.(*string)
-  			*ptr = val
-        case reflect.Uint8:
+			ptr := feildAddr.(*string)
+			*ptr = val
+		case reflect.Uint8:
 			val, err := UnpackUint8(r)
 			if err != nil {
 				return err
 			}
 			ptr := feildAddr.(*uint8)
-  			*ptr = val
+			*ptr = val
 		case reflect.Uint16:
 			val, err := UnpackUint16(r)
 			if err != nil {
 				return err
 			}
 			ptr := feildAddr.(*uint16)
-  			*ptr = val
+			*ptr = val
 		case reflect.Uint32:
 			val, err := UnpackUint32(r)
 			if err != nil {
 				return err
 			}
 			ptr := feildAddr.(*uint32)
-  			*ptr = val
+			*ptr = val
 		case reflect.Uint64:
 			val, err := UnpackUint64(r)
 			if err != nil {
 				return err
 			}
 			ptr := feildAddr.(*uint64)
-  			*ptr = val
+			*ptr = val
 		case reflect.Slice:
 			if feild.Type().Elem().Kind() == reflect.Uint8 {
 				val, err := UnpackBin16(r)

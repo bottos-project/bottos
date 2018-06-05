@@ -23,9 +23,9 @@ package wasm
 
 import (
 	"errors"
-	"io"
-	log "github.com/cihub/seelog"
 	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
+	log "github.com/cihub/seelog"
+	"io"
 )
 
 var ErrInvalidMagic = errors.New("wasm: Invalid magic number")
@@ -37,10 +37,10 @@ const (
 
 // Function represents an entry in the function index space of a module.
 type Function struct {
-	Sig  *FunctionSig
-	Body *FunctionBody
-	EnvFunc    bool
-	Method     string
+	Sig     *FunctionSig
+	Body    *FunctionBody
+	EnvFunc bool
+	Method  string
 }
 
 // Module represents a parsed WebAssembly module:
@@ -83,7 +83,7 @@ type EnvGlobal struct {
 	Val uint64
 }
 
-func NewEnvGlobal(env bool , val uint64 ) *EnvGlobal {
+func NewEnvGlobal(env bool, val uint64) *EnvGlobal {
 	e := &EnvGlobal{
 		Env: env,
 		Val: val,

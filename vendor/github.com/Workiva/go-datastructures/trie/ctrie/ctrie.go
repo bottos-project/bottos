@@ -376,7 +376,7 @@ func (c *Ctrie) Size() uint {
 	// computation is amortized across the update operations that occurred
 	// since the last snapshot.
 	size := uint(0)
-	for _ = range c.Iterator(nil) {
+	for range c.Iterator(nil) {
 		size++
 	}
 	return size

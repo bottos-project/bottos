@@ -1,4 +1,4 @@
-package types 
+package types
 
 import (
 	"crypto/sha256"
@@ -13,9 +13,6 @@ func (trx *Transaction) Hash() common.Hash {
 	return hash
 }
 
-
-
 func (trx *Transaction) ValidateSign() bool {
 	return true
 }
-

@@ -23,18 +23,18 @@
 package exec
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
-	"bytes"
-	"sync"
 	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/vm/wasm/disasm"
 	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
-	"github.com/bottos-project/bottos/contract"
+	"math"
+	"sync"
 )
 
 var (
@@ -79,30 +79,30 @@ type VM struct {
 	memory        []byte
 	compiledFuncs []compiledFunction
 
-	funcTable     [256]func()
+	funcTable [256]func()
 
-	memPos        int
+	memPos int
 	//To avoid the too much the number of recursion execution(dep) in contract
-	callDep       int
+	callDep int
 	//To limit the too much the number of new contract execution(wid) in contract
-	callWid       int
+	callWid int
 	// define a map relationship between memory address and data's type
-	memType       map[uint64]*typeInfo
+	memType map[uint64]*typeInfo
 	//define env function
-	envFunc       *EnvFunc
-	funcInfo      FuncInfo
+	envFunc  *EnvFunc
+	funcInfo FuncInfo
 
-	contract      *contract.Context
+	contract *contract.Context
 
-	vm_lock       *sync.Mutex
+	vm_lock *sync.Mutex
 	//the channel be used to communcate with vm_engine
-	vm_channel    chan []byte
+	vm_channel chan []byte
 
 	//record sub-trx for recursive call[wid]
-	sub_trx_lst   []*types.Transaction
-	sub_ctn_lst   []*contract.Context
+	sub_trx_lst []*types.Transaction
+	sub_ctn_lst []*contract.Context
 
-	codeVersion   uint32
+	codeVersion uint32
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -115,17 +115,17 @@ var endianess = binary.LittleEndian
 func NewVM(module *wasm.Module) (*VM, error) {
 
 	var value interface{}
-	var err   error
+	var err error
 
-	var vm = &VM {
-		envFunc        : NewEnvFunc(),
-		memPos         : -1,
-		memType        : make(map[uint64]*typeInfo),
-		memory         : make([]byte, wasmPageSize),
-		contract       : nil,
-		vm_lock        : new(sync.Mutex),
-		callDep        : 0,
-		callWid        : 0,
+	var vm = &VM{
+		envFunc:  NewEnvFunc(),
+		memPos:   -1,
+		memType:  make(map[uint64]*typeInfo),
+		memory:   make([]byte, wasmPageSize),
+		contract: nil,
+		vm_lock:  new(sync.Mutex),
+		callDep:  0,
+		callWid:  0,
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {
@@ -134,21 +134,21 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 	if module.Memory != nil && len(module.Memory.Entries) != 0 {
 		if len(module.Memory.Entries) > 1 {
-			return nil , ErrMultipleLinearMemories
+			return nil, ErrMultipleLinearMemories
 		}
 		vm.memory = make([]byte, uint(module.Memory.Entries[0].Limits.Initial)*wasmPageSize)
 	}
 	copy(vm.memory, module.LinearMemoryIndexSpace[0])
 
 	if module.Data != nil {
-		for _ , funcList := range module.Data.Entries {
+		for _, funcList := range module.Data.Entries {
 			if value, err = module.ExecInitExpr(funcList.Offset); err != nil {
-				return nil,  err
+				return nil, err
 			}
 
 			index, ok := value.(int32)
 			if !ok {
-				return nil , errors.New("*ERROR* Failed to get data index from memory !!!")
+				return nil, errors.New("*ERROR* Failed to get data index from memory !!!")
 			}
 
 			// if it contains multi-function(splited by '0')
@@ -219,7 +219,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		}
 	}
 
-	return vm , nil
+	return vm, nil
 }
 
 // Memory returns the linear memory space for the VM.
@@ -447,7 +447,6 @@ outer:
 		return vm.ctx.stack[len(vm.ctx.stack)-1]
 	}
 
-
 	return 0
 }
 func (vm *VM) GetMemory() []byte {
@@ -490,14 +489,13 @@ func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 	return nil
 }
 
-
 func (vm *VM) GetMsgBytes() ([]byte, error) {
 
 	bytesbuf := bytes.NewBuffer(nil)
 	return bytesbuf.Bytes(), nil
 }
 
-func (vm *VM) SetContract (contract *contract.Context) error {
+func (vm *VM) SetContract(contract *contract.Context) error {
 
 	if contract == nil {
 		return errors.New("*ERROR* Empty parameter !!!")
@@ -507,7 +505,7 @@ func (vm *VM) SetContract (contract *contract.Context) error {
 	return nil
 }
 
-func (vm *VM) GetContract () *contract.Context {
+func (vm *VM) GetContract() *contract.Context {
 	return vm.contract
 }
 
