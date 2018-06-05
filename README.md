@@ -1,36 +1,37 @@
 # Bottos blockchain
 This repository of Bottos is to build an blockchain infrastructure.
-
+
 Bottos blockchain architecture is shown below.
 ![](BottosArchitecture.png)
 
-## Features of Bottos chain
+## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
-```
-    *  Hybrid Consensus
-    *  High-Performance Transactions
-    *  Microservices Chain Core
-    *  Horizontally Scalable Node (Cluster Nodes)
-    *  One-Click Deployment Script
-    *  Dynamic Node Model
-    *  Multi-Value System
-    *  Smart Contracts Domain
-```
 
-And you also have mutlple services below which are dedicated designed for AI ecosystem
-```
-    *  Multi-Data Service
-    *  Adaptive Distributed Storage
-    *  Distributed Digital Identification
-    *  Hierarchical Qos Service
-    *  Agile DApps Deployment
-    *  Contracts Management Service
-```
+-  **Hybrid Consensus**
+-  **High-Performance Transactions**
+-  **Microservices Chain Core**
+-  **Horizontally Scalable Node (Cluster Nodes)**
+-  **One-Click Deployment Script**
+-  **Dynamic Node Model**
+-  **Multi-Value System**
+-  **Smart Contracts Domain**
+
+
+And you also have multiple services below which are dedicated designed for AI ecosystem
+
+-  **Multi-Data Service**
+-  **Adaptive Distributed Storage**
+-  **Distributed Digital Identification**
+-  **Hierarchical Qos Service**
+-  **Agile DApps Deployment**
+-  **Contracts Management Service**
+
 Following the instructions below, you can build and deploy your own test node.
 
 
 ## Bottos Node Environment Deployment
-**One-Click Deployment script is coming in the following day**
+<font color="#dd0000">One-Click Deployment script is coming in the following day</font><br /> 
+
 
    To build a Bottos single node environment originally, following steps need to be done.
 *	Precondition
@@ -154,7 +155,7 @@ For the safety reason, we suggest user to use [ bottos ] account to continue fol
 &nbsp;
 
 ### Bottos Services Configuration
-The Bottos configuration includes node configuration, chain configuration and gensis configuration.
+The Bottos configuration includes node configuration, chain configuration and genesis configuration.
 The node configuration file [config.json] describes all the service names that supported by this node, and service file stored path, service IP address, etc.
 The configuration file [chainconfig.json] and [genesis.json]  describe the essential parameters to initializing the blockchain.
 
@@ -264,14 +265,11 @@ Commands list
     consul agent -dev &
     micro api &
     systemctl start minio
-    minio server -C /etc/minio --address “10.10.10.189:9000” &
+    minio server -C /etc/minio --address "10.10.10.189:9000" &
     ./node &
 
     cp /home/bottos/mnt/bottos/src/github.com/bottos-project/bottos/bcli/bcli /home/bottos/opt/go/bin/core/cmd_dir
 
-    /home/bottos/opt/go/bin/core/cmd_dir/./bcli newaccount -name usermng -pubkey 0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f &
-
-    /home/bottos/opt/go/bin/core/cmd_dir/./bcli deploycode -contract usermng -wasm $CORE_PROC_FILE_DIR/contract/usermng.wasm &
 ```
 
 **NOTE**
