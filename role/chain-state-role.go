@@ -2,8 +2,6 @@ package role
 
 import (
 	"encoding/json"
-	_ "fmt"
-	//"time"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
@@ -27,7 +25,6 @@ const (
 
 func getGenesisTime() uint64 {
 	t := config.Genesis.GenesisTime
-	//genesisTime := (uint32(t) / config.DEFAULT_BLOCK_INTERVAL) * config.DEFAULT_BLOCK_INTERVAL
 	return uint64(t)
 }
 
