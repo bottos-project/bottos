@@ -22,6 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package optiondb
 
 import (
@@ -33,6 +34,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+//OptionDbRepo is the interface for plugin db for user queries
 type OptionDbRepo interface {
 	InsertOptionDb(collection string, value interface{}) error
 	OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
@@ -42,6 +44,7 @@ type OptionDbRepo interface {
 var insertSession *MongoContext
 var getSession *MongoContext
 
+//InsertOptionDb is to insert record in option db
 func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
 	var err error
 	if insertSession == nil || insertSession.mgoSession == nil {
@@ -61,6 +64,7 @@ func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}
 	return nil
 }
 
+//RemoveAllOptionDb is to remove all records in option db
 func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
 	var err error
 	if getSession == nil || getSession.mgoSession == nil {
@@ -79,6 +83,7 @@ func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
 	return nil
 }
 
+//OptionDbFind is to find record in option db
 func (r *OptionDbRepository) OptionDbFind(collection string, key string, value interface{}) (interface{}, error) {
 	var err error
 	if getSession == nil || getSession.mgoSession == nil {
@@ -97,6 +102,7 @@ func (r *OptionDbRepository) OptionDbFind(collection string, key string, value i
 	return mesgs, nil
 }
 
+//OptionDbUpdate is to update record in option db
 func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
 	var err error
 	selector := bson.M{key: value}
