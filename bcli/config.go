@@ -35,20 +35,25 @@ import (
 )
 
 const (
+	//CONFIG_FILE_NAME configure file
 	CONFIG_FILE_NAME = "./cliconfig.json"
 )
 
+//CONFIG configure pointer
 var CONFIG *CLIConfig
 
+//CLIConfig configure key pairs
 type CLIConfig struct {
 	KeyPairs []KeyPair `json:"key_pairs"`
 }
 
+//KeyPair key pair
 type KeyPair struct {
 	PrivateKey string `json:"private_key"`
 	PublicKey  string `json:"public_key"`
 }
 
+//LoadConfig read configure
 func LoadConfig() error {
 	file, e := loadConfigJson(CONFIG_FILE_NAME)
 	if e != nil {
@@ -67,6 +72,7 @@ func LoadConfig() error {
 	return nil
 }
 
+//GetPrivateKey get private key
 func GetPrivateKey(pubkey string) ([]byte, error) {
 	if CONFIG != nil {
 		for _, keypair := range CONFIG.KeyPairs {
@@ -79,6 +85,7 @@ func GetPrivateKey(pubkey string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("Key Not Found")
 }
 
+//GetDefaultKey get default private key
 func GetDefaultKey() ([]byte, error) {
 	if CONFIG != nil {
 		return common.HexStringToBytes(CONFIG.KeyPairs[0].PrivateKey), nil

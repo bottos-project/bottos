@@ -1,3 +1,20 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -11,7 +28,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/micro/go-micro"
 	"golang.org/x/net/context"
 
 	coreapi "github.com/bottos-project/bottos/api"
@@ -27,6 +43,7 @@ type CLI struct {
 	client coreapi.CoreApiClient
 }
 
+//Transaction trx info
 type Transaction struct {
 	Version     uint32      `json:"version"`
 	CursorNum   uint32      `json:"cursor_num"`
@@ -51,6 +68,7 @@ func (cli *CLI) printUsage() {
 	fmt.Println("")
 }
 
+//NewCLI new console client
 func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
@@ -90,7 +108,7 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 		Param:       param,
 		SigAlg:      trx.SigAlg,
 	}
-	pub_key, pri_key := crypto.GenerateKey()
+	pubKey, priKey := crypto.GenerateKey()
 
 	data, err := proto.Marshal(ctrx)
 	if nil != err {
@@ -391,7 +409,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	fmt.Printf("TrxHash: %v\n", deployCodeRsp.Result.TrxHash)
 }
 
-func check_abi(abiRaw []byte) error {
+func checkAbi(abiRaw []byte) error {
 	_, err := contract.ParseAbi(abiRaw)
 	if err != nil {
 		return fmt.Errorf("ABI Parse error: %v", err)
@@ -581,10 +599,12 @@ func (cli *CLI) Run() {
 	}
 }
 
+//BytesToHex hex encode
 func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
 }
 
+//HexToBytes hex decode
 func HexToBytes(str string) ([]byte, error) {
 	h, err := hex.DecodeString(str)
 
