@@ -106,10 +106,10 @@ type Authorization struct {
 type Message struct {
 	WasmName    string //crx name
 	MethodName  string //method name
-	Auth         Authorization
+	Auth        Authorization
 	MethodParam []byte //parameter
 }
-
+//FuncInfo is function information
 type FuncInfo struct {
 	funcIndex int64
 	actIndex  uint64
@@ -120,15 +120,15 @@ type FuncInfo struct {
 }
 
 type subCrxMsg struct {
-	ctx      *contract.Context
-	callDep  int
+	ctx     *contract.Context
+	callDep int
 }
 
 var wasmEng *wasmEngine
 
 // VM_INSTANCE it means a VM instance , include its created time , end time and status
 type vmInstance struct {
-	vm          *VM       //it means a vm , it is a WASM module/file
+	vm         *VM       //it means a vm , it is a WASM module/file
 	createTime time.Time //vm instance's created time
 	endTime    time.Time //vm instance's deadline
 }
@@ -136,8 +136,8 @@ type vmInstance struct {
 // WASM_ENGINE struct wasm is a executable environment for other caller
 type wasmEngine struct {
 	//the string type need be modified
-	vmMap         map[string]*vmInstance
-	vmEngineLock  *sync.Mutex
+	vmMap        map[string]*vmInstance
+	vmEngineLock *sync.Mutex
 
 	//the channel is to communicate with each vm
 	vmChannel chan []byte
@@ -155,25 +155,25 @@ type wasmInterface interface {
 type vmRuntime struct {
 	vmList []vmInstance
 }
-
+//GetInstance is to get instance of wasm engine
 func GetInstance() *wasmEngine {
 
 	if wasmEng == nil {
 		wasmEng = &wasmEngine{
-			vmMap:         make(map[string]*vmInstance),
-			vmEngineLock:  new(sync.Mutex),
-			vmChannel:     make(chan []byte, 10),
+			vmMap:        make(map[string]*vmInstance),
+			vmEngineLock: new(sync.Mutex),
+			vmChannel:    make(chan []byte, 10),
 		}
 		wasmEng.Init()
 	}
 
 	return wasmEng
 }
-
+//GetFuncInfo is to get function information
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
-	index      := vm.funcInfo.funcEntry.Index
-	typeIndex  := vm.module.Function.Types[int(index)]
+	index := vm.funcInfo.funcEntry.Index
+	typeIndex := vm.module.Function.Types[int(index)]
 
 	vm.funcInfo.funcType = vm.module.Types.Entries[int(typeIndex)]
 	vm.funcInfo.funcIndex = int64(index)
@@ -213,7 +213,7 @@ func importer(name string) (*wasm.Module, error) {
 	}
 	return m, nil
 }
-
+//GetWasmVersion is to get wasm version
 func GetWasmVersion(ctx *contract.Context) uint32 {
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
@@ -231,7 +231,8 @@ func NewWASM(ctx *contract.Context) *VM {
 	var wasmCode []byte
 
 	//if non-Test condition , get wasmCode from Accout
-	var codeVersion uint32 = 0
+	var codeVersion uint32 
+	codeVersion = uint32(0)
 	if !TST {
 		//db handler will be invoked from Msg struct
 		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
@@ -290,7 +291,7 @@ func NewWASM(ctx *contract.Context) *VM {
 func (engine *wasmEngine) watchVm() error {
 
 	for {
-		for contractName,  vmInst := range engine.vmMap {
+		for contractName, vmInst := range engine.vmMap {
 
 			if time.Now().After(vmInst.endTime) {
 				delete(engine.vmMap, contractName)
@@ -299,8 +300,7 @@ func (engine *wasmEngine) watchVm() error {
 
 		time.Sleep(time.Second * WAIT_TIME)
 	}
-
-	return nil
+ 
 }
 
 func (engine *wasmEngine) Find(contractName string) (*vmInstance, error) {
@@ -349,7 +349,7 @@ func (engine *wasmEngine) startSubCrx(event []byte) error {
 func (engine *wasmEngine) StartHandler() error {
 
 	var event []byte //it means a MSG struct from ctx execution
-	var ok    bool
+	var ok bool
 
 	for {
 		event, ok = <-engine.vmChannel
@@ -379,22 +379,23 @@ func (engine *wasmEngine) Init() error {
 // Apply the function is to be used for json parameter
 func (engine *wasmEngine) Apply(ctx *contract.Context, executionTime uint32, receivedBlock bool) (interface{}, error) {
 
-	var divisor  time.Duration
+	var divisor time.Duration
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm *VM
+	vm = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline   = time.Now().Add(divisor)
+		deadline = time.Now().Add(divisor)
 
 		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
-			vm:          vm,
-			createTime:  time.Now(),
-			endTime:     deadline,
+			vm:         vm,
+			createTime: time.Now(),
+			endTime:    deadline,
 		}
 
 		vm.SetContract(ctx)
@@ -444,7 +445,7 @@ func (engine *wasmEngine) Apply(ctx *contract.Context, executionTime uint32, rec
 
 func (vm *VM) vmCall() ([]byte, error) {
 
-	funcParams   := make([]uint64, 2)
+	funcParams := make([]uint64, 2)
 	funcParams[0] = vm.funcInfo.actIndex
 	funcParams[1] = vm.funcInfo.argIndex
 
@@ -485,18 +486,19 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm *VM
+	vm = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline   = time.Now().Add(divisor)
+		deadline = time.Now().Add(divisor)
 
 		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
-			vm:          vm,
-			createTime:  time.Now(),
-			endTime:     deadline,
+			vm:         vm,
+			createTime: time.Now(),
+			endTime:    deadline,
 		}
 
 		vm.SetContract(ctx)
@@ -526,7 +528,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	}
 
 	findex := funcEntry.Index
-	ftype  := vm.module.Function.Types[int(findex)]
+	ftype := vm.module.Function.Types[int(findex)]
 
 	funcParams := make([]interface{}, 1)
 	//Get function's string first char
