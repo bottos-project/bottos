@@ -25,11 +25,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+
 	"github.com/bottos-project/bottos/vm/wasm/wasm/internal/readpos"
 	"github.com/bottos-project/bottos/vm/wasm/wasm/leb128"
 	log "github.com/cihub/seelog"
-	"io"
-	"io/ioutil"
 )
 
 // SectionID is a 1-byte code that encodes the section code of both known and custom sections.
@@ -740,7 +741,7 @@ func readLocalEntry(r io.Reader) (LocalEntry, error) {
 	return l, nil
 }
 
-// SectionData describes the intial values of a module's linear memory
+// SectionData describes the initial values of a module's linear memory
 type SectionData struct {
 	Section
 	Entries []DataSegment

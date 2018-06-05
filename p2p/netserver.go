@@ -191,7 +191,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		serv.AppendList(remoteConn, msg)
 
 	case CRX_BROADCAST:
-		//Receive crx_boardcast from other peer , and set it to txpool
+		//Receive crx_broadcast from other peer , and set it to txpool
 
 		var newCrx types.Transaction
 		err = json.Unmarshal(msg.Content, &newCrx)
@@ -213,7 +213,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		}
 
 	case BLK_BROADCAST:
-		//Receive blk_boardcast from other peer
+		//Receive blk_broadcast from other peer
 
 		var newBlk types.Block
 		err = json.Unmarshal(msg.Content, &newBlk)
