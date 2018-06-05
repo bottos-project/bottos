@@ -44,10 +44,10 @@ import (
 )
 
 const (
-	alpha      = 3  
-	bucketSize = 16 
-	hashBits   =  8
-	nBuckets   = hashBits + 1 
+	alpha      = 3
+	bucketSize = 16
+	hashBits   = 8
+	nBuckets   = hashBits + 1
 
 	maxBondingPingPongs = 16
 	maxFindnodeFailures = 5
@@ -55,16 +55,16 @@ const (
 
 // Table is definition of node table
 type Table struct {
-	mutex   sync.Mutex        
-	buckets [nBuckets]*bucket 
-	nursery []*Node          
-	db      *nodeDB          
-	bondmu    sync.Mutex
-	bonding   map[NodeID]*bondproc
-	bondslots chan struct{} 
-	nodeAddedHook func(*Node) 
-	net  transport
-	self *Node
+	mutex         sync.Mutex
+	buckets       [nBuckets]*bucket
+	nursery       []*Node
+	db            *nodeDB
+	bondmu        sync.Mutex
+	bonding       map[NodeID]*bondproc
+	bondslots     chan struct{}
+	nodeAddedHook func(*Node)
+	net           transport
+	self          *Node
 }
 
 type bondproc struct {
@@ -73,7 +73,6 @@ type bondproc struct {
 	done chan struct{}
 }
 
-
 type transport interface {
 	ping(NodeID, *net.UDPAddr) error
 	waitping(NodeID) error
@@ -81,17 +80,16 @@ type transport interface {
 	close()
 }
 
-
 type bucket struct {
 	lastLookup time.Time
 	entries    []*Node
 }
 
 func newTableInfo(t transport, ourID NodeID, ourAddr *net.UDPAddr, nodeDBPath string) *Table {
-	
+
 	db, err := newNodeDBInfo(nodeDBPath, Version, ourID)
 	if err != nil {
-		
+
 		db, _ = newNodeDBInfo("", Version, ourID)
 	}
 	tab := &Table{
@@ -116,7 +114,7 @@ func (tab *Table) Self() *Node {
 }
 
 // ReadRandomNodes is to get random nodes
-func (tab *Table) ReadRandomNodes(buf []*Node,buckets [][]*Node) (n int) {
+func (tab *Table) ReadRandomNodes(buf []*Node, buckets [][]*Node) (n int) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
 	for _, b := range tab.buckets {
@@ -127,7 +125,7 @@ func (tab *Table) ReadRandomNodes(buf []*Node,buckets [][]*Node) (n int) {
 	if len(buckets) == 0 {
 		return 0
 	}
-	
+
 	for i := uint64(len(buckets)) - 1; i > 0; i-- {
 		j := randUint(i)
 		buckets[i], buckets[j] = buckets[j], buckets[i]
@@ -163,11 +161,10 @@ func (tab *Table) Close() {
 	tab.db.close()
 }
 
-
 // Bootstrap is to boost trap
 func (tab *Table) Bootstrap(nodes []*Node) {
 	tab.mutex.Lock()
-	
+
 	tab.nursery = make([]*Node, 0, len(nodes))
 	for _, n := range nodes {
 		cpy := *n
@@ -189,7 +186,7 @@ func (tab *Table) Lookup(targetID NodeID) []*Node {
 	asked[tab.self.ID] = true
 
 	tab.mutex.Lock()
-	
+
 	tab.buckets[logdistance(tab.self.hash, target)].lastLookup = time.Now()
 
 	result := tab.closest(target, bucketSize)
@@ -201,23 +198,22 @@ func (tab *Table) Lookup(targetID NodeID) []*Node {
 	}
 
 	for {
-		
+
 		for i := 0; i < len(result.entries) && pendingQueries < alpha; i++ {
 			n := result.entries[i]
 			if !asked[n.ID] {
 				asked[n.ID] = true
 				pendingQueries++
 				go func() {
-					
+
 					r, err := tab.net.findnode(n.ID, n.addr(), targetID)
 					if err != nil {
-						
+
 						fails := tab.db.failFind(n.ID) + 1
 						tab.db.updateFindFails(n.ID, fails)
-						
 
 						if fails >= maxFindnodeFailures {
-							
+
 							tab.del(n)
 						}
 					}
@@ -226,7 +222,7 @@ func (tab *Table) Lookup(targetID NodeID) []*Node {
 			}
 		}
 		if pendingQueries == 0 {
-			
+
 			break
 		}
 
@@ -241,11 +237,9 @@ func (tab *Table) Lookup(targetID NodeID) []*Node {
 	return result.entries
 }
 
-
 func (tab *Table) refresh() {
 	seed := true
 
-	
 	tab.mutex.Lock()
 	for _, bucket := range tab.buckets {
 		if len(bucket.entries) > 0 {
@@ -255,37 +249,34 @@ func (tab *Table) refresh() {
 	}
 	tab.mutex.Unlock()
 
-	
 	if !seed {
-		
+
 		var target NodeID
 		rand.Read(target[:])
 
 		result := tab.Lookup(target)
 		if len(result) == 0 {
-			
+
 			seed = true
 		}
 	}
 
 	if seed {
-		
+
 		seeds := tab.db.querySeedNodes(10)
-		
+
 		nodes := append(tab.nursery, seeds...)
 
-		
 		bonded := tab.bondall(nodes)
 		if len(bonded) > 0 {
 			tab.Lookup(tab.self.ID)
 		}
-		
+
 	}
 }
 
-
 func (tab *Table) closest(target string, nresults int) *nodesByDistance {
-	
+
 	close := &nodesByDistance{target: target}
 	for _, b := range tab.buckets {
 		for _, n := range b.entries {
@@ -301,4 +292,3 @@ func (tab *Table) len() (n int) {
 	}
 	return n
 }
-

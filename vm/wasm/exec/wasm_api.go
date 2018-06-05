@@ -109,6 +109,7 @@ type Message struct {
 	Auth        Authorization
 	MethodParam []byte //parameter
 }
+
 //FuncInfo is function information
 type FuncInfo struct {
 	funcIndex int64
@@ -155,6 +156,7 @@ type wasmInterface interface {
 type vmRuntime struct {
 	vmList []vmInstance
 }
+
 //GetInstance is to get instance of wasm engine
 func GetInstance() *wasmEngine {
 
@@ -169,6 +171,7 @@ func GetInstance() *wasmEngine {
 
 	return wasmEng
 }
+
 //GetFuncInfo is to get function information
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
@@ -213,6 +216,7 @@ func importer(name string) (*wasm.Module, error) {
 	}
 	return m, nil
 }
+
 //GetWasmVersion is to get wasm version
 func GetWasmVersion(ctx *contract.Context) uint32 {
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
@@ -231,7 +235,7 @@ func NewWASM(ctx *contract.Context) *VM {
 	var wasmCode []byte
 
 	//if non-Test condition , get wasmCode from Accout
-	var codeVersion uint32 
+	var codeVersion uint32
 	codeVersion = uint32(0)
 	if !TST {
 		//db handler will be invoked from Msg struct
@@ -300,7 +304,7 @@ func (engine *wasmEngine) watchVm() error {
 
 		time.Sleep(time.Second * WAIT_TIME)
 	}
- 
+
 }
 
 func (engine *wasmEngine) Find(contractName string) (*vmInstance, error) {

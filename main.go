@@ -83,6 +83,7 @@ func main() {
 
 	WaitSystemDown(chain, multiActors)
 }
+
 //WaitSystemDown is to handle ctrl+C
 func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) {
 	exit := make(chan bool, 0)

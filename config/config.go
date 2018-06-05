@@ -41,6 +41,7 @@ const (
 
 // Param is var of Parameter type
 var Param *Parameter
+
 // Genesis is var of GenesisConfig type
 var Genesis *GenesisConfig
 

@@ -48,7 +48,6 @@ func blockNumberToKey(blockNumber uint32) string {
 	return key
 }
 
-
 // CreateBlockHistoryRole is to init block history
 func CreateBlockHistoryRole(ldb *db.DBService) error {
 	for i := 0; i < 65536; i++ {
