@@ -52,17 +52,19 @@ type TrxPool struct {
 	pending    map[common.Hash]*types.Transaction
 	roleIntf   role.RoleInterface
 	contractDB *contractdb.ContractDB
+	netActorPid     *actor.PID
 
 	mu   sync.RWMutex
 	quit chan struct{}
 }
 
-func InitTrxPool(env *env.ActorEnv) *TrxPool {
+func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst := &TrxPool{
 		pending:    make(map[common.Hash]*types.Transaction),
 		roleIntf:   env.RoleIntf,
 		contractDB: env.ContractDB,
+		netActorPid: netActorPid,
 
 		quit: make(chan struct{}),
 	}
@@ -125,6 +127,11 @@ func (self *TrxPool) CheckTransactionBaseConditionFromFront(trx *types.Transacti
 	if !self.VerifySignature(trx) {
 		return false, bottosErr.ErrTrxSignError
 	}
+
+	notify := &message.NotifyTrx {
+		Trx:  trx,
+	}
+	self.netActorPid.Tell(notify)		
 
 	return true, bottosErr.ErrNoError
 }

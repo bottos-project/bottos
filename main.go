@@ -63,7 +63,7 @@ func main() {
 	}
 	multiActors := cactor.InitActors(actorenv)
 
-	var trxPool = transaction.InitTrxPool(actorenv)
+	var trxPool = transaction.InitTrxPool(actorenv, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
 
 	if config.Param.ApiServiceEnable {

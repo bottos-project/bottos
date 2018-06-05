@@ -46,6 +46,11 @@ type MultiActor struct {
 	producerActorPid *actor.PID
 }
 
+//GetNetActor get net actor PID
+func (m *MultiActor) GetNetActor() *actor.PID {
+	return m.netActorPid
+}
+
 func InitActors(env *env.ActorEnv) *MultiActor {
 
 	mActor := &MultiActor{
