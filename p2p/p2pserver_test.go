@@ -55,8 +55,7 @@ func TestP2PServ(t *testing.T) {
 	p2p := NewServ()
 	p2p.Start()
 
-	for {
-	}
+	for {}
 
 	return
 }
