@@ -34,13 +34,16 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
+//OpenFileLimit is to limiting the size of open leveldb
 var OpenFileLimit = 64
 
+//KVDatabase struct
 type KVDatabase struct {
 	fn string      // filename for reporting
 	db *leveldb.DB // LevelDB instance
 }
 
+//NewKVDatabase is to create a new kv database
 func NewKVDatabase(file string) (*KVDatabase, error) {
 	// open a kvdatabase
 	db, err := leveldb.OpenFile(file, &opt.Options{OpenFilesCacheCapacity: OpenFileLimit})
@@ -54,38 +57,47 @@ func NewKVDatabase(file string) (*KVDatabase, error) {
 	}, nil
 }
 
+//CallPut is to put object by key and value
 func (k *KVDatabase) CallPut(key []byte, value []byte) error {
 
 	return k.db.Put(key, value, nil)
 }
 
+//CallGet is to get object by key and return value
 func (k *KVDatabase) CallGet(key []byte) ([]byte, error) {
 	return k.db.Get(key, nil)
 }
 
+//CallDelete is to delete object by key
 func (k *KVDatabase) CallDelete(key []byte) error {
 
 	return k.db.Delete(key, nil)
 }
 
+//CallNewIterator is to interate object
 func (k *KVDatabase) CallNewIterator() iterator.Iterator {
 	return k.db.NewIterator(nil, nil)
 }
+
+//CallNewIteratorPrefix is to iterate prefix
 func (k *KVDatabase) CallNewIteratorPrefix() iterator.Iterator {
 	return k.db.NewIterator(nil, nil)
 }
 
+//CallFlush is to flush object
 func (k *KVDatabase) CallFlush() error {
 
 	return nil
 }
 
+//CallClose is to close object
 func (k *KVDatabase) CallClose() {
 
 	k.db.Close()
 	fmt.Println("flushed and closed db:", k.fn)
 }
 
+//CallSeek is to seek object
 func (k *KVDatabase) CallSeek(prefixKey []byte) ([]interface{}, error) {
 	var valueList []interface{}
 	iter := k.db.NewIterator(util.BytesPrefix(prefixKey), nil)
