@@ -32,17 +32,21 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+//TransactionHistoryObjectName is transaction_history
 const TransactionHistoryObjectName string = "transaction_history"
 
+//TransactionHistory is to store the history of transaction
 type TransactionHistory struct {
 	TxHash    common.Hash `json:"trx_hash"`
 	BlockHash common.Hash `json:"block_hash"`
 }
 
+//CreateTransactionHistoryObjectRole is creating a transaction history role
 func CreateTransactionHistoryObjectRole(ldb *db.DBService) error {
 	return nil
 }
 
+//AddTransactionHistoryRole is adding transaction history role
 func AddTransactionHistoryRole(ldb *db.DBService, txhash common.Hash, blockhash common.Hash) error {
 	value := &TransactionHistory{
 		TxHash:    txhash,
@@ -57,6 +61,7 @@ func setTransactionHistoryObjectRole(ldb *db.DBService, txhash common.Hash, valu
 	return ldb.SetObject(TransactionHistoryObjectName, key, string(jsonvalue))
 }
 
+//GetTransactionHistoryRole is geting transaction history role
 func GetTransactionHistoryRole(ldb *db.DBService, txhash common.Hash) (common.Hash, error) {
 	history, err := getTransactionHistoryByHash(ldb, txhash)
 	if err != nil {

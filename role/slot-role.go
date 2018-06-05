@@ -22,12 +22,14 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package role
 
 import (
 	"github.com/bottos-project/bottos/config"
 )
 
+//GetSlotAtTime is geting slot at time
 func (r *Role) GetSlotAtTime(current uint64) uint64 {
 	firstSlotTime := r.GetSlotTime(1)
 
@@ -37,6 +39,7 @@ func (r *Role) GetSlotAtTime(current uint64) uint64 {
 	return (current-firstSlotTime)/uint64(config.DEFAULT_BLOCK_INTERVAL) + 1
 }
 
+//GetSlotTime is geting slot time
 func (r *Role) GetSlotTime(slotNum uint64) uint64 {
 
 	if slotNum == 0 {
