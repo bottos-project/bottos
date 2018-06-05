@@ -46,8 +46,10 @@ var (
 	trxExpirationCheckInterval = 2 * time.Second // Time interval for check expiration pending transactions
 )
 
+// TrxPoolInst is local var of TrxPool
 var TrxPoolInst *TrxPool
 
+// TrxPool is definition of trx pool
 type TrxPool struct {
 	pending    map[common.Hash]*types.Transaction
 	roleIntf   role.RoleInterface
@@ -58,6 +60,7 @@ type TrxPool struct {
 	quit chan struct{}
 }
 
+// InitTrxPool is init trx pool process when system start
 func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst := &TrxPool{
@@ -76,7 +79,7 @@ func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
 	return TrxPoolInst
 }
 
-func (self *TrxPool) expirationCheckLoop() {
+func (trxPool *TrxPool) expirationCheckLoop() {
 
 	expire := time.NewTicker(trxExpirationCheckInterval)
 	defer expire.Stop()
@@ -84,65 +87,70 @@ func (self *TrxPool) expirationCheckLoop() {
 	for {
 		select {
 		case <-expire.C:
-			self.mu.Lock()
+			trxPool.mu.Lock()
 
 			var currentTime = common.Now()
-			for trxHash := range self.pending {
-				if currentTime >= (self.pending[trxHash].Lifetime) {
-					fmt.Println("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", self.pending[trxHash].Lifetime)
-					delete(self.pending, trxHash)
+			for trxHash := range trxPool.pending {
+				if currentTime >= (trxPool.pending[trxHash].Lifetime) {
+					fmt.Println("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", trxPool.pending[trxHash].Lifetime)
+					delete(trxPool.pending, trxHash)
 				}
 			}
 
-			self.mu.Unlock()
+			trxPool.mu.Unlock()
 
-		case <-self.quit:
+		case <-trxPool.quit:
 			return
 		}
 	}
 }
 
-func (self *TrxPool) addTransaction(trx *types.Transaction) {
+func (trxPool *TrxPool) addTransaction(trx *types.Transaction) {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
 
 	trxHash := trx.Hash()
-	self.pending[trxHash] = trx
+	trxPool.pending[trxHash] = trx
 }
 
-func (self *TrxPool) Stop() {
+// Stop is processing when system stop
+func (trxPool *TrxPool) Stop() {
 
-	close(self.quit)
+	close(trxPool.quit)
 
 	fmt.Println("Transaction pool stopped")
 }
 
-func (self *TrxPool) CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode) {
+// CheckTransactionBaseConditionFromFront is checking trx from front
+func (trxPool *TrxPool) CheckTransactionBaseConditionFromFront(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 
-	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(self.pending)) {
+	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
 		return false, bottosErr.ErrTrxPendingNumLimit
 	}
 
-	if !self.VerifySignature(trx) {
+	if !trxPool.VerifySignature(trx) {
 		return false, bottosErr.ErrTrxSignError
 	}
 
 	notify := &message.NotifyTrx {
 		Trx:  trx,
 	}
-	self.netActorPid.Tell(notify)		
+	trxPool.netActorPid.Tell(notify)		
 
 	return true, bottosErr.ErrNoError
 }
 
-func (self *TrxPool) CheckTransactionBaseConditionFromP2P() {
+
+// CheckTransactionBaseConditionFromP2P is checking trx from P2P
+func (trxPool *TrxPool) CheckTransactionBaseConditionFromP2P() {
 
 }
 
-func (self *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
+// HandleTransactionFromFront is processing trx from front
+func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
 
-	if checkResult, err := self.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
+	if checkResult, err := trxPool.CheckTransactionBaseConditionFromFront(trx); true != checkResult {
 		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
@@ -155,73 +163,73 @@ func (self *TrxPool) HandleTransactionFromFront(context actor.Context, trx *type
 		return
 	}
 
-	self.addTransaction(trx)
+	trxPool.addTransaction(trx)
 
 	context.Respond(bottosErr.ErrNoError)
 }
 
-func (self *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
+// HandleTransactionFromP2P is processing trx from P2P
+func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
 
-	self.CheckTransactionBaseConditionFromP2P()
+	trxPool.CheckTransactionBaseConditionFromP2P()
 
 	trxApplyServiceInst.ApplyTransaction(trx)
 
-	self.addTransaction(trx)
+	trxPool.addTransaction(trx)
 }
 
-func (self *TrxPool) HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction) {
+// HandlePushTransactionReq is entry of trx req
+func (trxPool *TrxPool) HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction) {
 
 	if message.TrxSenderTypeFront == TrxSender {
-		self.HandleTransactionFromFront(context, trx)
+		trxPool.HandleTransactionFromFront(context, trx)
 	} else if message.TrxSenderTypeP2P == TrxSender {
-		self.HandleTransactionFromP2P(context, trx)
+		trxPool.HandleTransactionFromP2P(context, trx)
 	}
 }
 
-func (self *TrxPool) GetAllPendingTransactions(context actor.Context) {
+// GetAllPendingTransactions is interface to get all pending trxs in trx pool
+func (trxPool *TrxPool) GetAllPendingTransactions(context actor.Context) {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
 
 	rsp := &message.GetAllPendingTrxRsp{}
-	for trxHash := range self.pending {
-		rsp.Trxs = append(rsp.Trxs, self.pending[trxHash])
+	for trxHash := range trxPool.pending {
+		rsp.Trxs = append(rsp.Trxs, trxPool.pending[trxHash])
 	}
 
 	context.Respond(rsp)
 }
 
-func (self *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
+// RemoveTransactions is interface to remove trxs in trx pool
+func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 
 	for _, trx := range trxs {
-		delete(self.pending, trx.Hash())
+		delete(trxPool.pending, trx.Hash())
 	}
 }
 
-func (self *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
+// RemoveSingleTransaction is interface to remove single trx in trx pool
+func (trxPool *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
 
-	delete(self.pending, trx.Hash())
+	delete(trxPool.pending, trx.Hash())
 }
 
-func (self *TrxPool) GetPendingTransaction(trxHash common.Hash) *types.Transaction {
+func (trxPool *TrxPool) getPubKey(accountName string) ([]byte, error) {
 
-	return nil
-}
-
-func (self *TrxPool) getPubKey(accountName string) ([]byte, error) {
-
-	account, err := self.roleIntf.GetAccount(accountName)
-	if nil == err {
-		return account.PublicKey, nil
-	} else {
+	account, err := trxPool.roleIntf.GetAccount(accountName)
+	if nil != err {
 		return nil, fmt.Errorf("get account failed")
 	}
+
+	return account.PublicKey, nil
 }
 
-func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
+// VerifySignature is verify signature from trx whether it is valid
+func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
-	return true
-	trxToVerify := &types.BasicTransaction{
+	trxToVerify := &types.BasicTransaction {
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
@@ -238,7 +246,7 @@ func (self *TrxPool) VerifySignature(trx *types.Transaction) bool {
 		return false
 	}
 
-	senderPubKey, err := self.getPubKey(trx.Sender)
+	senderPubKey, err := trxPool.getPubKey(trx.Sender)
 	if nil != err {
 		return false
 	}
