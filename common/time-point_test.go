@@ -37,6 +37,7 @@ func Test_Now(t *testing.T) {
 	fmt.Println(ab)
 
 }
+
 func Test_MeasureStart(t *testing.T) {
 	now := time.Now().Unix()
 	fmt.Println(now)
@@ -44,11 +45,6 @@ func Test_MeasureStart(t *testing.T) {
 	fmt.Println(m)
 }
 
-// bigpow returns a ** b as a big integer.
-func bigpow(a, b int64) *big.Int {
-	r := big.NewInt(a)
-	return r.Exp(r, big.NewInt(b), nil)
-}
 func Test_NanoSeconds(t *testing.T) {
 	m := MeasureStart()
 	an := big.NewInt(0)
