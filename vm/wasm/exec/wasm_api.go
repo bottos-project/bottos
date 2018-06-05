@@ -220,7 +220,7 @@ func NewWASM(ctx *contract.Context) *VM {
 	var err error
 	var wasmCode []byte
 
-	var codeVersion uint32 = 0
+	var codeVersion uint32
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
 		fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
@@ -325,7 +325,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm *VM
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
