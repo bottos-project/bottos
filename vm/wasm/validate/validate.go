@@ -19,15 +19,24 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// package validate provides functions for validating WebAssembly modules.
+/*
+ * file description: the interface for WASM execution
+ * @Author: Stewart Li
+ * @Date:   2017-12-04
+ * @Last Modified by:   Stewart Li
+ * @Last Modified time: 2017-05-15
+ */
+
+// Package validate provides functions for validating WebAssembly modules
 package validate
 
 import (
 	"bytes"
+	"io"
+
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 	log "github.com/cihub/seelog"
-	"io"
 )
 
 // vibhavp: TODO: We do not verify whether blocks don't access for the parent block, do that.
