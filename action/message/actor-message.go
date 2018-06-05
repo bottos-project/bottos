@@ -15,6 +15,14 @@
 //You should have received a copy of the GNU General Public License
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+ * file description:  actor entry
+ * @Author:
+ * @Date:   2017-12-20
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package message
 
 import (

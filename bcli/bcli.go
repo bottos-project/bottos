@@ -91,19 +91,16 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 		SigAlg:      trx.SigAlg,
 	}
 	pub_key, pri_key := crypto.GenerateKey()
-	fmt.Println("test:pub key is ", pub_key, "\n", pri_key)
 
 	data, err := proto.Marshal(ctrx)
 	if nil != err {
 		return "", err
 	}
-	fmt.Println("marshal result: \n", data)
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(data)))
 	hashData := h.Sum(nil)
 	seckey, err := GetDefaultKey()
-	fmt.Println("seckey is : \n", hex.EncodeToString(seckey))
 	signdata, err := crypto.Sign(hashData, seckey)
 
 	return BytesToHex(signdata), err

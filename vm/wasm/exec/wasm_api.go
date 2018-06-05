@@ -74,29 +74,35 @@ const (
 	CALL_WID_LIMIT = 10
 )
 
+// ParamList define param array
 type ParamList struct {
 	Params []ParamInfo
 }
 
+// ParamInfo define param info
 type ParamInfo struct {
 	Type string
 	Val  string
 }
 
+// Rtn define the return type
 type Rtn struct {
 	Type string
 	Val  string
 }
 
-type Apply_context struct {
+// ApplyContext define the apply context
+type ApplyContext struct {
 	Msg Message
 }
 
+// Authorization define the struct of authorization
 type Authorization struct {
 	Accout      string
 	CodeVersion common.Hash
 }
 
+// Message define the message info
 type Message struct {
 	Wasm_name    string //crx name
 	Method_name  string //method name
@@ -140,7 +146,7 @@ type WASM_ENGINE struct {
 type wasm_interface interface {
 	Init() error
 	//　a wrap for VM_Call
-	Apply(ctx Apply_context, execution_time uint32, received_block bool) interface{}
+	Apply(ctx ApplyContext, execution_time uint32, received_block bool) interface{}
 	Start(ctx *contract.Context, execution_time uint32, received_block bool) (uint32, error)
 	Process(ctx *contract.Context, depth uint8, execution_time uint32, received_block bool) (uint32, error)
 	GetFuncInfo(module wasm.Module, entry wasm.ExportEntry) error
