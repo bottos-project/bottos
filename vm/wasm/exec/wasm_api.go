@@ -109,7 +109,7 @@ type Message struct {
 	Auth        Authorization
 	MethodParam []byte //parameter
 }
-
+//FuncInfo is function information
 type FuncInfo struct {
 	funcIndex int64
 	actIndex  uint64
@@ -155,7 +155,7 @@ type wasmInterface interface {
 type vmRuntime struct {
 	vmList []vmInstance
 }
-
+//GetInstance is to get instance of wasm engine
 func GetInstance() *wasmEngine {
 
 	if wasmEng == nil {
@@ -169,7 +169,7 @@ func GetInstance() *wasmEngine {
 
 	return wasmEng
 }
-
+//GetFuncInfo is to get function information
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
 	index := vm.funcInfo.funcEntry.Index
@@ -213,7 +213,7 @@ func importer(name string) (*wasm.Module, error) {
 	}
 	return m, nil
 }
-
+//GetWasmVersion is to get wasm version
 func GetWasmVersion(ctx *contract.Context) uint32 {
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
@@ -231,7 +231,8 @@ func NewWASM(ctx *contract.Context) *VM {
 	var wasmCode []byte
 
 	//if non-Test condition , get wasmCode from Accout
-	var codeVersion uint32 = 0
+	var codeVersion uint32 
+	codeVersion = uint32(0)
 	if !TST {
 		//db handler will be invoked from Msg struct
 		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
@@ -299,8 +300,7 @@ func (engine *wasmEngine) watchVm() error {
 
 		time.Sleep(time.Second * WAIT_TIME)
 	}
-
-	return nil
+ 
 }
 
 func (engine *wasmEngine) Find(contractName string) (*vmInstance, error) {
@@ -383,7 +383,8 @@ func (engine *wasmEngine) Apply(ctx *contract.Context, executionTime uint32, rec
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm *VM
+	vm = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
@@ -485,7 +486,8 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm *VM
+	vm = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
