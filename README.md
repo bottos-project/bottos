@@ -30,7 +30,7 @@ Following the instructions below, you can build and deploy your own test node.
 
 
 ## Bottos Node Environment Deployment
-<font color="#dd0000">One-Click Deployment script is coming in the following day</font><br /> 
+**One-Click Deployment script is coming in the following day**
 
 
    To build a Bottos single node environment originally, following steps need to be done.
