@@ -13,22 +13,30 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+// DelegateVotesObjectName is definition of delegate vote object name
 const DelegateVotesObjectName string = "delegatevotes"
+// DelegateVotesObjectKeyName is definition of delegate vote object key name
 const DelegateVotesObjectKeyName string = "owner_account"
+// DelegateVotesObjectIndexVote is definition of delegate vote object index name
 const DelegateVotesObjectIndexVote string = "votes"
+// DelegateVotesObjectIndexFinishTime is definition of delegate vote object index finish time
 const DelegateVotesObjectIndexFinishTime string = "term_finish_time"
 
+// Serve is definition of serve
 type Serve struct {
 	Votes          uint64   `json:"votes"`
 	Position       *big.Int `json:"position"`
 	TermUpdateTime *big.Int `json:"term_update_time"`
 	TermFinishTime *big.Int `json:"term_finish_time"`
 }
+
+// DelegateVotes is definition of delegate votes
 type DelegateVotes struct {
 	OwnerAccount string `json:"owner_account"`
 	Serve        `json:"serve"`
 }
 
+// CreateDelegateVotesRole is to save initial delegate votes
 func CreateDelegateVotesRole(ldb *db.DBService) error {
 	err := ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectKeyName, DelegateVotesObjectKeyName)
 	if err != nil {
@@ -45,6 +53,7 @@ func CreateDelegateVotesRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetDelegateVotesRole is to save delegate votes
 func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -54,6 +63,7 @@ func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) e
 	return ldb.SetObject(DelegateVotesObjectName, key, string(jsonvalue))
 }
 
+// GetDelegateVotesRoleByAccountName is to get delegate votes by account name
 func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*DelegateVotes, error) {
 
 	value, err := ldb.GetObject(DelegateVotesObjectName, key)
@@ -70,6 +80,7 @@ func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*Delegate
 
 }
 
+// GetDelegateVotesRoleByVote is to get delegate votes by vote
 func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes, error) {
 	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, strconv.FormatUint(vote, 10))
 	if err != nil {
@@ -85,6 +96,7 @@ func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes,
 
 }
 
+// GetDelegateVotesRoleByFinishTime is to get delegate votes by finish time
 func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*DelegateVotes, error) {
 	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, key.String())
 	if err != nil {
@@ -100,6 +112,7 @@ func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*Delegat
 
 }
 
+// update is to update delegate
 func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, currentTermTime *big.Int) {
 	if currentTermTime.Cmp(big.NewInt(0)) == -1 || currentTermTime.Cmp(big.NewInt(0)) == -1 {
 		return
@@ -122,6 +135,8 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	d.Serve.TermUpdateTime = currentTermTime
 	d.Serve.TermFinishTime = termFinishTime
 }
+
+// GetAllDelegateVotesRole is to get all delegate votes
 func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
@@ -141,7 +156,7 @@ func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 
 }
 
-//TODO
+// ResetAllDelegateNewTerm is to reset all delegate
 func ResetAllDelegateNewTerm(ldb *db.DBService) {
 
 	voteDelegates, err := GetAllDelegateVotesRole(ldb)
@@ -156,6 +171,7 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 	}
 }
 
+// SetDelegateListNewTerm is to set delegate list new term
 func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string) {
 	for _, accountName := range lists {
 		delegate, err := GetDelegateVotesRoleByAccountName(ldb, accountName)
@@ -169,6 +185,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 	}
 }
 
+// StartNewTerm is to start new term
 func (d *DelegateVotes) StartNewTerm(currentTermTime *big.Int) *DelegateVotes {
 	d.update(d.Serve.Votes, big.NewInt(0), currentTermTime)
 	return &DelegateVotes{
@@ -183,6 +200,7 @@ func (d *DelegateVotes) StartNewTerm(currentTermTime *big.Int) *DelegateVotes {
 
 }
 
+// UpdateVotes is to update votes
 func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 	timeSinceLastUpdate := new(big.Int).Sub(currentTermTime, d.Serve.TermUpdateTime)
 	myVotes := new(big.Int).Mul(new(big.Int).SetUint64(d.Serve.Votes), timeSinceLastUpdate)
@@ -192,6 +210,7 @@ func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 	d.update(newSpeed, newPosition, currentTermTime)
 }
 
+// GetAllSortVotesDelegates is to get all sort votes delegates
 func GetAllSortVotesDelegates(ldb *db.DBService) ([]string, error) {
 	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexVote)
 	if err != nil {
@@ -209,6 +228,7 @@ func GetAllSortVotesDelegates(ldb *db.DBService) ([]string, error) {
 	return accounts, nil
 }
 
+// GetAllSortFinishTimeDelegates is to get all sort finish time delegates
 func GetAllSortFinishTimeDelegates(ldb *db.DBService) ([]string, error) {
 	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexFinishTime)
 	if err != nil {
