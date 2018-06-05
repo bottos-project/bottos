@@ -61,31 +61,37 @@ func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
 		syncState: 0,
 	}
 }
+
 //GetPeerAddr is getting peer address
 func (p *Peer) GetPeerAddr() string {
 	return p.peerAddr
 }
+
 //SetPeerAddr is setting peer address
 func (p *Peer) SetPeerAddr(addr string) {
 	p.peerAddr = addr
 }
+
 //SetPeerState is setting peer state
 func (p *Peer) SetPeerState(state uint32) {
 	p.syncState = state
 }
+
 //GetPeerState is getting peer state
 func (p *Peer) GetPeerState() uint32 {
 	return p.syncState
 }
+
 //GetId is to get id
 func (p *Peer) GetId() uint64 {
 	if p.peerId == 0 {
-		addr_port := p.peerAddr + ":" + fmt.Sprint(p.servPort)
-		p.peerId = Hash(addr_port)
+		addrPort := p.peerAddr + ":" + fmt.Sprint(p.servPort)
+		p.peerId = Hash(addrPort)
 	}
 
 	return uint64(p.peerId)
 }
+
 //SendTo is to send to message buffer
 func (p *Peer) SendTo(buf []byte, isSync bool) error {
 	len, err := p.conn.Write(buf)
