@@ -32,23 +32,30 @@ import (
 	"github.com/bottos-project/bottos/db"
 )
 
+// BalanceObjectName is definition of object name of balance
 const BalanceObjectName string = "balance"
+
+// StakedBalanceObjectName is definition of object name of stake balance
 const StakedBalanceObjectName string = "staked_balance"
 
+// Balance is definition of balance
 type Balance struct {
 	AccountName string `json:"account_name"`
 	Balance     uint64 `json:"balance"`
 }
 
+// StakedBalance is definition of stake balance
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
 	StakedBalance uint64 `json:"staked_balance"`
 }
 
+// CreateBalanceRole is to create balance role
 func CreateBalanceRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetBalanceRole is to set balance
 func SetBalanceRole(ldb *db.DBService, accountName string, value *Balance) error {
 	key := accountName
 	jsonvalue, err := json.Marshal(value)
@@ -58,6 +65,7 @@ func SetBalanceRole(ldb *db.DBService, accountName string, value *Balance) error
 	return ldb.SetObject(BalanceObjectName, key, string(jsonvalue))
 }
 
+// GetBalanceRole is to get balance
 func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 	key := accountName
 	value, err := ldb.GetObject(BalanceObjectName, key)
@@ -92,34 +100,39 @@ func safeSub(a uint64, b uint64) (uint64, error) {
 	return c, nil
 }
 
+// SafeAdd is safe function to add balance 
 func (balance *Balance) SafeAdd(amount uint64) error {
 	var a, c uint64
 	a = balance.Balance
 	c, err := safeAdd(a, amount)
 	if err != nil {
 		return err
-	} else {
-		balance.Balance = c
-		return nil
-	}
+	} 
+
+	balance.Balance = c
+	return nil
+	
 }
 
+// SafeSub is safe function to sub balance 
 func (balance *Balance) SafeSub(amount uint64) error {
 	var a, c uint64
 	a = balance.Balance
 	c, err := safeSub(a, amount)
 	if err != nil {
 		return err
-	} else {
-		balance.Balance = c
-		return nil
-	}
+	} 
+	
+	balance.Balance = c
+	return nil
 }
 
+// CreateStakedBalanceRole is to create stake balance role
 func CreateStakedBalanceRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetStakedBalanceRole is to set stake balance role
 func SetStakedBalanceRole(ldb *db.DBService, accountName string, value *StakedBalance) error {
 	key := accountName
 	jsonvalue, err := json.Marshal(value)
@@ -130,6 +143,7 @@ func SetStakedBalanceRole(ldb *db.DBService, accountName string, value *StakedBa
 	return ldb.SetObject(StakedBalanceObjectName, key, string(jsonvalue))
 }
 
+// GetStakedBalanceRoleByName is to get stake balance
 func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance, error) {
 	key := name
 	value, err := ldb.GetObject(StakedBalanceObjectName, key)
@@ -146,26 +160,28 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 	return res, nil
 }
 
+// SafeAdd is safe function to add  stake balance 
 func (balance *StakedBalance) SafeAdd(amount uint64) error {
 	var a, c uint64
 	a = balance.StakedBalance
 	c, err := safeAdd(a, amount)
 	if err != nil {
 		return err
-	} else {
-		balance.StakedBalance = c
-		return nil
-	}
+	} 
+
+	balance.StakedBalance = c
+	return nil	
 }
 
+// SafeSub is safe function to sub stake balance 
 func (balance *StakedBalance) SafeSub(amount uint64) error {
 	var a, c uint64
 	a = balance.StakedBalance
 	c, err := safeSub(a, amount)
 	if err != nil {
 		return err
-	} else {
-		balance.StakedBalance = c
-		return nil
-	}
+	} 
+
+	balance.StakedBalance = c
+	return nil
 }

@@ -33,9 +33,11 @@ import (
 )
 
 const (
+	//AccountObjectName is the table name of user account
 	AccountObjectName string = "account"
 )
 
+// Account is definition of user account
 type Account struct {
 	AccountName  string      `json:"account_name"`
 	PublicKey    []byte      `json:"public_key"`
@@ -47,6 +49,7 @@ type Account struct {
 	ContractAbi  []byte      `json:"abi"`
 }
 
+// CreateAccountRole is create account role
 func CreateAccountRole(ldb *db.DBService) error {
 	return nil
 }
@@ -55,6 +58,7 @@ func accountNameToKey(name string) string {
 	return name
 }
 
+// SetAccountRole is common func to set role for account
 func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error {
 	key := accountNameToKey(accountName)
 	jsonvalue, err := json.Marshal(value)
@@ -64,6 +68,7 @@ func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error
 	return ldb.SetObject(AccountObjectName, key, string(jsonvalue))
 }
 
+// GetAccountRole is common func to get role for account
 func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	key := accountNameToKey(accountName)
 	value, err := ldb.GetObject(AccountObjectName, key)
