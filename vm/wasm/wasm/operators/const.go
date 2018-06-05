@@ -25,6 +25,7 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. This file define op code
 var (
 	I32Const = newOp(0x41, "i32.const", nil, wasm.ValueTypeI32)
 	I64Const = newOp(0x42, "i64.const", nil, wasm.ValueTypeI64)

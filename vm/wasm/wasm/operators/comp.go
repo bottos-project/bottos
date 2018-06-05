@@ -25,36 +25,22 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. This file define op code
 var (
-	//I32Eqz op i32 eqz
 	I32Eqz = newOp(0x45, "i32.eqz", []wasm.ValueType{wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32Eq op i32 eq
-	I32Eq = newOp(0x46, "i32.eq", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32Ne op i32 ne
-	I32Ne = newOp(0x47, "i32.ne", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32LtS op i32 lt_s
+	I32Eq  = newOp(0x46, "i32.eq", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
+	I32Ne  = newOp(0x47, "i32.ne", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
 	I32LtS = newOp(0x48, "i32.lt_s", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32LtU op i32 lt_u
 	I32LtU = newOp(0x49, "i32.lt_u", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32GtS op i32 gt_s
 	I32GtS = newOp(0x4a, "i32.gt_s", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32GtU op i32 gt_u
 	I32GtU = newOp(0x4b, "i32.gt_u", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32LeS op i32 le_s
 	I32LeS = newOp(0x4c, "i32.le_s", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32LeU op i32 le_u
 	I32LeU = newOp(0x4d, "i32.le_u", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32GeS op i32 ge_s
 	I32GeS = newOp(0x4e, "i32.ge_s", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I32GeU op i32 ge_s
 	I32GeU = newOp(0x4f, "i32.ge_u", []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, wasm.ValueTypeI32)
-	//I64Eqz op i64 eqz
 	I64Eqz = newOp(0x50, "i64.eqz", []wasm.ValueType{wasm.ValueTypeI64}, wasm.ValueTypeI32)
-	//I64Eq op i64 eq
-	I64Eq = newOp(0x51, "i64.eq", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
-	//I64Ne op i64 ne
-	I64Ne = newOp(0x52, "i64.ne", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
-	//I64LtS op i64 lt_s
+	I64Eq  = newOp(0x51, "i64.eq", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
+	I64Ne  = newOp(0x52, "i64.ne", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
 	I64LtS = newOp(0x53, "i64.lt_s", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
 	I64LtU = newOp(0x54, "i64.lt_u", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)
 	I64GtS = newOp(0x55, "i64.gt_s", []wasm.ValueType{wasm.ValueTypeI64, wasm.ValueTypeI64}, wasm.ValueTypeI32)

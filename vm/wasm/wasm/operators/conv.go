@@ -56,6 +56,7 @@ func newConversionOp(code byte, name string) byte {
 	return newOp(code, name, []wasm.ValueType{param}, returns)
 }
 
+// DO NOT EDIT. follow define op code
 var (
 	I32WrapI64     = newConversionOp(0xa7, "i32.wrap/i64")
 	I32TruncSF32   = newConversionOp(0xa8, "i32.trunc_s/f32")

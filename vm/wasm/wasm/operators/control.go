@@ -25,6 +25,7 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. This file define op code
 var (
 	Unreachable = newOp(0x00, "unreachable", nil, noReturn)
 	Nop         = newOp(0x01, "nop", nil, noReturn)
