@@ -53,7 +53,7 @@ type NetServer struct {
 	notify   *NotifyManager
 	listener net.Listener
 
-	seed_peer []string
+	seedPeer []string
 
 	neighborList []*net.UDPAddr
 	serverAddr   *net.UDPAddr
@@ -61,7 +61,7 @@ type NetServer struct {
 	//todo
 	publicKey string
 
-	time_interval *time.Timer
+	timeInterval *time.Timer
 	netLock       sync.RWMutex
 }
 
@@ -70,10 +70,10 @@ func NewNetServer() *NetServer {
 
 	return &NetServer{
 		addr:          config.Param.ServAddr,
-		seed_peer:     config.Param.PeerList,
+		seedPeer:     config.Param.PeerList,
 		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
-		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
+		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 
@@ -86,11 +86,11 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 
 	return &NetServer{
 		config:        config,
-		seed_peer:     config.PeerLst,
+		seedPeer:     config.PeerLst,
 		addr:          config.ServAddr,
 		port:          config.ServPort,
 		notify:        NewNotifyManager(),
-		time_interval: time.NewTimer(TIME_INTERVAL * time.Second),
+		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 
@@ -158,13 +158,13 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 		}
 
 		//create a new conn to response the remote peer
-		remote_conn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+		remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 		if err != nil {
 			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 			return
 		}
 
-		len, err := remote_conn.Write(data)
+		len, err := remoteConn.Write(data)
 		if err != nil {
 			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
 			return
@@ -173,7 +173,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 			return
 		}
 
-		serv.AppendList(remote_conn, msg)
+		serv.AppendList(remoteConn, msg)
 
 	case RESPONSE:
 		//a response from my proactive connect
@@ -182,13 +182,13 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 			return
 		}
 
-		remote_conn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+		remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 		if err != nil {
 			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 			return
 		}
 
-		serv.AppendList(remote_conn, msg)
+		serv.AppendList(remoteConn, msg)
 
 	case CRX_BROADCAST:
 		//Receive crx_boardcast from other peer , and set it to txpool
@@ -215,8 +215,8 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 	case BLK_BROADCAST:
 		//Receive blk_boardcast from other peer
 
-		var new_blk types.Block
-		err = json.Unmarshal(msg.Content, &new_blk)
+		var newBlk types.Block
+		err = json.Unmarshal(msg.Content, &newBlk)
 		if err != nil {
 			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
 			return
@@ -224,7 +224,7 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 
 		//build a new message struct (ReceiveBlock) to send to chainactor
 		recvBlk := msgDef.ReceiveBlock{
-			Block: &new_blk,
+			Block: &newBlk,
 		}
 
 		if serv.notify.chainActorPid != nil {
@@ -241,7 +241,7 @@ func (serv *NetServer) ActiveSeeds() error {
 
 	for {
 		select {
-		case <-serv.time_interval.C:
+		case <-serv.timeInterval.C:
 			serv.ConnectSeeds()
 			serv.WatchStatus()
 			serv.ResetTimer()
@@ -261,14 +261,14 @@ func (serv *NetServer) AppendList(conn net.Conn, msg message) error {
 
 //ResetTimer reset time to start timer for a new round
 func (serv *NetServer) ResetTimer() {
-	serv.time_interval.Stop()
-	serv.time_interval.Reset(time.Second * TIME_INTERVAL)
+	serv.timeInterval.Stop()
+	serv.timeInterval.Reset(time.Second * TIME_INTERVAL)
 }
 
 //ConnectSeeds connect seed during start p2p server
 func (serv *NetServer) ConnectSeeds() error {
 
-	for _, peer := range serv.seed_peer {
+	for _, peer := range serv.seedPeer {
 		//check if the new peer is in peer list
 		if serv.notify.IsExist(peer, false) {
 			continue
@@ -314,8 +314,8 @@ func (serv *NetServer) SendTo(conn net.Conn, msg []byte, isExist bool) error {
 
 //Send to connect to certain peer proactively
 func (serv *NetServer) Send(addr string, msg []byte, isExist bool) error {
-	addr_port := addr + ":" + fmt.Sprint(serv.port)
-	conn, err := net.Dial("tcp", addr_port)
+	addPort := addr + ":" + fmt.Sprint(serv.port)
+	conn, err := net.Dial("tcp", addPort)
 
 	if err != nil {
 		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
@@ -337,8 +337,8 @@ func (serv *NetServer) Send(addr string, msg []byte, isExist bool) error {
 //ConnectUDP to connect certain peer with udp
 func (serv *NetServer) ConnectUDP(addr string, msg []byte, isExist bool) error {
 
-	addr_port := addr + ":" + fmt.Sprint(serv.port)
-	remoteAddr, err := net.ResolveUDPAddr("udp4", addr_port)
+	addPort := addr + ":" + fmt.Sprint(serv.port)
+	remoteAddr, err := net.ResolveUDPAddr("udp4", addPort)
 	if err != nil {
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}

@@ -39,7 +39,7 @@ import (
 	"strings"
 )
 
-//its function to sync the trx , blk and peer info with other p2p other
+//NotifyManager is function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
 	p2p      *P2PServer
 	stopSync chan bool
@@ -53,6 +53,7 @@ type NotifyManager struct {
 	sync.RWMutex
 }
 
+// NewNotifyManager is to initial notify manager
 func NewNotifyManager() *NotifyManager {
 	return &NotifyManager{
 		peerMap:          make(map[uint64]*Peer),
@@ -62,10 +63,12 @@ func NewNotifyManager() *NotifyManager {
 	}
 }
 
+// Start is to start notify manager
 func (notify *NotifyManager) Start() {
 	//for{}
 }
 
+// BroadcastByte is to broadcast data
 func (notify *NotifyManager) BroadcastByte(buf []byte, isSync bool) {
 	notify.RLock()
 	defer notify.RUnlock()
@@ -79,6 +82,7 @@ func (notify *NotifyManager) BroadcastByte(buf []byte, isSync bool) {
 	return
 }
 
+// AddPeer is to add an peer to local
 func (notify *NotifyManager) AddPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
@@ -88,6 +92,7 @@ func (notify *NotifyManager) AddPeer(peer *Peer) {
 	}
 }
 
+// DelPeer is to del peer from local
 func (notify *NotifyManager) DelPeer(peer *Peer)  {
 	notify.Lock()
 	defer notify.Unlock()
@@ -97,18 +102,19 @@ func (notify *NotifyManager) DelPeer(peer *Peer)  {
 	}
 }
 
-//sync blk info with other peer
+//BroadcastBlk is to sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
 }
 
-//sync blk's hash info with other peer
+//SyncHash is to sync blk's hash info with other peer
 func (notify *NotifyManager) SyncHash() {
 }
 
-//sync peer info with other peer
+//SyncPeer is to sync peer info with other peer
 func (notify *NotifyManager) SyncPeer() {
 }
 
+// IsExist is to judge whether an addr is exist
 func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
 	for _, peer := range notify.peerMap {
 		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
@@ -119,6 +125,7 @@ func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
 	return false
 }
 
+// GetPeerMap is to get peer map
 func (notify *NotifyManager) GetPeerMap() map[uint64]*Peer {
 	return notify.peerMap
 }
