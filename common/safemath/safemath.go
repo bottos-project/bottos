@@ -29,26 +29,29 @@ import (
 	"errors"
 )
 
+//Uint64Add safe add
 func Uint64Add(a uint64, b uint64) (uint64, error) {
 	var c uint64
 	c = a + b
 	if c >= a {
 		return c, nil
-	} else {
-		return 0, errors.New("uint64 overflow")
 	}
+
+	return 0, errors.New("uint64 overflow")
 }
 
+//Uint64Sub safe sub
 func Uint64Sub(a uint64, b uint64) (uint64, error) {
 	var c uint64
 	if b <= a {
 		c = a - b
 		return c, nil
-	} else {
-		return 0, errors.New("uint64 overflow")
 	}
+
+	return 0, errors.New("uint64 overflow")
 }
 
+//Uint64Mul safe mul
 func Uint64Mul(a uint64, b uint64) (uint64, error) {
 	var c uint64
 	c = a * b

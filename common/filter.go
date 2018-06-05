@@ -25,7 +25,7 @@
 
 package common
 
-// Filter filter string
+//Filter filter out and return the rest
 func Filter(sources []string, filters []string) []string {
 	var tmpList []string
 	var has bool

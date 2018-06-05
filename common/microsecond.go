@@ -22,12 +22,14 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package common
 
 import (
 	"time"
 )
 
+//Microsecond micro second type
 type Microsecond struct {
 	Count uint64
 }
@@ -36,19 +38,28 @@ func maximum() Microsecond {
 	return Microsecond{Count: 0x7fffffffffffffff}
 }
 
+//ToMicroseconds current time to micro second
 func ToMicroseconds(current time.Time) uint64 {
 	cur := current.Unix()
 	return uint64(cur * 1000)
 }
+
+//ToSeconds micro second to second
 func ToSeconds(m Microsecond) uint64 {
 	return m.Count / 1000000
 }
+
+//ToMilliseconds micro second to milli second
 func ToMilliseconds(m Microsecond) uint64 {
 	return m.Count / 1000
 }
+
+//SecondsToMicro second to micro second
 func SecondsToMicro(s uint64) Microsecond {
 	return Microsecond{s * 1000000}
 }
+
+//MilliSecToMicro milli second to micro second
 func MilliSecToMicro(m uint64) Microsecond {
 	return Microsecond{m * 1000}
 }

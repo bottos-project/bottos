@@ -22,18 +22,20 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package common
 
 import (
 	"math/big"
 )
 
+//MaxUint128 return max value of 128 bit
 func MaxUint128() *big.Int {
-	max_value := bigpow(2, 128)
-	return max_value
+	maxValue := bigpow(2, 128)
+	return maxValue
 }
 
-// bigpow returns a ** b as a big integer.
+//bigpow returns a ** b as a big integer.
 func bigpow(a int64, b int64) *big.Int {
 	r := big.NewInt(a)
 	return r.Exp(r, big.NewInt(b), nil)
