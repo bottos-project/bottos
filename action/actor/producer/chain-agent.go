@@ -33,10 +33,12 @@ import (
 
 var chainActorPid *actor.PID
 
+// SetChainActorPid is to set chain actor PID for use
 func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
+// ApplyBlock is to receive and handle blocks
 func ApplyBlock(block *types.Block) {
 
 	applyBlock := &message.InsertBlockReq{block}

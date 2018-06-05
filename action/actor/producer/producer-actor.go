@@ -39,11 +39,13 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+// ProducerActor is to define actor for producer
 type ProducerActor struct {
 	roleIntf role.RoleInterface
 	ins      producer.ReporterRepo
 }
 
+// NewProducerActor is to create actor for producer
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
 	ins := producer.New(env.Chain, env.RoleIntf)
@@ -64,7 +66,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		fmt.Printf("ProducerActor received started msg", msg)
+		fmt.Printf("ProducerActor received started msg: %s", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
@@ -83,10 +85,12 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 
 }
 
+// Receive is to receive and handle message
 func (p *ProducerActor) Receive(context actor.Context) {
 
 	p.handleSystemMsg(context)
 }
+
 func (p *ProducerActor) working() {
 
 	if p.ins.IsReady() {
