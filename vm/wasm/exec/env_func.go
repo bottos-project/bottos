@@ -1,3 +1,32 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+// This program is free software: you can distribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+// Copyright 2017 The go-interpreter Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+/*
+ * file description:  convert variable
+ * @Author: Stewart Li
+ * @Date:   2017-12-07
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package exec
 
 import (
@@ -6,13 +35,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/contract/msgpack"
-	"strconv"
-	"strings"
 )
 
+// EnvFunc defines env for func execution
 type EnvFunc struct {
 	envFuncMap map[string]func(vm *VM) (bool, error)
 
@@ -24,33 +55,35 @@ type EnvFunc struct {
 	envMethod       string
 }
 
+// NewEnvFunc new an EnvFunc
 func NewEnvFunc() *EnvFunc {
-	env_func := EnvFunc{
+	envFunc := EnvFunc{
 		envFuncMap:      make(map[string]func(*VM) (bool, error)),
 		envFuncParamIdx: 0,
 	}
 
-	env_func.Register("strcmp", stringcmp)
-	env_func.Register("malloc", malloc)
-	env_func.Register("arrayLen", arrayLen)
-	env_func.Register("memcpy", memcpy)
-	env_func.Register("JsonUnmashal", jsonUnmashal)
-	env_func.Register("JsonMashal", jsonMashal)
-	env_func.Register("memset", memset)
+	envFunc.Register("strcmp", stringcmp)
+	envFunc.Register("malloc", malloc)
+	envFunc.Register("arrayLen", arrayLen)
+	envFunc.Register("memcpy", memcpy)
+	envFunc.Register("JsonUnmashal", jsonUnmashal)
+	envFunc.Register("JsonMashal", jsonMashal)
+	envFunc.Register("memset", memset)
 
-	env_func.Register("printi", printi)
-	env_func.Register("prints", prints)
-	env_func.Register("get_str_value", get_str_value)
-	env_func.Register("set_str_value", set_str_value)
-	env_func.Register("remove_str_value", remove_str_value)
-	env_func.Register("get_param", get_param)
-	env_func.Register("call_trx", call_trx)
-	env_func.Register("recv_trx", recv_trx)
-	env_func.Register("parse_param", parse_param)
+	envFunc.Register("printi", printi)
+	envFunc.Register("prints", prints)
+	envFunc.Register("getStrValue", getStrValue)
+	envFunc.Register("setStrValue", setStrValue)
+	envFunc.Register("removeStrValue", removeStrValue)
+	envFunc.Register("getParam", getParam)
+	envFunc.Register("callTrx", callTrx)
+	envFunc.Register("recvTrx", recvTrx)
+	envFunc.Register("parseParam", parseParam)
 
-	return &env_func
+	return &envFunc
 }
 
+// Bytes2String convert bytes to string
 func Bytes2String(bytes []byte) string {
 
 	for i, b := range bytes {
@@ -62,12 +95,14 @@ func Bytes2String(bytes []byte) string {
 
 }
 
+// Register register a method in VM
 func (env *EnvFunc) Register(method string, handler func(*VM) (bool, error)) {
 	if _, ok := env.envFuncMap[method]; !ok {
 		env.envFuncMap[method] = handler
 	}
 }
 
+// Invoke invoke a methon in VM
 func (env *EnvFunc) Invoke(method string, vm *VM) (bool, error) {
 
 	fc, ok := env.envFuncMap[method]
@@ -78,6 +113,7 @@ func (env *EnvFunc) Invoke(method string, vm *VM) (bool, error) {
 	return fc(vm)
 }
 
+// GetEnvFuncMap retrieve a method from FuncMap
 func (env *EnvFunc) GetEnvFuncMap() map[string]func(*VM) (bool, error) {
 	return env.envFuncMap
 }
@@ -639,13 +675,13 @@ func stringcmp(vm *VM) (bool, error) {
 	return true, nil
 }
 
-func get_str_value(vm *VM) (bool, error) {
+func getStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 8 {
-		return false, errors.New("parameter count error while call get_str_value")
+		return false, errors.New("parameter count error while call getStrValue")
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
@@ -693,13 +729,13 @@ func get_str_value(vm *VM) (bool, error) {
 	return true, nil
 }
 
-func set_str_value(vm *VM) (bool, error) {
+func setStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 6 {
-		return false, errors.New("parameter count error while call set_str_value")
+		return false, errors.New("parameter count error while call setStrValue")
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -734,18 +770,18 @@ func set_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func set_str_value:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
+	fmt.Printf("VM: from contract:%v, method:%v, func setStrValue:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
 
 	return true, nil
 }
 
-func remove_str_value(vm *VM) (bool, error) {
+func removeStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 4 {
-		return false, errors.New("parameter count error while call remove_str_value")
+		return false, errors.New("parameter count error while call removeStrValue")
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -773,7 +809,7 @@ func remove_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func remove_str_value:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
+	fmt.Printf("VM: from contract:%v, method:%v, func removeStrValue:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
 
 	return true, nil
 }
@@ -799,7 +835,7 @@ func prints(vm *VM) (bool, error) {
 
 }
 
-func get_param(vm *VM) (bool, error) {
+func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
@@ -823,14 +859,14 @@ func get_param(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(paramLen))
 	}
 
-	//fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
+	//fmt.Printf("VM: from contract:%v, method:%v, func getParam:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
 
 	return true, nil
 }
 
-func call_trx(vm *VM) (bool, error) {
+func callTrx(vm *VM) (bool, error) {
 
-	//fmt.Println("VM::call_trx")
+	//fmt.Println("VM::callTrx")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 
@@ -838,15 +874,15 @@ func call_trx(vm *VM) (bool, error) {
 		return false, errors.New("*ERROR* Parameter count error while call memcpy")
 	}
 
-	c_pos := int(params[0])
-	m_pos := int(params[1])
-	p_pos := int(params[2])
-	p_len := int(params[3])
+	cPos := int(params[0])
+	mPos := int(params[1])
+	pPos := int(params[2])
+	pLen := int(params[3])
 
-	contrx := BytesToString(vm.memory[c_pos : c_pos+vm.memType[uint64(c_pos)].Len-1])
-	method := BytesToString(vm.memory[m_pos : m_pos+vm.memType[uint64(m_pos)].Len-1])
+	contrx := BytesToString(vm.memory[cPos : cPos+vm.memType[uint64(cPos)].Len-1])
+	method := BytesToString(vm.memory[mPos : mPos+vm.memType[uint64(mPos)].Len-1])
 	//the bytes after msgpack.Marshal
-	param := vm.memory[p_pos : p_pos+p_len]
+	param := vm.memory[pPos : pPos+pLen]
 	value := make([]byte, len(param))
 	copy(value, param)
 
@@ -873,7 +909,7 @@ func call_trx(vm *VM) (bool, error) {
 
 		var tf transferparam
 		msgpack.Unmarshal(trx.Param , &tf)
-		fmt.Println("VM::call_trx trx.Param = ",trx.Param," , tf = ",tf)
+		fmt.Println("VM::callTrx trx.Param = ",trx.Param," , tf = ",tf)
 	*/
 
 	//Todo thread synchronization
@@ -889,36 +925,36 @@ func call_trx(vm *VM) (bool, error) {
 	return true, nil
 }
 
-func recv_trx(vm *VM) (bool, error) {
+func recvTrx(vm *VM) (bool, error) {
 
-	fmt.Println("VM::recv_trx")
+	fmt.Println("VM::recvTrx")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("*ERROR* parameter count error while call memcpy")
 	}
 
-	crx_pos := int(params[0])
-	crx_len := int(params[1])
+	crxPos := int(params[0])
+	crxLen := int(params[1])
 
-	b_crx := vm.memory[crx_pos : crx_pos+crx_len]
+	bCrx := vm.memory[crxPos : crxPos+crxLen]
 
 	var crx contract.Context
 
-	if err := json.Unmarshal(b_crx, &crx); err != nil {
+	if err := json.Unmarshal(bCrx, &crx); err != nil {
 		fmt.Println("Unmarshal: ", err.Error())
 		return false, nil
 	}
 
-	vm.vm_channel <- b_crx
+	vm.vm_channel <- bCrx
 	fmt.Println("Send Sem !!!")
 
 	return true, nil
 }
 
-func parse_param(vm *VM) (bool, error) {
+func parseParam(vm *VM) (bool, error) {
 
-	//fmt.Println("VM::parse_param")
+	//fmt.Println("VM::parseParam")
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 
@@ -926,9 +962,9 @@ func parse_param(vm *VM) (bool, error) {
 		return false, errors.New("*ERROR* Parameter count error while call memcpy")
 	}
 
-	param_pos := int(params[0])
-	param_len := int(params[1])
-	param := vm.memory[param_pos : param_pos+param_len]
+	paramPos := int(params[0])
+	paramLen := int(params[1])
+	param := vm.memory[paramPos : paramPos+paramLen]
 
 	type transferparam struct {
 		To     string
@@ -938,8 +974,8 @@ func parse_param(vm *VM) (bool, error) {
 	var tf transferparam
 	msgpack.Unmarshal(param, &tf)
 
-	//fmt.Println("VM::parse_param() param from contract param: ", param)
-	//fmt.Println("VM::parse_param() param from contract tf:    ", tf)
+	//fmt.Println("VM::parseParam() param from contract param: ", param)
+	//fmt.Println("VM::parseParam() param from contract tf:    ", tf)
 
 	return true, nil
 }
