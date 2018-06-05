@@ -126,14 +126,14 @@ type subCrxMsg struct {
 
 var wasmEng *wasmEngine
 
-// VM_INSTANCE it means a VM instance , include its created time , end time and status
+// vmInstance it means a VM instance , include its created time , end time and status
 type vmInstance struct {
 	vm          *VM       //it means a vm , it is a WASM module/file
 	createTime time.Time //vm instance's created time
 	endTime    time.Time //vm instance's deadline
 }
 
-// WASM_ENGINE struct wasm is a executable environment for other caller
+// wasmEngine struct wasm is a executable environment for other caller
 type wasmEngine struct {
 	//the string type need be modified
 	vmMap         map[string]*vmInstance
@@ -145,7 +145,7 @@ type wasmEngine struct {
 
 type wasmInterface interface {
 	Init() error
-	//　a wrap for VM_Call
+	//a wrap for vmCall
 	Apply(ctx ApplyContext, executionTime uint32, receivedBlock bool) interface{}
 	Start(ctx *contract.Context, executionTime uint32, receivedBlock bool) (uint32, error)
 	Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) (uint32, error)
