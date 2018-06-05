@@ -36,6 +36,7 @@ import (
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
+	"github.com/micro/go-micro"
 )
 
 // CLI responsible for processing command line arguments
