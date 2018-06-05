@@ -28,6 +28,7 @@ type trxApplyApi interface {
 	ApplyTransaction(trx *types.Transaction)
 }
 
+// NewTrxApplyService is to retrieve the transaction service
 func NewTrxApplyService() *TrxApplyService {
 	return GetTrxApplyService()
 }

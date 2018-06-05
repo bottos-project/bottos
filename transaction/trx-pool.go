@@ -36,6 +36,7 @@ import (
 
 	"crypto/sha256"
 	"encoding/hex"
+
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"

@@ -22,9 +22,10 @@ package transaction
 
 import (
 	"fmt"
-	"github.com/bottos-project/bottos/action/env"
 	"sync"
 	"time"
+
+	"github.com/bottos-project/bottos/action/env"
 
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
@@ -37,6 +38,7 @@ import (
 	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
 )
 
+// TrxApplyService is to define a service for apply a transaction
 type TrxApplyService struct {
 	roleIntf   role.RoleInterface
 	ContractDB *contractdb.ContractDB
@@ -47,6 +49,7 @@ type TrxApplyService struct {
 var trxApplyServiceInst *TrxApplyService
 var once sync.Once
 
+// CreateTrxApplyService is to new a TrxApplyService
 func CreateTrxApplyService(env *env.ActorEnv) *TrxApplyService {
 	once.Do(func() {
 		trxApplyServiceInst = &TrxApplyService{roleIntf: env.RoleIntf, ContractDB: env.ContractDB, core: env.Chain, ncIntf: env.NcIntf}
@@ -55,10 +58,12 @@ func CreateTrxApplyService(env *env.ActorEnv) *TrxApplyService {
 	return trxApplyServiceInst
 }
 
+// GetTrxApplyService is to get trxApplyService
 func GetTrxApplyService() *TrxApplyService {
 	return trxApplyServiceInst
 }
 
+// CheckTransactionLifeTime is to check life time of a transaction
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
 
 	curTime := common.Now()
@@ -76,6 +81,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 	return true
 }
 
+// CheckTransactionUnique is to check whether a transaction is unique
 func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transaction) bool {
 
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
@@ -89,6 +95,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 	return true
 }
 
+// CheckTransactionMatchChain is to check whether it is the right chain
 func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Transaction) bool {
 
 	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
@@ -106,12 +113,14 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 	return true
 }
 
+// SaveTransactionExpiration is to save the expiration of a transaction
 func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Transaction) {
 
 	var transactionExpiration = &role.TransactionExpiration{TrxHash: trx.Hash(), Expiration: trx.Lifetime}
 	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
 
+// ApplyTransaction is to handle a transaction, include parameters checking
 func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, bottosErr.ErrCode, *types.HandledTransaction) {
 
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
@@ -151,6 +160,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	return true, bottosErr.ErrNoError, handleTrx
 }
 
+// ProcessTransaction is to handle a transaction without parameters checking
 func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transaction, deepLimit uint32) (bool, bottosErr.ErrCode, []*types.DerivedTransaction) {
 
 	var derivedTrx []*types.DerivedTransaction
@@ -164,35 +174,36 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 		bottoserr = contract.ConvertErrorCode(contErr)
 		if bottosErr.ErrNoError == bottoserr {
 			return true, bottosErr.ErrNoError, nil
-		} else {
-			fmt.Println("process trx, failed  bottos error: ", bottosErr.ErrNoError)
-			return false, bottoserr, nil
-		}
-	} else {
-		/* call evm... */
-		trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
-		if nil != exeErr {
-			fmt.Println("process trx failed")
-			return false, bottosErr.ErrTrxContractHanldeError, nil
 		}
 
-		fmt.Println("derived trx list len is ", len(trxList))
-		for _, subTrx := range trxList {
-			fmt.Println(subTrx)
-		}
+		fmt.Println("process trx, failed bottos error: ", bottosErr.ErrNoError)
+		return false, bottoserr, nil
 
-		for _, subTrx := range trxList {
-			result, bottosErr, subDerivedTrx := trxApplyService.ProcessTransaction(subTrx, deepLimit+1)
-			if false == result {
-				return false, bottosErr, nil
-			}
-
-			handleTrx := &types.DerivedTransaction{
-				Transaction: subTrx,
-				DerivedTrx:  subDerivedTrx,
-			}
-			derivedTrx = append(derivedTrx, handleTrx)
-		}
-		return true, bottosErr.ErrNoError, derivedTrx
 	}
+	// else branch
+	trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
+	if nil != exeErr {
+		fmt.Println("process trx failed")
+		return false, bottosErr.ErrTrxContractHanldeError, nil
+	}
+
+	fmt.Println("derived trx list len is ", len(trxList))
+	for _, subTrx := range trxList {
+		fmt.Println(subTrx)
+	}
+
+	for _, subTrx := range trxList {
+		result, bottosErr, subDerivedTrx := trxApplyService.ProcessTransaction(subTrx, deepLimit+1)
+		if false == result {
+			return false, bottosErr, nil
+		}
+
+		handleTrx := &types.DerivedTransaction{
+			Transaction: subTrx,
+			DerivedTrx:  subDerivedTrx,
+		}
+		derivedTrx = append(derivedTrx, handleTrx)
+	}
+	return true, bottosErr.ErrNoError, derivedTrx
+
 }
