@@ -86,11 +86,11 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 
 	return &NetServer{
 		config:        config,
-		seedPeer:     config.PeerLst,
+		seedPeer:      config.PeerLst,
 		addr:          config.ServAddr,
 		port:          config.ServPort,
 		notify:        NewNotifyManager(),
-		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
+		timeInterval:  time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 

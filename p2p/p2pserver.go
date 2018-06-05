@@ -92,20 +92,20 @@ func NewServ() *P2PServer{
 		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	var p2pserv *P2PServer = nil
+	var p2pServ *P2PServer = nil
 	if TST == 0 {
-		p2pserv = &P2PServer{
+		p2pServ = &P2PServer{
 			serv:      NewNetServer(),
 			p2pConfig: p2pconfig,
 		}
 	} else {
-		p2pserv = &P2PServer{
+		p2pServ = &P2PServer{
 			serv:      NewNetServerTst(p2pconfig),
 			p2pConfig: p2pconfig,
 		}
 	}
 
-	return p2pserv
+	return p2pServ
 }
 
 func (p2p *P2PServer) Init() error {
