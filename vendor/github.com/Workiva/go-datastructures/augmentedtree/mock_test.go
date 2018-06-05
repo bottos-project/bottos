@@ -51,7 +51,7 @@ func (mi mockInterval) ID() uint64 {
 }
 
 func constructSingleDimensionInterval(low, high int64, id uint64) *mockInterval {
-	return &mockInterval{[]*dimension{&dimension{low: low, high: high}}, id}
+	return &mockInterval{[]*dimension{{low: low, high: high}}, id}
 }
 
 func constructMultiDimensionInterval(id uint64, dimensions ...*dimension) *mockInterval {

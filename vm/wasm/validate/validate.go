@@ -24,10 +24,10 @@ package validate
 
 import (
 	"bytes"
-	"io"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 	log "github.com/cihub/seelog"
+	"io"
 )
 
 // vibhavp: TODO: We do not verify whether blocks don't access for the parent block, do that.

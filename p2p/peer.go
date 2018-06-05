@@ -1,4 +1,3 @@
-
 // Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
@@ -32,32 +31,32 @@
 
 package p2pserver
 
-import  (
-	"net"
-	"fmt"
+import (
 	"errors"
+	"fmt"
+	"net"
 )
 
 type Peer struct {
-	peerAddr     string
-	servPort     int
-	peerId       uint32
-	publicKey    string
+	peerAddr  string
+	servPort  int
+	peerId    uint32
+	publicKey string
 
-	peer_sock    *net.UDPAddr
-	conn         net.Conn
+	peer_sock *net.UDPAddr
+	conn      net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-func NewPeer(addr_name string , serv_port int , conn net.Conn) *Peer {
+func NewPeer(addr_name string, serv_port int, conn net.Conn) *Peer {
 	return &Peer{
-		peerAddr:   addr_name,
-		servPort:   serv_port,
-		peerId:     0,
-		conn:       conn,
-		syncState:  0,
+		peerAddr:  addr_name,
+		servPort:  serv_port,
+		peerId:    0,
+		conn:      conn,
+		syncState: 0,
 	}
 }
 
@@ -80,17 +79,17 @@ func (p *Peer) GetPeerState() uint32 {
 func (p *Peer) GetId() uint64 {
 	if p.peerId == 0 {
 		addr_port := p.peerAddr + ":" + fmt.Sprint(p.servPort)
-		p.peerId   = Hash(addr_port)
+		p.peerId = Hash(addr_port)
 	}
 
 	return uint64(p.peerId)
 }
 
 func (p *Peer) SendTo(buf []byte, isSync bool) error {
-	len , err := p.conn.Write(buf)
+	len, err := p.conn.Write(buf)
 	if err != nil {
 		return errors.New("*ERROR* Failed to send data !!!")
-	}else if len <= 0 {
+	} else if len <= 0 {
 		return errors.New("*ERROR* Failed to send data !!!")
 	}
 

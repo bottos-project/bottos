@@ -5,11 +5,11 @@ import (
 )
 
 const (
-	BIN16 = 0xc5
-	UINT8  = 0xcc
-	UINT16 = 0xcd
-	UINT32 = 0xce
-	UINT64 = 0xcf
+	BIN16   = 0xc5
+	UINT8   = 0xcc
+	UINT16  = 0xcd
+	UINT32  = 0xce
+	UINT64  = 0xcf
 	STR16   = 0xda
 	ARRAY16 = 0xdc
 

@@ -28,8 +28,6 @@ type trxApplyApi interface {
 	ApplyTransaction(trx *types.Transaction)
 }
 
-func NewTrxApplyService() *TrxApplyService {	
+func NewTrxApplyService() *TrxApplyService {
 	return GetTrxApplyService()
 }
-
-

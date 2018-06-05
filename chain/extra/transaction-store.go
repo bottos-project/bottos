@@ -26,25 +26,25 @@
 package txstore
 
 import (
+	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/role"
 )
- 
+
 var (
-	TrxBlockHashPrefix   = []byte("txbh-")
+	TrxBlockHashPrefix = []byte("txbh-")
 )
 
 type TransactionStore struct {
 	roleIntf role.RoleInterface
-	bc chain.BlockChainInterface
+	bc       chain.BlockChainInterface
 }
 
 func NewTransactionStore(bc chain.BlockChainInterface, roleIntf role.RoleInterface) *TransactionStore {
-	ts := &TransactionStore {
+	ts := &TransactionStore{
 		roleIntf: roleIntf,
-		bc: bc,
+		bc:       bc,
 	}
 	bc.RegisterHandledBlockCallback(ts.ReceiveHandledBlock)
 	return ts

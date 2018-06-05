@@ -37,7 +37,7 @@ type ContractDB struct {
 }
 
 func NewContractDB(db *db.DBService) *ContractDB {
-	cdb := &ContractDB{Db:db}
+	cdb := &ContractDB{Db: db}
 
 	return cdb
 }
@@ -79,5 +79,5 @@ func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string
 }
 
 func (cdb *ContractDB) getObjectName(contract string, object string) string {
-	return ContractObjectNamePrefix + contract + object;
+	return ContractObjectNamePrefix + contract + object
 }

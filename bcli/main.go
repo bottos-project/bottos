@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-
 func main() {
 	err := LoadConfig()
 	if err != nil {
@@ -15,4 +14,3 @@ func main() {
 	cli := NewCLI()
 	cli.Run()
 }
-

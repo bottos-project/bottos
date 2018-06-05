@@ -27,18 +27,18 @@ package role
 
 import (
 	"encoding/json"
-	_"fmt"
+	_ "fmt"
 	"strconv"
 
-	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/db"
 )
 
 const BlockHistoryObjectName string = "block_history"
 
 type BlockHistory struct {
-	BlockNumber			uint32			`json:"block_number"`
-	BlockHash			common.Hash		`json:"block_hash"`
+	BlockNumber uint32      `json:"block_number"`
+	BlockHash   common.Hash `json:"block_hash"`
 }
 
 func blockNumberToKey(blockNumber uint32) string {
@@ -66,9 +66,9 @@ func CreateBlockHistoryRole(ldb *db.DBService) error {
 
 func SetBlockHistoryRole(ldb *db.DBService, blockNumber uint32, blockHash common.Hash) error {
 	key := blockNumberToKey(blockNumber)
-	value := &BlockHistory {
+	value := &BlockHistory{
 		BlockNumber: blockNumber,
-		BlockHash: blockHash,
+		BlockHash:   blockHash,
 	}
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
@@ -91,4 +91,3 @@ func GetBlockHistoryRole(ldb *db.DBService, blockNumber uint32) (*BlockHistory, 
 
 	return res, nil
 }
-  

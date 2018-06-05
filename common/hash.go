@@ -26,9 +26,9 @@ package common
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"crypto/sha256"
 	"fmt"
 )
 
@@ -94,8 +94,8 @@ func (h *Hash) SetBytes(b []byte) {
 }
 
 func (h *Hash) Label() uint32 {
-	var  chainCursorLabel uint32
-	chainCursorLabel  = (uint32)(h[HashLength-1]) + (uint32)(h[HashLength-2])<<8 + (uint32)(h[HashLength-3])<<16 + (uint32)(h[HashLength-4])<<24
+	var chainCursorLabel uint32
+	chainCursorLabel = (uint32)(h[HashLength-1]) + (uint32)(h[HashLength-2])<<8 + (uint32)(h[HashLength-3])<<16 + (uint32)(h[HashLength-4])<<24
 
 	return chainCursorLabel
 }

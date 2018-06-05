@@ -48,24 +48,24 @@ func SetChainActorPid(cpid *actor.PID) {
 //func ReceiveNewTrx() []*types.Transaction {
 func GetAllPendingTrx() []*types.Transaction {
 	/*
-	getTrxsReq := &message.GetAllPendingTrxReq{}
-	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
-	if nil == getTrxsErr {
-	} else {
-		fmt.Println("get all trx req exec error") //TODO
-	}
+		getTrxsReq := &message.GetAllPendingTrxReq{}
+		getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
+		if nil == getTrxsErr {
+		} else {
+			fmt.Println("get all trx req exec error") //TODO
+		}
 
-	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-	fmt.Println("pending transaction number ", len(mesg.Trxs))
-	var trxs = []*types.Transaction{}
-	for i := 0; i < len(mesg.Trxs); i++ {
-		dbtag := new(types.Transaction)
-		dbtag = mesg.Trxs[i]
+		mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
+		fmt.Println("pending transaction number ", len(mesg.Trxs))
+		var trxs = []*types.Transaction{}
+		for i := 0; i < len(mesg.Trxs); i++ {
+			dbtag := new(types.Transaction)
+			dbtag = mesg.Trxs[i]
 
-		trxs = append(trxs, dbtag)
-	}
+			trxs = append(trxs, dbtag)
+		}
 
-	return trxs
+		return trxs
 	*/
 	return nil
 }
@@ -73,12 +73,10 @@ func GetAllPendingTrx() []*types.Transaction {
 //Send new Trx from other peers
 func SendNewTrx(trx *types.Transaction) (bool, error) {
 	/*
-	if trx == nil {
-		return false , errors.New("*ERROR* Failed to send the data from netactor !!!")
-	}
-	trxActorPid.Tell(trx)
+		if trx == nil {
+			return false , errors.New("*ERROR* Failed to send the data from netactor !!!")
+		}
+		trxActorPid.Tell(trx)
 	*/
-	return true , nil
+	return true, nil
 }
-
-

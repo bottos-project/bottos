@@ -23,7 +23,6 @@
  * @Last Modified time:
  */
 
-
 package chain
 
 import (
@@ -35,7 +34,7 @@ type HandledBlockCallback func(*types.Block)
 
 type BlockChainInterface interface {
 	Close()
-	
+
 	HasBlock(hash common.Hash) bool
 	GetBlockByHash(hash common.Hash) *types.Block
 	GetBlockByNumber(number uint32) *types.Block
@@ -47,7 +46,7 @@ type BlockChainInterface interface {
 	LastConsensusBlockNum() uint32
 	GenesisTimestamp() uint64
 
-	InsertBlock(block *types.Block) error 
+	InsertBlock(block *types.Block) error
 
 	RegisterHandledBlockCallback(cb HandledBlockCallback)
 }

@@ -1,15 +1,15 @@
 package contract
 
 import (
-	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract/contractdb"
+	"github.com/bottos-project/bottos/role"
 )
 
 type Context struct {
-	RoleIntf role.RoleInterface
+	RoleIntf   role.RoleInterface
 	ContractDB *contractdb.ContractDB
-	Trx *types.Transaction
+	Trx        *types.Transaction
 }
 
 func (ctx *Context) GetTrxParam() []byte {

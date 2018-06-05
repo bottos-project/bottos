@@ -97,7 +97,7 @@ func TestStateStore_EnsureRegistration(t *testing.T) {
 	// Verify that the service got registered.
 	verifyService := func() {
 		svcmap := map[string]*structs.NodeService{
-			"redis1": &structs.NodeService{
+			"redis1": {
 				ID:        "redis1",
 				Service:   "redis",
 				Address:   "1.1.1.1",
@@ -1548,14 +1548,14 @@ func TestStateStore_Service_Snapshot(t *testing.T) {
 	// Register a node with two services.
 	testRegisterNode(t, s, 0, "node1")
 	ns := []*structs.NodeService{
-		&structs.NodeService{
+		{
 			ID:      "service1",
 			Service: "redis",
 			Tags:    []string{"prod"},
 			Address: "1.1.1.1",
 			Port:    1111,
 		},
-		&structs.NodeService{
+		{
 			ID:      "service2",
 			Service: "nomad",
 			Tags:    []string{"dev"},
@@ -2683,7 +2683,7 @@ func TestStateStore_NodeInfo_NodeDump(t *testing.T) {
 				},
 			},
 			Services: []*structs.NodeService{
-				&structs.NodeService{
+				{
 					ID:      "service1",
 					Service: "service1",
 					Address: "1.1.1.1",
@@ -2693,7 +2693,7 @@ func TestStateStore_NodeInfo_NodeDump(t *testing.T) {
 						ModifyIndex: 2,
 					},
 				},
-				&structs.NodeService{
+				{
 					ID:      "service2",
 					Service: "service2",
 					Address: "1.1.1.1",
@@ -2732,7 +2732,7 @@ func TestStateStore_NodeInfo_NodeDump(t *testing.T) {
 				},
 			},
 			Services: []*structs.NodeService{
-				&structs.NodeService{
+				{
 					ID:      "service1",
 					Service: "service1",
 					Address: "1.1.1.1",
@@ -2742,7 +2742,7 @@ func TestStateStore_NodeInfo_NodeDump(t *testing.T) {
 						ModifyIndex: 4,
 					},
 				},
-				&structs.NodeService{
+				{
 					ID:      "service2",
 					Service: "service2",
 					Address: "1.1.1.1",

@@ -5,20 +5,20 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/contract/msgpack"
 	"strconv"
 	"strings"
-	"fmt"
-	"github.com/bottos-project/bottos/contract"
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/contract/msgpack"
 )
 
 type EnvFunc struct {
-	envFuncMap      map[string]func(vm *VM) (bool, error)
+	envFuncMap map[string]func(vm *VM) (bool, error)
 
-	envFuncCtx      context
-	envFuncParam    []uint64
-	envFuncRtn      bool
+	envFuncCtx   context
+	envFuncParam []uint64
+	envFuncRtn   bool
 
 	envFuncParamIdx int
 	envMethod       string
@@ -38,15 +38,15 @@ func NewEnvFunc() *EnvFunc {
 	env_func.Register("JsonMashal", jsonMashal)
 	env_func.Register("memset", memset)
 
-	env_func.Register("printi" , printi)
-	env_func.Register("prints" , prints)
-	env_func.Register("get_str_value" , get_str_value)
-	env_func.Register("set_str_value" , set_str_value)
-	env_func.Register("remove_str_value" , remove_str_value)
-	env_func.Register("get_param" , get_param)
-	env_func.Register("call_trx" , call_trx)
-	env_func.Register("recv_trx" , recv_trx)
-	env_func.Register("parse_param" , parse_param)
+	env_func.Register("printi", printi)
+	env_func.Register("prints", prints)
+	env_func.Register("get_str_value", get_str_value)
+	env_func.Register("set_str_value", set_str_value)
+	env_func.Register("remove_str_value", remove_str_value)
+	env_func.Register("get_param", get_param)
+	env_func.Register("call_trx", call_trx)
+	env_func.Register("recv_trx", recv_trx)
+	env_func.Register("parse_param", parse_param)
 
 	return &env_func
 }
@@ -85,16 +85,16 @@ func (env *EnvFunc) GetEnvFuncMap() map[string]func(*VM) (bool, error) {
 func calloc(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 
 	if len(params) != 2 {
 		return false, errors.New("*ERROR* Invalid parameter count during call calloc !!! ")
 	}
-	count  := int(params[0])
+	count := int(params[0])
 	length := int(params[1])
 	//we don't know whats the alloc type here
-	index, err := vm.getStoragePos((count*length), Unknown)
-		if err != nil {
+	index, err := vm.getStoragePos((count * length), Unknown)
+	if err != nil {
 		return false, err
 	}
 
@@ -247,12 +247,10 @@ func readMessage(vm *VM) (bool, error) {
 	addr := int(params[0])
 	length := int(params[1])
 
-
 	msgBytes, err := vm.GetMsgBytes()
 	if err != nil {
 		return false, err
 	}
-
 
 	if length != len(msgBytes) {
 		return false, errors.New("readMessage length error")
@@ -642,7 +640,7 @@ func stringcmp(vm *VM) (bool, error) {
 }
 
 func get_str_value(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -674,12 +672,12 @@ func get_str_value(vm *VM) (bool, error) {
 
 	valueLen := 0
 	if err == nil {
-		valueLen = len(value);
+		valueLen = len(value)
 		// check buf len
 		if valueLen <= valueBufLen {
 			copy(vm.memory[valueBufPos:valueBufPos+valueLen], []byte(value))
 		} else {
-			valueLen = 0;
+			valueLen = 0
 		}
 	}
 
@@ -690,13 +688,13 @@ func get_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(valueLen))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value);
+	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value)
 
-	return true , nil
+	return true, nil
 }
 
 func set_str_value(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -726,7 +724,7 @@ func set_str_value(vm *VM) (bool, error) {
 
 	result := 1
 	if err != nil {
-		result = 0;
+		result = 0
 	}
 
 	//1. recover the vm context
@@ -736,13 +734,13 @@ func set_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func set_str_value:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value);
+	fmt.Printf("VM: from contract:%v, method:%v, func set_str_value:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
 
-	return true , nil
+	return true, nil
 }
 
 func remove_str_value(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -767,7 +765,7 @@ func remove_str_value(vm *VM) (bool, error) {
 
 	result := 1
 	if err != nil {
-		result = 0;
+		result = 0
 	}
 
 	vm.ctx = envFunc.envFuncCtx
@@ -775,17 +773,17 @@ func remove_str_value(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func remove_str_value:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key);
+	fmt.Printf("VM: from contract:%v, method:%v, func remove_str_value:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
 
-	return true , nil
+	return true, nil
 }
 
 func printi(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	contractCtx := vm.GetContract()
 	value := vm.envFunc.envFuncParam[0]
-	fmt.Printf("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value);
+	fmt.Printf("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
-	return true , nil
+	return true, nil
 }
 
 func prints(vm *VM) (bool, error) {
@@ -794,15 +792,15 @@ func prints(vm *VM) (bool, error) {
 	len := vm.envFunc.envFuncParam[1]
 
 	value := make([]byte, len)
-	copy(value, vm.memory[pos : pos+len])
+	copy(value, vm.memory[pos:pos+len])
 	//param := string(value)
 	//fmt.Printf("VM: prints: %v\n", param);
-	return true , nil
+	return true, nil
 
 }
 
 func get_param(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract();
+	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
@@ -810,8 +808,8 @@ func get_param(vm *VM) (bool, error) {
 		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	bufPos   := int(params[0])
-	bufLen   := int(params[1])
+	bufPos := int(params[0])
+	bufLen := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
@@ -827,56 +825,55 @@ func get_param(vm *VM) (bool, error) {
 
 	//fmt.Printf("VM: from contract:%v, method:%v, func get_param:(param=%x)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contractCtx.Trx.Param)
 
-	return true , nil
+	return true, nil
 }
 
-
-func call_trx (vm *VM) (bool, error) {
+func call_trx(vm *VM) (bool, error) {
 
 	//fmt.Println("VM::call_trx")
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 
 	if len(params) != 4 {
 		return false, errors.New("*ERROR* Parameter count error while call memcpy")
 	}
 
-	c_pos  := int(params[0])
-	m_pos  := int(params[1])
-	p_pos  := int(params[2])
-	p_len  := int(params[3])
+	c_pos := int(params[0])
+	m_pos := int(params[1])
+	p_pos := int(params[2])
+	p_len := int(params[3])
 
-	contrx   := BytesToString(vm.memory[c_pos:c_pos+vm.memType[uint64(c_pos)].Len-1])
-	method   := BytesToString(vm.memory[m_pos:m_pos+vm.memType[uint64(m_pos)].Len-1])
+	contrx := BytesToString(vm.memory[c_pos : c_pos+vm.memType[uint64(c_pos)].Len-1])
+	method := BytesToString(vm.memory[m_pos : m_pos+vm.memType[uint64(m_pos)].Len-1])
 	//the bytes after msgpack.Marshal
-	param    := vm.memory[p_pos:p_pos + p_len]
-	value    := make([]byte , len(param))
-	copy(value , param)
+	param := vm.memory[p_pos : p_pos+p_len]
+	value := make([]byte, len(param))
+	copy(value, param)
 
 	trx := &types.Transaction{
-		Version        : vm.contract.Trx.Version,
-		CursorNum      : vm.contract.Trx.CursorNum,
-		CursorLabel    : vm.contract.Trx.CursorLabel,
-		Lifetime       : vm.contract.Trx.Lifetime,
-		Sender         : vm.contract.Trx.Contract,
-		Contract       : contrx,
-		Method         : method,
-		Param          : value,       //the bytes after msgpack.Marshal
-		SigAlg         : vm.contract.Trx.SigAlg,
-		Signature      : []byte{},
+		Version:     vm.contract.Trx.Version,
+		CursorNum:   vm.contract.Trx.CursorNum,
+		CursorLabel: vm.contract.Trx.CursorLabel,
+		Lifetime:    vm.contract.Trx.Lifetime,
+		Sender:      vm.contract.Trx.Contract,
+		Contract:    contrx,
+		Method:      method,
+		Param:       value, //the bytes after msgpack.Marshal
+		SigAlg:      vm.contract.Trx.SigAlg,
+		Signature:   []byte{},
 	}
 	//ctx := &contract.Context{ Trx:trx}
-	ctx := &contract.Context{RoleIntf:vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx:trx}
+	ctx := &contract.Context{RoleIntf: vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx: trx}
 
 	/*
-	type transferparam struct {
-		To			string
-		Amount		uint32
-	}
+		type transferparam struct {
+			To			string
+			Amount		uint32
+		}
 
-	var tf transferparam
-	msgpack.Unmarshal(trx.Param , &tf)
-	fmt.Println("VM::call_trx trx.Param = ",trx.Param," , tf = ",tf)
+		var tf transferparam
+		msgpack.Unmarshal(trx.Param , &tf)
+		fmt.Println("VM::call_trx trx.Param = ",trx.Param," , tf = ",tf)
 	*/
 
 	//Todo thread synchronization
@@ -889,61 +886,60 @@ func call_trx (vm *VM) (bool, error) {
 		vm.pushUint32(uint32(0))
 	}
 
-	return true , nil
+	return true, nil
 }
 
-func recv_trx (vm *VM) (bool, error) {
+func recv_trx(vm *VM) (bool, error) {
 
 	fmt.Println("VM::recv_trx")
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("*ERROR* parameter count error while call memcpy")
 	}
 
-	crx_pos  := int(params[0])
-	crx_len  := int(params[1])
+	crx_pos := int(params[0])
+	crx_len := int(params[1])
 
-	b_crx := vm.memory[crx_pos:crx_pos+crx_len]
+	b_crx := vm.memory[crx_pos : crx_pos+crx_len]
 
 	var crx contract.Context
 
-	if err := json.Unmarshal(b_crx, &crx) ; err != nil{
+	if err := json.Unmarshal(b_crx, &crx); err != nil {
 		fmt.Println("Unmarshal: ", err.Error())
-		return false , nil
+		return false, nil
 	}
-
 
 	vm.vm_channel <- b_crx
 	fmt.Println("Send Sem !!!")
 
-	return true,nil
+	return true, nil
 }
 
-func parse_param (vm *VM) (bool, error) {
+func parse_param(vm *VM) (bool, error) {
 
 	//fmt.Println("VM::parse_param")
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 
 	if len(params) != 2 {
 		return false, errors.New("*ERROR* Parameter count error while call memcpy")
 	}
 
-	param_pos  := int(params[0])
-	param_len  := int(params[1])
-	param      := vm.memory[param_pos:param_pos + param_len]
+	param_pos := int(params[0])
+	param_len := int(params[1])
+	param := vm.memory[param_pos : param_pos+param_len]
 
 	type transferparam struct {
-		To			string
-		Amount		uint32
+		To     string
+		Amount uint32
 	}
 
 	var tf transferparam
-	msgpack.Unmarshal(param , &tf)
+	msgpack.Unmarshal(param, &tf)
 
 	//fmt.Println("VM::parse_param() param from contract param: ", param)
 	//fmt.Println("VM::parse_param() param from contract tf:    ", tf)
 
-	return true , nil
+	return true, nil
 }

@@ -1,8 +1,8 @@
 package safemath
 
 import (
-	"testing"
 	"math"
+	"testing"
 	//"fmt"
 
 	"github.com/stretchr/testify/assert"
@@ -41,10 +41,10 @@ func TestSafeMath(t *testing.T) {
 	assert.Equal(t, u64max, u64)
 
 	// overflow
-	var a,b,c uint64
+	var a, b, c uint64
 	a = u64max
 	b = uint64(1)
-	c, err := Uint64Add(a,b)
+	c, err := Uint64Add(a, b)
 	assert.NotNil(t, err)
 
 	// overflow
@@ -53,18 +53,18 @@ func TestSafeMath(t *testing.T) {
 	assert.Equal(t, u64max, u64)
 	a = u64zero
 	b = uint64(1)
-	c, err = Uint64Sub(a,b)
+	c, err = Uint64Sub(a, b)
 	assert.NotNil(t, err)
 
 	// normal add
 	a = 9999999
 	b = 88888888
-	c, err = Uint64Add(a,b)
+	c, err = Uint64Add(a, b)
 	assert.Equal(t, a+b, c)
 
 	// normal sub
 	a = 99999999
 	b = 88888888
-	c, err = Uint64Sub(a,b)
+	c, err = Uint64Sub(a, b)
 	assert.Equal(t, a-b, c)
 }

@@ -25,9 +25,6 @@
 
 package contractdb
 
-import (
-)
-
 func (cdb *ContractDB) getStrValue(objectName string, key string) (string, error) {
 	value, err := cdb.Db.GetObject(objectName, key)
 	if err != nil {
@@ -45,4 +42,3 @@ func (cdb *ContractDB) removeStrValue(objectName string, key string) error {
 	_, err := cdb.Db.DeleteObject(objectName, key)
 	return err
 }
-

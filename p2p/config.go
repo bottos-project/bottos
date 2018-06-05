@@ -32,9 +32,8 @@
 package p2pserver
 
 const (
-	CONF_FILE   = "config.json"
+	CONF_FILE     = "config.json"
 	TIME_INTERVAL = 10
 	//*WRAN* set the variable as "true" before starting test
-	TST           = 0
-
+	TST = 0
 )

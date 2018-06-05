@@ -5,49 +5,49 @@ import (
 )
 
 type NewAccountParam struct {
-	Name		string		`json:"name"`
-	Pubkey		string 		`json:"pubkey"`
+	Name   string `json:"name"`
+	Pubkey string `json:"pubkey"`
 }
 
 type TransferParam struct {
-	From		string		`json:"from"`
-	To			string		`json:"to"`
-	Value		uint64		`json:"value"`
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Value uint64 `json:"value"`
 }
 
 type SetDelegateParam struct {
-	Name		string		`json:"name"`
-	Pubkey		string 		`json:"pubkey"`
+	Name   string `json:"name"`
+	Pubkey string `json:"pubkey"`
 	// TODO CONFIG
 }
 
 type GrantCreditParam struct {
-	Name		string		`json:"name"`
-	Spender		string 		`json:"spender"`
-	Limit		uint64		`json:"limit"`
+	Name    string `json:"name"`
+	Spender string `json:"spender"`
+	Limit   uint64 `json:"limit"`
 }
 
 type CancelCreditParam struct {
-	Name		string		`json:"name"`
-	Spender		string 		`json:"spender"`
+	Name    string `json:"name"`
+	Spender string `json:"spender"`
 }
 
 type TransferFromParam struct {
-	From		string		`json:"from"`
-	To			string		`json:"to"`
-	Value		uint64		`json:"value"`
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Value uint64 `json:"value"`
 }
 
 type DeployCodeParam struct {
-	Name		 string		 `json:"name"`
-	VMType       byte        `json:"vm_type"`
-	VMVersion    byte        `json:"vm_version"`
-	ContractCode []byte      `json:"contract_code"`
+	Name         string `json:"name"`
+	VMType       byte   `json:"vm_type"`
+	VMVersion    byte   `json:"vm_version"`
+	ContractCode []byte `json:"contract_code"`
 }
 
 type DeployABIParam struct {
-	Name		 string		 `json:"name"`
-	ContractAbi	 []byte      `json:"contract_abi"`
+	Name        string `json:"name"`
+	ContractAbi []byte `json:"contract_abi"`
 }
 
 type NativeContractInterface interface {

@@ -28,15 +28,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bottos-project/bottos/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-    "github.com/bottos-project/bottos/config"
 )
 
 type OptionDbRepo interface {
-    InsertOptionDb(collection string, value interface{}) error
-    OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
-    OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error
+	InsertOptionDb(collection string, value interface{}) error
+	OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
+	OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error
 }
 
 var insertSession *MongoContext
@@ -89,18 +89,18 @@ func (r *OptionDbRepository) OptionDbFind(collection string, key string, value i
 		}
 	}
 	var mesgs interface{}
-    getSession.GetCollection(config.DEFAULT_OPTIONDB_NAME, collection).Find(bson.M{"$or": []bson.M{bson.M{key: value}}}).One(&mesgs)
-    if mesgs == nil {
-        return nil, errors.New("No record is found.")
-    }
-    
-    return mesgs, nil
+	getSession.GetCollection(config.DEFAULT_OPTIONDB_NAME, collection).Find(bson.M{"$or": []bson.M{{key: value}}}).One(&mesgs)
+	if mesgs == nil {
+		return nil, errors.New("No record is found.")
+	}
+
+	return mesgs, nil
 }
 
 func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
-    var err error
-    selector := bson.M{key: value}
-    data := bson.M{"$set": bson.M{updatekey: updatevalue}}
+	var err error
+	selector := bson.M{key: value}
+	data := bson.M{"$set": bson.M{updatekey: updatevalue}}
 
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
@@ -109,9 +109,8 @@ func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
 	}
-    
-    _, err = getSession.mgoSession.DB(config.DEFAULT_OPTIONDB_NAME).C(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME).UpdateAll(selector, data)
 
-    return err 
+	_, err = getSession.mgoSession.DB(config.DEFAULT_OPTIONDB_NAME).C(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME).UpdateAll(selector, data)
+
+	return err
 }
-

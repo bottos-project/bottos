@@ -138,8 +138,8 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 				//todo to support the memorybase global
 				if importEntry.FieldName == "memoryBase" || importEntry.FieldName == "tableBase" {
 					glb := &GlobalEntry{Type: &GlobalVar{Type: ValueTypeI32, Mutable: false},
-						Init:    []byte{getGlobal, byte(0), end}, //global 0 end
-						envGlobal: NewEnvGlobal(true , 16),
+						Init:      []byte{getGlobal, byte(0), end}, //global 0 end
+						envGlobal: NewEnvGlobal(true, 16),
 					}
 					module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
 					module.imports.Globals++
@@ -161,57 +161,57 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 
 			}
 		} else {
-		importedModule, ok := modules[importEntry.ModuleName]
-		if !ok {
-			var err error
-			importedModule, err = resolve(importEntry.ModuleName)
-			if err != nil {
-				return err
+			importedModule, ok := modules[importEntry.ModuleName]
+			if !ok {
+				var err error
+				importedModule, err = resolve(importEntry.ModuleName)
+				if err != nil {
+					return err
+				}
+
+				modules[importEntry.ModuleName] = importedModule
 			}
 
-			modules[importEntry.ModuleName] = importedModule
-		}
-
-		if importedModule.Export == nil {
-			return ErrNoExportsInImportedModule
-		}
-
-		exportEntry, ok := importedModule.Export.Entries[importEntry.FieldName]
-		if !ok {
-			return ExportNotFoundError{importEntry.ModuleName, importEntry.FieldName}
-		}
-
-		if exportEntry.Kind != importEntry.Kind {
-			return KindMismatchError{
-				FieldName:  importEntry.FieldName,
-				ModuleName: importEntry.ModuleName,
-				Import:     importEntry.Kind,
-				Export:     exportEntry.Kind,
+			if importedModule.Export == nil {
+				return ErrNoExportsInImportedModule
 			}
-		}
 
-		index := exportEntry.Index
+			exportEntry, ok := importedModule.Export.Entries[importEntry.FieldName]
+			if !ok {
+				return ExportNotFoundError{importEntry.ModuleName, importEntry.FieldName}
+			}
 
-		switch exportEntry.Kind {
-		case ExternalFunction:
-			fn := importedModule.GetFunction(int(index))
-			if fn == nil {
-				return InvalidFunctionIndexError(index)
+			if exportEntry.Kind != importEntry.Kind {
+				return KindMismatchError{
+					FieldName:  importEntry.FieldName,
+					ModuleName: importEntry.ModuleName,
+					Import:     importEntry.Kind,
+					Export:     exportEntry.Kind,
+				}
 			}
-			module.FunctionIndexSpace = append(module.FunctionIndexSpace, *fn)
-			module.Code.Bodies = append(module.Code.Bodies, *fn.Body)
-			module.imports.Funcs = append(module.imports.Funcs, funcs)
-			funcs++
-		case ExternalGlobal:
-			glb := importedModule.GetGlobal(int(index))
-			if glb == nil {
-				return InvalidGlobalIndexError(index)
-			}
-			if glb.Type.Mutable {
-				return ErrImportMutGlobal
-			}
-			module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
-			module.imports.Globals++
+
+			index := exportEntry.Index
+
+			switch exportEntry.Kind {
+			case ExternalFunction:
+				fn := importedModule.GetFunction(int(index))
+				if fn == nil {
+					return InvalidFunctionIndexError(index)
+				}
+				module.FunctionIndexSpace = append(module.FunctionIndexSpace, *fn)
+				module.Code.Bodies = append(module.Code.Bodies, *fn.Body)
+				module.imports.Funcs = append(module.imports.Funcs, funcs)
+				funcs++
+			case ExternalGlobal:
+				glb := importedModule.GetGlobal(int(index))
+				if glb == nil {
+					return InvalidGlobalIndexError(index)
+				}
+				if glb.Type.Mutable {
+					return ErrImportMutGlobal
+				}
+				module.GlobalIndexSpace = append(module.GlobalIndexSpace, *glb)
+				module.imports.Globals++
 
 				// In both cases below, index should be always 0 (according to the MVP)
 				// We check it against the length of the index space anyway.

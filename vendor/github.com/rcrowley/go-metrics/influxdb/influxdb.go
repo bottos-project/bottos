@@ -27,7 +27,7 @@ func Influxdb(r metrics.Registry, d time.Duration, config *Config) {
 		return
 	}
 
-	for _ = range time.Tick(d) {
+	for range time.Tick(d) {
 		if err := send(r, client); err != nil {
 			log.Println(err)
 		}

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/role"
 )
-
 
 func newAccount(ctx *Context) ContractError {
 	newaccount := &NewAccountParam{}
@@ -207,9 +206,9 @@ func grantCredit(ctx *Context) ContractError {
 	}
 
 	credit := &role.TransferCredit{
-		Name: param.Name,
+		Name:    param.Name,
 		Spender: param.Spender,
-		Limit: param.Limit,
+		Limit:   param.Limit,
 	}
 	err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
 	if err != nil {
@@ -340,7 +339,7 @@ func transferFrom(ctx *Context) ContractError {
 }
 
 func checkCode(code []byte) error {
-	// TODO 
+	// TODO
 	return nil
 }
 
@@ -384,7 +383,7 @@ func deployCode(ctx *Context) ContractError {
 func checkAbi(abiRaw []byte) error {
 	_, err := ParseAbi(abiRaw)
 	if err != nil {
-		return fmt.Errorf("ABI Parse error: %v", err) 
+		return fmt.Errorf("ABI Parse error: %v", err)
 	}
 	return nil
 }

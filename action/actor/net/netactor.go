@@ -30,13 +30,12 @@ import (
 	//"encoding/json"
 	"github.com/bottos-project/bottos/action/message"
 	//"github.com/bottos-project/bottos/common/types"
-	p2pserv "github.com/bottos-project/bottos/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	p2pserv "github.com/bottos-project/bottos/p2p"
 )
 
 var NetActorPid *actor.PID
 var p2p *p2pserv.P2PServer = nil
-
 
 type NetActor struct {
 	props *actor.Props
@@ -47,7 +46,6 @@ func ContructNetActor() *NetActor {
 }
 
 func NewNetActor() *actor.PID {
-
 
 	p2p = p2pserv.NewServ()
 	go p2p.Start()
@@ -86,12 +84,12 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 	//case types.Transaction:
 	case message.NotifyTrx:
 		//fmt.Printf("NetActor received Transaction msg")
-		go p2p.BroadCast(msg.Trx , p2pserv.TRANSACTION)
+		go p2p.BroadCast(msg.Trx, p2pserv.TRANSACTION)
 
 	//case types.Block:
 	case message.NotifyBlock:
 		//fmt.Printf("NetActor received Block msg")
-		go p2p.BroadCast(msg.Block , p2pserv.BLOCK)
+		go p2p.BroadCast(msg.Block, p2pserv.BLOCK)
 	}
 
 }

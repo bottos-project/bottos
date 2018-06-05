@@ -32,13 +32,13 @@
 package p2pserver
 
 import (
-	"unsafe"
 	"hash/fnv"
+	"unsafe"
 )
 
 //message type
 const (
-	REQUEST  = iota   //0
+	REQUEST = iota //0
 	RESPONSE
 	CRX_BROADCAST
 	BLK_BROADCAST
@@ -47,8 +47,8 @@ const (
 
 //connection state
 const (
-	ESTABLISH   = iota //receive peer`s verack
-	INACTIVITY         //link broken
+	ESTABLISH  = iota //receive peer`s verack
+	INACTIVITY        //link broken
 )
 
 //p2p call type
@@ -57,15 +57,12 @@ const (
 	BLOCK
 )
 
-
 type message struct {
-	Src       string
-	Dst       string
-	MsgType   uint8
-	Content   []byte
+	Src     string
+	Dst     string
+	MsgType uint8
+	Content []byte
 }
-
-
 
 func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
@@ -76,6 +73,3 @@ func Hash(str string) uint32 {
 	h.Write([]byte(str))
 	return h.Sum32()
 }
-
-
-

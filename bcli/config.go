@@ -23,51 +23,51 @@
  * @Last Modified time:
  */
 
- package main
+package main
 
- import (
-	 "bytes"
-	 "encoding/json"
-	 "fmt"
-	 "io/ioutil"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 
-	 "github.com/bottos-project/bottos/common"
- )
- 
- const (
-	 CONFIG_FILE_NAME = "./cliconfig.json"
- )
- 
- var CONFIG *CLIConfig
- 
- type CLIConfig struct {
-	KeyPairs          []KeyPair `json:"key_pairs"`
- }
- 
- type KeyPair struct {
-	 PrivateKey string `json:"private_key"`
-	 PublicKey  string `json:"public_key"`
- }
- 
- func LoadConfig() error {
-	 file, e := loadConfigJson(CONFIG_FILE_NAME)
-	 if e != nil {
-		 fmt.Println("Read config file error: ", e)
-		 return e
-	 }
- 
-	 config := CLIConfig{}
-	 e = json.Unmarshal(file, &config)
-	 if e != nil {
-		 fmt.Println("Unmarshal config file error: ", e)
-		 return e
-	 }
-	 CONFIG = &config
- 
-	 return nil
- }
+	"github.com/bottos-project/bottos/common"
+)
 
- func GetPrivateKey(pubkey string) ([]byte, error) {
+const (
+	CONFIG_FILE_NAME = "./cliconfig.json"
+)
+
+var CONFIG *CLIConfig
+
+type CLIConfig struct {
+	KeyPairs []KeyPair `json:"key_pairs"`
+}
+
+type KeyPair struct {
+	PrivateKey string `json:"private_key"`
+	PublicKey  string `json:"public_key"`
+}
+
+func LoadConfig() error {
+	file, e := loadConfigJson(CONFIG_FILE_NAME)
+	if e != nil {
+		fmt.Println("Read config file error: ", e)
+		return e
+	}
+
+	config := CLIConfig{}
+	e = json.Unmarshal(file, &config)
+	if e != nil {
+		fmt.Println("Unmarshal config file error: ", e)
+		return e
+	}
+	CONFIG = &config
+
+	return nil
+}
+
+func GetPrivateKey(pubkey string) ([]byte, error) {
 	if CONFIG != nil {
 		for _, keypair := range CONFIG.KeyPairs {
 			if pubkey == keypair.PublicKey {
@@ -77,23 +77,23 @@
 	}
 
 	return []byte{}, fmt.Errorf("Key Not Found")
- }
+}
 
- func GetDefaultKey() ([]byte, error) {
+func GetDefaultKey() ([]byte, error) {
 	if CONFIG != nil {
 		return common.HexStringToBytes(CONFIG.KeyPairs[0].PrivateKey), nil
 	}
 
 	return []byte{}, fmt.Errorf("Key Not Found")
- }
- 
- func loadConfigJson(fn string) ([]byte, error) {
-	 file, e := ioutil.ReadFile(fn)
-	 if e != nil {
-		 return nil, e
-	 }
- 
-	 // Remove the UTF-8 Byte Order Mark
-	 file = bytes.TrimPrefix(file, []byte("\xef\xbb\xbf"))
-	 return file, nil
- }
+}
+
+func loadConfigJson(fn string) ([]byte, error) {
+	file, e := ioutil.ReadFile(fn)
+	if e != nil {
+		return nil, e
+	}
+
+	// Remove the UTF-8 Byte Order Mark
+	file = bytes.TrimPrefix(file, []byte("\xef\xbb\xbf"))
+	return file, nil
+}

@@ -60,6 +60,7 @@ const parserInitialStackSize = 16
 //line lang.y:196
 
 //line yacctab:1
+
 var parserExca = [...]int{
 	-1, 1,
 	1, -1,

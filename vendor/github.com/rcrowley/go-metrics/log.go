@@ -8,7 +8,7 @@ import (
 // Output each metric in the given registry periodically using the given
 // logger.
 func Log(r Registry, d time.Duration, l *log.Logger) {
-	for _ = range time.Tick(d) {
+	for range time.Tick(d) {
 		r.Each(func(name string, i interface{}) {
 			switch metric := i.(type) {
 			case Counter:

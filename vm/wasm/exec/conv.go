@@ -22,10 +22,10 @@
 package exec
 
 import (
-	"math"
-	"unsafe"
 	"bytes"
 	"encoding/binary"
+	"math"
+	"unsafe"
 )
 
 func (vm *VM) i32Wrapi64() {
@@ -129,7 +129,7 @@ func BytesToString(bytes []byte) string {
 
 func F32ToBytes(f32 float32) []byte {
 	bytes := make([]byte, 4)
-	bits  := math.Float32bits(f32)
+	bits := math.Float32bits(f32)
 
 	binary.LittleEndian.PutUint32(bytes, bits)
 
@@ -137,7 +137,7 @@ func F32ToBytes(f32 float32) []byte {
 }
 
 func BytesToF32(b []byte) float32 {
-	f32  := math.Float32frombits(binary.LittleEndian.Uint32(b))
+	f32 := math.Float32frombits(binary.LittleEndian.Uint32(b))
 	return f32
 }
 
@@ -148,7 +148,7 @@ func F64ToBytes(f64 float64) []byte {
 }
 
 func BytesToF64(b []byte) float64 {
-	f64  := math.Float64frombits(binary.LittleEndian.Uint64(b))
+	f64 := math.Float64frombits(binary.LittleEndian.Uint64(b))
 	return f64
 }
 

@@ -23,7 +23,7 @@
  * @Last Modified time:
  */
 
-package types 
+package types
 
 import (
 	//"math/big"
@@ -33,7 +33,6 @@ import (
 	"crypto/sha256"
 	"github.com/bottos-project/bottos/common"
 	"github.com/golang/protobuf/proto"
-
 )
 
 func NewBlock(h *Header, txs []*Transaction) *Block {
@@ -81,11 +80,11 @@ func (b *Block) GetPrevBlockHash() common.Hash {
 	return common.BytesToHash(bh)
 }
 
-func (b *Block) GetNumber() uint32 { 
+func (b *Block) GetNumber() uint32 {
 	return b.GetHeader().GetNumber()
 }
 
-func (b *Block) GetTimestamp() uint64 { 
+func (b *Block) GetTimestamp() uint64 {
 	return b.GetHeader().GetTimestamp()
 }
 
@@ -95,7 +94,7 @@ func (b *Block) GetMerkleRoot() common.Hash {
 }
 
 func (b *Block) ComputeMerkleRoot() common.Hash {
-	if (len(b.Transactions) > 0) {
+	if len(b.Transactions) > 0 {
 		var hs []common.Hash
 		for _, tx := range b.Transactions {
 			hs = append(hs, tx.Hash())
@@ -126,7 +125,7 @@ func (b *Block) GetDelegateSign() common.Hash {
 
 func (b *Block) ValidateSign() bool {
 	return true
-} 
+}
 
 func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 	for _, transaction := range b.Transactions {
@@ -136,5 +135,4 @@ func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 	}
 
 	return nil
-} 
-
+}

@@ -26,18 +26,18 @@ package txstore
 
 import (
 	"fmt"
-	"testing"
-	"os"
 	"io"
+	"os"
+	"testing"
 
+	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/db"
 )
 
 type MockBlockChain struct {
-	cb chain.HandledBlockCallback
+	cb    chain.HandledBlockCallback
 	block *types.Block
 }
 
@@ -66,13 +66,13 @@ func (bc *MockBlockChain) RegisterHandledBlockCallback(cb chain.HandledBlockCall
 	bc.cb = cb
 }
 
-func (bc *MockBlockChain) HasBlock(hash common.Hash) bool {return false}
-func (bc *MockBlockChain) GetBlockByNumber(number uint32) *types.Block  {return nil}
-func (bc *MockBlockChain) HeadBlockTime() uint64  {return 0}
-func (bc *MockBlockChain) HeadBlockNum() uint32  {return 0}
-func (bc *MockBlockChain) HeadBlockHash() common.Hash  {return common.Hash{}}
-func (bc *MockBlockChain) HeadBlockDelegate() string  {return ""}
-func (bc *MockBlockChain) GenesisTimestamp() uint64  {return 0}
+func (bc *MockBlockChain) HasBlock(hash common.Hash) bool              { return false }
+func (bc *MockBlockChain) GetBlockByNumber(number uint32) *types.Block { return nil }
+func (bc *MockBlockChain) HeadBlockTime() uint64                       { return 0 }
+func (bc *MockBlockChain) HeadBlockNum() uint32                        { return 0 }
+func (bc *MockBlockChain) HeadBlockHash() common.Hash                  { return common.Hash{} }
+func (bc *MockBlockChain) HeadBlockDelegate() string                   { return "" }
+func (bc *MockBlockChain) GenesisTimestamp() uint64                    { return 0 }
 
 func TestTxStore(t *testing.T) {
 	bc := NewMockBlockChain()
@@ -84,9 +84,9 @@ func TestTxStore(t *testing.T) {
 	txStore := NewTransactionStore(bc, dbInst)
 
 	var txs []*types.Transaction
-	tx1 := &types.Transaction{RefBlockNum:1}
-	tx2 := &types.Transaction{RefBlockNum:2}
-	tx3 := &types.Transaction{RefBlockNum:3}
+	tx1 := &types.Transaction{RefBlockNum: 1}
+	tx2 := &types.Transaction{RefBlockNum: 2}
+	tx3 := &types.Transaction{RefBlockNum: 3}
 	txs = append(txs, tx1)
 	txs = append(txs, tx2)
 	txs = append(txs, tx3)
@@ -100,17 +100,17 @@ func TestTxStore(t *testing.T) {
 }
 
 func CopyFile(dstName, srcName string) (written int64, err error) {
-    src, err := os.Open(srcName)
-    if err != nil {
-        return
-    }
-    defer src.Close()
+	src, err := os.Open(srcName)
+	if err != nil {
+		return
+	}
+	defer src.Close()
 
-    dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
-    if err != nil {
-        return
-    }
-    defer dst.Close()
+	dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return
+	}
+	defer dst.Close()
 
-    return io.Copy(dst, src)
+	return io.Copy(dst, src)
 }

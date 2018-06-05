@@ -1,10 +1,10 @@
-﻿package msgpack
+package msgpack
 
 import (
 	"fmt"
 	//"bytes"
-	"testing"
 	"encoding/hex"
+	"testing"
 )
 
 func BytesToHex(d []byte) string {
@@ -18,18 +18,18 @@ func HexToBytes(str string) ([]byte, error) {
 }
 
 func TestMarshalStruct(t *testing.T) {
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 uint32
 	}
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "testuser",
 		V2: 99,
 	}
 
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -39,25 +39,25 @@ func TestMarshalStruct(t *testing.T) {
 }
 
 func TestMarshalNestStruct1(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 uint32
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 uint32
 		V3 TestSubStruct
 	}
 	fmt.Println("TestMarshalNestStruct1...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "testuser",
 		V2: 99,
-		V3: TestSubStruct{V1:"123", V2:3},
+		V3: TestSubStruct{V1: "123", V2: 3},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -67,25 +67,25 @@ func TestMarshalNestStruct1(t *testing.T) {
 }
 
 func TestMarshalNestStruct2(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 uint32
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 uint32
 		V3 *TestSubStruct
 	}
 	fmt.Println("TestMarshalNestStruct2...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "testuser",
 		V2: 99,
-		V3: &TestSubStruct{V1:"123", V2:3},
+		V3: &TestSubStruct{V1: "123", V2: 3},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -95,12 +95,12 @@ func TestMarshalNestStruct2(t *testing.T) {
 }
 
 func TestMarshalNestStruct3(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 uint32
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 uint32
 		V3 TestSubStruct
@@ -108,14 +108,14 @@ func TestMarshalNestStruct3(t *testing.T) {
 	}
 	fmt.Println("TestMarshalNestStruct3...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "testuser",
 		V2: 99,
-		V3: TestSubStruct{V1:"123", V2:3},
-		V4: []byte{99,21,22},
+		V3: TestSubStruct{V1: "123", V2: 3},
+		V4: []byte{99, 21, 22},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -126,41 +126,41 @@ func TestMarshalNestStruct3(t *testing.T) {
 
 func TestPackMarshalReguser(t *testing.T) {
 
-	type RegUser struct{
+	type RegUser struct {
 		V1 string
 		V2 string
 	}
 
 	fmt.Println("TestPackMarshalReguser...")
 
-	ts := RegUser {
+	ts := RegUser{
 		V1: "did:bot:21tDAKCERh95uGgKbJNHYp",
 		V2: "this is a test string",
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 }
 
 func TestTransfer(t *testing.T) {
 
-	type Transfer struct{
-		From string
-		To string
+	type Transfer struct {
+		From  string
+		To    string
 		Value uint64
 	}
 
 	fmt.Println("TestTransfer...")
 
 	// marshal
-	ts := Transfer {
+	ts := Transfer{
 		From:  "bottos",
 		To:    "bot",
 		Value: 100000000000,
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -174,27 +174,27 @@ func TestTransfer(t *testing.T) {
 
 func TestNewAccount(t *testing.T) {
 	type newaccountparam struct {
-		Name		string
-		Pubkey		string
+		Name   string
+		Pubkey string
 	}
-	param := newaccountparam {
-		Name: "testuser",
+	param := newaccountparam{
+		Name:   "testuser",
 		Pubkey: "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
 	}
 
 	fmt.Println("TestNewAccount...")
 	b, err := Marshal(param)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
-	
+
 	param1 := &newaccountparam{}
 	err = Unmarshal(b, param1)
 	fmt.Println("param1: ", param1)
 }
 
 func TestDatafileReg(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 string
 		V3 uint64
@@ -205,15 +205,15 @@ func TestDatafileReg(t *testing.T) {
 		V8 string
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 *TestSubStruct
 	}
 	fmt.Println("TestDatafileReg...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "12345678901234567890",
-		V2: &TestSubStruct{V1:"salertest", V2:"sissidTest", V3:111, V4:"filenameTest",V5:"filepolicytest",V6:"authpathtest",V7:222,V8:"sign"},
+		V2: &TestSubStruct{V1: "salertest", V2: "sissidTest", V3: 111, V4: "filenameTest", V5: "filepolicytest", V6: "authpathtest", V7: 222, V8: "sign"},
 	}
 	b, err := Marshal(ts)
 
@@ -274,13 +274,13 @@ func TestAssetfileReg(t *testing.T) {
 }
 
 func TestUserReg(t *testing.T) {
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 string
 	}
 	fmt.Println("TestUserReg...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "didinfotest",
 		V2: "userinfotest",
 	}
@@ -295,34 +295,34 @@ func TestUserReg(t *testing.T) {
 }
 
 func TestAssetReg(t *testing.T) {
-	type TestSubStruct struct{
-		V1 string
-		V2 string
-		V3 string
-		V4 string
-		V5 string
-		V6 string
-		V7 string
-		V8 string
-		V9 uint32
+	type TestSubStruct struct {
+		V1  string
+		V2  string
+		V3  string
+		V4  string
+		V5  string
+		V6  string
+		V7  string
+		V8  string
+		V9  uint32
 		V10 uint64
 		V11 string
 		V12 uint32
 		V13 string
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 *TestSubStruct
 	}
 	fmt.Println("TestAssetReg...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "23456789012345678901",
-		V2: &TestSubStruct{V1:"usernametest", V2:"assetname", V3:"assettypetest", V4:"tagtest",V5:"pathtest",V6:"hasttest",V7:"storepathtest",V8:"12345678901234567890",V9:11,V10:22,V11:"desctriptest",V12:333,V13:"signtest"},
+		V2: &TestSubStruct{V1: "usernametest", V2: "assetname", V3: "assettypetest", V4: "tagtest", V5: "pathtest", V6: "hasttest", V7: "storepathtest", V8: "12345678901234567890", V9: 11, V10: 22, V11: "desctriptest", V12: 333, V13: "signtest"},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -331,35 +331,32 @@ func TestAssetReg(t *testing.T) {
 	fmt.Println("ts1 ", ts1, err)
 }
 
-
-
-
 func TestDataReqReg(t *testing.T) {
-	type TestSubStruct struct{
-		V1 string
-		V2 string
-		V3 uint64
-		V4 uint64
-		V5 string
-		V6 uint64
-		V7 uint32
-		V8 uint64
-		V9 uint32
+	type TestSubStruct struct {
+		V1  string
+		V2  string
+		V3  uint64
+		V4  uint64
+		V5  string
+		V6  uint64
+		V7  uint32
+		V8  uint64
+		V9  uint32
 		V10 string
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 *TestSubStruct
 	}
 	fmt.Println("TestDataReqReg...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "12345678901234567890",
-		V2: &TestSubStruct{V1:"usernametest",  V2:"reqnametest", V3:111,V4:222,V5:"hasttest",V6:222,V7:2,V8:333,V9:444,V10:"desctriptest"},
+		V2: &TestSubStruct{V1: "usernametest", V2: "reqnametest", V3: 111, V4: 222, V5: "hasttest", V6: 222, V7: 2, V8: 333, V9: 444, V10: "desctriptest"},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -369,7 +366,7 @@ func TestDataReqReg(t *testing.T) {
 }
 
 func TestGoodsProReq(t *testing.T) {
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 uint32
 		V3 string
@@ -378,10 +375,10 @@ func TestGoodsProReq(t *testing.T) {
 
 	fmt.Println("TestGoodsProReq...")
 
-	ts := TestStruct {V1:"usernametest",  V2:2, V3:"asset",V4:"goodsIdTest"}
-	
+	ts := TestStruct{V1: "usernametest", V2: 2, V3: "asset", V4: "goodsIdTest"}
+
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -391,7 +388,7 @@ func TestGoodsProReq(t *testing.T) {
 }
 
 func TestDataDeal_PreSaleReq(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 string
 		V3 string
@@ -400,18 +397,18 @@ func TestDataDeal_PreSaleReq(t *testing.T) {
 		V6 uint64
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 *TestSubStruct
 	}
 	fmt.Println("TestDataDeal_PreSaleReq...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "12345678901234567899",
-		V2: &TestSubStruct{V1:"usernametest",  V2:"assetidTest", V3:"requireId",V4:"consumerId",V5:2,V6:222},
+		V2: &TestSubStruct{V1: "usernametest", V2: "assetidTest", V3: "requireId", V4: "consumerId", V5: 2, V6: 222},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 
@@ -421,24 +418,24 @@ func TestDataDeal_PreSaleReq(t *testing.T) {
 }
 
 func TestDataDeal_BuyAssetReq(t *testing.T) {
-	type TestSubStruct struct{
+	type TestSubStruct struct {
 		V1 string
 		V2 string
 		V3 uint64
 	}
 
-	type TestStruct struct{
+	type TestStruct struct {
 		V1 string
 		V2 *TestSubStruct
 	}
 	fmt.Println("TestDataDeal_BuyAssetReq...")
 
-	ts := TestStruct {
+	ts := TestStruct{
 		V1: "12345678901234567899",
-		V2: &TestSubStruct{V1:"buyertest",  V2:"23456789012345678901", V3:1234},
+		V2: &TestSubStruct{V1: "buyertest", V2: "23456789012345678901", V3: 1234},
 	}
 	b, err := Marshal(ts)
-	
+
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
 

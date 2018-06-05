@@ -34,11 +34,11 @@ import (
 const TransferCreditObjectName string = "credit"
 
 type TransferCredit struct {
-	Name			string			`json:"name"`
-	Spender			string			`json:"spender"`
-	Limit			uint64			`json:"limit"`
+	Name    string `json:"name"`
+	Spender string `json:"spender"`
+	Limit   uint64 `json:"limit"`
 }
- 
+
 func CreateTransferCreditRole(ldb *db.DBService) error {
 	return nil
 }
@@ -48,7 +48,7 @@ func generateKey(name string, spender string) string {
 }
 
 func (credit *TransferCredit) SafeSub(amount uint64) error {
-	var a,c uint64
+	var a, c uint64
 	a = credit.Limit
 	c, err := safeSub(a, amount)
 	if err != nil {

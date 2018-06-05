@@ -1,4 +1,3 @@
-
 // Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
@@ -24,26 +23,23 @@
  * @Last Modified time:
  */
 
- package chain
-
- import (
- )
+package chain
 
 type ConfirmedNum []uint32
 
-func (c ConfirmedNum) Len() int { 
-	return len(c) 
+func (c ConfirmedNum) Len() int {
+	return len(c)
 }
 
-func (c ConfirmedNum) Swap(i, j int) { 
+func (c ConfirmedNum) Swap(i, j int) {
 	if i >= 0 && i < c.Len() && j >= 0 && j < c.Len() {
-		c[i], c[j] = c[j], c[i] 
+		c[i], c[j] = c[j], c[i]
 	}
 }
 
-func (c ConfirmedNum) Less(i, j int) bool { 
+func (c ConfirmedNum) Less(i, j int) bool {
 	if i >= 0 && i < c.Len() && j >= 0 && j < c.Len() {
-		return c[i] < c[j] 
+		return c[i] < c[j]
 	}
 	return false
 }

@@ -46,7 +46,7 @@ func ContructTrxActor() *TrxActor {
 }
 
 func NewTrxActor() *actor.PID {
-	
+
 	props := actor.FromProducer(func() actor.Actor { return ContructTrxActor() })
 
 	var err error
