@@ -73,8 +73,6 @@ func (t *TransactionStore) addTx(txhash common.Hash, blockhash common.Hash) erro
 }
 
 func (t *TransactionStore) delTx(txhash common.Hash) error {
-	// TODO
-
 	return nil
 }
 

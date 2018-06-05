@@ -65,9 +65,6 @@ func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 	if err := proto.Unmarshal(data, &block); err != nil {
 		return nil
 	}
-
-	//fmt.Printf("GetBlock, hash: %x, data: %x\n", hash.Bytes(), data)
-
 	return &block
 }
 
@@ -122,8 +119,5 @@ func WriteBlock(db *db.DBService, block *types.Block) error {
 	if err != nil {
 		return err
 	}
-
-	//fmt.Printf("WriteBlock, hash: %x, key: %x, value: %x\n", block.Hash().Bytes(), key, data)
-
 	return writeHead(db, block)
 }
