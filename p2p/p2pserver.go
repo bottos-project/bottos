@@ -158,9 +158,9 @@ func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
 }
 
 //BroadCastImpl is the broadcast template
-func (p2p *P2PServer) BroadCastImpl(m interface{}, msg_type uint8) error {
+func (p2p *P2PServer) BroadCastImpl(m interface{}, msgType uint8) error {
 
-	content_byte, err := json.Marshal(m)
+	contentByte, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
@@ -168,27 +168,27 @@ func (p2p *P2PServer) BroadCastImpl(m interface{}, msg_type uint8) error {
 
 	msg := message{
 		Src:     p2p.p2pConfig.ServAddr,
-		MsgType: msg_type, // the type to notify other peers new crx
-		Content: content_byte,
+		MsgType: msgType, // the type to notify other peers new crx
+		Content: contentByte,
 	}
 
-	msg_byte, err := json.Marshal(msg)
+	msgByte, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
-	p2p.serv.notify.BroadcastByte(msg_byte, false)
+	p2p.serv.notify.BroadcastByte(msgByte, false)
 
 	return nil
 }
 
 //BroadCast is to broadcast
 //A interface for call from other component
-func (p2p *P2PServer) BroadCast(m interface{}, call_type uint8) error {
+func (p2p *P2PServer) BroadCast(m interface{}, callType uint8) error {
 
 	var res error
-	switch call_type {
+	switch callType {
 	case TRANSACTION:
 		res = p2p.BroadCastImpl(m, CRX_BROADCAST)
 
