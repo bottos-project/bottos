@@ -34,14 +34,14 @@ import (
 	"time"
 )
 
-//nat handle
+// Handle is definition of interface
 type Handle interface {
 	Mapping(p string, internalPort int, externalPort int, time int) error
 	EIP() (net.IP, error)
 	String() string
 }
 
-//get pmp or upnp handle
+// GetHandle is to get handler func by config
 func GetHandle(config string) Handle {
 	switch config {
 	case "pmp":
@@ -53,7 +53,7 @@ func GetHandle(config string) Handle {
 	}
 }
 
-//map timer
+// Map is to handle a struct from intport to extport
 func Map(h Handle, c chan struct{}, p string, intport int, extport int) {
 	update := time.NewTimer(10 * time.Minute)
 	err := h.Mapping(p, intport, extport, 1200)
