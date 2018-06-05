@@ -22,6 +22,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package producer
 
 import (
@@ -32,6 +33,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 )
 
+//ReportState is recording the state of reporters
 type ReportState struct {
 	ScheduledTime     uint64
 	ScheduledReporter string
@@ -41,6 +43,7 @@ type ReportState struct {
 	ReportEnable      bool
 }
 
+//IsReady is check if repoter state
 func (r *Reporter) IsReady() bool {
 	now := GetReportTimeNow()
 	r.state.SetCheckFlag(1)
@@ -65,6 +68,8 @@ func (r *Reporter) IsReady() bool {
 	return true
 
 }
+
+//GetReportTimeNow is to count reporter's time
 func GetReportTimeNow() uint64 {
 	systemNow := common.NowToMicroseconds()
 	nowMicro := common.Microsecond{}
@@ -72,15 +77,23 @@ func GetReportTimeNow() uint64 {
 	now := common.ToSeconds(nowMicro)
 	return now
 }
+
+//StartReport is to start
 func (r *Reporter) StartReport() {
 	r.state.IsReporting = true
 }
+
+//EndReport is to stop report
 func (r *Reporter) EndReport() {
 	r.state.IsReporting = false
 }
+
+//SetCheckFlag is to set check flags
 func (r *ReportState) SetCheckFlag(flag uint32) {
 	r.CheckFlag |= flag
 }
+
+//IsSynced is to check synced flags
 func (r *Reporter) IsSynced(when uint64) bool {
 	if r.state.ReportEnable == true {
 		return true
@@ -93,6 +106,7 @@ func (r *Reporter) IsSynced(when uint64) bool {
 	return false
 }
 
+//IsMyTurn is to check if is my turn
 func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 	accountName, err := r.roleIntf.GetCandidateBySlot(slot)
 	if err != nil {
