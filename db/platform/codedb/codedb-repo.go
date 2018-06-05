@@ -32,12 +32,14 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+//CodeDbRepository is to build code db
 type CodeDbRepository struct {
 	fn string     // filename for reporting
 	db *buntdb.DB // LevelDB instance
 	tx *buntdb.Tx
 }
 
+//NewCodeDbRepository is to create new code db
 func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 	codedb, err := buntdb.Open(file)
 	if err != nil {
@@ -48,10 +50,13 @@ func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 		db: codedb,
 	}, nil
 }
+
+//CallStartUndoSession is to start undo session
 func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
 	k.tx, _ = k.db.Begin(true)
 }
 
+//CallCreatObjectIndex is to create object index
 func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName string, indexJson string) error {
 	if k.tx == nil {
 
@@ -60,6 +65,8 @@ func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName str
 
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
+
+//CallCreatObjectMultiIndexs is to create object with multi indexs
 func (k *CodeDbRepository) CallCreatObjectMultiIndexs(objectName string, indexName string, indexJson string) error {
 	if k.tx == nil {
 		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
@@ -67,6 +74,8 @@ func (k *CodeDbRepository) CallCreatObjectMultiIndexs(objectName string, indexNa
 
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
+
+//CallSetObject is to set object
 func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectValue string) error {
 	strValue := fmt.Sprintf("%v", objectValue)
 	if k.tx == nil {
@@ -80,6 +89,7 @@ func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectVa
 	return err
 }
 
+//CallDeleteObject is to delete object
 func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (string, error) {
 	var objectValue string
 	var err error
@@ -93,6 +103,7 @@ func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (stri
 
 }
 
+//CallCommit is to call commit
 func (k *CodeDbRepository) CallCommit() error {
 	if k.tx == nil {
 		fmt.Println("tx is not start undo session")
@@ -100,6 +111,8 @@ func (k *CodeDbRepository) CallCommit() error {
 	}
 	return k.tx.Commit()
 }
+
+//CallRollback is to call rollback
 func (k *CodeDbRepository) CallRollback() error {
 	if k.tx == nil {
 		fmt.Println("tx is not start undo session")

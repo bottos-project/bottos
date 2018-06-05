@@ -31,6 +31,7 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+//CallGetObject is to get object by key
 func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string, error) {
 	var objectValue string
 	var err error
@@ -44,6 +45,7 @@ func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string,
 
 }
 
+//CallGetAllObjectKeys is to get all objects by objectName
 func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, error) {
 	var objectValue []string
 	var err error
@@ -59,6 +61,8 @@ func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, er
 	return objectValue, err
 
 }
+
+//CallGetAllObjects is to get all objects by keyName which is indexname
 func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
 	var objectValue []string
 	var err error
@@ -74,6 +78,7 @@ func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
 
 }
 
+//CallGetObjectByIndex is to get object by one indexName
 func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
 	var objectValue string
 
@@ -89,6 +94,8 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 	return objectValue, err
 
 }
+
+//CallGetAllObjectsSortByIndex is to get all objects by sort indexName
 func (k *CodeDbRepository) CallGetAllObjectsSortByIndex(indexName string) ([]string, error) {
 	var objectValue []string
 	var err error
