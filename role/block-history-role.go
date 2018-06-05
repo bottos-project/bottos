@@ -27,15 +27,16 @@ package role
 
 import (
 	"encoding/json"
-	_ "fmt"
 	"strconv"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
 )
 
+//BlockHistoryObjectName is definition of block history object name
 const BlockHistoryObjectName string = "block_history"
 
+// BlockHistory is definition of block history
 type BlockHistory struct {
 	BlockNumber uint32      `json:"block_number"`
 	BlockHash   common.Hash `json:"block_hash"`
@@ -47,6 +48,8 @@ func blockNumberToKey(blockNumber uint32) string {
 	return key
 }
 
+
+// CreateBlockHistoryRole is to init block history
 func CreateBlockHistoryRole(ldb *db.DBService) error {
 	for i := 0; i < 65536; i++ {
 		value := &BlockHistory{}
@@ -64,6 +67,7 @@ func CreateBlockHistoryRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetBlockHistoryRole is to save block history
 func SetBlockHistoryRole(ldb *db.DBService, blockNumber uint32, blockHash common.Hash) error {
 	key := blockNumberToKey(blockNumber)
 	value := &BlockHistory{
@@ -77,6 +81,7 @@ func SetBlockHistoryRole(ldb *db.DBService, blockNumber uint32, blockHash common
 	return ldb.SetObject(BlockHistoryObjectName, key, string(jsonvalue))
 }
 
+// GetBlockHistoryRole is to get block history
 func GetBlockHistoryRole(ldb *db.DBService, blockNumber uint32) (*BlockHistory, error) {
 	key := blockNumberToKey(blockNumber)
 	value, err := ldb.GetObject(BlockHistoryObjectName, key)
