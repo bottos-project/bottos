@@ -34,16 +34,6 @@ import (
 	"time"
 )
 
-// Interface is definition of interface
-type Interface interface {
-	AddMapping(protocol string, extport, intport int, name string, lifetime time.Duration) error
-	DeleteMapping(protocol string, extport, intport int) error
-
-	ExternalIP() (net.IP, error)
-
-	String() string
-}
-
 // Handle is definition of interface
 type Handle interface {
 	Mapping(p string, internalPort int, externalPort int, time int) error
