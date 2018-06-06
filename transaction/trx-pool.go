@@ -140,14 +140,12 @@ func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (b
 func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *types.Transaction) {
 
 	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
-		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
 	}
 
 	result, err, _ := trxApplyServiceInst.ApplyTransaction(trx)
 	if !result {
-		fmt.Println("apply trx  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
 	}
