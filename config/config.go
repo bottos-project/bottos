@@ -61,6 +61,7 @@ type Parameter struct {
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
+	ChainId           string    `json:"chain_id"`
 }
 
 // KeyPair is definition of key pair
