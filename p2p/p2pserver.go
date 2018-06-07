@@ -116,9 +116,7 @@ func NewServ() *P2PServer{
 }
 
 func (p2p *P2PServer) Init() error {
-
 	fmt.Println("p2pServer::Init()")
-
 	return nil
 }
 

@@ -136,7 +136,6 @@ type wasmEngine struct {
 type wasmInterface interface {
 	Init() error
 	//a wrap for vmCall
-	Apply(ctx ApplyContext, executionTime uint32, receivedBlock bool) interface{}
 	Start(ctx *contract.Context, executionTime uint32, receivedBlock bool) (uint32, error)
 	Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) (uint32, error)
 	GetFuncInfo(module wasm.Module, entry wasm.ExportEntry) error
