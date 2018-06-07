@@ -163,6 +163,10 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 // ProcessTransaction is to handle a transaction without parameters checking
 func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transaction, deepLimit uint32) (bool, bottosErr.ErrCode, []*types.DerivedTransaction) {
 
+	if deepLimit >= config.DEFAUL_MAX_CONTRACT_DEPTH {
+		return false, bottosErr.ErrTrxContractDepthError, nil
+	}
+
 	var derivedTrx []*types.DerivedTransaction
 
 	bottoserr := bottosErr.ErrNoError
@@ -183,13 +187,17 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 	// else branch
 	trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
 	if nil != exeErr {
-		fmt.Println("process trx failed")
+		fmt.Println("process trx failed, error: ",exeErr)
 		return false, bottosErr.ErrTrxContractHanldeError, nil
 	}
 
 	fmt.Println("derived trx list len is ", len(trxList))
 	for _, subTrx := range trxList {
 		fmt.Println(subTrx)
+	}
+
+	if (uint32(len(trxList))) >= config.DEFAUL_MAX_SUB_CONTRACT_NUM {
+		return false, bottosErr.ErrTrxSubContractNumError, nil
 	}
 
 	for _, subTrx := range trxList {

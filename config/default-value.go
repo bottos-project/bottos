@@ -83,3 +83,8 @@ const DEFAULT_OPTIONDB_TABLE_TRX_NAME string = "Transactions"
 
 // DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME define default option db table name of account
 const DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME string = "Accounts"
+
+// DEFAUL_MAX_CONTRACT_DEPTH define max call contract depth
+const DEFAUL_MAX_CONTRACT_DEPTH  uint32 = 10
+// DEFAUL_MAX_SUB_CONTRACT_NUM define max sub contract num
+const DEFAUL_MAX_SUB_CONTRACT_NUM  uint32 = 10
