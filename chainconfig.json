@@ -19,5 +19,5 @@
 	"enable_stale_report": true,
 	"option_db":"",
     "log_config":"log.xml",
-    "chain_id":"000000000001"
+    "chain_id":"00000000000000000000000000000000"
 }
