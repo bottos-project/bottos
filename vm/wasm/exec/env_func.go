@@ -233,8 +233,11 @@ func prints(vm *VM) (bool, error) {
 
 	value := make([]byte, len)
 	copy(value, vm.memory[pos:pos+len])
+	param := string(value)
 
-	return true, nil
+	fmt.Printf("VM: func prints: %v\n", param);
+	return true , nil
+
 }
 
 func getParam(vm *VM) (bool, error) {
