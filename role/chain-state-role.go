@@ -21,7 +21,7 @@ type ChainState struct {
 
 const (
 	// ChainStateName is definition of chain state name
-	ChainStateName       string = "chain_state"
+	ChainStateName string = "chain_state"
 	// ChainStateDefaultKey is definition of chain stake default key
 	ChainStateDefaultKey string = "chain_state_defkey"
 )

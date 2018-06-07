@@ -100,29 +100,29 @@ func safeSub(a uint64, b uint64) (uint64, error) {
 	return c, nil
 }
 
-// SafeAdd is safe function to add balance 
+// SafeAdd is safe function to add balance
 func (balance *Balance) SafeAdd(amount uint64) error {
 	var a, c uint64
 	a = balance.Balance
 	c, err := safeAdd(a, amount)
 	if err != nil {
 		return err
-	} 
+	}
 
 	balance.Balance = c
 	return nil
-	
+
 }
 
-// SafeSub is safe function to sub balance 
+// SafeSub is safe function to sub balance
 func (balance *Balance) SafeSub(amount uint64) error {
 	var a, c uint64
 	a = balance.Balance
 	c, err := safeSub(a, amount)
 	if err != nil {
 		return err
-	} 
-	
+	}
+
 	balance.Balance = c
 	return nil
 }
@@ -160,27 +160,27 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 	return res, nil
 }
 
-// SafeAdd is safe function to add  stake balance 
+// SafeAdd is safe function to add  stake balance
 func (balance *StakedBalance) SafeAdd(amount uint64) error {
 	var a, c uint64
 	a = balance.StakedBalance
 	c, err := safeAdd(a, amount)
 	if err != nil {
 		return err
-	} 
+	}
 
 	balance.StakedBalance = c
-	return nil	
+	return nil
 }
 
-// SafeSub is safe function to sub stake balance 
+// SafeSub is safe function to sub stake balance
 func (balance *StakedBalance) SafeSub(amount uint64) error {
 	var a, c uint64
 	a = balance.StakedBalance
 	c, err := safeSub(a, amount)
 	if err != nil {
 		return err
-	} 
+	}
 
 	balance.StakedBalance = c
 	return nil

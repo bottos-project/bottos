@@ -47,7 +47,7 @@ type ChainConfig struct {
 
 const (
 	// CoreStateName is definition of core state name
-	CoreStateName       string = "core_state"
+	CoreStateName string = "core_state"
 	// CoreStateDefaultKey is definition of core state default key
 	CoreStateDefaultKey string = "core_state_defkey"
 )

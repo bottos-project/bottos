@@ -25,6 +25,7 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. follow define op code
 var (
 	I32ReinterpretF32 = newOp(0xbc, "i32.reinterpret/f32", []wasm.ValueType{wasm.ValueTypeF32}, wasm.ValueTypeI32)
 	I64ReinterpretF64 = newOp(0xbd, "i64.reinterpret/f64", []wasm.ValueType{wasm.ValueTypeF64}, wasm.ValueTypeI64)

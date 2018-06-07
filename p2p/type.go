@@ -32,8 +32,8 @@
 package p2pserver
 
 import (
-	"hash/fnv"
 	"crypto/rsa"
+	"hash/fnv"
 	"unsafe"
 )
 
@@ -69,30 +69,34 @@ func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
+//Hash ...
 func Hash(str string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(str))
 	return h.Sum32()
 }
 
+//RsaKeyPair is to store rsa publickey and privatekey
 type RsaKeyPair struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
+//Key interface
 type Key interface {
 	Bytes() ([]byte, error)
 	Equals(Key) bool
 }
 
+//PrivKey interface
 type PrivKey interface {
 	Key
 	Sign([]byte) ([]byte, error)
 	GetPublicKey() PubKey
 }
 
+//PubKey interface
 type PubKey interface {
 	Key
 	VerifyKey(data []byte, sig []byte) (bool, error)
 }
-

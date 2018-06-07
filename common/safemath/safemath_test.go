@@ -26,6 +26,7 @@
 package safemath
 
 import (
+	"fmt"
 	"math"
 	"testing"
 	//"fmt"
@@ -91,5 +92,6 @@ func TestSafeMath(t *testing.T) {
 	a = 99999999
 	b = 88888888
 	c, err = Uint64Sub(a, b)
+	fmt.Printf(err)
 	assert.Equal(t, a-b, c)
 }

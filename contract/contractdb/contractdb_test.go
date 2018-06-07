@@ -89,6 +89,9 @@ func TestDifferentStrValue(t *testing.T) {
 	getStr1, err := cdb.GetStrValue(contract, object, "abc")
 	getStr2, err := cdb.GetStrValue(contract, object, "xxx")
 
+	if err != nil {
+		return
+	}
 	fmt.Printf("str1=%v, getStr1=%v\n", string(str1), getStr1)
 	fmt.Printf("str2=%v, getStr2=%v\n", string(str2), getStr2)
 }

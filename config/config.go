@@ -35,12 +35,17 @@ import (
 )
 
 const (
+	// CONFIG_FILE_NAME is definition of config file name
 	CONFIG_FILE_NAME = "./chainconfig.json"
 )
 
+// Param is var of Parameter type
 var Param *Parameter
+
+// Genesis is var of GenesisConfig type
 var Genesis *GenesisConfig
 
+// Parameter is definition of config param
 type Parameter struct {
 	GenesisJson       string    `json:"genesis_json"`
 	DataDir           string    `json:"data_dir"`
@@ -56,25 +61,30 @@ type Parameter struct {
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
+	ChainId           string    `json:"chain_id"`
 }
 
+// KeyPair is definition of key pair
 type KeyPair struct {
 	PrivateKey string `json:"private_key"`
 	PublicKey  string `json:"public_key"`
 }
 
+// GenesisConfig is definition of genesis config
 type GenesisConfig struct {
 	GenesisTime   uint64         `json:"genesis_time"`
 	ChainId       string         `json:"chain_id"`
 	InitDelegates []InitDelegate `json:"init_delegates"`
 }
 
+// InitDelegate is definition of init delegate
 type InitDelegate struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"public_key"`
 	Balance   uint64 `json:"balance"`
 }
 
+// LoadConfig is to load config file
 func LoadConfig() error {
 	file, e := loadConfigJson(CONFIG_FILE_NAME)
 	if e != nil {
@@ -122,9 +132,10 @@ func loadConfigJson(fn string) ([]byte, error) {
 	return file, nil
 }
 
-func loadLogConfig(log_config_file string) {
+// loadLogConfig is to load log config file
+func loadLogConfig(logConfigFile string) {
 	defer log.Flush()
-	logger, err := log.LoggerFromConfigAsFile(log_config_file)
+	logger, err := log.LoggerFromConfigAsFile(logConfigFile)
 	if err != nil {
 		log.Critical("*ERROR* Failed to parse config log file !!!", err)
 		os.Exit(1)

@@ -32,15 +32,16 @@
 package p2pserver
 
 import (
-	"fmt"
-	"sync"
-	"errors"
-	"io/ioutil"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"sync"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
-//
+//P2PServer is p2p server
 type P2PServer struct {
 	serv      *NetServer
 	p2pConfig *P2PConfig
@@ -48,13 +49,14 @@ type P2PServer struct {
 	p2pLock sync.RWMutex
 }
 
+//P2PConfig is to config p2p
 type P2PConfig struct {
 	ServAddr string
 	ServPort int
 	PeerLst  []string
 }
 
-//parse json configuration
+//ReadFile is to parse json configuration
 func ReadFile(filename string) *P2PConfig {
 
 	if filename == "" {
@@ -65,13 +67,13 @@ func ReadFile(filename string) *P2PConfig {
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to read the config: ",filename)
-		return  &P2PConfig{}
+		fmt.Println("*ERROR* Failed to read the config: ", filename)
+		return &P2PConfig{}
 	}
 
 	str := string(bytes)
 
-	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
+	if err := json.Unmarshal([]byte(str), &pc); err != nil {
 		fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
@@ -79,7 +81,8 @@ func ReadFile(filename string) *P2PConfig {
 	return &pc
 }
 
-func NewServ() *P2PServer{
+//NewServ is to create new server
+func NewServ() *P2PServer {
 
 	p2pconfig := ReadFile(CONF_FILE)
 
@@ -92,7 +95,8 @@ func NewServ() *P2PServer{
 		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	var p2pServ *P2PServer = nil
+	var p2pServ *P2PServer
+	p2pServ = nil
 	if TST == 0 {
 		p2pServ = &P2PServer{
 			serv:      NewNetServer(),
@@ -108,11 +112,12 @@ func NewServ() *P2PServer{
 	return p2pServ
 }
 
+//Init is to init p2p before start up
 func (p2p *P2PServer) Init() error {
 	return nil
 }
 
-//it is the entry of p2p
+//Start is the entry of p2p
 func (p2p *P2PServer) Start() error {
 
 	if p2p.p2pConfig == nil {
@@ -137,50 +142,53 @@ func (p2p *P2PServer) Start() error {
 	return nil
 }
 
-//run a heart beat to watch the network status
-
+//RunHeartBeat is to run a heart beat to watch the network status
 func (p2p *P2PServer) RunHeartBeat() error {
 	return nil
 }
 
+//SetTrxActor is to set trx actor
 func (p2p *P2PServer) SetTrxActor(trxActorPid *actor.PID) {
 	p2p.serv.notify.trxActorPid = trxActorPid
 }
 
+//SetChainActor is to set chain actor
 func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
-func (p2p *P2PServer) BroadCastImpl(m interface{}, msg_type uint8) error {
+//BroadCastImpl is the broadcast template
+func (p2p *P2PServer) BroadCastImpl(m interface{}, msgType uint8) error {
 
-	content_byte , err := json.Marshal(m)
-	if err != nil{
+	contentByte, err := json.Marshal(m)
+	if err != nil {
 		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
 	msg := message{
 		Src:     p2p.p2pConfig.ServAddr,
-		MsgType: msg_type, // the type to notify other peers new crx
-		Content: content_byte,
+		MsgType: msgType, // the type to notify other peers new crx
+		Content: contentByte,
 	}
 
-	msg_byte , err := json.Marshal(msg)
-	if err != nil{
+	msgByte, err := json.Marshal(msg)
+	if err != nil {
 		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
-	p2p.serv.notify.BroadcastByte(msg_byte, false)
+	p2p.serv.notify.BroadcastByte(msgByte, false)
 
 	return nil
 }
 
+//BroadCast is to broadcast
 //A interface for call from other component
-func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
+func (p2p *P2PServer) BroadCast(m interface{}, callType uint8) error {
 
 	var res error
-	switch call_type {
+	switch callType {
 	case TRANSACTION:
 		res = p2p.BroadCastImpl(m, CRX_BROADCAST)
 
@@ -191,4 +199,3 @@ func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
 
 	return res
 }
-

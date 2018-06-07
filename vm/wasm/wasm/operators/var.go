@@ -21,6 +21,7 @@
 
 package operators
 
+// DO NOT EDIT. follow define op code
 var (
 	GetLocal  = newPolymorphicOp(0x20, "get_local")
 	SetLocal  = newPolymorphicOp(0x21, "set_local")

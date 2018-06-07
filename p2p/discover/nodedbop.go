@@ -22,7 +22,6 @@
 // Contains the node database, storing previously seen nodes and any collected
 // metadata about them for QoS purposes.
 
-
 /*
  * file description: the interface for WASM execution
  * @Author: Richard
@@ -35,18 +34,15 @@ package discover
 
 import (
 	"bytes"
-	"time"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"time"
 )
-
-
 
 func (db *nodeDB) updNode(node *Node) error {
 	blob := []byte("test")
-	
+
 	return db.ldb.Put(makeNodeKey(node.ID, nodeDBDiscoverRoot), blob, nil)
 }
-
 
 func (db *nodeDB) delNode(id NodeID) error {
 	deleter := db.ldb.NewIterator(util.BytesPrefix(makeNodeKey(id, "")), nil)
@@ -58,11 +54,9 @@ func (db *nodeDB) delNode(id NodeID) error {
 	return nil
 }
 
-
 func (db *nodeDB) ensureExp() {
 	db.sync.Do(func() { go db.exp() })
 }
-
 
 func (db *nodeDB) exp() {
 	tick := time.Tick(nodeDBCycle)
@@ -70,7 +64,7 @@ func (db *nodeDB) exp() {
 		select {
 		case <-tick:
 			if err := db.expNodes(); err != nil {
-		       return 
+				return
 			}
 		case <-db.quit:
 			return
@@ -78,10 +72,8 @@ func (db *nodeDB) exp() {
 	}
 }
 
-
 func (db *nodeDB) expNodes() error {
 	threshold := time.Now().Add(-nodeDBExpiration)
-
 
 	item := db.ldb.NewIterator(nil, nil)
 	defer item.Release()
@@ -104,7 +96,6 @@ func (db *nodeDB) expNodes() error {
 	return nil
 }
 
-
 func (db *nodeDB) lastPingOp(id NodeID) time.Time {
 	return time.Unix(db.fetchNodeInt64(makeNodeKey(id, nodeDBDiscoverPing)), 0)
 }
@@ -117,21 +108,17 @@ func (db *nodeDB) lastPongOp(id NodeID) time.Time {
 	return time.Unix(db.fetchNodeInt64(makeNodeKey(id, nodeDBDiscoverPong)), 0)
 }
 
-
 func (db *nodeDB) updateLastPong(id NodeID, instance time.Time) error {
 	return db.storeNodeInt64(makeNodeKey(id, nodeDBDiscoverPong), instance.Unix())
 }
-
 
 func (db *nodeDB) failFind(id NodeID) int {
 	return int(db.fetchNodeInt64(makeNodeKey(id, nodeDBDiscoverFindFails)))
 }
 
-
 func (db *nodeDB) updateFindFails(id NodeID, fails int) error {
 	return db.storeNodeInt64(makeNodeKey(id, nodeDBDiscoverFindFails), int64(fails))
 }
-
 
 func (db *nodeDB) querySeedNodes(n int) []*Node {
 
@@ -151,7 +138,7 @@ func (db *nodeDB) querySeedNodes(n int) []*Node {
 			db.delNode(id)
 			continue
 		}
-	
+
 		if node := db.node(id); node != nil {
 			nodes = append(nodes, node)
 		}

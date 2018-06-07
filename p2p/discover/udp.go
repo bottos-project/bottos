@@ -19,7 +19,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-
 /*
  * file description: the interface for WASM execution
  * @Author: Richard
@@ -39,28 +38,28 @@ import (
 	"time"
 
 	"github.com/bottos-project/bottos/p2p/nat"
-
 )
 
 const (
-	Version = 3
-	macSize  = 256 / 8
-	sigSize  = 520 / 8
-	headSize = macSize + sigSize 
-	respTimeout = 600 * time.Millisecond
-	sendTimeout = 600 * time.Millisecond
-	expiration  = 30 * time.Second
+	// Version is version num definition
+	Version         = 3
+	macSize         = 256 / 8
+	sigSize         = 520 / 8
+	headSize        = macSize + sigSize
+	respTimeout     = 600 * time.Millisecond
+	sendTimeout     = 600 * time.Millisecond
+	expiration      = 30 * time.Second
 	refreshInterval = 1 * time.Hour
-	pingPacket = iota + 1
+	pingPacket      = iota + 1
 	pongPacket
 	findnodePacket
 	neighborsPacket
 )
 
 var (
-	headSpace = make([]byte, headSize)
-	maxNeighbors int
-	errTooSmall   = errors.New("udpPacket is too small")
+	headSpace           = make([]byte, headSize)
+	maxNeighbors        int
+	errTooSmall         = errors.New("udpPacket is too small")
 	errBadHash          = errors.New("a bad hash")
 	errExpired          = errors.New("expired")
 	errBadVersion       = errors.New("version illegal")
@@ -70,7 +69,6 @@ var (
 	errClosed           = errors.New("socket closed")
 )
 
-
 type (
 	ping struct {
 		Version    uint
@@ -78,12 +76,12 @@ type (
 		Expiration uint64
 	}
 	pong struct {
-		To rpcEndpoint
-		ReplyTok   []byte 
-		Expiration uint64 
+		To         rpcEndpoint
+		ReplyTok   []byte
+		Expiration uint64
 	}
 	findnode struct {
-		Target     NodeID 
+		Target     NodeID
 		Expiration uint64
 	}
 	neighbors struct {
@@ -91,26 +89,26 @@ type (
 		Expiration uint64
 	}
 	rpcNode struct {
-		IP  net.IP 
-		UDP uint64 
-		TCP uint64 
+		IP  net.IP
+		UDP uint64
+		TCP uint64
 		ID  NodeID
 	}
 	rpcEndpoint struct {
-		IP  net.IP 
-		UDP uint64 
-		TCP uint64 
+		IP  net.IP
+		UDP uint64
+		TCP uint64
 	}
 )
 
 type udp struct {
-	udpConn        udpConn
+	udpConn     udpConn
 	priv        *ecdsa.PrivateKey
 	ourEndpoint rpcEndpoint
-	addpending chan *pending
-	gotreply   chan udpReply
-	closing chan struct{}
-	nat     string
+	addpending  chan *pending
+	gotreply    chan udpReply
+	closing     chan struct{}
+	nat         string
 	*Table
 }
 type udpPacket interface {
@@ -123,22 +121,19 @@ type udpConn interface {
 	LocalAddr() net.Addr
 }
 type udpReply struct {
-	from  NodeID
-	ptype byte
-	data  interface{}
+	from    NodeID
+	ptype   byte
+	data    interface{}
 	matched chan<- bool
 }
 
-
-
 type pending struct {
-	from  NodeID
-	ptype byte
+	from     NodeID
+	ptype    byte
 	deadline time.Time
 	callback func(resp interface{}) (done bool)
-	errc chan<- error
+	errc     chan<- error
 }
-
 
 func makeUdpEndpoint(addr *net.UDPAddr, tcpPort uint64) rpcEndpoint {
 	ip := addr.IP.To4()
@@ -155,12 +150,12 @@ func newNodeFromRPC(rn rpcNode) (n *Node, valid bool) {
 	return newNodeInfo(rn.ID, rn.IP, rn.UDP, rn.TCP), true
 }
 
+// RPCNode is to get rpc node struct
 func RPCNode(n *Node) rpcNode {
 	return rpcNode{ID: n.ID, IP: n.IP, UDP: n.UDP, TCP: n.TCP}
 }
 
-
-
+// ListenUDP is to start udp to listen
 func ListenUDP(priv *ecdsa.PrivateKey, laddr string, natm nat.Interface, nodeDBPath string) (*Table, error) {
 	addr, err := net.ResolveUDPAddr("udp", laddr)
 	if err != nil {
@@ -176,7 +171,7 @@ func ListenUDP(priv *ecdsa.PrivateKey, laddr string, natm nat.Interface, nodeDBP
 
 func newUDP(priv *ecdsa.PrivateKey, c udpConn, natm nat.Interface, nodeDBPath string) (*Table, *udp) {
 	udp := &udp{
-		udpConn:       c,
+		udpConn:    c,
 		priv:       priv,
 		closing:    make(chan struct{}),
 		gotreply:   make(chan udpReply),
@@ -210,7 +205,6 @@ func (t *udp) waitping(from NodeID) error {
 	return <-t.pending(from, pingPacket, func(interface{}) bool { return true })
 }
 
-
 func (t *udp) loop() {
 	var (
 		pending      []*pending
@@ -218,7 +212,7 @@ func (t *udp) loop() {
 		timeout      = time.NewTimer(0)
 		refresh      = time.NewTicker(refreshInterval)
 	)
-	<-timeout.C 
+	<-timeout.C
 	defer refresh.Stop()
 	defer timeout.Stop()
 	rearmTimeout := func() {
@@ -236,7 +230,7 @@ func (t *udp) loop() {
 			for i := 0; i < len(pending); i++ {
 				if p := pending[i]; p.from == r.from && p.ptype == r.ptype {
 					matched = true
-					if p.callback(r.data) {	
+					if p.callback(r.data) {
 						p.errc <- nil
 						copy(pending[i:], pending[i+1:])
 						pending = pending[:len(pending)-1]
@@ -271,7 +265,6 @@ func (t *udp) loop() {
 	}
 }
 
-
 func init() {
 	p := neighbors{Expiration: ^uint64(0)}
 	maxSizeNode := rpcNode{IP: make(net.IP, 16), UDP: ^uint64(0), TCP: ^uint64(0)}
@@ -300,7 +293,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte
 	if t.db.node(fromID) == nil {
 		return errUnknownNode
 	}
-	var target  string 
+	var target string
 	t.mutex.Lock()
 	closest := t.closest(target, bucketSize).entries
 	t.mutex.Unlock()
@@ -351,9 +344,6 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 	return nil
 }
 
-
-
-
 func (t *udp) findnode(toid NodeID, toaddr *net.UDPAddr, target NodeID) ([]*Node, error) {
 	nrec := 0
 	nodes := make([]*Node, 0, bucketSize)
@@ -386,8 +376,6 @@ func (t *udp) pending(id NodeID, ptype byte, callback func(interface{}) bool) <-
 	return ch
 }
 
-
-
 func expired(ts uint64) bool {
 	return time.Unix(int64(ts), 0).Before(time.Now())
 }
@@ -397,9 +385,9 @@ func (t *udp) send(toaddr *net.UDPAddr, ptype byte, req interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if _, err = t.udpConn.WriteToUDP(udpPacket, toaddr); err != nil {
-		
+
 	}
 	return err
 }
@@ -441,11 +429,11 @@ func decodePacket(buf []byte) (udpPacket, NodeID, []byte, error) {
 	}
 	hash, sig, sigdata := buf[:macSize], buf[macSize:headSize], buf[headSize:]
 	fmt.Println(sig)
-	var  shouldhash []byte
+	var shouldhash []byte
 	if !bytes.Equal(hash, shouldhash) {
 		return nil, NodeID{}, nil, errBadHash
 	}
-	var fromID NodeID 
+	var fromID NodeID
 	var err error
 	var req udpPacket
 	switch ptype := sigdata[0]; ptype {

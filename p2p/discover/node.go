@@ -19,7 +19,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-
 /*
  * file description: the interface for WASM execution
  * @Author: Richard
@@ -27,6 +26,7 @@
  * @Last Modified by:
  * @Last Modified time:
  */
+
 package discover
 
 import (
@@ -44,14 +44,15 @@ import (
 
 const nodeIDBitLength = 512
 
-
+//Node node info
 type Node struct {
-	IP       net.IP 
-	UDP, TCP uint64 
+	IP       net.IP
+	UDP, TCP uint64
 	ID       NodeID
-	hash      string
+	hash     string
 }
 
+//NodeID node id data
 type NodeID [nodeIDBitLength / 8]byte
 
 var ncount = [256]int{
@@ -98,14 +99,12 @@ func newNodeInfo(id NodeID, ip net.IP, udpPort, tcpPort uint64) *Node {
 		UDP: udpPort,
 		TCP: tcpPort,
 		ID:  id,
-		
 	}
 }
 
 func (n *Node) addr() *net.UDPAddr {
 	return &net.UDPAddr{IP: n.IP, Port: int(n.UDP)}
 }
-
 
 func (n *Node) String() string {
 	addr := net.TCPAddr{IP: n.IP, Port: int(n.TCP)}
@@ -120,7 +119,7 @@ func (n *Node) String() string {
 	return u.String()
 }
 
-
+//ParseNodeInfo parse node info from node url string
 func ParseNodeInfo(rawurl string) (*Node, error) {
 	var (
 		id               NodeID
@@ -131,14 +130,14 @@ func ParseNodeInfo(rawurl string) (*Node, error) {
 	if u.Scheme != "enode" {
 		return nil, errors.New("invalid URL, set like \"enode\"")
 	}
-	
+
 	if u.User == nil {
 		return nil, errors.New("missing nodeID")
 	}
 	if id, err = HexNodeID(u.User.String()); err != nil {
 		return nil, fmt.Errorf("invalid nodeID: %v", err)
 	}
-	
+
 	host, port, err := net.SplitHostPort(u.Host)
 	if err != nil {
 		return nil, fmt.Errorf("invalid host: %v", err)
@@ -146,11 +145,11 @@ func ParseNodeInfo(rawurl string) (*Node, error) {
 	if ip = net.ParseIP(host); ip == nil {
 		return nil, errors.New("invalid IP")
 	}
-	
+
 	if ipv4 := ip.To4(); ipv4 != nil {
 		ip = ipv4
 	}
-	
+
 	if tcpPort, err = strconv.ParseUint(port, 10, 16); err != nil {
 		return nil, errors.New("invalid port")
 	}
@@ -165,7 +164,7 @@ func ParseNodeInfo(rawurl string) (*Node, error) {
 	return newNodeInfo(id, ip, uint64(udpPort), uint64(tcpPort)), nil
 }
 
-
+//MustParseNode parse node info
 func MustParseNode(rawurl string) *Node {
 	n, err := ParseNodeInfo(rawurl)
 	if err != nil {
@@ -174,20 +173,16 @@ func MustParseNode(rawurl string) *Node {
 	return n
 }
 
-
-
-
-
 func (n NodeID) String() string {
 	return fmt.Sprintf("%x", n[:])
 }
 
-
+//GoString node id to string
 func (n NodeID) GoString() string {
 	return fmt.Sprintf("discover.HexNodeID(\"%x\")", n[:])
 }
 
-
+//HexNodeID node id covert from string
 func HexNodeID(in string) (NodeID, error) {
 	var id NodeID
 	if strings.HasPrefix(in, "0x") {
@@ -204,7 +199,7 @@ func HexNodeID(in string) (NodeID, error) {
 	return id, nil
 }
 
-
+//MustHexNodeID nodeid from string
 func MustHexNodeID(in string) NodeID {
 	id, err := HexNodeID(in)
 	if err != nil {
@@ -213,7 +208,7 @@ func MustHexNodeID(in string) NodeID {
 	return id
 }
 
-
+//PublickeyID node id from public key
 func PublickeyID(pub *ecdsa.PublicKey) NodeID {
 	var id NodeID
 	pbytes := elliptic.Marshal(pub.Curve, pub.X, pub.Y)
@@ -224,21 +219,20 @@ func PublickeyID(pub *ecdsa.PublicKey) NodeID {
 	return id
 }
 
-
-func (id NodeID) Publickey() (*ecdsa.PublicKey, error) {
+//Publickey calc node public key depend on node id
+func (n NodeID) Publickey() (*ecdsa.PublicKey, error) {
 	p := &ecdsa.PublicKey{Curve: nil, X: new(big.Int), Y: new(big.Int)}
-	half := len(id) / 2
-	p.X.SetBytes(id[:half])
-	p.Y.SetBytes(id[half:])
+	half := len(n) / 2
+	p.X.SetBytes(n[:half])
+	p.Y.SetBytes(n[half:])
 	if !p.Curve.IsOnCurve(p.X, p.Y) {
 		return nil, errors.New("not on the curve")
 	}
 	return p, nil
 }
 
-
 func recoverNode(hash, sig []byte, pubkey string) (id NodeID, err error) {
-	
+
 	if len(pubkey)-1 != len(id) {
 		return id, fmt.Errorf("invalid length, has %d bits, want %d bits", len(pubkey)*8, (len(id)+1)*8)
 	}
@@ -261,8 +255,6 @@ func distancecmp(target, x, y string) int {
 	return 0
 }
 
-
-
 func logdistance(x, y string) int {
 	lz := 0
 	for i := range x {
@@ -276,7 +268,6 @@ func logdistance(x, y string) int {
 	}
 	return len(x)*8 - lz
 }
-
 
 func nodeDistance(x string, n int) (y string) {
 	if n == 0 {

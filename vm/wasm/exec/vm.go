@@ -82,13 +82,13 @@ type VM struct {
 
 	funcTable [256]func()
 
-	memPos  int
+	memPos int
 	//To avoid the too much the number of recursion execution(dep) in contract
-	callDep  int
+	callDep int
 	//To limit the too much the number of new contract execution(wid) in contract
-	callWid  int
+	callWid int
 	// define a map relationship between memory address and data's type
-	memType  map[uint64]*typeInfo
+	memType map[uint64]*typeInfo
 	//define env function
 	envFunc  *EnvFunc
 	funcInfo FuncInfo

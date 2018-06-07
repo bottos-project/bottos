@@ -25,6 +25,7 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. follow define op code
 var (
 	I32Load    = newOp(0x28, "i32.load", []wasm.ValueType{wasm.ValueTypeI32}, wasm.ValueTypeI32)
 	I64Load    = newOp(0x29, "i64.load", []wasm.ValueType{wasm.ValueTypeI32}, wasm.ValueTypeI64)

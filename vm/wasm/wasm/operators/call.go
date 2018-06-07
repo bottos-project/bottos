@@ -22,6 +22,8 @@
 package operators
 
 var (
-	Call         = newPolymorphicOp(0x10, "call")
+	//Call op call
+	Call = newPolymorphicOp(0x10, "call")
+	//CallIndirect op call indirect
 	CallIndirect = newPolymorphicOp(0x11, "call_indirect")
 )

@@ -51,10 +51,10 @@ var TrxPoolInst *TrxPool
 
 // TrxPool is definition of trx pool
 type TrxPool struct {
-	pending    map[common.Hash]*types.Transaction
-	roleIntf   role.RoleInterface
-	contractDB *contractdb.ContractDB
-	netActorPid     *actor.PID
+	pending     map[common.Hash]*types.Transaction
+	roleIntf    role.RoleInterface
+	contractDB  *contractdb.ContractDB
+	netActorPid *actor.PID
 
 	mu   sync.RWMutex
 	quit chan struct{}
@@ -64,9 +64,9 @@ type TrxPool struct {
 func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst := &TrxPool{
-		pending:    make(map[common.Hash]*types.Transaction),
-		roleIntf:   env.RoleIntf,
-		contractDB: env.ContractDB,
+		pending:     make(map[common.Hash]*types.Transaction),
+		roleIntf:    env.RoleIntf,
+		contractDB:  env.ContractDB,
 		netActorPid: netActorPid,
 
 		quit: make(chan struct{}),
@@ -132,7 +132,7 @@ func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (b
 	if !trxPool.VerifySignature(trx) {
 		return false, bottosErr.ErrTrxSignError
 	}
-	
+
 	return true, bottosErr.ErrNoError
 }
 
@@ -140,24 +140,22 @@ func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (b
 func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *types.Transaction) {
 
 	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
-		fmt.Println("check base condition  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
 	}
 
 	result, err, _ := trxApplyServiceInst.ApplyTransaction(trx)
 	if !result {
-		fmt.Println("apply trx  error, trx: ", trx.Hash())
 		context.Respond(err)
 		return
 	}
 
 	trxPool.addTransaction(trx)
 
-	notify := &message.NotifyTrx {
-		Trx:  trx,
+	notify := &message.NotifyTrx{
+		Trx: trx,
 	}
-	trxPool.netActorPid.Tell(notify)		
+	trxPool.netActorPid.Tell(notify)
 
 	context.Respond(bottosErr.ErrNoError)
 }
@@ -170,11 +168,9 @@ func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *t
 
 // HandleTransactionFromP2P is handling trx from P2P
 func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-	
+
 	trxPool.HandleTransactionCommon(context, trx)
 }
-
-
 
 // HandlePushTransactionReq is entry of trx req
 func (trxPool *TrxPool) HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction) {
@@ -227,7 +223,7 @@ func (trxPool *TrxPool) getPubKey(accountName string) ([]byte, error) {
 // VerifySignature is verify signature from trx whether it is valid
 func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
-	trxToVerify := &types.BasicTransaction {
+	trxToVerify := &types.BasicTransaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
@@ -251,6 +247,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(serializeData)))
+	//h.Write([]byte(config.Param.ChainId))	
 	hashData := h.Sum(nil)
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)

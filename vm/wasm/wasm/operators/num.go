@@ -25,6 +25,7 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
 
+// DO NOT EDIT. follow define op code
 var (
 	I32Clz      = newOp(0x67, "i32.clz", []wasm.ValueType{wasm.ValueTypeI32}, wasm.ValueTypeI32)
 	I32Ctz      = newOp(0x68, "i32.ctz", []wasm.ValueType{wasm.ValueTypeI32}, wasm.ValueTypeI32)

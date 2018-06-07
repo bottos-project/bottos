@@ -28,6 +28,7 @@ package apiactor
 import (
 	"context"
 	"time"
+	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
@@ -152,6 +153,8 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Errcode = (uint32)(tempErr)
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
 	}
+	
+	fmt.Println("trx: ", resp.Result.TrxHash, resp.Msg)
 
 	return nil
 }

@@ -57,7 +57,7 @@ func NewTrxActor() *actor.PID {
 	TrxActorPid, err = actor.SpawnNamed(props, "TrxActor")
 
 	if err != nil {
-		panic(fmt.Errorf("TrxActor SpawnNamed error: ", err))
+		panic(fmt.Errorf("TrxActor SpawnNamed error: %v", err))
 	} else {
 		return TrxActorPid
 	}
@@ -69,21 +69,15 @@ func SetTrxPool(pool *transaction.TrxPool) {
 }
 
 func handleSystemMsg(context actor.Context) bool {
-
-	switch msg := context.Message().(type) {
-
+	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("TrxActor received started msg", msg)
-
+		fmt.Printf("TrxActor received started msg")
 	case *actor.Stopping:
 		fmt.Printf("TrxActor received stopping msg")
-
 	case *actor.Restart:
 		fmt.Printf("TrxActor received restart msg")
-
 	case *actor.Restarting:
 		fmt.Printf("TrxActor received restarting msg")
-
 	default:
 		return false
 	}

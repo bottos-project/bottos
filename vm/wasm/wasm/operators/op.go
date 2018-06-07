@@ -47,6 +47,7 @@ type Op struct {
 	Returns     wasm.ValueType   // the value returned (pushed) by the operator, is 0 for polymorphic operators
 }
 
+//IsValid check name
 func (o Op) IsValid() bool {
 	return o.Name != ""
 }
@@ -81,6 +82,7 @@ func newPolymorphicOp(code byte, name string) byte {
 	return code
 }
 
+//InvalidOpcodeError op code error type
 type InvalidOpcodeError byte
 
 func (e InvalidOpcodeError) Error() string {

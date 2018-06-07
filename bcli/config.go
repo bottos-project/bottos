@@ -45,6 +45,7 @@ var CONFIG *CLIConfig
 //CLIConfig configure key pairs
 type CLIConfig struct {
 	KeyPairs []KeyPair `json:"key_pairs"`
+	ChainId  string `json:"chain_id"`
 }
 
 //KeyPair key pair
@@ -94,6 +95,15 @@ func GetDefaultKey() ([]byte, error) {
 	return []byte{}, fmt.Errorf("Key Not Found")
 }
 
+
+//GetChainId get chain id
+func GetChainId() ([]byte, error) {
+	if CONFIG != nil {
+		return common.HexStringToBytes(CONFIG.ChainId), nil
+	}
+
+	return []byte{}, fmt.Errorf("Chain Id Not Found")
+}
 func loadConfigJson(fn string) ([]byte, error) {
 	file, e := ioutil.ReadFile(fn)
 	if e != nil {
