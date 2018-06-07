@@ -1,6 +1,6 @@
 # Bottos blockchain
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/bottos-project/bottos)](https://goreportcard.com/report/github.com/bottos-project/bottos)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bottos-project/bottos)](https://goreportcard.com/report/github.com/bottos-project/bottos)   [![License](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 
 This repository of Bottos is to build an blockchain infrastructure.
 
