@@ -48,6 +48,11 @@ const (
 	ErrTrxChainMathError ErrCode = 10006
 	// ErrTrxContractHanldeError handle trx contract error
 	ErrTrxContractHanldeError ErrCode = 10007
+	// ErrTrxContractDepthError handle trx contract depth error
+	ErrTrxContractDepthError ErrCode = 10008
+	// ErrTrxSubContractNumError handle trx sub contract num error
+	ErrTrxSubContractNumError ErrCode = 10009
+
 
 	// ErrContractAccountNameIllegal invalid contract account name
 	ErrContractAccountNameIllegal ErrCode = 10101
@@ -103,6 +108,8 @@ var (
 		ErrTrxUniqueError:         "push trx: " + "check trx unique error",
 		ErrTrxChainMathError:      "push trx: " + "check match chain error",
 		ErrTrxContractHanldeError: "push trx: " + "process contract error",
+		ErrTrxContractDepthError:  "push trx: " + "contract depth error",
+		ErrTrxSubContractNumError: "push trx: " + "sub contract num error",
 
 		ErrContractAccountNameIllegal:  "push trx: " + "illegal account name",
 		ErrContractAccountNotFound:     "push trx: " + "account name not found",
