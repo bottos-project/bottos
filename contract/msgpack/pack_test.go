@@ -308,7 +308,7 @@ func TestUserReg(t *testing.T) {
 	fmt.Println("TestUserReg...")
 
 	ts := TestStruct{
-		V1: "didinfotest",
+		V1: "buyertest",
 		V2: "userinfotest",
 	}
 	b, err := Marshal(ts)
