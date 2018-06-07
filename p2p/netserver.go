@@ -38,10 +38,10 @@ import (
 	"time"
 	"errors"
 	"encoding/json"
-	"github.com/bottos-project/core/config"
-	"github.com/bottos-project/core/action/env"
-	"github.com/bottos-project/core/common/types"
-	msgDef "github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/common/types"
+	msgDef "github.com/bottos-project/bottos/action/message"
 )
 
 const (

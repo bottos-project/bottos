@@ -28,11 +28,11 @@ package netactor
 import (
 	"fmt"
 	//"encoding/json"
-	"github.com/bottos-project/core/action/message"
+	"github.com/bottos-project/bottos/action/message"
 	//"github.com/bottos-project/core/common/types"
-	p2pserv "github.com/bottos-project/core/p2p"
+	p2pserv "github.com/bottos-project/bottos/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/bottos/action/env"
 )
 
 var NetActorPid   *actor.PID = nil

@@ -40,7 +40,7 @@ import (
 	"io/ioutil"
 	"time"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/bottos/action/env"
 )
 
 var actorEnv *env.ActorEnv

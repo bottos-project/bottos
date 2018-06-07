@@ -57,7 +57,7 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 
 	mActor := &MultiActor{
 		apiactor.NewApiActor(),
-		netactor.NewNetActor(),
+		netactor.NewNetActor(env),
 		trxactor.NewTrxActor(),
 		chainactor.NewChainActor(env),
 		produceractor.NewProducerActor(env),
