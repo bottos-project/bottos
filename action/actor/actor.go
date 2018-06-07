@@ -38,6 +38,10 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 )
 
+var apiActorPid *actor.PID
+var netActorPid *actor.PID
+var trxActorPid *actor.PID
+var chainActorPid *actor.PID
 //MultiActor actor group
 type MultiActor struct {
 	apiActorPid      *actor.PID
@@ -47,6 +51,9 @@ type MultiActor struct {
 	producerActorPid *actor.PID
 }
 
+func (m *MultiActor) GetTrxActor() *actor.PID {
+	return m.trxActorPid
+}
 //GetNetActor get net actor PID
 func (m *MultiActor) GetNetActor() *actor.PID {
 	return m.netActorPid
@@ -70,15 +77,16 @@ func registerActorMsgTbl(m *MultiActor) {
 
 	fmt.Println("RegisterActorMsgTbl")
 
-	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
+	apiactor.SetTrxActorPid(m.trxActorPid)          // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid)
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
-	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> chain
+	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> trx
+	produceractor.SetNetActorPid(m.netActorPid)     // producer --> chain
 	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
 
-	netactor.SetTrxActorPid(m.trxActorPid)
-	netactor.SetChainActorPid(m.chainActorPid)
+	netactor.SetTrxActorPid(m.trxActorPid)          //p2p --> trx
+	netactor.SetChainActorPid(m.chainActorPid)      //p2p --> chain
 }
 
 //GetTrxActorPID get trx actor pid

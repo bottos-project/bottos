@@ -16,52 +16,30 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  api agent
+ * file description:  net actor
  * @Author:
- * @Date:   2017-12-06
+ * @Date:   2017-12-07
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package trxactor
+package produceractor
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common/types"
 )
 
-var apiactorPid *actor.PID
-var netActor *actor.PID
+var netActorPid *actor.PID
 
-func SetApiActorPid(apid *actor.PID) {
-	apiactorPid = apid
+func SetNetActorPid(tpid *actor.PID) {
+	netActorPid = tpid
 }
 
-func SetNetActorPid(pid *actor.PID) {
-	netActor = pid
-}
+func BroadCastBlock(block *types.Block) {
 
-func GetNetActorPid() *actor.PID {
-	return netActor
-}
-
-func sendTrxRsp(trxRsp uint64, pid *actor.PID) {
-
-	pid.Tell("pushTrxRsp")
-	/*
-		pushTrxReq := &types.Transaction{
-			RefBlockNum: 11,
-			Sender:      22,
-		}
-
-			trxactorPid.Tell(pushTrxReq)
-
-			f := trxactorPid.RequestFuture(pushTrxReq, 5000*time.Millisecond)
-			es, err := f.Result() // waits for pid to reply
-
-			fmt.Println("this is es err", es, err)
-	*/
-	//result, _ := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
-
-	//fmt.Println(result)
-
+	broadCastBlock := &message.NotifyBlock{block}
+	netActorPid.Tell(broadCastBlock)
+	return
 }
