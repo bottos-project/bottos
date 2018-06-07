@@ -420,8 +420,6 @@ func (serv *NetServer) sendBklInfo (peer *Peer) {
 		return
 	}
 
-	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::SendBklInfo() send msg: ", msg , " , blockInfoByte = ", blockInfoByte)
-
 	peer.SendTo(msgByte , false)
 
 	return
@@ -446,14 +444,12 @@ func (serv *NetServer) syncBlock(srcAddr string , blockInfo *BlockInfo) error {
 		return nil
 	}
 
-	//set synced = false
 	syncLock.Lock()
 	isSynced = false
 	syncLock.Unlock()
-	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::syncBlock() BLOCK_INFO block_num = " , block_num , " , block_info = ",block_info)
 
 	//if local header_num < remote header_num , request remote peer to sync
-	//todo blockNum < blockInfo.BlockNum
+	//blockNum < blockInfo.BlockNum
 	for i := headerNum + 1; i <=  blockInfo.HeaderNum; i++ {
 		//use block id to require block from other peer
 		serv.reqBlock(srcAddr , i)
@@ -559,7 +555,7 @@ func (serv *NetServer) handleCrxBroadcast (msg CommonMessage) {
 		Trx:       &newCrx,
 		TrxSender: msgDef.TrxSenderTypeP2P,
 	}
-	SuperPrint(YELLO_PRINT , "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:",msg.Src," newCrx = ",newCrx)
+	SuperPrint(YELLO_PRINT , "******************* NetServer::HandleMessage from:",msg.Src," newCrx = ",newCrx)
 
 	if serv.notify.trxActorPid != nil {
 		fmt.Println("NetServer::HandleMessage() send new crx to trxActor: ",recvTrx)

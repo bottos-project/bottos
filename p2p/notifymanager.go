@@ -64,13 +64,10 @@ func NewNotifyManager() *NotifyManager {
 }
 
 func (notify *NotifyManager) Start() {
-	fmt.Println("NotifyManager::Start")
-	//for{}
 }
 
 func (notify *NotifyManager) broadcastByte (buf []byte, isSync bool) {
-	//notify.RLock()
-	//defer notify.RUnlock()
+
 	fmt.Println("NotifyManager::broadcastByte")
 	peer_map := notify.getPeerMap()
 
