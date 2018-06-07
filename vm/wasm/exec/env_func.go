@@ -58,11 +58,11 @@ func NewEnvFunc() *EnvFunc {
 
 	envFunc.Register("printi", printi)
 	envFunc.Register("prints", prints)
-	envFunc.Register("getStrValue", getStrValue)
-	envFunc.Register("setStrValue", setStrValue)
-	envFunc.Register("removeStrValue", removeStrValue)
-	envFunc.Register("getParam", getParam)
-	envFunc.Register("callTrx", callTrx)
+	envFunc.Register("get_str_value", getStrValue)
+	envFunc.Register("set_str_value", setStrValue)
+	envFunc.Register("remove_str_value", removeStrValue)
+	envFunc.Register("get_param", getParam)
+	envFunc.Register("call_trx", callTrx)
 
 	return &envFunc
 }
