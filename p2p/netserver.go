@@ -48,7 +48,7 @@ const (
 	SYN_BLK_NUM = 10
 )
 
-var isSynced bool = false
+var isSynced bool = true
 var syncLock sync.RWMutex
 
 func GetSyncStatus() bool {
@@ -76,7 +76,7 @@ type NetServer struct {
 	publicKey       string
 
 	timeInterval   *time.Timer
-	syncLock         sync.RWMutex
+	syncLock        sync.RWMutex
 
 	actorEnv        *env.ActorEnv
 	isSync          bool
