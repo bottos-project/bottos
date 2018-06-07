@@ -25,37 +25,37 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by: Stewart Li
- * @Last Modified time:2018-05-29
+ * @Last Modified by:
+ * @Last Modified time:
  */
 
 package p2pserver
 
 import (
-	//"fmt"
+	"fmt"
 	"sync"
 	//"reflect"
-	"github.com/AsynkronIT/protoactor-go/actor"
 	"strings"
+	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
-//NotifyManager is function to sync the trx , blk and peer info with other p2p other
+//its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-	p2p      *P2PServer
-	stopSync chan bool
+
+	p2p              *P2PServer
+	stopSync         chan bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
-	peerMap map[uint64]*Peer
+	peerMap          map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
 
-// NewNotifyManager is to initial notify manager
 func NewNotifyManager() *NotifyManager {
-	return &NotifyManager{
+	return &NotifyManager {
 		peerMap:          make(map[uint64]*Peer),
 		trxActorPid:      nil,
 		chainActorPid:    nil,
@@ -63,61 +63,91 @@ func NewNotifyManager() *NotifyManager {
 	}
 }
 
-// Start is to start notify manager
 func (notify *NotifyManager) Start() {
+	fmt.Println("NotifyManager::Start")
 	//for{}
 }
 
-// BroadcastByte is to broadcast data
-func (notify *NotifyManager) BroadcastByte(buf []byte, isSync bool) {
-	notify.RLock()
-	defer notify.RUnlock()
+func (notify *NotifyManager) broadcastByte (buf []byte, isSync bool) {
+	//notify.RLock()
+	//defer notify.RUnlock()
+	fmt.Println("NotifyManager::broadcastByte")
+	peer_map := notify.getPeerMap()
 
-	for _, peer := range notify.peerMap {
+	for _ , peer := range peer_map {
 		if peer.GetPeerState() == ESTABLISH {
-			peer.SendTo(buf, false)
+			peer.SendTo(buf , false)
 		}
 	}
 
 	return
 }
 
-// AddPeer is to add an peer to local
-func (notify *NotifyManager) AddPeer(peer *Peer) {
+func (notify *NotifyManager) addPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _, ok := notify.peerMap[peer.GetId()]; !ok {
+	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
 		notify.peerMap[peer.GetId()] = peer
 	}
 }
 
-// DelPeer is to del peer from local
-func (notify *NotifyManager) DelPeer(peer *Peer) {
+func (notify *NotifyManager) delPeer(peer *Peer)  {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _, ok := notify.peerMap[peer.GetId()]; !ok {
+	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
 		delete(notify.peerMap, peer.GetId())
 	}
 }
 
-//BroadcastBlk is to sync blk info with other peer
+func (notify *NotifyManager) getPeer(addr string)  {
+
+}
+
+func (notify *NotifyManager) getPeerMap() map[uint64]*Peer {
+	notify.RLock()
+	defer notify.RUnlock()
+
+	return notify.peerMap
+}
+
+func (notify *NotifyManager) getPeerCnt() uint32 {
+	notify.RLock()
+	defer notify.RUnlock()
+
+	if len(notify.peerMap) == 0 {
+		return 0
+	}
+
+	var cnt uint32 = 0
+	for _ , peer := range notify.peerMap {
+		if ESTABLISH == peer.GetPeerState() {
+			cnt++
+		}
+	}
+	return cnt
+}
+
+
+//todo sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
+	//fmt.Println("NotifyManager::BroadcastBlk")
 }
 
-//SyncHash is to sync blk's hash info with other peer
+//todo sync blk's hash info with other peer
 func (notify *NotifyManager) SyncHash() {
+	//fmt.Println("NotifyManager::SyncHash")
 }
 
-//SyncPeer is to sync peer info with other peer
+//todo sync peer info with other peer
 func (notify *NotifyManager) SyncPeer() {
+	//fmt.Println("NotifyManager::SyncPeer")
 }
 
-// IsExist is to judge whether an addr is exist
-func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
-	for _, peer := range notify.peerMap {
-		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
+func (notify *NotifyManager) isExist(addr string , isExist bool) bool {
+	for _ , peer := range notify.peerMap {
+		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
 			return true
 		}
 	}
@@ -125,7 +155,24 @@ func (notify *NotifyManager) IsExist(addr string, isExist bool) bool {
 	return false
 }
 
-// GetPeerMap is to get peer map
-func (notify *NotifyManager) GetPeerMap() map[uint64]*Peer {
-	return notify.peerMap
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

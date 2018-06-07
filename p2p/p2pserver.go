@@ -25,39 +25,42 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by: Stewart Li
- * @Last Modified time: 2018-06-04
+ * @Last Modified by:
+ * @Last Modified time:
  */
 
 package p2pserver
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"sync"
-
+	"errors"
+	"crypto/rsa"
+	"encoding/json"
+	"io/ioutil"
+	"time"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/core/action/env"
 )
 
-//P2PServer is p2p server
-type P2PServer struct {
-	serv      *NetServer
-	p2pConfig *P2PConfig
+var actorEnv *env.ActorEnv
 
-	p2pLock sync.RWMutex
+//
+type P2PServer struct{
+	serv          *NetServer
+	p2pConfig     *P2PConfig
+
+	p2pLock        sync.RWMutex
 }
 
-//P2PConfig is to config p2p
 type P2PConfig struct {
-	ServAddr string
-	ServPort int
-	PeerLst  []string
+	ServAddr    string
+	ServPort    int
+	PeerLst     []string
 }
 
-//ReadFile is to parse json configuration
-func ReadFile(filename string) *P2PConfig {
+//parse json configuration
+func ReadFile(filename string) *P2PConfig{
 
 	if filename == "" {
 		fmt.Println("*ERROR* parmeter is null")
@@ -67,13 +70,13 @@ func ReadFile(filename string) *P2PConfig {
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to read the config: ", filename)
-		return &P2PConfig{}
+		fmt.Println("*ERROR* Failed to read the config: ",filename)
+		return  &P2PConfig{}
 	}
 
-	str := string(bytes)
+	str:=string(bytes)
 
-	if err := json.Unmarshal([]byte(str), &pc); err != nil {
+	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
 		fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
@@ -81,44 +84,48 @@ func ReadFile(filename string) *P2PConfig {
 	return &pc
 }
 
-//NewServ is to create new server
-func NewServ() *P2PServer {
+//
+func NewServ() *P2PServer{
+	fmt.Println("NewServ()")
 
+	//config file for test
 	p2pconfig := ReadFile(CONF_FILE)
-
 	/*
-		prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
-		if err != nil {
-			panic(err)
-		}
+	prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	if err != nil {
+		panic(err)
+	}
 
-		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
+	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	var p2pServ *P2PServer
-	p2pServ = nil
+	var p2pserv *P2PServer = nil
 	if TST == 0 {
-		p2pServ = &P2PServer{
+		p2pserv = &P2PServer{
 			serv:      NewNetServer(),
 			p2pConfig: p2pconfig,
 		}
-	} else {
-		p2pServ = &P2PServer{
+	}else{
+		p2pserv = &P2PServer{
 			serv:      NewNetServerTst(p2pconfig),
 			p2pConfig: p2pconfig,
 		}
 	}
 
-	return p2pServ
+	return p2pserv
 }
 
-//Init is to init p2p before start up
 func (p2p *P2PServer) Init() error {
+
+	fmt.Println("p2pServer::Init()")
+
 	return nil
 }
 
-//Start is the entry of p2p
+
+//it is the entry of p2p
 func (p2p *P2PServer) Start() error {
+	fmt.Println("p2pServer::Start()")
 
 	if p2p.p2pConfig == nil {
 		return errors.New("*ERROR* P2P Configuration hadn't been inited yet !!!")
@@ -134,68 +141,126 @@ func (p2p *P2PServer) Start() error {
 	}
 
 	//connect to other seed nodes
-	go p2p.serv.ActiveSeeds()
+	go p2p.serv.activeTimedTask()
+	go p2p.testBlock()
 
-	//ping/pong
+	//get all seeds or wait for 3 seconds
+	//go p2p.serv.initSync()
+	// Todo ping/pong
 	go p2p.RunHeartBeat()
 
 	return nil
 }
 
-//RunHeartBeat is to run a heart beat to watch the network status
-func (p2p *P2PServer) RunHeartBeat() error {
+//run a heart beat to watch the network status
+func  (p2p *P2PServer) RunHeartBeat() error {
+	fmt.Println("p2pServer::RunHeartBeat()")
 	return nil
 }
 
-//SetTrxActor is to set trx actor
-func (p2p *P2PServer) SetTrxActor(trxActorPid *actor.PID) {
+func  (p2p *P2PServer) SetTrxActor (trxActorPid *actor.PID)  {
 	p2p.serv.notify.trxActorPid = trxActorPid
 }
 
-//SetChainActor is to set chain actor
-func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
+func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
-//BroadCastImpl is the broadcast template
-func (p2p *P2PServer) BroadCastImpl(m interface{}, msgType uint8) error {
-
-	contentByte, err := json.Marshal(m)
-	if err != nil {
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
-		return err
-	}
-
-	msg := message{
-		Src:     p2p.p2pConfig.ServAddr,
-		MsgType: msgType, // the type to notify other peers new crx
-		Content: contentByte,
-	}
-
-	msgByte, err := json.Marshal(msg)
-	if err != nil {
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
-		return err
-	}
-
-	p2p.serv.notify.BroadcastByte(msgByte, false)
-
-	return nil
+func  (p2p *P2PServer) SetChainActorPid (tpid *actor.PID)  {
+	p2p.serv.notify.chainActorPid = tpid
 }
 
-//BroadCast is to broadcast
-//A interface for call from other component
-func (p2p *P2PServer) BroadCast(m interface{}, callType uint8) error {
+func (p2p *P2PServer) SetActorEnv (env *env.ActorEnv)  {
+	p2p.serv.actorEnv = env
+	actorEnv          = env
+}
 
+//A interface for call from other component
+func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
+	fmt.Println("p2pServer::BroadCast()")
 	var res error
-	switch callType {
+	switch call_type{
 	case TRANSACTION:
-		res = p2p.BroadCastImpl(m, CRX_BROADCAST)
+		res = p2p.serv.broadCastImpl(m , CRX_BROADCAST)
 
 	case BLOCK:
-		res = p2p.BroadCastImpl(m, BLK_BROADCAST)
+		res = p2p.serv.broadCastImpl(m , BLK_BROADCAST)
 
 	}
 
 	return res
 }
+
+type RsaKeyPair struct {
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+}
+
+// Key represents a crypto key that can be compared to another key
+type Key interface {
+	// Bytes returns a serialized, storeable representation of this key
+	Bytes() ([]byte, error)
+
+	// Equals checks whether two PubKeys are the same
+	Equals(Key) bool
+}
+
+// PrivKey represents a private key that can be used to generate a public key,
+// sign data, and decrypt data that was encrypted with a public key
+type PrivKey interface {
+	Key
+
+	// Cryptographically sign the given bytes
+	Sign([]byte) ([]byte, error)
+
+	// Return a public key paired with this private key
+	GetPublic() PubKey
+}
+
+type PubKey interface {
+	Key
+
+	// Verify that 'sig' is the signed hash of 'data'
+	Verify(data []byte, sig []byte) (bool, error)
+}
+
+
+/*
+// Generates a keypair
+func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, error) {
+
+	privateKey, err := rsa.GenerateKey(src, bits)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	publicKey := &privateKey.PublicKey
+
+	return &RsaKeyPair{privateKey:privateKey}, &RsaKeyPair{ publicKey:publicKey}, nil
+}
+*/
+
+func (p2p *P2PServer)testBlock() {
+	var timeInterval *time.Timer = time.NewTimer(3 * time.Second)
+	var blockNum  uint32
+	var headerNum uint32
+
+	for {
+		select {
+		case <- timeInterval.C:
+
+			blockNum  = actorEnv.Chain.LastConsensusBlockNum()
+			headerNum = actorEnv.Chain.HeadBlockNum()
+			SuperPrint(AUQA_PRINT , "P2PServer::TestBlock() blockNum: ",blockNum," , headerNum: ", headerNum)
+
+			timeInterval.Stop()
+			timeInterval.Reset(time.Second * 3)
+		}
+	}
+
+}
+
+
+
+
+

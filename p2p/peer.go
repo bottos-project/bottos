@@ -25,81 +25,84 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by:    Stewart Li
- * @Last Modified time:  2018-05-16
+ * @Last Modified by:
+ * @Last Modified time:
  */
 
 package p2pserver
 
-import (
-	"errors"
-	"fmt"
+import  (
 	"net"
+	"fmt"
+	"errors"
 )
 
-//Peer info
 type Peer struct {
-	peerAddr  string
-	servPort  int
-	peerId    uint32
-	publicKey string
+	peerAddr     string
+	servPort     int
+	peerId       uint32
+	publicKey    string
 
-	peerSock *net.UDPAddr
-	conn     net.Conn
+	peerSock    *net.UDPAddr
+	conn         net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-//NewPeer is to create new peer
-func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
+func NewPeer(addr_name string , serv_port int , conn net.Conn) *Peer {
 	return &Peer{
-		peerAddr:  addrName,
-		servPort:  servPort,
-		peerId:    0,
-		conn:      conn,
-		syncState: 0,
+		peerAddr:   addr_name,
+		servPort:   serv_port,
+		peerId:     0,
+		conn:       conn,
+		syncState:  0,
 	}
 }
 
-//GetPeerAddr is getting peer address
 func (p *Peer) GetPeerAddr() string {
 	return p.peerAddr
 }
 
-//SetPeerAddr is setting peer address
 func (p *Peer) SetPeerAddr(addr string) {
 	p.peerAddr = addr
 }
 
-//SetPeerState is setting peer state
 func (p *Peer) SetPeerState(state uint32) {
 	p.syncState = state
 }
 
-//GetPeerState is getting peer state
 func (p *Peer) GetPeerState() uint32 {
 	return p.syncState
 }
 
-//GetId is to get id
 func (p *Peer) GetId() uint64 {
 	if p.peerId == 0 {
-		addrPort := p.peerAddr + ":" + fmt.Sprint(p.servPort)
-		p.peerId = Hash(addrPort)
+		addr_port := p.peerAddr + ":" + fmt.Sprint(p.servPort)
+		p.peerId   = Hash(addr_port)
 	}
 
 	return uint64(p.peerId)
 }
 
-//SendTo is to send to message buffer
 func (p *Peer) SendTo(buf []byte, isSync bool) error {
-	len, err := p.conn.Write(buf)
+
+	conn, err := net.Dial("tcp", p.peerAddr+":"+fmt.Sprint(p.servPort))
 	if err != nil {
+		SuperPrint(RED_PRINT,"*ERROR* Failed to create a connection for remote server !!! err: ",err.Error())
+		return err
+	}
+
+	len , err := conn.Write(buf)
+	if err != nil {
+		SuperPrint(RED_PRINT ,"*ERROR* Failed to send data !!! len: ",len,err.Error() )
 		return errors.New("*ERROR* Failed to send data !!!")
-	} else if len <= 0 {
+	}else if len <= 0 {
+		SuperPrint(RED_PRINT , "*ERROR* Failed to send data !!! len: ",len,err.Error() )
 		return errors.New("*ERROR* Failed to send data !!!")
 	}
+
+	conn.Close()
 
 	return nil
 }

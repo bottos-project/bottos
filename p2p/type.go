@@ -32,71 +32,77 @@
 package p2pserver
 
 import (
-	"crypto/rsa"
-	"hash/fnv"
+	"fmt"
 	"unsafe"
+	"hash/fnv"
 )
 
 //message type
 const (
-	REQUEST = iota //0
+	REQUEST  = iota   //0
 	RESPONSE
 	CRX_BROADCAST
 	BLK_BROADCAST
-	OTHER
+	DEFAULT
 )
 
 //connection state
 const (
-	ESTABLISH  = iota //receive peer`s verack
-	INACTIVITY        //link broken
+	ESTABLISH   = 10 //receive peer`s verack
+	INACTIVITY  = 11       //link broken
 )
 
 //p2p call type
 const (
-	TRANSACTION = iota
-	BLOCK
+	TRANSACTION = 100
+	BLOCK       = 101
+	BLOCK_INFO  = 102
+	BLOCK_REQ   = 103
+	BLOCK_RES   = 104
 )
 
-type message struct {
-	Src     string
-	Dst     string
-	MsgType uint8
-	Content []byte
+const (
+	BLOCK_PRINT        = 30
+	RED_PRINT          = 31
+	GREEN_PRINT        = 32
+	YELLO_PRINT        = 33
+	BLUE_PRINT         = 34
+	PURPLISH_RED_PRINT = 35
+	AUQA_PRINT         = 36
+	WHITE_PRINT        = 37
+)
+
+type CommonMessage struct {
+	Src       string
+	Dst       string
+	MsgType   uint8
+	Content   []byte
+}
+
+type BlockInfo struct {
+	BlockNum  uint32
+	HeaderNum uint32
+}
+
+type BlockReq struct {
+	BlockNum uint32
 }
 
 func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-//Hash ...
 func Hash(str string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(str))
 	return h.Sum32()
 }
 
-//RsaKeyPair is to store rsa publickey and privatekey
-type RsaKeyPair struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
+func SuperPrint(color uint8 , args ...interface{}) {
+	for _, v := range args {
+		fmt.Printf("%c[%d;%d;%dm%v%c[0m", 0x1B, 123 , 40 , color, v, 0x1B)
+	}
+	fmt.Printf("\n")
 }
 
-//Key interface
-type Key interface {
-	Bytes() ([]byte, error)
-	Equals(Key) bool
-}
 
-//PrivKey interface
-type PrivKey interface {
-	Key
-	Sign([]byte) ([]byte, error)
-	GetPublicKey() PubKey
-}
-
-//PubKey interface
-type PubKey interface {
-	Key
-	VerifyKey(data []byte, sig []byte) (bool, error)
-}

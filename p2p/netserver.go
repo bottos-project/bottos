@@ -25,59 +25,80 @@
  * file description: the interface for WASM execution
  * @Author: Stewart Li
  * @Date:   2018-02-08
- * @Last Modified by: Stewart Li
- * @Last Modified time: 2018-06-05
+ * @Last Modified by:
+ * @Last Modified time:
  */
 
 package p2pserver
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"sync"
 	"time"
-
-	msgDef "github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/config"
+	"errors"
+	"encoding/json"
+	"github.com/bottos-project/core/config"
+	"github.com/bottos-project/core/action/env"
+	"github.com/bottos-project/core/common/types"
+	msgDef "github.com/bottos-project/core/action/message"
 )
 
-//NetServer p2p server
-type NetServer struct {
-	config *P2PConfig
-	port   int
-	addr   string
+const (
+	SYN_BLK_NUM = 10
+)
 
-	notify   *NotifyManager
-	listener net.Listener
+var isSynced bool = false
+var syncLock sync.RWMutex
 
-	seedPeer []string
+func GetSyncStatus() bool {
+	syncLock.RLock()
+	defer syncLock.RUnlock()
 
-	neighborList []*net.UDPAddr
-	serverAddr   *net.UDPAddr
-	socket       *net.UDPConn
-	//todo
-	publicKey string
-
-	timeInterval *time.Timer
-	netLock      sync.RWMutex
+	return isSynced
 }
 
-//NewNetServer new a p2p server
+type NetServer struct {
+	config          *P2PConfig
+	port            int
+	addr            string
+
+	notify          *NotifyManager
+	listener        net.Listener
+
+	seedPeer        []string
+	connPeerNum     int
+
+	neighborList    []*net.UDPAddr
+	serverAddr      *net.UDPAddr
+	socket          *net.UDPConn
+	//todo publicKey to identify credit peer
+	publicKey       string
+
+	timeInterval   *time.Timer
+	syncLock         sync.RWMutex
+
+	actorEnv        *env.ActorEnv
+	isSync          bool
+
+	sync.RWMutex
+}
+
 func NewNetServer() *NetServer {
 
 	return &NetServer{
-		addr:         config.Param.ServAddr,
-		seedPeer:     config.Param.PeerList,
-		port:         config.Param.P2PPort,
-		notify:       NewNotifyManager(),
-		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
+		addr:          config.Param.ServAddr,
+		seedPeer:      config.Param.PeerList,
+		port:          config.Param.P2PPort,
+		notify:        NewNotifyManager(),
+		connPeerNum:   0,
+		actorEnv:      nil,
+		isSync:        false,
+		timeInterval:  time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 
-//NewNetServerTst new a p2p server with test configure
+//for UT
 func NewNetServerTst(config *P2PConfig) *NetServer {
 	if config == nil {
 		fmt.Println("*ERROR* Parmeter is empty !!!")
@@ -85,28 +106,32 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 	}
 
 	return &NetServer{
-		config:       config,
-		seedPeer:     config.PeerLst,
-		addr:         config.ServAddr,
-		port:         config.ServPort,
-		notify:       NewNotifyManager(),
-		timeInterval: time.NewTimer(TIME_INTERVAL * time.Second),
+		config:        config,
+		seedPeer:      config.PeerLst,
+		addr:          config.ServAddr,
+		port:          config.ServPort,
+		notify:        NewNotifyManager(),
+		connPeerNum:   0,
+		actorEnv:      nil,
+		timeInterval:  time.NewTimer(TIME_INTERVAL * time.Second),
 	}
 }
 
-//Start start listener
+//start listener
 func (serv *NetServer) Start() error {
+	fmt.Println("netServer::Start()")
 
 	go serv.Listening()
 
 	return nil
 }
 
-//Listening listen and run accept
+//run accept
 func (serv *NetServer) Listening() {
+	fmt.Println("NetServer::Listening()")
 	listener, err := net.Listen("tcp", ":"+fmt.Sprint(serv.port))
 	if err != nil {
-		fmt.Println("*ERROR* Failed to listen at port: " + fmt.Sprint(serv.port))
+		fmt.Println("*ERROR* Failed to listen at port: "+fmt.Sprint(serv.port))
 		return
 	}
 
@@ -120,23 +145,42 @@ func (serv *NetServer) Listening() {
 			continue
 		}
 
-		go serv.HandleMessage(conn)
+		go serv.handleMessage(conn)
 	}
 }
 
-//HandleMessage process message
-func (serv *NetServer) HandleMessage(conn net.Conn) {
+func (serv *NetServer) requestSyncLock() bool {
+	serv.Lock()
+	defer serv.Unlock()
+	if serv.isSync {
+		return true
+	} else {
+		serv.isSync = true
+		return false
+	}
+}
+
+
+func (serv *NetServer) releaseSyncLock() {
+	serv.Lock()
+	defer serv.Unlock()
+
+	serv.isSync = false
+}
+
+//run accept
+func (serv *NetServer) handleMessage(conn net.Conn) {
 
 	data := make([]byte, 4096)
-	var msg message
+	var msg CommonMessage
 
-	len, err := conn.Read(data)
+	len , err := conn.Read(data)
 	if err != nil {
 		fmt.Println("*WRAN* Can't read data from remote peer !!!")
 		return
 	}
 
-	err = json.Unmarshal(data[0:len], &msg)
+	err = json.Unmarshal(data[0:len] , &msg)
 	if err != nil {
 		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
@@ -144,231 +188,497 @@ func (serv *NetServer) HandleMessage(conn net.Conn) {
 
 	switch msg.MsgType {
 	case REQUEST:
-		//receive a connection request from other peer passively
-		rsp := message{
-			Src:     serv.addr,
-			Dst:     msg.Src,
-			MsgType: RESPONSE,
-		}
-
-		data, err := json.Marshal(rsp)
-		if err != nil {
-			fmt.Println("*WRAN* Failed to package the response message : ", err)
-			return
-		}
-
-		//create a new conn to response the remote peer
-		remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
-		if err != nil {
-			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
-			return
-		}
-
-		len, err := remoteConn.Write(data)
-		if err != nil {
-			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
-			return
-		} else if len < 0 {
-			fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
-			return
-		}
-
-		serv.AppendList(remoteConn, msg)
+		serv.handleRequest(msg)
 
 	case RESPONSE:
-		//a response from my proactive connect
-		//if the remote peer hadn't existed at local , add it into local
-		if serv.notify.IsExist(msg.Src, false) {
-			return
-		}
-
-		remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
-		if err != nil {
-			fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
-			return
-		}
-
-		serv.AppendList(remoteConn, msg)
+		serv.handleResponse(msg)
 
 	case CRX_BROADCAST:
-		//Receive crx_broadcast from other peer , and set it to txpool
-
-		var newCrx types.Transaction
-		err = json.Unmarshal(msg.Content, &newCrx)
-		if err != nil {
-			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
-			return
-		}
-
-		recvTrx := msgDef.PushTrxReq{
-			Trx:       &newCrx,
-			TrxSender: msgDef.TrxSenderTypeP2P,
-		}
-
-		fmt.Printf("%c[%d;%d;%dm%s %v %v %v %c[0m ", 0x1B, 123, 40, 33, "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:", msg.Src, " new_crx = ", newCrx, 0x1B)
-
-		if serv.notify.trxActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx to trxActor: ", recvTrx)
-			serv.notify.trxActorPid.Tell(&recvTrx)
-		}
+		serv.handleCrxBroadcast(msg)
 
 	case BLK_BROADCAST:
-		//Receive blk_broadcast from other peer
+		serv.handleBlkBroadcast(msg)
 
-		var newBlk types.Block
-		err = json.Unmarshal(msg.Content, &newBlk)
-		if err != nil {
-			fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
-			return
-		}
+	case BLOCK_INFO:
+		serv.handleBlkInfo(msg)
 
-		//build a new message struct (ReceiveBlock) to send to chainactor
-		recvBlk := msgDef.ReceiveBlock{
-			Block: &newBlk,
-		}
+	case BLOCK_REQ:
+		serv.handleBlkReq(msg)
 
-		if serv.notify.chainActorPid != nil {
-			fmt.Println("NetServer::HandleMessage() send new_crx to chainActor: ", recvBlk)
-			serv.notify.chainActorPid.Tell(recvBlk)
-		}
+	case BLOCK_RES:
+		serv.handleBlkRes(msg)
+
+	case DEFAULT:
+		SuperPrint(YELLO_PRINT , "DEFAULT ")
 	}
 
 	return
 }
 
-//ActiveSeeds active seeds
-func (serv *NetServer) ActiveSeeds() error {
-
+func (serv *NetServer) activeTimedTask() error {
+	fmt.Println("p2pServer::ActiveSeeds()")
 	for {
 		select {
-		case <-serv.timeInterval.C:
-			serv.ConnectSeeds()
-			serv.WatchStatus()
-			serv.ResetTimer()
+		case <- serv.timeInterval.C:
+			serv.connectSeeds()
+			serv.watchStatus()
+			serv.broadcastBlkInfo()
+			serv.resetTimer()
 		}
 	}
 }
 
-//AppendList add a establish peer
-func (serv *NetServer) AppendList(conn net.Conn, msg message) error {
+func (serv *NetServer) appendList(conn net.Conn , msg CommonMessage) error {
 	//package remote peer info as "peer" struct and add it into peer list
-	peer := NewPeer(msg.Src, serv.port, conn)
+	fmt.Println("NetServer::AppendList")
+	peer := NewPeer(msg.Src , serv.port , conn)
 	peer.SetPeerState(ESTABLISH)
-	serv.notify.AddPeer(peer)
+	serv.notify.addPeer(peer)
 
 	return nil
 }
 
-//ResetTimer reset time to start timer for a new round
-func (serv *NetServer) ResetTimer() {
+//reset time to start timer for a new round
+func  (serv *NetServer) resetTimer()  {
 	serv.timeInterval.Stop()
 	serv.timeInterval.Reset(time.Second * TIME_INTERVAL)
 }
 
-//ConnectSeeds connect seed during start p2p server
-func (serv *NetServer) ConnectSeeds() error {
+//connect seed during start p2p server
+func (serv *NetServer) connectSeeds() error {
 
-	for _, peer := range serv.seedPeer {
+	for _ , peer := range serv.seedPeer {
 		//check if the new peer is in peer list
-		if serv.notify.IsExist(peer, false) {
+		if serv.notify.isExist(peer , false) {
 			continue
 		}
 
-		var msg = message{
-			Src:     serv.addr,
-			Dst:     peer,
-			MsgType: REQUEST,
+		var msg = CommonMessage {
+			Src:      serv.addr,
+			Dst:      peer,
+			MsgType:  REQUEST,
 		}
 
-		req, err := json.Marshal(msg)
+		req , err := json.Marshal(msg)
 		if err != nil {
 			return err
 		}
 
-		//connect remote seed peer , if it's successful , add it into remote_list
-		go serv.Send(peer, req, false)
-
+		//connect remote seed peer , if it's successful , add it into remote peer list
+		go serv.Send(peer , req , false)
 	}
 
 	return nil
 }
 
-//SendTo to connect specified peer
-func (serv *NetServer) SendTo(conn net.Conn, msg []byte, isExist bool) error {
-
+//to connect specified peer
+func (serv *NetServer) SendTo (conn net.Conn , msg []byte , isExist bool) error {
+	fmt.Println("p2pServer::SendTo")
 	if conn == nil {
 		return errors.New("*ERROR* Invalid parameter !!!")
 	}
 
-	len, err := conn.Write(msg)
+	len , err := conn.Write(msg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
 
 	return nil
 }
 
-//Send to connect to certain peer proactively
-func (serv *NetServer) Send(addr string, msg []byte, isExist bool) error {
-	addPort := addr + ":" + fmt.Sprint(serv.port)
-	conn, err := net.Dial("tcp", addPort)
-
+//to connect to certain peer proactively
+func (serv *NetServer) Send (addr string , msg []byte , isExist bool) error {
+	addrPort := addr+":"+fmt.Sprint(serv.port)
+	conn , err := net.Dial("tcp", addrPort)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ", err)
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return err
 	}
 
-	len, err := conn.Write(msg)
+	len , err := conn.Write(msg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ", err)
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
+
+	conn.Close()
 
 	return nil
 }
 
-//ConnectUDP to connect certain peer with udp
-func (serv *NetServer) ConnectUDP(addr string, msg []byte, isExist bool) error {
+//to connect certain peer with udp
+func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error {
 
-	addPort := addr + ":" + fmt.Sprint(serv.port)
-	remoteAddr, err := net.ResolveUDPAddr("udp4", addPort)
+	addrPort := addr+":"+fmt.Sprint(serv.port)
+	remoteAddr, err := net.ResolveUDPAddr("udp4", addrPort)
 	if err != nil {
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
-	_, err = serv.socket.WriteToUDP(msg, remoteAddr)
+	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
-		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ", err)
+		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
 
 	return nil
 }
 
-//WatchStatus debug peers state
-func (serv *NetServer) WatchStatus() {
-	for key, peer := range serv.notify.peerMap {
-		fmt.Println("*** NetServer::WatchStatus() current status: key = ", key, " , peer = ", peer.peerAddr, " ***")
+func (serv *NetServer) watchStatus() {
+
+	blockNum  := serv.actorEnv.Chain.LastConsensusBlockNum()
+	headerNum := serv.actorEnv.Chain.HeadBlockNum()
+
+	SuperPrint(BLUE_PRINT,"NetServer::WatchStatus() blockNum: ",blockNum," , headerNum: ", headerNum)
+
+	for _, peer := range serv.notify.peerMap {
+		SuperPrint(BLUE_PRINT,"*** NetServer::WatchStatus() current status: peer = ",peer.peerAddr," ***")
 	}
 
 }
 
-//Ping send ping message to a peer
-func (serv *NetServer) Ping() {
+func  (serv *NetServer) broadCastImpl(m interface{} , msgType uint8) error {
+	fmt.Println("P2PServer::BroadCastImpl")
 
-	peerMap := serv.notify.GetPeerMap()
-	for _, peer := range peerMap {
-		if peer.syncState != ESTABLISH {
-			continue
-		}
-		//Todo send msg to test connection with other peers
+	contentByte , err := json.Marshal(m)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return err
 	}
 
+	msg := CommonMessage {
+		Src:     serv.addr,
+		MsgType: msgType, // the type to notify other peers new crx
+		Content: contentByte,
+	}
+
+	msgByte , err := json.Marshal(msg)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return err
+	}
+
+	serv.notify.broadcastByte(msgByte , false)
+
+	return nil
+}
+
+// broadcast current blk info(height and so on) to peerMap
+func (serv *NetServer) broadcastBlkInfo()  {
+
+	peerMap := serv.notify.getPeerMap()
+	for _ , peer := range peerMap {
+		go serv.sendBklInfo(peer)
+	}
+}
+
+func (serv *NetServer) sendBklInfo (peer *Peer) {
+	if peer.syncState != ESTABLISH {
+		return
+	}
+
+	if serv.actorEnv == nil {
+		return
+	}
+
+	blockNum  := serv.actorEnv.Chain.LastConsensusBlockNum()
+	headerNum := serv.actorEnv.Chain.HeadBlockNum()
+
+	//no generated blk and return
+	if blockNum <= 0 && headerNum <= 0 {
+		return
+	}
+
+	blockInfo := BlockInfo {
+		BlockNum:  serv.actorEnv.Chain.LastConsensusBlockNum(),
+		HeaderNum: serv.actorEnv.Chain.HeadBlockNum(),
+	}
+
+	blockInfoByte , err := json.Marshal(blockInfo)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the blockinfo to broadcast : ", err)
+		return
+	}
+
+	msg := CommonMessage {
+		Src:     serv.addr,
+		Dst:     peer.peerAddr,
+		MsgType: BLOCK_INFO, // the type to notify other peers new crx
+		Content: blockInfoByte,
+	}
+
+	msgByte , err := json.Marshal(msg)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return
+	}
+
+	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::SendBklInfo() send msg: ", msg , " , blockInfoByte = ", blockInfoByte)
+
+	peer.SendTo(msgByte , false)
+
+	return
+}
+
+func (serv *NetServer) syncBlock(srcAddr string , blockInfo *BlockInfo) error {
+	//if true means it is synchronsizing else to start synchronsize
+	//it enable just one goruntine is running for the function
+	if serv.requestSyncLock() {
+		return nil
+	}
+	defer serv.releaseSyncLock()
+
+	//Get block info at local
+	//blockNum  := actorEnv.Chain.LastConsensusBlockNum()
+	headerNum := actorEnv.Chain.HeadBlockNum()
+	gap       := blockInfo.BlockNum - headerNum
+	if gap <= 0 {
+		syncLock.Lock()
+		defer syncLock.Unlock()
+		isSynced = true
+		return nil
+	}
+
+	//set synced = false
+	syncLock.Lock()
+	isSynced = false
+	syncLock.Unlock()
+	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::syncBlock() BLOCK_INFO block_num = " , block_num , " , block_info = ",block_info)
+
+	//if local header_num < remote header_num , request remote peer to sync
+	//todo blockNum < blockInfo.BlockNum
+	for i := headerNum + 1; i <=  blockInfo.HeaderNum; i++ {
+		//use block id to require block from other peer
+		serv.reqBlock(srcAddr , i)
+	}
+
+	return nil
+}
+
+func (serv *NetServer) reqBlock (addr string , blockId uint32) error {
+	blockReq := BlockReq {
+		BlockNum: blockId,
+	}
+
+	blockReqByte , err := json.Marshal(blockReq)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the blockinfo to broadcast : ", err)
+		return err
+	}
+
+	msg := CommonMessage {
+		Src:     serv.addr,
+		Dst:     addr,
+		MsgType: BLOCK_REQ, // the type to notify other peers new crx
+		Content: blockReqByte,
+	}
+
+	msgByte , err := json.Marshal(msg)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return err
+	}
+
+	serv.Send(addr , msgByte , false )
+
+	SuperPrint(PURPLISH_RED_PRINT , "NetServer::ReqBlock()  sync blk req: ", msg )
+
+	return nil
+}
+
+
+func (serv *NetServer) handleRequest (msg CommonMessage) {
+	//receive a connection request from other peer passively
+	rsp := CommonMessage {
+		Src:      serv.addr,
+		Dst:      msg.Src,
+		MsgType:  RESPONSE,
+	}
+
+	data , err := json.Marshal(rsp)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the response message : ", err)
+		return
+	}
+
+	//create a new conn to response the remote peer
+	remoteConn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+	if err != nil {
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		return
+	}
+
+	len , err := remoteConn.Write(data)
+	if err != nil {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return
+	} else if len < 0 {
+		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		return
+	}
+
+	//remoteConn.SetDeadline(time.Now().Add(20 * time.Second))
+	serv.appendList(remoteConn , msg)
+}
+
+func (serv *NetServer) handleResponse (msg CommonMessage) {
+	//a response from my proactive connect
+	//if the remote peer hadn't existed at local , add it into local
+	if serv.notify.isExist(msg.Src , false) {
+		return
+	}
+
+
+	remoteConn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+	if err != nil {
+		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		return
+	}
+	//remoteConn.SetDeadline(time.Now().Add(20 * time.Second))
+	serv.appendList(remoteConn , msg)
+}
+
+
+func (serv *NetServer) handleCrxBroadcast (msg CommonMessage) {
+	//Receive crx boardcast from other peer , and set it to txpool
+	var newCrx types.Transaction
+	err := json.Unmarshal(msg.Content , &newCrx)
+	if err != nil {
+		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	recvTrx := msgDef.PushTrxReq{
+		Trx:       &newCrx,
+		TrxSender: msgDef.TrxSenderTypeP2P,
+	}
+	SuperPrint(YELLO_PRINT , "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:",msg.Src," newCrx = ",newCrx)
+
+	if serv.notify.trxActorPid != nil {
+		fmt.Println("NetServer::HandleMessage() send new crx to trxActor: ",recvTrx)
+		serv.notify.trxActorPid.Tell(&recvTrx)
+	}
+
+	//todo broadcast to other peers
+}
+
+func (serv *NetServer) handleBlkBroadcast (msg CommonMessage) {
+	//Receive blk boardcast from other peer
+	var newBlk types.Block
+	err := json.Unmarshal(msg.Content , &newBlk)
+	if err != nil {
+		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	//build a new message struct (ReceiveBlock) to send to chainactor
+	recvBlk := msgDef.ReceiveBlock{
+		Block:   &newBlk,
+	}
+	SuperPrint(YELLO_PRINT,"<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:",msg.Src," newBlk = ",newBlk)
+
+	if serv.notify.chainActorPid != nil {
+		SuperPrint(YELLO_PRINT,"NetServer::HandleMessage() send new crx to chainActor")
+		serv.notify.chainActorPid.Tell(&recvBlk)
+	}
+
+	//todo broadcast to other peers
+}
+
+func (serv *NetServer) handleBlkInfo (msg CommonMessage) {
+	//Receive broadcast from other peers
+	var blockInfo BlockInfo
+	err := json.Unmarshal(msg.Content , &blockInfo)
+	if err != nil {
+		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::HandleMessage() blockInfo: ", blockInfo ," , msg= " , msg)
+	go serv.syncBlock(msg.Src , &blockInfo)
+}
+
+func (serv *NetServer) handleBlkReq (msg CommonMessage) {
+	var blockReq BlockReq
+	err := json.Unmarshal(msg.Content , &blockReq)
+	if err != nil {
+		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	blk := actorEnv.Chain.GetBlockByNumber(blockReq.BlockNum)
+	blkByte , err := json.Marshal(blk)
+	if err != nil{
+		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		return
+	}
+
+	var req = CommonMessage {
+		Src:      serv.addr,
+		Dst:      msg.Src,
+		MsgType:  BLOCK_RES,
+		Content:  blkByte,
+	}
+
+	reqByte , err := json.Marshal(req)
+	if err != nil {
+		return
+	}
+
+	SuperPrint(PURPLISH_RED_PRINT, "NetServer::SyncBlock()  BLOCK_REQ  send back : ", msg.Src)
+	serv.Send(msg.Src , reqByte , false)
+}
+
+func (serv *NetServer) handleBlkRes (msg CommonMessage) {
+	//SuperPrint(PURPLISH_RED_PRINT,"NetServer::HandleMessage() BLOCK_RES")
+	var newBlk types.Block
+	err := json.Unmarshal(msg.Content , &newBlk)
+	if err != nil {
+		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	//build a new message struct (ReceiveBlock) to send to chainactor
+	recvBlk := msgDef.ReceiveBlock{
+		Block:   &newBlk,
+	}
+
+	if serv.notify.chainActorPid != nil {
+		SuperPrint(PURPLISH_RED_PRINT , "NetServer::HandleMessage() send BLOCK_RES to actor: ",newBlk)
+		serv.notify.chainActorPid.Tell(&recvBlk)
+	}
+}
+
+func (serv *NetServer) matchMinConnection() bool {
+	return int(serv.notify.getPeerCnt())+1 >= MIN_NODE_NUM
+}
+
+func (serv *NetServer) syncFinished() bool {
+	//check all peers about blk height
+	return true
+}
+
+//goruntine,
+func (serv *NetServer) initSync()  {
+	if serv.matchMinConnection() {
+		syncLock.Lock()
+		isSynced = true
+		syncLock.Unlock()
+
+		return
+	}
+
+	time.Sleep(INIT_SYNC_WAIT * time.Second)
+	syncLock.Lock()
+	isSynced = true
+	syncLock.Unlock()
+
+	return
 }

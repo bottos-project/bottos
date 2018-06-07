@@ -1,5 +1,5 @@
 {
-  "servAddr": "127.0.0.1",
+  "servAddr":"127.0.0.1",
   "servPort":6890,
   "peerLst": [
     "127.0.0.1"

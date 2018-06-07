@@ -32,11 +32,10 @@
 package p2pserver
 
 const (
-	// CONF_FILE is definition of config file name
-	CONF_FILE = "config.json"
-	// TIME_INTERVAL is definition of time interval
-	TIME_INTERVAL = 10
-	// TST is switch for test
+	CONF_FILE      = "config.json"
+	TIME_INTERVAL  = 10
 	//*WRAN* set the variable as "true" before starting test
-	TST = 0
+	TST            = 0
+	MIN_NODE_NUM   = 2
+	INIT_SYNC_WAIT = 3
 )
