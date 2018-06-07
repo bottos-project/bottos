@@ -30,25 +30,9 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 )
 
-//TrxSenderType trx sender type
-type TrxSenderType uint8
-
-const (
-	//InvalidSenderType trx sender type invalid value
-	InvalidSenderType TrxSenderType = iota
-	//TrxSenderTypeFront trx sender type front
-	TrxSenderTypeFront
-	//TrxSenderTypeP2P trx sender type p2p
-	TrxSenderTypeP2P
-	//MaxTrxSenderType trx sender type max value
-	MaxTrxSenderType
-)
-
 //PushTrxReq trx request info
 type PushTrxReq struct {
 	Trx *types.Transaction
-
-	TrxSender TrxSenderType
 }
 
 //QueryTrxReq the key of trx query

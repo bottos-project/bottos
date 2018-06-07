@@ -21,7 +21,7 @@
 package transaction
 
 import (
-	"fmt"
+	//"fmt"
 	"sync"
 	"time"
 
@@ -36,6 +36,7 @@ import (
 	"github.com/bottos-project/bottos/contract/contractdb"
 	"github.com/bottos-project/bottos/role"
 	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
+	log "github.com/cihub/seelog"
 )
 
 // TrxApplyService is to define a service for apply a transaction
@@ -69,12 +70,12 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 	curTime := common.Now()
 
 	if curTime >= trx.Lifetime {
-		fmt.Println("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "have past, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
+		log.Error("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "have past, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
 		return false
 	}
 
 	if trx.Lifetime >= (curTime + config.DEFAULT_MAX_LIFE_TIME) {
-		fmt.Println("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "too far, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
+		log.Error("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "too far, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
 		return false
 	}
 
@@ -86,8 +87,8 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
-		fmt.Println("check unique error ", trx.Hash())
-		fmt.Println("transactionExpiration is  ", transactionExpiration)
+		log.Error("check unique error ", trx.Hash())
+		log.Error("transactionExpiration is  ", transactionExpiration)
 
 		return false
 	}
@@ -100,13 +101,14 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 
 	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
 	if nil != err || nil == blockHistory {
+		log.Error("get block history error")
 		return false
 	}
 
 	var chainCursorLabel uint32 = (uint32)(blockHistory.BlockHash[common.HashLength-1]) + (uint32)(blockHistory.BlockHash[common.HashLength-2])<<8 + (uint32)(blockHistory.BlockHash[common.HashLength-3])<<16 + (uint32)(blockHistory.BlockHash[common.HashLength-4])<<24
 
 	if chainCursorLabel != trx.CursorLabel {
-		fmt.Println("check chain match error,trx cursorlabel ", trx.CursorLabel, "chain cursollabel ", chainCursorLabel, "trx: ", trx.Hash())
+		log.Error("check chain match error,trx cursorlabel ", trx.CursorLabel, "chain cursollabel ", chainCursorLabel, "trx: ", trx.Hash())
 		return false
 	}
 
@@ -125,22 +127,19 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if nil != getAccountErr || nil == account {
-		fmt.Println("check account error, trx: ", trx.Hash())
+		log.Error("check account error", trx.Hash())
 		return false, bottosErr.ErrTrxAccountError, nil
 	}
 
-	if !trxApplyService.CheckTransactionLifeTime(trx) {
-		fmt.Println("check lift time error, trx: ", trx.Hash())
+	if !trxApplyService.CheckTransactionLifeTime(trx) {		
 		return false, bottosErr.ErrTrxLifeTimeError, nil
 	}
 
 	if !trxApplyService.CheckTransactionUnique(trx) {
-		fmt.Println("check trx unique error, trx: ", trx.Hash())
 		return false, bottosErr.ErrTrxUniqueError, nil
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
-		fmt.Println("check chain match error, trx: ", trx.Hash())
 		return false, bottosErr.ErrTrxChainMathError, nil
 	}
 
@@ -149,6 +148,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
 
 	if false == result {
+		log.Error("process trx error", trx.Hash())
 		return false, bottosError, nil
 	}
 
@@ -180,20 +180,20 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 			return true, bottosErr.ErrNoError, nil
 		}
 
-		fmt.Println("process trx, failed bottos error: ", bottosErr.ErrNoError)
+		log.Error("process trx, failed bottos error: ", bottosErr.ErrNoError)
 		return false, bottoserr, nil
 
 	}
 	// else branch
 	trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
 	if nil != exeErr {
-		fmt.Println("process trx failed, error: ",exeErr)
+		log.Error("process trx failed, error: ",exeErr)
 		return false, bottosErr.ErrTrxContractHanldeError, nil
 	}
 
-	fmt.Println("derived trx list len is ", len(trxList))
+	log.Trace("derived trx list len is ", len(trxList))
 	for _, subTrx := range trxList {
-		fmt.Println(subTrx)
+		log.Trace(subTrx)
 	}
 
 	if (uint32(len(trxList))) >= config.DEFAUL_MAX_SUB_CONTRACT_NUM {

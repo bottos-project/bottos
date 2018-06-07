@@ -555,9 +555,8 @@ func (serv *NetServer) handleCrxBroadcast (msg CommonMessage) {
 		return
 	}
 
-	recvTrx := msgDef.PushTrxReq{
+	recvTrx := msgDef.NotifyTrx{
 		Trx:       &newCrx,
-		TrxSender: msgDef.TrxSenderTypeP2P,
 	}
 	SuperPrint(YELLO_PRINT , "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:",msg.Src," newCrx = ",newCrx)
 

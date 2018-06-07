@@ -94,8 +94,12 @@ func (t *TrxActor) Receive(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 	case *message.PushTrxReq:
+		
+		trxPool.HandleTransactionFromFront(context, msg.Trx)
 
-		trxPool.HandlePushTransactionReq(context, msg.TrxSender, msg.Trx)
+	case *message.NotifyTrx:
+
+		trxPool.HandleTransactionFromP2P(context, msg.Trx)
 
 	case *message.GetAllPendingTrxReq:
 

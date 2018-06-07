@@ -28,7 +28,7 @@ package apiactor
 import (
 	"context"
 	"time"
-	"fmt"
+	//"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
@@ -38,6 +38,7 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
+	log "github.com/cihub/seelog"
 )
 
 //ApiService is actor service
@@ -123,7 +124,6 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 
 	reqMsg := &message.PushTrxReq{
 		Trx:       intTrx,
-		TrxSender: message.TrxSenderTypeFront,
 	}
 
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
@@ -131,6 +131,8 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
+
+		log.Error("trx ", intTrx.Hash(), " actor process failed" )
 
 		return nil
 	}
@@ -154,7 +156,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
 	}
 	
-	fmt.Println("trx: ", resp.Result.TrxHash, resp.Msg)
+	log.Infof("trx: %v %s", resp.Result.TrxHash, resp.Msg)
 
 	return nil
 }

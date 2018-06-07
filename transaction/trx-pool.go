@@ -40,6 +40,7 @@ import (
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
+	log "github.com/cihub/seelog"
 )
 
 var (
@@ -92,7 +93,7 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 			var currentTime = common.Now()
 			for trxHash := range trxPool.pending {
 				if currentTime >= (trxPool.pending[trxHash].Lifetime) {
-					fmt.Println("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", trxPool.pending[trxHash].Lifetime)
+					log.Info("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", trxPool.pending[trxHash].Lifetime)
 					delete(trxPool.pending, trxHash)
 				}
 			}
@@ -119,13 +120,14 @@ func (trxPool *TrxPool) Stop() {
 
 	close(trxPool.quit)
 
-	fmt.Println("Transaction pool stopped")
+	log.Info("Transaction pool stopped")
 }
 
 // CheckTransactionBaseCondition is checking trx
 func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
+		log.Errorf("trx %v pending num over", trx.Hash())
 		return false, bottosErr.ErrTrxPendingNumLimit
 	}
 
@@ -162,24 +164,14 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 // HandleTransactionFromFront is handling trx from front
 func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-
+	log.Infof("rcv trx %v from front,sender %v, contract %v method %v,", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
 // HandleTransactionFromP2P is handling trx from P2P
 func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-
+	log.Tracef("rcv trx %v from P2P,sender %v, contract %v method %v,", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
-}
-
-// HandlePushTransactionReq is entry of trx req
-func (trxPool *TrxPool) HandlePushTransactionReq(context actor.Context, TrxSender message.TrxSenderType, trx *types.Transaction) {
-
-	if message.TrxSenderTypeFront == TrxSender {
-		trxPool.HandleTransactionFromFront(context, trx)
-	} else if message.TrxSenderTypeP2P == TrxSender {
-		trxPool.HandleTransactionFromP2P(context, trx)
-	}
 }
 
 // GetAllPendingTransactions is interface to get all pending trxs in trx pool
@@ -242,6 +234,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	senderPubKey, err := trxPool.getPubKey(trx.Sender)
 	if nil != err {
+		log.Errorf("trx %v get pub key error", trx.Hash())
 		return false
 	}
 
@@ -251,6 +244,10 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 	hashData := h.Sum(nil)
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
+
+	if false == verifyResult {
+		log.Errorf("trx %v verify signature failed, sender %v, pubkey %v", trx.Hash(), trx.Sender, senderPubKey)
+	}
 
 	return verifyResult
 }

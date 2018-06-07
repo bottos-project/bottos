@@ -32,16 +32,14 @@ import (
 var apiactorPid *actor.PID
 var netActor *actor.PID
 
+// SetApiActorPid is to save api actor
 func SetApiActorPid(apid *actor.PID) {
 	apiactorPid = apid
 }
 
+// SetNetActorPid is to save net actor
 func SetNetActorPid(pid *actor.PID) {
 	netActor = pid
-}
-
-func GetNetActorPid() *actor.PID {
-	return netActor
 }
 
 func sendTrxRsp(trxRsp uint64, pid *actor.PID) {
