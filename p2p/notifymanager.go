@@ -35,12 +35,13 @@ import (
 	"fmt"
 	"sync"
 	//"reflect"
+	"strings"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	log "github.com/cihub/seelog"
-	"strings"
 )
 
-//its function to sync the trx , blk and peer info with other p2p other
+//NotifyManager its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
 	p2p      *P2PServer
 	stopSync chan bool
@@ -54,6 +55,7 @@ type NotifyManager struct {
 	sync.RWMutex
 }
 
+//NewNotifyManager create manager
 func NewNotifyManager() *NotifyManager {
 	return &NotifyManager{
 		peerMap:          make(map[uint64]*Peer),
@@ -63,15 +65,16 @@ func NewNotifyManager() *NotifyManager {
 	}
 }
 
+//Start start
 func (notify *NotifyManager) Start() {
 }
 
 func (notify *NotifyManager) broadcastByte(buf []byte, isSync bool) {
 
 	fmt.Println("NotifyManager::broadcastByte")
-	peer_map := notify.getPeerMap()
+	peerMap := notify.getPeerMap()
 
-	for _, peer := range peer_map {
+	for _, peer := range peerMap {
 		if peer.GetPeerState() == ESTABLISH {
 			peer.SendTo(buf, false)
 		}
@@ -117,7 +120,7 @@ func (notify *NotifyManager) getPeerCnt() uint32 {
 		return 0
 	}
 
-	var cnt uint32 = 0
+	var cnt uint32
 	for _, peer := range notify.peerMap {
 		if ESTABLISH == peer.GetPeerState() {
 			cnt++
@@ -126,17 +129,17 @@ func (notify *NotifyManager) getPeerCnt() uint32 {
 	return cnt
 }
 
-//todo sync blk info with other peer
+//BroadcastBlk todo sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
 	//fmt.Println("NotifyManager::BroadcastBlk")
 }
 
-//todo sync blk's hash info with other peer
+//SyncHash todo sync blk's hash info with other peer
 func (notify *NotifyManager) SyncHash() {
 	//fmt.Println("NotifyManager::SyncHash")
 }
 
-//todo sync peer info with other peer
+//SyncPeer todo sync peer info with other peer
 func (notify *NotifyManager) SyncPeer() {
 	//fmt.Println("NotifyManager::SyncPeer")
 }
@@ -151,6 +154,7 @@ func (notify *NotifyManager) isExist(addr string, isExist bool) bool {
 	return false
 }
 
+//GetPeerInfo get peer info
 func (notify *NotifyManager) GetPeerInfo(id uint64) string {
 	notify.Lock()
 	defer notify.Unlock()

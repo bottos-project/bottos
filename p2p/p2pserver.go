@@ -147,7 +147,7 @@ func (p2p *P2PServer) Start() error {
 	}
 
 	//peer neighbor exchange
-	go p2p.serv.PneStart()
+	go p2p.serv.StartPne()
 
 	//get all seeds or wait for 3 seconds
 	//go p2p.serv.initSync()

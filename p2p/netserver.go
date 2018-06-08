@@ -690,7 +690,7 @@ func (serv *NetServer) initSync() {
 }
 
 func (serv *NetServer) StartUdpServer() {
-	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port + 1}
+	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port}
 	go func() {
 		log.Info("StartUdpServer")
 
@@ -739,7 +739,7 @@ func (serv *NetServer) HandleUdpMessage(data []byte, n int, raddr *net.UDPAddr) 
 var once sync.Once
 
 //PneStart start pne
-func (serv *NetServer) PneStart() {
+func (serv *NetServer) StartPne() {
 	/*wait make sure some peer have already been connected*/
 	once.Do(func() {
 		log.Debug("wait peer connect")
@@ -884,7 +884,7 @@ func (serv *NetServer) ConnectPneNeighbor() error {
 
 func (serv *NetServer) SendUdpMsg(msg []byte, raddr string) error {
 
-	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port + 1}
+	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
 
 	//check addr and package num
 	_, err := serv.udpSocket.WriteToUDP(msg, dstAddr)
@@ -898,7 +898,7 @@ func (serv *NetServer) SendUdpMsg(msg []byte, raddr string) error {
 func (serv *NetServer) SendUdpMsgConn(msg []byte, raddr string) error {
 
 	srcAddr := &net.UDPAddr{IP: net.ParseIP(serv.addr), Port: 0}
-	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port + 1}
+	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
 
 	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
 	if err != nil {

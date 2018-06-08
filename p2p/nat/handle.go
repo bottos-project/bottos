@@ -40,7 +40,14 @@ type Handle interface {
 	EIP() (net.IP, error)
 	String() string
 }
-
+// Interface is definition of net
+type Interface interface {
+	
+	AddMapping(protocol string, extport, intport int, name string, lifetime time.Duration) error
+	DeleteMapping(protocol string, extport, intport int) error
+	ExternalIP() (net.IP, error)
+	String() string
+}
 // GetHandle is to get handler func by config
 func GetHandle(config string) Handle {
 	switch config {
