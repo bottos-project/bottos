@@ -32,20 +32,23 @@
 package p2pserver
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
-	log "github.com/cihub/seelog"
 	"net"
 	"sync"
 	"time"
-	"errors"
-	"encoding/json"
-	"github.com/bottos-project/bottos/config"
+
 	"github.com/bottos-project/bottos/action/env"
-	"github.com/bottos-project/bottos/common/types"
 	msgDef "github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
+	log "github.com/cihub/seelog"
 )
 
 const (
+	//SYN_BLK_NUM sync block number
 	SYN_BLK_NUM = 10
 )
 
@@ -60,27 +63,30 @@ func GetSyncStatus() bool {
 }
 
 type NetServer struct {
-	config          *P2PConfig
-	port            int
-	addr            string
+	config *P2PConfig
+	port   int
+	addr   string
 
-	notify          *NotifyManager
-	listener        net.Listener
+	notify *NotifyManager
+	pne    *PneManager
 
-	seedPeer        []string
-	connPeerNum     int
+	listener net.Listener
 
-	neighborList    []*net.UDPAddr
-	serverAddr      *net.UDPAddr
-	socket          *net.UDPConn
+	seedPeer    []string
+	connPeerNum int
+
+	neighborList []*net.UDPAddr
+	serverAddr   *net.UDPAddr
+	udpSocket    *net.UDPConn
+
 	//todo publicKey to identify credit peer
-	publicKey       string
+	publicKey string
 
-	timeInterval   *time.Timer
-	syncLock        sync.RWMutex
+	timeInterval *time.Timer
+	syncLock     sync.RWMutex
 
-	actorEnv        *env.ActorEnv
-	isSync          bool
+	actorEnv *env.ActorEnv
+	isSync   bool
 
 	sync.RWMutex
 }
@@ -92,6 +98,7 @@ func NewNetServer() *NetServer {
 		seedPeer:      config.Param.PeerList,
 		port:          config.Param.P2PPort,
 		notify:        NewNotifyManager(),
+		pne:          NewPneQueue(),
 		connPeerNum:   0,
 		actorEnv:      nil,
 		isSync:        false,
@@ -112,6 +119,7 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 		addr:          config.ServAddr,
 		port:          config.ServPort,
 		notify:        NewNotifyManager(),
+		pne:          NewPneQueue(),
 		connPeerNum:   0,
 		actorEnv:      nil,
 		timeInterval:  time.NewTimer(TIME_INTERVAL * time.Second),
@@ -160,7 +168,6 @@ func (serv *NetServer) requestSyncLock() bool {
 		return false
 	}
 }
-
 
 func (serv *NetServer) releaseSyncLock() {
 	serv.Lock()
@@ -224,6 +231,7 @@ func (serv *NetServer) activeTimedTask() error {
 			serv.connectSeeds()
 			serv.watchStatus()
 			serv.broadcastBlkInfo()
+			serv.ConnectPneNeighbor()
 			serv.resetTimer()
 		}
 	}
@@ -235,6 +243,9 @@ func (serv *NetServer) appendList(conn net.Conn , msg CommonMessage) error {
 	peer := NewPeer(msg.Src , serv.port , conn)
 	peer.SetPeerState(ESTABLISH)
 	serv.notify.addPeer(peer)
+
+	serv.pne.AddPnePeer(peer.GetId())
+	serv.pne.DelNeighbor(peer.GetPeerAddr())
 
 	return nil
 }
@@ -323,7 +334,7 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
 	}
 
-	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
+	_, err = serv.udpSocket.WriteToUDP(msg, remoteAddr)
 	if err != nil { //todo check len
 		log.Error("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
@@ -334,10 +345,12 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 
 func (serv *NetServer) watchStatus() {
 
-	blockNum  := serv.actorEnv.Chain.LastConsensusBlockNum()
-	headerNum := serv.actorEnv.Chain.HeadBlockNum()
+	if TST == 0 {
+		blockNum := serv.actorEnv.Chain.LastConsensusBlockNum()
+		headerNum := serv.actorEnv.Chain.HeadBlockNum()
 
-	SuperPrint(BLUE_PRINT,"NetServer::WatchStatus() blockNum: ",blockNum," , headerNum: ", headerNum)
+		SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() blockNum: ", blockNum, " , headerNum: ", headerNum)
+	}
 
 	for _, peer := range serv.notify.peerMap {
 		SuperPrint(BLUE_PRINT,"*** NetServer::WatchStatus() current status: peer = ",peer.peerAddr," ***")
@@ -499,7 +512,6 @@ func (serv *NetServer) handleRequest (msg CommonMessage) {
 		MsgType:  RESPONSE,
 	}
 
-	log.Warn()
 	data , err := json.Marshal(rsp)
 	if err != nil{
 		log.Error("*WRAN* Failed to package the response message : ", err)
@@ -678,4 +690,230 @@ func (serv *NetServer) initSync()  {
 	syncLock.Unlock()
 
 	return
+}
+
+func (serv *NetServer) StartUdpServer() {
+	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port}
+	go func() {
+		log.Info("StartUdpServer")
+
+		listen, err := net.ListenUDP("udp", addr)
+		if err != nil {
+			log.Critical("udp listen error")
+			return
+		}
+
+		defer listen.Close()
+
+		serv.udpSocket = listen
+
+		for {
+			data := make([]byte, 1024)
+			n, raddr, err := listen.ReadFromUDP(data)
+			if err != nil {
+				log.Errorf("read udp data error: %s", err)
+				continue
+			}
+
+			serv.HandleUdpMessage(data, n, raddr)
+		}
+	}()
+
+}
+
+func (serv *NetServer) HandleUdpMessage(data []byte, n int, raddr *net.UDPAddr) {
+	var msg CommonMessage
+
+	log.Debug("HandleUdpMessage")
+	err := json.Unmarshal(data[0:n], &msg)
+	if err != nil {
+		log.Error("HandleMessage Can't unmarshal data from remote peer !!!")
+		return
+	}
+
+	switch msg.MsgType {
+	case PEERNEIGHBOR_REQ:
+		serv.ProcessPneRequest(msg, raddr)
+	case PEERNEIGHBOR_RSP:
+		serv.ProcessPneResponse(msg)
+	}
+}
+
+var once sync.Once
+
+//PneStart start pne
+func (serv *NetServer) StartPne() {
+	/*wait make sure some peer have already been connected*/
+	once.Do(func() {
+		log.Debug("wait peer connect")
+		time.Sleep(TIME_PNE_START * time.Minute)
+	})
+
+	log.Debug("new pne timer")
+
+	exchange := time.NewTimer(TIME_PNE_EXCHANGE * time.Minute)
+
+	defer func() {
+		log.Debug("pne timer stop")
+		exchange.Stop()
+	}()
+
+	for {
+		select {
+		case <-exchange.C:
+			log.Debug("pne request timer")
+			id, ret := serv.pne.NextPnePeer()
+			if ret != false {
+				log.Debugf("peer id: %d", id)
+				serv.sendPneRequest(id)
+
+				// add back to queue
+				serv.pne.AddPnePeer(id)
+			}
+
+			exchange.Reset(TIME_PNE_EXCHANGE * time.Minute)
+		}
+	}
+}
+
+//sendPneRequest process peer's pne response
+func (serv *NetServer) sendPneRequest(id uint64) {
+	log.Debug("sendPneRequest")
+
+	peerAddr := serv.notify.GetPeerInfo(id)
+	if peerAddr == "" {
+		log.Info("no peer id: %d", id)
+		return
+	}
+
+	var msg = CommonMessage{
+		Src:     serv.addr,
+		Dst:     peerAddr,
+		MsgType: PEERNEIGHBOR_REQ,
+	}
+
+	req, err := json.Marshal(msg)
+	if err != nil {
+		log.Errorf("req marshal err: %s", err)
+		return
+	}
+
+	serv.SendUdpMsg(req, peerAddr)
+
+}
+
+//ProcessPneResponse process peer's pne response
+func (serv *NetServer) ProcessPneRequest(recvMsg CommonMessage, raddr *net.UDPAddr) {
+	addrs := serv.notify.GetPeersAddr()
+	if len(addrs) == 0 {
+		log.Info("no peer")
+		return
+	}
+
+	if len(addrs) > MAX_NEIGHBOR_NUM {
+		log.Info("max neighbor number")
+		addrs = addrs[0 : MAX_NEIGHBOR_NUM-1]
+	}
+
+	//send neighbors addr to peer
+	byteAddrs, err := json.Marshal(addrs)
+	if err != nil {
+		log.Errorf("addrs Marshal error:%s", err)
+		return
+	}
+
+	msg := CommonMessage{
+		Src:     serv.addr,
+		Dst:     recvMsg.Src,
+		MsgType: PEERNEIGHBOR_RSP,
+		Content: byteAddrs,
+	}
+
+	byteMsg, err := json.Marshal(msg)
+	if err != nil {
+		log.Errorf("byteMsg Marshal error:%s", err)
+		return
+	}
+
+	serv.SendUdpMsg(byteMsg, recvMsg.Src)
+
+}
+
+//ProcessPneResponse process peer's pne response
+func (serv *NetServer) ProcessPneResponse(recvMsg CommonMessage) {
+	var addrs []string
+
+	log.Debugf("recv response from peer: %s", recvMsg.Src)
+
+	err := json.Unmarshal(recvMsg.Content, &addrs)
+	if err != nil {
+		log.Errorf("addrs Unmarshal error:%s", err)
+		return
+	}
+
+	//filter self and peer
+	peers := serv.notify.GetPeersAddr()
+	peers = append(peers, serv.addr)
+
+	addrs = common.Filter(addrs, peers)
+
+	//add neighbor
+	serv.pne.AddNeighbor(addrs)
+}
+
+//ConnectPneNeighbor connect pne neighbor
+func (serv *NetServer) ConnectPneNeighbor() error {
+	neighbors := serv.pne.NextPneNeighbors()
+
+	for i := range neighbors {
+		log.Debugf("conect to neighbor:%s", neighbors[i])
+
+		var msg = CommonMessage{
+			Src:     serv.addr,
+			Dst:     neighbors[i],
+			MsgType: REQUEST,
+		}
+
+		req, err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		go serv.Send(neighbors[i], req, false)
+	}
+
+	return nil
+}
+
+func (serv *NetServer) SendUdpMsg(msg []byte, raddr string) error {
+
+	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
+
+	//check addr and package num
+	_, err := serv.udpSocket.WriteToUDP(msg, dstAddr)
+	if err != nil {
+		log.Errorf("send request error: %s", err)
+	}
+
+	return nil
+}
+
+func (serv *NetServer) SendUdpMsgConn(msg []byte, raddr string) error {
+
+	srcAddr := &net.UDPAddr{IP: net.ParseIP(serv.addr), Port: 0}
+	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
+
+	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
+	if err != nil {
+		log.Errorf("open udp socket error: %s", err)
+	}
+	defer conn.Close()
+
+	//check addr and package num
+	_, err = conn.Write(msg)
+	if err != nil {
+		log.Errorf("send request error: %s", err)
+	}
+
+	return nil
 }
