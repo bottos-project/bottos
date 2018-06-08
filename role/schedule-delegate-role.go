@@ -3,10 +3,11 @@ package role
 import (
 	"encoding/json"
 	"errors"
-	log "github.com/cihub/seelog"
 	"math/big"
 	"math/rand"
 	"sort"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -160,16 +161,16 @@ func ElectNextTermDelegatesRole(ldb *db.DBService, block *types.Block) []string 
 
 	h := block.Hash()
 	label := h.Label()
-	fmt.Println("Label: %v", label)
+	log.Info("Label: %v", label)
 	r := rand.New(rand.NewSource(int64(label)))
 
-	fmt.Println("New Eelected, beafor shuffle: ", reporterList)
+	log.Info("New Eelected, beafor shuffle: ", reporterList)
 
 	r.Shuffle(len(reporterList), func(i, j int) {
 		reporterList[i], reporterList[j] = reporterList[j], reporterList[i]
 	})
 
-	fmt.Println("New Eelected: ", reporterList)
+	log.Info("New Eelected: ", reporterList)
 
 	return reporterList
 
