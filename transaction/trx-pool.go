@@ -164,13 +164,13 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 // HandleTransactionFromFront is handling trx from front
 func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	log.Infof("rcv trx %v from front,sender %v, contract %v method %v,", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
+	log.Infof("rcv trx %v from front,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
 // HandleTransactionFromP2P is handling trx from P2P
 func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-	log.Tracef("rcv trx %v from P2P,sender %v, contract %v method %v,", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
+	log.Tracef("rcv trx %v from P2P,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
