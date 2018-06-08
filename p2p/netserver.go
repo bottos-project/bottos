@@ -690,7 +690,7 @@ func (serv *NetServer) initSync() {
 }
 
 func (serv *NetServer) StartUdpServer() {
-	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port + 1}
+	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port}
 	go func() {
 		log.Info("StartUdpServer")
 
@@ -739,7 +739,7 @@ func (serv *NetServer) HandleUdpMessage(data []byte, n int, raddr *net.UDPAddr) 
 var once sync.Once
 
 //PneStart start pne
-func (serv *NetServer) PneStart() {
+func (serv *NetServer) StartPne() {
 	/*wait make sure some peer have already been connected*/
 	once.Do(func() {
 		log.Debug("wait peer connect")
