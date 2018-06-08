@@ -26,9 +26,10 @@
 package produceractor
 
 import (
-	log "github.com/cihub/seelog"
 	"time"
 	"unsafe"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
@@ -130,15 +131,12 @@ func (p *ProducerActor) working() {
 		}
 		block = p.ins.Woker(trxs)
 		trxs = nil
-		for _, trx := range pendingTrx {
-			PushTransaction(trx)
-		}
 		if block != nil {
 			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
 
 			ApplyBlock(block)
 			log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", block.GetNumber(), len(block.Transactions), block.Header.Delegate, block.Hash())
-                        BroadCastBlock(block)
+			BroadCastBlock(block)
 		}
 	}
 }

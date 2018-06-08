@@ -26,8 +26,9 @@
 package produceractor
 
 import (
-	log "github.com/cihub/seelog"
 	"time"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
@@ -71,6 +72,4 @@ func VerifyTransactions(trx *types.Transaction) (bool, error) {
 	   	trxApply := transaction.NewTrxApplyService()
 	   	pass, _, _ := trxApply.ApplyTransaction(trx)
 	   	return pass, nil */
-}
-func PushTransaction(trx *types.Transaction) {
 }
