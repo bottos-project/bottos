@@ -56,12 +56,7 @@ func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo 
 //Woker is an actor of repoter
 func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
-	now := common.NowToSeconds()
-	slot := p.roleIntf.GetSlotAtTime(now)
-	accountName, err1 := p.roleIntf.GetCandidateBySlot(slot)
-	if err1 != nil {
-		return nil // errors.New("report Block failed")
-	}
+	accountName := p.state.ScheduledReporter
 	block, err := p.reportBlock(p.state.ScheduledTime, accountName, trxs)
 	if err != nil {
 		return nil // errors.New("report Block failed")
