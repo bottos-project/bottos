@@ -109,10 +109,6 @@ func (b *Block) GetDelegateSign() common.Hash {
 	return common.BytesToHash(bh)
 }
 
-func (b *Block) ValidateSign() bool {
-	return true
-}
-
 func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 	for _, transaction := range b.Transactions {
 		if transaction.Hash() == hash {

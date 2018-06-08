@@ -16,6 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
+Package types is definition of common type
  * file description:  transaction
  * @Author: Gong Zibin
  * @Date:   2017-12-07
@@ -30,13 +31,10 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// Hash is to calc hash value of transaction
 func (trx *Transaction) Hash() common.Hash {
 	data, _ := proto.Marshal(trx)
 	temp := sha256.Sum256(data)
 	hash := sha256.Sum256(temp[:])
 	return hash
-}
-
-func (trx *Transaction) ValidateSign() bool {
-	return true
 }
