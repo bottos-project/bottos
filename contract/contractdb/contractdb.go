@@ -29,6 +29,7 @@ import (
 	"fmt"
 
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 //ContractObjectNamePrefix is the contract object name prefix
@@ -51,7 +52,7 @@ func (cdb *ContractDB) SetStrValue(contract string, object string, key string, v
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.setStrValue(objName, key, value)
 
-	fmt.Println("SetStrValue: ", contract, object, key, objName, value)
+	log.Info("SetStrValue: ", contract, object, key, objName, value)
 	if err != nil {
 		return fmt.Errorf("SetStr error, contract: %v, object: %v, key: %v, value: %v", contract, object, key, value)
 	}
@@ -63,7 +64,7 @@ func (cdb *ContractDB) GetStrValue(contract string, object string, key string) (
 	objName := cdb.getObjectName(contract, object)
 	value, err := cdb.getStrValue(objName, key)
 
-	fmt.Println("GetStrValue: ", contract, object, key, objName, value)
+	log.Info("GetStrValue: ", contract, object, key, objName, value)
 
 	if err != nil {
 		return "", fmt.Errorf("GetStr error, contract: %v, object: %v, key: %v", contract, object, key)
@@ -76,7 +77,7 @@ func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string
 	objName := cdb.getObjectName(contract, object)
 	err := cdb.removeStrValue(objName, key)
 
-	fmt.Println("RemoveStrValue: ", contract, object, key, objName)
+	log.Info("RemoveStrValue: ", contract, object, key, objName)
 
 	if err != nil {
 		return fmt.Errorf("RemoveStr error, contract: %v, object: %v, key: %v", contract, object, key)

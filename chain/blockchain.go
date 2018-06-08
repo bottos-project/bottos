@@ -26,7 +26,7 @@
 package chain
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"sort"
 	"sync"
 	"unsafe"
@@ -85,7 +85,7 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 
 //Close close chain cache
 func (bc *BlockChain) Close() {
-	fmt.Println("BlockChain: Close")
+	log.Info("BlockChain: Close")
 	bc.blockCache.Reset()
 }
 
@@ -112,7 +112,7 @@ func (bc *BlockChain) initChain() error {
 		ctx := &contract.Context{RoleIntf: bc.roleIntf, Trx: trx}
 		err := bc.nc.ExecuteNativeContract(ctx)
 		if err != contract.ERROR_NONE {
-			fmt.Println("NativeContractInitChain Error: ", trx, err)
+			log.Infof("NativeContractInitChain Error: ", trx, err)
 			break
 		}
 	}
@@ -241,7 +241,7 @@ func (bc *BlockChain) initBlockCache() error {
 func (bc *BlockChain) LoadBlockDb() error {
 	lastBlock := GetLastBlock(bc.blockDb)
 	if lastBlock == nil {
-		return fmt.Errorf("Loading block database fail, try recovering")
+		return log.Error("Loading block database fail, try recovering")
 	}
 
 	if lastBlock.GetNumber() == 0 {
@@ -249,10 +249,10 @@ func (bc *BlockChain) LoadBlockDb() error {
 	}
 
 	if bc.HeadBlockHash() != lastBlock.Hash() {
-		return fmt.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=%x", bc.HeadBlockHash(), lastBlock.Hash())
+		return log.Errorf("Load block db fail, head block hash=%x, last block in blockdb hash=%x", bc.HeadBlockHash(), lastBlock.Hash())
 	}
 
-	fmt.Printf("Loading block database, Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
+	log.Infof("Loading block database, Last block num = %v, hash = %x\n", lastBlock.GetNumber(), lastBlock.Hash())
 
 	return nil
 }
@@ -280,7 +280,7 @@ func (bc *BlockChain) updateChainState(block *types.Block) {
 		missBlocks = slot
 	}
 	if missBlocks == 0 {
-		fmt.Println("missBlocks", missBlocks)
+		log.Infof("missBlocks", missBlocks)
 		panic(1)
 	}
 	missBlocks--
@@ -367,7 +367,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 			if block != nil {
 				bc.WriteBlock(block)
 			} else {
-				fmt.Printf("block num = %v not found\n", i)
+				log.Infof("block num = %v not found\n", i)
 			}
 		}
 
@@ -413,16 +413,16 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 	prevBlockHash := block.GetPrevBlockHash()
 	if prevBlockHash != bc.HeadBlockHash() {
-		return fmt.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
+		return log.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
 	}
 
 	if block.GetNumber() != bc.HeadBlockNum()+1 {
-		return fmt.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
+		return log.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
 	}
 
 	// block timestamp check
 	if block.GetTimestamp() <= bc.HeadBlockTime() && bc.HeadBlockNum() != 0 {
-		return fmt.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		return log.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
 	}
 
 	return nil
@@ -435,24 +435,24 @@ func (bc *BlockChain) InsertBlock(block *types.Block) error {
 
 	err := bc.ValidateBlock(block)
 	if err != nil {
-		fmt.Println("Validate Block error: ", err)
+		log.Infof("Validate Block error: ", err)
 		return err
 	}
 
 	// push to cache, block must link now
 	_, err = bc.blockCache.Insert(block)
 	if err != nil {
-		fmt.Println("blockCache insert error: ", err)
+		log.Infof("blockCache insert error: ", err)
 		return err
 	}
 
 	err = bc.HandleBlock(block)
 	if err != nil {
-		fmt.Println("InsertBlock error: ", err)
+		log.Infof("InsertBlock error: ", err)
 		return err
 	}
 
-	fmt.Printf("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
+	log.Infof("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 
 	return nil
 }

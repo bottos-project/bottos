@@ -22,8 +22,11 @@
  * @Last Modified by:
  * @Last Modified time:
  */
-
 package kvdb
+
+import (
+	"github.com/syndtr/goleveldb/leveldb/iterator"
+)
 
 //KvDBRepo is interface for leveldb
 type KvDBRepo interface {
@@ -32,5 +35,7 @@ type KvDBRepo interface {
 	CallDelete(key []byte) error
 	CallClose()
 	CallFlush() error
-	CallSeek(prefixKey []byte) ([]interface{}, error)
+	CallSeek(prefixKey []byte) ([]string, error)
+
+	CallNewIterator() iterator.Iterator
 }

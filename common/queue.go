@@ -16,39 +16,33 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description: database interface
- * @Author: May Luo
- * @Date:   2017-12-04
+ * file description:  none lock queue
+ * @Author: eripi
+ * @Date:   2018-1-05
  * @Last Modified by:
  * @Last Modified time:
  */
-package db
 
-import (
-	//"fmt"
-	"testing"
+package common
 
-	log "github.com/cihub/seelog"
-)
+import "container/list"
 
-func TestDBService_Callput(t *testing.T) {
-	log.Info("abc")
-	ins := NewDbService("./db")
-	ins.Put([]byte("abc"), []byte("123"))
-	res, _ := ins.Get([]byte("abc"))
-	log.Info(res)
-	ins.Close()
+type Queue struct {
+	l *list.List
 }
-func TestDBService_CallGet(t *testing.T) {
-	log.Info("abc")
-	ins := NewDbService("./db")
-	ins.Put([]byte("abc"), []byte("123"))
-	res, _ := ins.Get([]byte("abc"))
-	log.Info(res)
+
+func NewQueue() *Queue {
+	return &Queue{l: list.New()}
 }
-func TestDBService_CallFlush(t *testing.T) {
-	log.Info("abc")
-	ins := NewDbService("./db")
-	ins.Put([]byte("abc"), []byte("123"))
-	ins.Flush()
+
+func (q *Queue) Pop() interface{} {
+	if q.l.Front() != nil {
+		return q.l.Remove(q.l.Front())
+	}
+
+	return nil
+}
+
+func (q *Queue) Push(data interface{}) {
+	q.l.PushBack(data)
 }

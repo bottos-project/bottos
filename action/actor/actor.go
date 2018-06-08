@@ -26,8 +26,7 @@
 package actionactor
 
 import (
-	"fmt"
-
+    log "github.com/cihub/seelog"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	apiactor "github.com/bottos-project/bottos/action/actor/api"
 	chainactor "github.com/bottos-project/bottos/action/actor/chain"
@@ -75,8 +74,7 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 
 func registerActorMsgTbl(m *MultiActor) {
 
-	fmt.Println("RegisterActorMsgTbl")
-
+    log.Info("RegisterActorMsgTbl")
 	apiactor.SetTrxActorPid(m.trxActorPid)          // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid)
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api

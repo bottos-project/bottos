@@ -25,7 +25,7 @@
 package chain
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"sort"
 	"testing"
 
@@ -40,10 +40,10 @@ func TestBlockChain_ConfirmedSort(t *testing.T) {
 		lastConfirmedNums[i] = delegateNum - i
 	}
 
-	fmt.Println(lastConfirmedNums)
+	log.Info(lastConfirmedNums)
 
 	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(lastConfirmedNums) / 100
 	sort.Sort(lastConfirmedNums)
-	fmt.Println(lastConfirmedNums)
-	fmt.Println(lastConfirmedNums[consensusIndex])
+	log.Info(lastConfirmedNums)
+	log.Info(lastConfirmedNums[consensusIndex])
 }

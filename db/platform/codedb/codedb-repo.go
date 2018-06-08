@@ -30,6 +30,7 @@ import (
 	"fmt"
 
 	"github.com/tidwall/buntdb"
+	log "github.com/cihub/seelog"
 )
 
 //CodeDbRepository is to build code db
@@ -106,7 +107,7 @@ func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (stri
 //CallCommit is to call commit
 func (k *CodeDbRepository) CallCommit() error {
 	if k.tx == nil {
-		fmt.Println("tx is not start undo session")
+		log.Info("tx is not start undo session")
 		return errors.New("tx is not start undo session")
 	}
 	return k.tx.Commit()
@@ -115,7 +116,7 @@ func (k *CodeDbRepository) CallCommit() error {
 //CallRollback is to call rollback
 func (k *CodeDbRepository) CallRollback() error {
 	if k.tx == nil {
-		fmt.Println("tx is not start undo session")
+		log.Info("tx is not start undo session")
 		return errors.New("tx is not start undo session")
 	}
 	return k.tx.Rollback()

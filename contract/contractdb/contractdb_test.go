@@ -30,6 +30,7 @@ import (
 	"testing"
 
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 type TestParam struct {
@@ -53,13 +54,13 @@ func TestCreateAndUpdateStrValue(t *testing.T) {
 	str, _ := json.Marshal(tp)
 	cdb.SetStrValue(contract, object, account, string(str))
 	getStr, _ := cdb.GetStrValue(contract, object, account)
-	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
+	log.Infof("str=%v, getStr=%v\n", string(str), getStr)
 
 	tp.Value = 1234
 	str, _ = json.Marshal(tp)
 	cdb.SetStrValue(contract, object, account, string(str))
 	getStr, _ = cdb.GetStrValue(contract, object, account)
-	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
+	log.Infof("str=%v, getStr=%v\n", string(str), getStr)
 }
 
 func TestDifferentStrValue(t *testing.T) {
@@ -92,8 +93,8 @@ func TestDifferentStrValue(t *testing.T) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("str1=%v, getStr1=%v\n", string(str1), getStr1)
-	fmt.Printf("str2=%v, getStr2=%v\n", string(str2), getStr2)
+	log.Infof("str1=%v, getStr1=%v\n", string(str1), getStr1)
+	log.Infof("str2=%v, getStr2=%v\n", string(str2), getStr2)
 }
 
 func TestRemoveStrValue(t *testing.T) {
@@ -115,10 +116,10 @@ func TestRemoveStrValue(t *testing.T) {
 
 	cdb.SetStrValue(contract, object, account, string(str))
 	getStr, err := cdb.GetStrValue(contract, object, account)
-	fmt.Printf("str=%v, getStr=%v\n", string(str), getStr)
+	log.Infof("str=%v, getStr=%v\n", string(str), getStr)
 
-	fmt.Println("remove string")
+	log.Info("remove string")
 	err = cdb.RemoveStrValue(contract, object, account)
 	getStr, err = cdb.GetStrValue(contract, object, account)
-	fmt.Println("get string error: ", err)
+	log.Info("get string error: ", err)
 }

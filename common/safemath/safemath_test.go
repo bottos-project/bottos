@@ -26,10 +26,10 @@
 package safemath
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math"
 	"testing"
-	//"fmt"
+	
 
 	"github.com/stretchr/testify/assert"
 )
@@ -92,6 +92,6 @@ func TestSafeMath(t *testing.T) {
 	a = 99999999
 	b = 88888888
 	c, err = Uint64Sub(a, b)
-	fmt.Printf(err)
+	log.Info(err)
 	assert.Equal(t, a-b, c)
 }

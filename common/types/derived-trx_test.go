@@ -25,7 +25,7 @@
 package types
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -55,13 +55,13 @@ func TestDerivedTransaction_onelayer(t *testing.T) {
 	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
 	data, err := proto.Marshal(handledTrx)
-	fmt.Println(handledTrx)
-	fmt.Printf("data:%x\n", data)
+	log.Info(handledTrx)
+	log.Infof("data:%x\n", data)
 
 	unmTrx := &HandledTransaction{}
 	err = proto.Unmarshal(data, unmTrx)
-	fmt.Println(err)
-	fmt.Println(unmTrx)
+	log.Info(err)
+	log.Info(unmTrx)
 }
 
 func TestDerivedTransaction_twolayer(t *testing.T) {
@@ -89,17 +89,17 @@ func TestDerivedTransaction_twolayer(t *testing.T) {
 	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
 	data, err := proto.Marshal(handledTrx)
-	fmt.Println(handledTrx)
-	fmt.Printf("data:%x\n", data)
+	log.Info(handledTrx)
+	log.Infof("data:%x\n", data)
 
 	unmHandledTrx := &HandledTransaction{}
 	err = proto.Unmarshal(data, unmHandledTrx)
-	fmt.Println(err)
-	fmt.Println(unmHandledTrx.Transaction)
-	fmt.Println(unmHandledTrx.DerivedTrx[0].Transaction)
-	fmt.Println(unmHandledTrx.DerivedTrx[0].DerivedTrx)
-	fmt.Println(unmHandledTrx.DerivedTrx[1].Transaction)
-	fmt.Println(unmHandledTrx.DerivedTrx[1].DerivedTrx)
-	fmt.Println(unmHandledTrx.DerivedTrx[2].Transaction)
-	fmt.Println(unmHandledTrx.DerivedTrx[2].DerivedTrx)
+	log.Info(err)
+	log.Info(unmHandledTrx.Transaction)
+	log.Info(unmHandledTrx.DerivedTrx[0].Transaction)
+	log.Info(unmHandledTrx.DerivedTrx[0].DerivedTrx)
+	log.Info(unmHandledTrx.DerivedTrx[1].Transaction)
+	log.Info(unmHandledTrx.DerivedTrx[1].DerivedTrx)
+	log.Info(unmHandledTrx.DerivedTrx[2].Transaction)
+	log.Info(unmHandledTrx.DerivedTrx[2].DerivedTrx)
 }

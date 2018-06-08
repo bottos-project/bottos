@@ -25,10 +25,12 @@
 package msgpack
 
 import (
-	"fmt"
+	//"fmt"
 	//"bytes"
 	"encoding/hex"
 	"testing"
+
+	log "github.com/cihub/seelog"
 )
 
 func BytesToHex(d []byte) string {
@@ -54,13 +56,13 @@ func TestMarshalStruct(t *testing.T) {
 
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1)
-	fmt.Println(err)
+	log.Info("ts1 ", ts1)
+	log.Info(err)
 }
 
 func TestMarshalNestStruct1(t *testing.T) {
@@ -74,7 +76,7 @@ func TestMarshalNestStruct1(t *testing.T) {
 		V2 uint32
 		V3 TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStruct1...")
+	log.Info("TestMarshalNestStruct1...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -83,12 +85,12 @@ func TestMarshalNestStruct1(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestMarshalNestStruct2(t *testing.T) {
@@ -102,7 +104,7 @@ func TestMarshalNestStruct2(t *testing.T) {
 		V2 uint32
 		V3 *TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStruct2...")
+	log.Info("TestMarshalNestStruct2...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -111,12 +113,12 @@ func TestMarshalNestStruct2(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestMarshalNestStruct3(t *testing.T) {
@@ -131,7 +133,7 @@ func TestMarshalNestStruct3(t *testing.T) {
 		V3 TestSubStruct
 		V4 []byte
 	}
-	fmt.Println("TestMarshalNestStruct3...")
+	log.Info("TestMarshalNestStruct3...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -141,12 +143,12 @@ func TestMarshalNestStruct3(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("Unmarshal, ts: ", ts1, err)
+	log.Info("Unmarshal, ts: ", ts1, err)
 }
 
 func TestPackMarshalReguser(t *testing.T) {
@@ -156,7 +158,7 @@ func TestPackMarshalReguser(t *testing.T) {
 		V2 string
 	}
 
-	fmt.Println("TestPackMarshalReguser...")
+	log.Info("TestPackMarshalReguser...")
 
 	ts := RegUser{
 		V1: "did:bot:21tDAKCERh95uGgKbJNHYp",
@@ -164,8 +166,8 @@ func TestPackMarshalReguser(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 }
 
 func TestTransfer(t *testing.T) {
@@ -176,7 +178,7 @@ func TestTransfer(t *testing.T) {
 		Value uint64
 	}
 
-	fmt.Println("TestTransfer...")
+	log.Info("TestTransfer...")
 
 	// marshal
 	ts := Transfer{
@@ -186,16 +188,16 @@ func TestTransfer(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := &Transfer{}
 	err = Unmarshal(b, ts1)
-	fmt.Println("ts1: ", ts1)
+	log.Info("ts1: ", ts1)
 	cc, _ := HexToBytes("dc0004da00057474747474da000461666166cf000000003b9aca00da000c417072696c27732072656e74")
 	err = Unmarshal(cc, ts1)
-	fmt.Println("ts1: ", ts1)
-	fmt.Println(err)
+	log.Info("ts1: ", ts1)
+	log.Info(err)
 }
 
 func TestNewAccount(t *testing.T) {
@@ -208,16 +210,16 @@ func TestNewAccount(t *testing.T) {
 		Pubkey: "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
 	}
 
-	fmt.Println("TestNewAccount...")
+	log.Info("TestNewAccount...")
 	b, err := Marshal(param)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	param1 := &newaccountparam{}
 	err = Unmarshal(b, param1)
-	fmt.Println("param1: ", param1)
-	fmt.Println(err)
+	log.Info("param1: ", param1)
+	log.Info(err)
 }
 
 func TestDatafileReg(t *testing.T) {
@@ -236,7 +238,7 @@ func TestDatafileReg(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestDatafileReg...")
+	log.Info("TestDatafileReg...")
 
 	ts := TestStruct{
 		V1: "12345678901234567890",
@@ -244,12 +246,12 @@ func TestDatafileReg(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestAssetfileReg(t *testing.T) {
@@ -270,7 +272,7 @@ func TestAssetfileReg(t *testing.T) {
 		AssetId string
 		V2      TestSubStruct
 	}
-	fmt.Println("TestAssetfileReg...")
+	log.Info("TestAssetfileReg...")
 
 	ts := TestStruct{
 		AssetId: "98e0b84063b311e8a5e3d1b3c579b67f",
@@ -289,15 +291,15 @@ func TestAssetfileReg(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 	cc, _ := HexToBytes("dc0002da00206230356563613430363362363131653861313164623763303833663930643061dc000ada0003626f74da00046e616d65cf000000000000000eda0005312d312d31da0000da004066636336386466646632316639343432616134306361363062313262396639653332383239663332346566343532653730656533623434313465363164396434ce5b195680ce00000001cf00038d7e9ed09f00da0003313233")
 	err = Unmarshal(cc, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestUserReg(t *testing.T) {
@@ -305,7 +307,7 @@ func TestUserReg(t *testing.T) {
 		V1 string
 		V2 string
 	}
-	fmt.Println("TestUserReg...")
+	log.Info("TestUserReg...")
 
 	ts := TestStruct{
 		V1: "buyertest",
@@ -313,12 +315,12 @@ func TestUserReg(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestAssetReg(t *testing.T) {
@@ -342,7 +344,7 @@ func TestAssetReg(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestAssetReg...")
+	log.Info("TestAssetReg...")
 
 	ts := TestStruct{
 		V1: "23456789012345678901",
@@ -350,12 +352,12 @@ func TestAssetReg(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestDataReqReg(t *testing.T) {
@@ -376,7 +378,7 @@ func TestDataReqReg(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestDataReqReg...")
+	log.Info("TestDataReqReg...")
 
 	ts := TestStruct{
 		V1: "12345678901234567890",
@@ -384,12 +386,12 @@ func TestDataReqReg(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestGoodsProReq(t *testing.T) {
@@ -400,18 +402,18 @@ func TestGoodsProReq(t *testing.T) {
 		V4 string
 	}
 
-	fmt.Println("TestGoodsProReq...")
+	log.Info("TestGoodsProReq...")
 
 	ts := TestStruct{V1: "usernametest", V2: 2, V3: "asset", V4: "goodsIdTest"}
 
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestDataDeal_PreSaleReq(t *testing.T) {
@@ -428,7 +430,7 @@ func TestDataDeal_PreSaleReq(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestDataDeal_PreSaleReq...")
+	log.Info("TestDataDeal_PreSaleReq...")
 
 	ts := TestStruct{
 		V1: "12345678901234567899",
@@ -436,12 +438,12 @@ func TestDataDeal_PreSaleReq(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }
 
 func TestDataDeal_BuyAssetReq(t *testing.T) {
@@ -455,7 +457,7 @@ func TestDataDeal_BuyAssetReq(t *testing.T) {
 		V1 string
 		V2 *TestSubStruct
 	}
-	fmt.Println("TestDataDeal_BuyAssetReq...")
+	log.Info("TestDataDeal_BuyAssetReq...")
 
 	ts := TestStruct{
 		V1: "12345678901234567899",
@@ -463,10 +465,10 @@ func TestDataDeal_BuyAssetReq(t *testing.T) {
 	}
 	b, err := Marshal(ts)
 
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	log.Infof("%v\n", BytesToHex(b))
+	log.Info(err)
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Println("ts1 ", ts1, err)
+	log.Info("ts1 ", ts1, err)
 }

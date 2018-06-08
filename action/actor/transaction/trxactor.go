@@ -26,7 +26,7 @@
 package trxactor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
@@ -57,7 +57,7 @@ func NewTrxActor() *actor.PID {
 	TrxActorPid, err = actor.SpawnNamed(props, "TrxActor")
 
 	if err != nil {
-		panic(fmt.Errorf("TrxActor SpawnNamed error: %v", err))
+		panic(log.Errorf("TrxActor SpawnNamed error: %v", err))
 	} else {
 		return TrxActorPid
 	}
@@ -71,13 +71,13 @@ func SetTrxPool(pool *transaction.TrxPool) {
 func handleSystemMsg(context actor.Context) bool {
 	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("TrxActor received started msg")
+		log.Info("TrxActor received started msg")
 	case *actor.Stopping:
-		fmt.Printf("TrxActor received stopping msg")
+		log.Info("TrxActor received stopping msg")
 	case *actor.Restart:
-		fmt.Printf("TrxActor received restart msg")
+		log.Info("TrxActor received restart msg")
 	case *actor.Restarting:
-		fmt.Printf("TrxActor received restarting msg")
+		log.Info("TrxActor received restarting msg")
 	default:
 		return false
 	}
@@ -110,6 +110,6 @@ func (t *TrxActor) Receive(context actor.Context) {
 		trxPool.RemoveTransactions(msg.Trxs)
 
 	default:
-		fmt.Println("trx actor: Unknown msg")
+		log.Info("trx actor: Unknown msg")
 	}
 }

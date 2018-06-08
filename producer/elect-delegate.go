@@ -27,7 +27,7 @@ package producer
 
 import (
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math/rand"
 	"reflect"
 
@@ -42,7 +42,7 @@ func StringSliceReflectEqual(a, b []string) bool {
 
 //ShuffleEelectCandidateList is to shuffle the candidates in one round
 func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, error) {
-	newSchedule := r.roleIntf.ElectNextTermDelegates()
+	newSchedule := r.roleIntf.ElectNextTermDelegates(&block)
 	currentState, err := r.roleIntf.GetCoreState()
 	if err != nil {
 		return nil, err
@@ -50,12 +50,17 @@ func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, erro
 	changes := common.Filter(currentState.CurrentDelegates, newSchedule)
 	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
 	if equal == false {
-		fmt.Println("invalid block changes")
+		log.Info("invalid block changes")
 		return nil, errors.New("Unexpected round changes in new block header")
 	}
-	for i := range newSchedule {
-		j := rand.Intn(i + 1)
+
+	h := block.Hash()
+	label := h.Label()
+	rand.New(rand.NewSource(int64(label)))
+	rand.Shuffle(len(newSchedule), func(i, j int) {
 		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
-	}
+	})
+
+	fmt.Println("New Eelected: ", newSchedule)
 	return newSchedule, nil
 }

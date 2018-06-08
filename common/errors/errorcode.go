@@ -25,7 +25,7 @@
 
 package errors
 
-// import "fmt"
+
 
 // ErrCode define the type of error
 type ErrCode uint32

@@ -26,7 +26,7 @@
 package chain
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -100,7 +100,7 @@ func (c *BlockChainCache) Trim(headBlockNum uint32, LIB uint32) error {
 			c.cache.Remove(hash.(common.Hash))
 			c.cache.Remove(start)
 			trimmed = true
-			fmt.Printf("remove block form block cache, num = %v, hash = %x\n", start, hash.(common.Hash))
+			log.Infof("remove block form block cache, num = %v, hash = %x\n", start, hash.(common.Hash))
 		}
 	}
 
@@ -108,7 +108,7 @@ func (c *BlockChainCache) Trim(headBlockNum uint32, LIB uint32) error {
 		c.startBlock = c.GetBlockByNum(LIB)
 	}
 
-	fmt.Printf("BlockCache Trim, head block num = %v, LIB = %v, start = %v\n", headBlockNum, LIB, c.startBlock.GetNumber())
+	log.Infof("BlockCache Trim, head block num = %v, LIB = %v, start = %v\n", headBlockNum, LIB, c.startBlock.GetNumber())
 	return nil
 }
 
@@ -137,6 +137,6 @@ func (c *BlockChainCache) Insert(block *types.Block) (*types.Block, error) {
 		return c.headBlock, nil
 	}
 
-	return nil, fmt.Errorf("BlockCache insert block error, block not link, block PrevBlockHash: %x, head block Hash: %x\n", block.GetPrevBlockHash(), c.headBlock.Hash())
+	return nil, log.Errorf("BlockCache insert block error, block not link, block PrevBlockHash: %x, head block Hash: %x\n", block.GetPrevBlockHash(), c.headBlock.Hash())
 
 }

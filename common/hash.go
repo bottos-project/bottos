@@ -30,7 +30,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -132,7 +132,7 @@ func NumberToBytes(num interface{}, bits int) []byte {
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.BigEndian, num)
 	if err != nil {
-		fmt.Println("NumberToBytes failed:", err)
+		log.Infof("NumberToBytes failed:", err)
 	}
 
 	return buf.Bytes()[buf.Len()-(bits/8):]

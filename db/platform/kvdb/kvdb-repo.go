@@ -32,6 +32,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	log "github.com/cihub/seelog"
 )
 
 //OpenFileLimit is to limiting the size of open leveldb
@@ -94,21 +95,19 @@ func (k *KVDatabase) CallFlush() error {
 func (k *KVDatabase) CallClose() {
 
 	k.db.Close()
-	fmt.Println("flushed and closed db:", k.fn)
+	log.Info("flushed and closed db:", k.fn)
 }
 
 //CallSeek is to seek object
-func (k *KVDatabase) CallSeek(prefixKey []byte) ([]interface{}, error) {
-	var valueList []interface{}
+func (k *KVDatabase) CallSeek(prefixKey []byte) ([]string, error) {
+	var valueList []string
 	iter := k.db.NewIterator(util.BytesPrefix(prefixKey), nil)
 	for iter.Next() {
 		//ptrKey := iter.Key()
-		key := iter.Value()
-		if value, err := k.db.Get(key, nil); err != nil {
-			continue
-		} else {
-			valueList = append(valueList, value)
-		}
+		value := iter.Value()
+		fmt.Printf("CallSeek: %x\n", value)
+		valueList = append(valueList, string(value))
+		fmt.Println("CallSeek1: ", valueList)
 	}
 	iter.Release()
 	err := iter.Error()

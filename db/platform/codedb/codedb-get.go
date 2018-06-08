@@ -26,9 +26,10 @@
 package codedb
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/tidwall/buntdb"
+	log "github.com/cihub/seelog"
 )
 
 //CallGetObject is to get object by key
@@ -82,11 +83,11 @@ func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
 func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
 	var objectValue string
 
-	fmt.Println(`{` + indexName + ":" + indexValue + `}`)
+	log.Info(`{` + indexName + ":" + indexValue + `}`)
 	err := k.db.View(func(tx *buntdb.Tx) error {
 		return tx.AscendGreaterOrEqual(indexName, `{`+indexName+":"+indexValue+`}`, func(key, value string) bool {
 			objectValue = value
-			fmt.Printf(value)
+			log.Info(value)
 			return true
 		})
 	})

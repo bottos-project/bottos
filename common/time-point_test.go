@@ -25,7 +25,7 @@
 package common
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math/big"
 	"testing"
 	"time"
@@ -34,27 +34,27 @@ import (
 func Test_Now(t *testing.T) {
 
 	ab := Now()
-	fmt.Println(ab)
+	log.Info(ab)
 
 }
 
 func Test_MeasureStart(t *testing.T) {
 	now := time.Now().Unix()
-	fmt.Println(now)
+	log.Info(now)
 	m := MeasureStart()
-	fmt.Println(m)
+	log.Info(m)
 }
 
 func Test_NanoSeconds(t *testing.T) {
 	m := MeasureStart()
 	an := big.NewInt(0)
 	mb := an.SetUint64(m)
-	fmt.Println("ddd", mb)
+	log.Infof("ddd", mb)
 	bp := bigpow(10, 9)
-	fmt.Println(bp)
+	log.Info(bp)
 	value := mb.Div(mb, bp)
 
-	fmt.Println(value)
+	log.Info(value)
 	b := ToNanoseconds(time.Now())
-	fmt.Println(b)
+	log.Info(b)
 }

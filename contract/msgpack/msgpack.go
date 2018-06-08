@@ -30,6 +30,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+
+	log "github.com/cihub/seelog"
 )
 
 //Marshal is to serialize the message
@@ -54,14 +56,14 @@ func Encode(w io.Writer, structs interface{}) error {
 	v := reflect.ValueOf(structs)
 
 	if !v.IsValid() {
-		fmt.Printf("Not Valid %T\n", structs)
+		log.Errorf("Not Valid %T\n", structs)
 		return fmt.Errorf("Not Valid %T\n", structs)
 	}
 
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 		if !v.IsValid() {
-			fmt.Printf("Nil Ptr: %T\n", structs)
+			log.Errorf("Nil Ptr: %T\n", structs)
 			return fmt.Errorf("Nil Ptr: %T\n", structs)
 		}
 	}
@@ -115,17 +117,17 @@ func Decode(r io.Reader, dst interface{}) error {
 	v := reflect.ValueOf(dst)
 
 	if !v.IsValid() {
-		fmt.Printf("Not Valid %T\n", dst)
+		log.Errorf("Not Valid %T\n", dst)
 		return fmt.Errorf("Not Valid %T\n", dst)
 	}
 
 	if v.Kind() != reflect.Ptr {
-		fmt.Printf("dst Not Settable %T\n", dst)
+		log.Errorf("dst Not Settable %T\n", dst)
 		return fmt.Errorf("dst Not Settable %T)", dst)
 	}
 
 	if !v.Elem().IsValid() {
-		fmt.Printf("Nil Ptr: %T\n", dst)
+		log.Errorf("Nil Ptr: %T\n", dst)
 		return fmt.Errorf("Nil Ptr: %T\n", dst)
 	}
 

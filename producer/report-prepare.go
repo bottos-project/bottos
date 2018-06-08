@@ -26,7 +26,7 @@
 package producer
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math"
 
 	"github.com/bottos-project/bottos/common"
@@ -50,7 +50,7 @@ func (r *Reporter) IsReady() bool {
 
 	slot := r.roleIntf.GetSlotAtTime(now)
 	if slot == 0 {
-		//fmt.Println("slot is 0,not time yet")
+		//log.Info("slot is 0,not time yet")
 		return false
 	}
 
@@ -59,7 +59,7 @@ func (r *Reporter) IsReady() bool {
 		return false
 	}
 	if (now < object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
-		//fmt.Println("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
+		//log.Infof("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
 		return false
 	}
 	if r.IsMyTurn(now, slot) == false {
@@ -110,11 +110,11 @@ func (r *Reporter) IsSynced(when uint64) bool {
 func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 	accountName, err := r.roleIntf.GetCandidateBySlot(slot)
 	if err != nil {
-		fmt.Println("cannot get delegate by slot", slot)
+		log.Infof("cannot get delegate by slot", slot)
 		return false
 	}
 	if r.roleIntf.IsAccountExist(accountName) == false {
-		fmt.Println("account not exist", accountName)
+		log.Infof("account not exist", accountName)
 		return false
 	}
 
@@ -122,18 +122,18 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 
 	delegate, err := r.roleIntf.GetDelegateByAccountName(accountName)
 	if err != nil {
-		fmt.Println("find delegate by account failed", accountName)
+		log.Infof("find delegate by account failed", accountName)
 		return false
 	}
 	prate := r.roleIntf.GetDelegateParticipationRate()
 
 	if prate < config.DELEGATE_PATICIPATION {
-		//	fmt.Println("delegate paticipate rate is too low")
+		//	log.Info("delegate paticipate rate is too low")
 		return false
 	}
 
 	if math.Abs(float64(scheduledTime)-float64(startTime)) > 500 {
-		//	fmt.Println("delegate  is too slow")
+		//	log.Info("delegate  is too slow")
 		return false
 	}
 	r.state.ScheduledTime = scheduledTime

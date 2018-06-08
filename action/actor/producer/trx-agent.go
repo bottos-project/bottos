@@ -26,7 +26,7 @@
 package produceractor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
@@ -48,11 +48,11 @@ func GetAllPendingTrx() []*types.Transaction {
 
 	if nil == getTrxsErr {
 	} else {
-		fmt.Println("get all trx req exec error")
+		log.Info("get all trx req exec error")
 	}
 
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-	fmt.Println("pending transaction number ", len(mesg.Trxs))
+	log.Infof("pending transaction number ", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
 	for i := 0; i < len(mesg.Trxs); i++ {
 		dbtag := new(types.Transaction)
@@ -67,7 +67,7 @@ func GetAllPendingTrx() []*types.Transaction {
 // VerifyTransactions is to verify local and received transactons
 func VerifyTransactions(trx *types.Transaction) (bool, error) {
 	return true, nil
-	/* 	fmt.Println("start apply transaction trx one by one")
+	/* 	log.Info("start apply transaction trx one by one")
 	   	trxApply := transaction.NewTrxApplyService()
 	   	pass, _, _ := trxApply.ApplyTransaction(trx)
 	   	return pass, nil */

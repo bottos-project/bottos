@@ -27,11 +27,12 @@ package optiondb
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/bottos/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	log "github.com/cihub/seelog"
 )
 
 //OptionDbRepo is the interface for plugin db for user queries
@@ -50,7 +51,7 @@ func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}
 	if insertSession == nil || insertSession.mgoSession == nil {
 		insertSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
-			fmt.Println("collection cccccccccccc", insertSession, collection, err)
+			log.Error("collection cccccccccccc", insertSession, collection, err)
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
 	}
@@ -70,7 +71,7 @@ func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
-			fmt.Println("collection ", getSession, collection, err)
+			log.Error("collection ", getSession, collection, err)
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
 	}
@@ -89,7 +90,7 @@ func (r *OptionDbRepository) OptionDbFind(collection string, key string, value i
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
-			fmt.Println("collection ", getSession, collection, err)
+			log.Error("collection ", getSession, collection, err)
 			return nil, errors.New("Get session faild" + r.mgoEndpoint)
 		}
 	}
@@ -111,7 +112,7 @@ func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
-			fmt.Println("collection ", getSession, collection, err)
+			log.Error("collection ", getSession, collection, err)
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
 	}

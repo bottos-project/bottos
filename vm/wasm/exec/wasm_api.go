@@ -30,7 +30,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"os"
 	"sync"
 	"time"
@@ -209,7 +209,7 @@ func importer(name string) (*wasm.Module, error) {
 func GetWasmVersion(ctx *contract.Context) uint32 {
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
+		log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
 		return 0
 	}
 
@@ -224,7 +224,7 @@ func NewWASM(ctx *contract.Context) *VM {
 	var codeVersion uint32
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to get account by name !!! ", err.Error())
+		log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
 		return nil
 	}
 	codeVersion = binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
@@ -232,12 +232,12 @@ func NewWASM(ctx *contract.Context) *VM {
 
 	module, err := wasm.ReadModule(bytes.NewBuffer(wasmCode), importer)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to parse the wasm module !!! " + err.Error())
+		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
 		return nil
 	}
 
 	if module.Export == nil {
-		fmt.Println("*ERROR* Failed to find export method from wasm module !!!")
+		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
 		return nil
 	}
 
@@ -273,7 +273,7 @@ func (engine *wasmEngine) startSubCrx(event []byte) error {
 	var subCrx contract.Context
 
 	if err := json.Unmarshal(event, &subCrx); err != nil {
-		fmt.Println("Unmarshal: ", err.Error())
+		log.Infof("Unmarshal: ", err.Error())
 		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
 	}
 

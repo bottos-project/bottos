@@ -5,9 +5,11 @@ import (
 	"errors"
 	log "github.com/cihub/seelog"
 	"math/big"
+	"math/rand"
 	"sort"
 
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/db"
 )
@@ -89,7 +91,7 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 }
 
 //ElectNextTermDelegatesRole is to elect next term delegates
-func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
+func ElectNextTermDelegatesRole(ldb *db.DBService, block *types.Block) []string {
 	var tmpList []string
 	var eligibleList []string
 	var eligibles []string
@@ -155,6 +157,19 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	} else {
 		SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
+
+	h := block.Hash()
+	label := h.Label()
+	fmt.Println("Label: %v", label)
+	r := rand.New(rand.NewSource(int64(label)))
+
+	fmt.Println("New Eelected, beafor shuffle: ", reporterList)
+
+	r.Shuffle(len(reporterList), func(i, j int) {
+		reporterList[i], reporterList[j] = reporterList[j], reporterList[i]
+	})
+
+	fmt.Println("New Eelected: ", reporterList)
 
 	return reporterList
 

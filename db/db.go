@@ -26,11 +26,12 @@
 package db
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/bottos/db/platform/codedb"
 	"github.com/bottos-project/bottos/db/platform/kvdb"
 	"github.com/bottos-project/bottos/db/platform/optiondb"
+	log "github.com/cihub/seelog"
 )
 
 //DBService is db service struct for other package
@@ -47,7 +48,7 @@ func NewDbService(path string, codedbPath string, optPath string) *DBService {
 		return nil
 	}
 	db, err := codedb.NewCodeDbRepository(codedbPath)
-	fmt.Println(err)
+	log.Info(err)
 	if optPath == "" {
 		return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: nil}
 	}

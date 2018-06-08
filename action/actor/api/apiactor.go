@@ -26,8 +26,7 @@
 package apiactor
 
 import (
-	"fmt"
-
+    log "github.com/cihub/seelog"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
@@ -52,7 +51,7 @@ func NewApiActor() *actor.PID {
 	ApiActorPid, err = actor.SpawnNamed(props, "ApiActor")
 
 	if err != nil {
-		panic(fmt.Errorf("ApiActor SpawnNamed error: ", err))
+		panic(log.Errorf("ApiActor SpawnNamed error: ", err))
 	} else {
 		return ApiActorPid
 	}
@@ -62,13 +61,13 @@ func handleSystemMsg(context actor.Context) {
 
 	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("ApiActor received started msg")
+		log.Info("ApiActor received started msg")
 	case *actor.Stopping:
-		fmt.Printf("ApiActor received stopping msg")
+		log.Info("ApiActor received stopping msg")
 	case *actor.Restart:
-		fmt.Printf("ApiActor received restart msg")
+	    log.Info("ApiActor received restart msg")
 	case *actor.Restarting:
-		fmt.Printf("ApiActor received restarting msg")
+		log.Info("ApiActor received restarting msg")
 	}
 }
 

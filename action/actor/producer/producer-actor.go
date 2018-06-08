@@ -26,7 +26,7 @@
 package produceractor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"time"
 	"unsafe"
 
@@ -66,7 +66,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		fmt.Printf("ProducerActor received started msg: %s", msg)
+		log.Infof("ProducerActor received started msg: %s", msg)
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
@@ -74,13 +74,13 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 		context.SetReceiveTimeout(500 * time.Millisecond)
 
 	case *actor.Stopping:
-		fmt.Printf("ProducerActor received stopping msg")
+		log.Info("ProducerActor received stopping msg")
 
 	case *actor.Restart:
-		fmt.Printf("ProducerActor received restart msg")
+		log.Info("ProducerActor received restart msg")
 
 	case *actor.Restarting:
-		fmt.Printf("ProducerActor received restarting msg")
+		log.Info("ProducerActor received restarting msg")
 	}
 
 }
@@ -100,7 +100,7 @@ func (p *ProducerActor) working() {
 		pendingBlockSize := uint32(unsafe.Sizeof(block))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
-			fmt.Println("GetGlobalPropertyRole failed")
+			log.Info("GetGlobalPropertyRole failed")
 			return
 		}
 		var pendingTrx = []*types.Transaction{}
@@ -111,18 +111,18 @@ func (p *ProducerActor) working() {
 			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT ||
 				pendingBlockSize > coreStat.Config.MaxBlockSize {
 				pendingTrx = append(pendingTrx, dtag)
-				fmt.Println("Warning reach max size")
+				log.Info("Warning reach max size")
 				continue
 			}
 			pass, _ := VerifyTransactions(trx)
 			if pass == false {
-				fmt.Println("ApplyTransaction failed")
+				log.Info("ApplyTransaction failed")
 				continue
 			}
 			pendingBlockSize += uint32(unsafe.Sizeof(trx))
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
-				fmt.Println("Warning pending block size reach MaxBlockSize")
+				log.Info("Warning pending block size reach MaxBlockSize")
 				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
@@ -130,10 +130,10 @@ func (p *ProducerActor) working() {
 		}
 		block = p.ins.Woker(trxs)
 		if block != nil {
-			fmt.Printf("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
 
 			ApplyBlock(block)
-			fmt.Printf("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", block.GetNumber(), len(block.Transactions), block.Header.Delegate, block.Hash())
+			log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", block.GetNumber(), len(block.Transactions), block.Header.Delegate, block.Hash())
 		}
 	}
 }

@@ -26,7 +26,7 @@
 package netactor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	//"encoding/json"
 	"github.com/bottos-project/bottos/action/message"
 	//"github.com/bottos-project/core/common/types"
@@ -68,7 +68,7 @@ func NewNetActor(env *env.ActorEnv) *actor.PID {
 	if err == nil {
 		return NetActorPid
 	} else {
-		panic(fmt.Errorf("NetActor SpawnNamed error: ", err))
+		panic(log.Errorf("NetActor SpawnNamed error: ", err))
 	}
 
 	return nil
@@ -79,23 +79,23 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		fmt.Printf("NetActor received started msg", msg)
+		log.Infof("NetActor received started msg", msg)
 
 	case *actor.Stopping:
-		fmt.Printf("NetActor received stopping msg")
+	    log.Info("NetActor received stopping msg")
 
 	case *actor.Restart:
-		fmt.Printf("NetActor received restart msg")
+	    log.Info("NetActor received restart msg")
 
 	case *actor.Restarting:
-		fmt.Printf("NetActor received restarting msg")
+	    log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-		fmt.Printf("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 35, "<======================== NetActor received Transaction msg  , msg.Trx: ",msg.Trx, 0x1B)
+	    log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 35, "<======================== NetActor received Transaction msg  , msg.Trx: ",msg.Trx, 0x1B)
 		go p2p.BroadCast(msg.Trx , p2pserv.TRANSACTION)
 
 	case *message.NotifyBlock:
-		fmt.Printf("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 32, "<======================== NetActor received Block msg , msg.Block: ",msg.Block, 0x1B)
+		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 32, "<======================== NetActor received Block msg , msg.Block: ",msg.Block, 0x1B)
 		go p2p.BroadCast(msg.Block , p2pserv.BLOCK)
 
 	}
