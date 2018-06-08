@@ -25,8 +25,6 @@
 
 package errors
 
-
-
 // ErrCode define the type of error
 type ErrCode uint32
 
@@ -52,7 +50,6 @@ const (
 	ErrTrxContractDepthError ErrCode = 10008
 	// ErrTrxSubContractNumError handle trx sub contract num error
 	ErrTrxSubContractNumError ErrCode = 10009
-
 
 	// ErrContractAccountNameIllegal invalid contract account name
 	ErrContractAccountNameIllegal ErrCode = 10101

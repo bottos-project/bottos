@@ -24,9 +24,9 @@
 package operators
 
 import (
-	log "github.com/cihub/seelog"
-    "fmt"
+	"fmt"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
+	log "github.com/cihub/seelog"
 )
 
 var (

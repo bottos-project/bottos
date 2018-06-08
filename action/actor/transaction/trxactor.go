@@ -94,7 +94,7 @@ func (t *TrxActor) Receive(context actor.Context) {
 
 	switch msg := context.Message().(type) {
 	case *message.PushTrxReq:
-		
+
 		trxPool.HandleTransactionFromFront(context, msg.Trx)
 
 	case *message.NotifyTrx:

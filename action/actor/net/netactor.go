@@ -30,20 +30,19 @@ import (
 	//"encoding/json"
 	"github.com/bottos-project/bottos/action/message"
 	//"github.com/bottos-project/core/common/types"
-	p2pserv "github.com/bottos-project/bottos/p2p"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
+	p2pserv "github.com/bottos-project/bottos/p2p"
 )
 
-var NetActorPid   *actor.PID = nil
+var NetActorPid *actor.PID = nil
 
-var trxActorPid   *actor.PID = nil
+var trxActorPid *actor.PID = nil
 var chainActorPid *actor.PID = nil
 
 var p2p *p2pserv.P2PServer = nil
 
 var actorEnv *env.ActorEnv
-
 
 type NetActor struct {
 	props *actor.Props
@@ -55,7 +54,7 @@ func ContructNetActor() *NetActor {
 
 func NewNetActor(env *env.ActorEnv) *actor.PID {
 	actorEnv = env
-	
+
 	p2p = p2pserv.NewServ()
 	p2p.SetActorEnv(env)
 	go p2p.Start()
@@ -82,21 +81,21 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 		log.Infof("NetActor received started msg", msg)
 
 	case *actor.Stopping:
-	    log.Info("NetActor received stopping msg")
+		log.Info("NetActor received stopping msg")
 
 	case *actor.Restart:
-	    log.Info("NetActor received restart msg")
+		log.Info("NetActor received restart msg")
 
 	case *actor.Restarting:
-	    log.Info("NetActor received restarting msg")
+		log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-	    log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 35, "<======================== NetActor received Transaction msg  , msg.Trx: ",msg.Trx, 0x1B)
-		go p2p.BroadCast(msg.Trx , p2pserv.TRANSACTION)
+		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123, 40, 35, "<======================== NetActor received Transaction msg  , msg.Trx: ", msg.Trx, 0x1B)
+		go p2p.BroadCast(msg.Trx, p2pserv.TRANSACTION)
 
 	case *message.NotifyBlock:
-		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123 , 40 , 32, "<======================== NetActor received Block msg , msg.Block: ",msg.Block, 0x1B)
-		go p2p.BroadCast(msg.Block , p2pserv.BLOCK)
+		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123, 40, 32, "<======================== NetActor received Block msg , msg.Block: ", msg.Block, 0x1B)
+		go p2p.BroadCast(msg.Block, p2pserv.BLOCK)
 
 	}
 

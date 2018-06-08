@@ -122,7 +122,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	}
 
 	reqMsg := &message.PushTrxReq{
-		Trx:       intTrx,
+		Trx: intTrx,
 	}
 
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
@@ -131,7 +131,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
-		log.Error("trx ", intTrx.Hash(), " actor process failed" )
+		log.Error("trx ", intTrx.Hash(), " actor process failed")
 
 		return nil
 	}
@@ -154,7 +154,7 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 		resp.Errcode = (uint32)(tempErr)
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
 	}
-	
+
 	log.Infof("trx: %v %s", resp.Result.TrxHash, resp.Msg)
 
 	return nil

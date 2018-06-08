@@ -235,8 +235,8 @@ func prints(vm *VM) (bool, error) {
 	copy(value, vm.memory[pos:pos+len])
 	param := string(value)
 
-	log.Infof("VM: func prints: %v\n", param);
-	return true , nil
+	log.Infof("VM: func prints: %v\n", param)
+	return true, nil
 
 }
 
