@@ -1,7 +1,7 @@
 package exec
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/common/types"
@@ -21,7 +21,7 @@ func TestCallSubTrx(t *testing.T) {
 	}
 
 	bf , err :=  msgpack.Marshal(param)
-	fmt.Println(" TestCallSubTrx bf = ",bf," , err = ",err)
+	log.Infof(" TestCallSubTrx bf = ",bf," , err = ",err)
 
 	trx := &types.Transaction{
 		Version:1,
@@ -41,7 +41,7 @@ func TestCallSubTrx(t *testing.T) {
 
 	res , err := GetInstance().Start(ctx, 1, false)
 	if err != nil {
-		fmt.Println("*ERROR* fail to execute start !!! ",err.Error())
+		log.Infof("*ERROR* fail to execute start !!! ",err.Error())
 		return
 	}
 
@@ -49,6 +49,6 @@ func TestCallSubTrx(t *testing.T) {
 	var tf transferparam
 	for _ , sub_trx := range res {
 		msgpack.Unmarshal(sub_trx.Param , &tf)
-		fmt.Println("TestCallSubTrx sub_trx = ",sub_trx.Param ," , tf = ",tf)
+		log.Infof("TestCallSubTrx sub_trx = ",sub_trx.Param ," , tf = ",tf)
 	}
 }

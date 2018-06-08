@@ -56,10 +56,10 @@ func sendTrxRsp(trxRsp uint64, pid *actor.PID) {
 			f := trxactorPid.RequestFuture(pushTrxReq, 5000*time.Millisecond)
 			es, err := f.Result() // waits for pid to reply
 
-			fmt.Println("this is es err", es, err)
+			log.Infof("this is es err", es, err)
 	*/
 	//result, _ := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
 
-	//fmt.Println(result)
+	//log.Info(result)
 
 }

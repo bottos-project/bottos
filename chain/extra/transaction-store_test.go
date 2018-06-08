@@ -25,7 +25,7 @@
 package txstore
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"io"
 	"os"
 	"testing"
@@ -78,7 +78,7 @@ func TestTxStore(t *testing.T) {
 	bc := NewMockBlockChain()
 	dbInst := db.NewDbService("./datadir", "./datadir/db.db")
 	if dbInst == nil {
-		fmt.Println("Create DB service fail")
+		log.Info("Create DB service fail")
 		os.Exit(1)
 	}
 	txStore := NewTransactionStore(bc, dbInst)
@@ -96,7 +96,7 @@ func TestTxStore(t *testing.T) {
 
 	// check
 	expTx1 := txStore.GetTransaction(tx1.Hash())
-	fmt.Printf("tx1.hash=%x, expTx1.hash=%x\n", tx1.Hash(), expTx1.Hash())
+	log.Infof("tx1.hash=%x, expTx1.hash=%x\n", tx1.Hash(), expTx1.Hash())
 }
 
 func CopyFile(dstName, srcName string) (written int64, err error) {

@@ -80,7 +80,7 @@ func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*typ
 	// If this block is last in a round, calculate the schedule for the new round
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
 		newSchedule := p.roleIntf.ElectNextTermDelegates()
-		//fmt.Println("next term delgates", newSchedule)
+		//log.Infof("next term delgates", newSchedule)
 		currentState, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			return nil, err

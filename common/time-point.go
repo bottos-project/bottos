@@ -26,7 +26,7 @@
 package common
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"time"
 
 	"github.com/aristanetworks/goarista/monotime"
@@ -62,7 +62,7 @@ func MeasureStart() uint64 {
 func Elapsed(t uint64) uint64 {
 	nanoElapse := MeasureStart() - t
 	microElapse := nanoElapse / 1000
-	//	fmt.Println(microElapse)
+	//	log.Info(microElapse)
 	return microElapse
 
 }
@@ -82,6 +82,6 @@ func MicrosecondsAddToSec(src uint64, des uint64) uint64 {
 func NowToSlotSec(current time.Time, loopMicroSec uint64) uint64 {
 	cur := ToMicroseconds(current)
 	value := MicrosecondsAddToSec(cur, loopMicroSec)
-	fmt.Println(cur)
+	log.Info(cur)
 	return value
 }

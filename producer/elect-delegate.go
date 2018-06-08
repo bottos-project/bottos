@@ -27,7 +27,7 @@ package producer
 
 import (
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math/rand"
 	"reflect"
 
@@ -50,7 +50,7 @@ func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, erro
 	changes := common.Filter(currentState.CurrentDelegates, newSchedule)
 	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
 	if equal == false {
-		fmt.Println("invalid block changes")
+		log.Info("invalid block changes")
 		return nil, errors.New("Unexpected round changes in new block header")
 	}
 	for i := range newSchedule {

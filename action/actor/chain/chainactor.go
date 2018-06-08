@@ -26,7 +26,7 @@
 package chainactor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
@@ -63,7 +63,7 @@ func NewChainActor(env *env.ActorEnv) *actor.PID {
 	actorEnv = env
 
 	if err != nil {
-		panic(fmt.Errorf("ChainActor SpawnNamed error: %v", err))
+		panic(log.Errorf("ChainActor SpawnNamed error: %v", err))
 	} else {
 		return ChainActorPid
 	}
@@ -73,13 +73,13 @@ func handleSystemMsg(context actor.Context) {
 
 	switch context.Message().(type) {
 	case *actor.Started:
-		fmt.Println("BlockActor received started msg")
+		log.Info("BlockActor received started msg")
 	case *actor.Stopping:
-		fmt.Println("BlockActor received stopping msg")
+		log.Info("BlockActor received stopping msg")
 	case *actor.Restart:
-		fmt.Println("BlockActor received restart msg")
+		log.Info("BlockActor received restart msg")
 	case *actor.Restarting:
-		fmt.Println("BlockActor received restarting msg")
+		log.Info("BlockActor received restarting msg")
 	}
 }
 
@@ -140,7 +140,7 @@ func (c *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxR
 	if ctx.Sender() != nil {
 		resp := &message.QueryTrxResp{}
 		if tx == nil {
-			resp.Error = fmt.Errorf("Transaction not found")
+			resp.Error = log.Errorf("Transaction not found")
 		} else {
 			resp.Trx = tx
 		}
@@ -157,7 +157,7 @@ func (c *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBl
 	if ctx.Sender() != nil {
 		resp := &message.QueryBlockResp{}
 		if block == nil {
-			resp.Error = fmt.Errorf("Block not found")
+			resp.Error = log.Errorf("Block not found")
 		} else {
 			resp.Block = block
 		}

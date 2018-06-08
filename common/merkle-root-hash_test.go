@@ -26,7 +26,7 @@
 package common
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 )
 
@@ -39,7 +39,7 @@ func TestMerkleRootHash_Odd(t *testing.T) {
 	hs = append(hs, Sha256([]byte("5")))
 
 	root := ComputeMerkleRootHash(hs)
-	fmt.Printf("root hash: %x\n", root)
+	log.Infof("root hash: %x\n", root)
 }
 
 func TestMerkleRootHash_Even(t *testing.T) {
@@ -50,14 +50,14 @@ func TestMerkleRootHash_Even(t *testing.T) {
 	hs = append(hs, Sha256([]byte("4")))
 
 	root := ComputeMerkleRootHash(hs)
-	fmt.Printf("root hash: %x\n", root)
+	log.Infof("root hash: %x\n", root)
 }
 
 func TestMerkleRootHash_NULL(t *testing.T) {
 	var hs []Hash
 
 	root := ComputeMerkleRootHash(hs)
-	fmt.Printf("empty root hash: %x\n", root)
+	log.Infof("empty root hash: %x\n", root)
 }
 
 // https://btc.com/0000000000000000003c4601e87ab5389c15d9c48c37076472aa7d45cdd4fa30
@@ -71,9 +71,9 @@ func TestMerkleRootHash_BTC_0000000000000000003c4601e87ab5389c15d9c48c37076472aa
 	rootStr := reverseHash(root).ToHexString()
 	expectedRootStr := "2fc7d439472c12c27b8eff3a758c01772d4ae0ed2d6139fc4bbddac9b8943c3c"
 	if rootStr != expectedRootStr {
-		fmt.Printf("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	} else {
-		fmt.Printf("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	}
 }
 
@@ -91,9 +91,9 @@ func TestMerkleRootHash_BTC_00000000000010e45e3d943559acb2be2323fceb24182e811eb4
 	rootStr := reverseHash(root).ToHexString()
 	expectedRootStr := "ed0733aaeb0c0ec41b1f368c537ec32bea711c789d6d44ea1452077300f401a1"
 	if rootStr != expectedRootStr {
-		fmt.Printf("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	} else {
-		fmt.Printf("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	}
 
 }
@@ -111,9 +111,9 @@ func TestMerkleRootHash_BTC_000000000000000000010f01933e19182a0d2f3f134bfd6559ef
 	rootStr := reverseHash(root).ToHexString()
 	expectedRootStr := "c03c955ae773acf0d052a15a8a95487d29d2c210449e3094007b286a3b4d50f3"
 	if rootStr != expectedRootStr {
-		fmt.Printf("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	} else {
-		fmt.Printf("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	}
 
 }
@@ -146,9 +146,9 @@ func TestMerkleRootHash_BTC_000000000000030de89e7729d5785c4730839b6e16ea9fb686a5
 	rootStr := reverseHash(root).ToHexString()
 	expectedRootStr := "acb5aeb11e2a607e610b90f2722cf68aec719af2a2fd6a6af179764e90169af4"
 	if rootStr != expectedRootStr {
-		fmt.Printf("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	} else {
-		fmt.Printf("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	}
 
 }
@@ -180,9 +180,9 @@ func TestMerkleRootHash_BTC_000000000000000000165f317acde835bc398f5186e987775aff
 	rootStr := reverseHash(root).ToHexString()
 	expectedRootStr := "8361ee29a7f28a80d06c475f2160a2ee5c52fa6eb8de93098672145dd8a05ac3"
 	if rootStr != expectedRootStr {
-		fmt.Printf("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	} else {
-		fmt.Printf("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
+		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
 	}
 }
 

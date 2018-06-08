@@ -31,7 +31,7 @@ package exec
 
 import (
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
@@ -107,7 +107,7 @@ func getStrValue(vm *VM) (bool, error) {
 	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
-	fmt.Println(string(contract), len(contract), string(object), len(object), string(key), len(key))
+	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
 
 	valueLen := 0
@@ -128,7 +128,7 @@ func getStrValue(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(valueLen))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func get_test_str:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value)
+	log.Infof("VM: from contract:%v, method:%v, func get_test_str:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value)
 
 	return true, nil
 }
@@ -159,7 +159,7 @@ func setStrValue(vm *VM) (bool, error) {
 	value := make([]byte, valueLen)
 	copy(value, vm.memory[valuePos:valuePos+valueLen])
 
-	fmt.Println(string(object), len(object), string(key), len(key), string(value), len(value))
+	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
 	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
 
 	result := 1
@@ -174,7 +174,7 @@ func setStrValue(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func setStrValue:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
+	log.Infof("VM: from contract:%v, method:%v, func setStrValue:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
 
 	return true, nil
 }
@@ -200,7 +200,7 @@ func removeStrValue(vm *VM) (bool, error) {
 	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
-	fmt.Println(string(object), len(object), string(key), len(key))
+	log.Infof(string(object), len(object), string(key), len(key))
 	err := contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	result := 1
@@ -213,7 +213,7 @@ func removeStrValue(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(result))
 	}
 
-	fmt.Printf("VM: from contract:%v, method:%v, func removeStrValue:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
+	log.Infof("VM: from contract:%v, method:%v, func removeStrValue:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
 
 	return true, nil
 }
@@ -221,7 +221,7 @@ func removeStrValue(vm *VM) (bool, error) {
 func printi(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	value := vm.envFunc.envFuncParam[0]
-	fmt.Printf("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
+	log.Infof("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
 	return true, nil
 }
@@ -235,7 +235,7 @@ func prints(vm *VM) (bool, error) {
 	copy(value, vm.memory[pos:pos+len])
 	param := string(value)
 
-	fmt.Printf("VM: func prints: %v\n", param);
+	log.Infof("VM: func prints: %v\n", param);
 	return true , nil
 
 }

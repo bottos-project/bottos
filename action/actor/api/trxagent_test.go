@@ -17,7 +17,7 @@
 package apiactor
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"path/filepath"
 	"testing"
 	"time"
@@ -38,7 +38,7 @@ func TestPushTrxTest(t *testing.T) {
 	// init testing
 	dbInst := db.NewDbService("./datadir/", filepath.Join("./datadir/", "blockchain"))
 	if dbInst == nil {
-		fmt.Println("Create DB service fail")
+		log.Info("Create DB service fail")
 		//os.Exit(1)
 	}
 	trxActorPid = trxactor.NewTrxActor()
@@ -47,8 +47,7 @@ func TestPushTrxTest(t *testing.T) {
 	var trxPool = transaction.InitTrxPool(dbInst)
 	trxactor.SetTrxPool(trxPool)
 
-	fmt.Println("Test PushTrxTest will called")
-
+    log.Info("Test PushTrxTest will called")
 	trxTest := &types.Transaction{
 		Cursor:      11,
 		CursorLabel: 22,
@@ -63,9 +62,9 @@ func TestPushTrxTest(t *testing.T) {
 	result, err := trxActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result()
 
 	if nil == err {
-		fmt.Println("push trx req exec result:")
-		fmt.Println("rusult is =======", result)
-		fmt.Println("error  is =======", err)
+		log.Info("push trx req exec result:")
+		log.Infof("rusult is =======", result)
+		log.Infof("error  is =======", err)
 	} else {
 		t.Error("push trx failed, trx:", trxTest)
 	}
@@ -76,9 +75,9 @@ func TestPushTrxTest(t *testing.T) {
 	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if nil == err {
-		fmt.Println("get all trx req exec result:")
-		fmt.Println("rusult is =======", getTrxsResult)
-		fmt.Println("error  is =======", getTrxsErr)
+		log.Info("push trx req exec result:")
+		log.Infof("rusult is =======", getTrxsResult)
+		log.Infof("error  is =======", getTrxsErr)
 	} else {
 		t.Error("get all trx req exec error")
 	}
@@ -98,9 +97,9 @@ func TestPushTrxTest(t *testing.T) {
 	getTrxsAfterRemoveResult, getTrxsAfterRemoveErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
 
 	if nil == err {
-		fmt.Println("get all trx req after remove exec result:")
-		fmt.Println("rusult is =======", getTrxsAfterRemoveResult)
-		fmt.Println("error  is =======", getTrxsAfterRemoveErr)
+		log.Info("get all trx req after remove exec result:")
+		log.Infof("rusult is =======", getTrxsAfterRemoveResult)
+		log.Infof("error  is =======", getTrxsAfterRemoveErr)
 	} else {
 		t.Error("get all trx req after remove exec error")
 	}

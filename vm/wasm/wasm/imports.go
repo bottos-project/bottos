@@ -24,6 +24,7 @@ package wasm
 import (
 	"errors"
 	"fmt"
+	log "github.com/cihub/seelog"
 )
 
 // Import is an intreface implemented by types that can be imported by a WebAssembly module.
@@ -168,7 +169,7 @@ func (module *Module) resolveImports(resolve ResolveFunc) error {
 				module.imports.Memories++
 
 			default:
-				fmt.Println("not support import type")
+				log.Info("not support import type")
 
 			}
 		} else {

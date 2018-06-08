@@ -24,7 +24,7 @@
 package operators
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 )
@@ -54,7 +54,7 @@ func (o Op) IsValid() bool {
 
 func newOp(code byte, name string, args []wasm.ValueType, returns wasm.ValueType) byte {
 	if ops[code].IsValid() {
-		panic(fmt.Errorf("Opcode %#x is already assigned to %s", code, ops[code].Name))
+		panic(log.Errorf("Opcode %#x is already assigned to %s", code, ops[code].Name))
 	}
 
 	op := Op{
@@ -70,7 +70,7 @@ func newOp(code byte, name string, args []wasm.ValueType, returns wasm.ValueType
 
 func newPolymorphicOp(code byte, name string) byte {
 	if ops[code].IsValid() {
-		panic(fmt.Errorf("Opcode %#x is already assigned to %s", code, ops[code].Name))
+		panic(log.Errorf("Opcode %#x is already assigned to %s", code, ops[code].Name))
 	}
 
 	op := Op{

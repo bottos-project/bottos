@@ -25,11 +25,11 @@
 package common
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 )
 
 func TestUint128_MaxUint128(t *testing.T) {
 	value := MaxUint128()
-	fmt.Println(value)
+	log.Info(value)
 }
