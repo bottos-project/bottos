@@ -35,27 +35,27 @@ import (
 	"fmt"
 	"sync"
 	//"reflect"
-	"strings"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	log "github.com/cihub/seelog"
+	"strings"
 )
 
 //its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-
-	p2p              *P2PServer
-	stopSync         chan bool
+	p2p      *P2PServer
+	stopSync chan bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
-	peerMap          map[uint64]*Peer
+	peerMap map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
 
 func NewNotifyManager() *NotifyManager {
-	return &NotifyManager {
+	return &NotifyManager{
 		peerMap:          make(map[uint64]*Peer),
 		trxActorPid:      nil,
 		chainActorPid:    nil,
@@ -66,14 +66,14 @@ func NewNotifyManager() *NotifyManager {
 func (notify *NotifyManager) Start() {
 }
 
-func (notify *NotifyManager) broadcastByte (buf []byte, isSync bool) {
+func (notify *NotifyManager) broadcastByte(buf []byte, isSync bool) {
 
 	fmt.Println("NotifyManager::broadcastByte")
 	peer_map := notify.getPeerMap()
 
-	for _ , peer := range peer_map {
+	for _, peer := range peer_map {
 		if peer.GetPeerState() == ESTABLISH {
-			peer.SendTo(buf , false)
+			peer.SendTo(buf, false)
 		}
 	}
 
@@ -84,21 +84,21 @@ func (notify *NotifyManager) addPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+	if _, ok := notify.peerMap[peer.GetId()]; !ok {
 		notify.peerMap[peer.GetId()] = peer
 	}
 }
 
-func (notify *NotifyManager) delPeer(peer *Peer)  {
+func (notify *NotifyManager) delPeer(peer *Peer) {
 	notify.Lock()
 	defer notify.Unlock()
 
-	if _ , ok := notify.peerMap[peer.GetId()]; !ok {
+	if _, ok := notify.peerMap[peer.GetId()]; !ok {
 		delete(notify.peerMap, peer.GetId())
 	}
 }
 
-func (notify *NotifyManager) getPeer(addr string)  {
+func (notify *NotifyManager) getPeer(addr string) {
 
 }
 
@@ -118,14 +118,13 @@ func (notify *NotifyManager) getPeerCnt() uint32 {
 	}
 
 	var cnt uint32 = 0
-	for _ , peer := range notify.peerMap {
+	for _, peer := range notify.peerMap {
 		if ESTABLISH == peer.GetPeerState() {
 			cnt++
 		}
 	}
 	return cnt
 }
-
 
 //todo sync blk info with other peer
 func (notify *NotifyManager) BroadcastBlk() {
@@ -142,9 +141,9 @@ func (notify *NotifyManager) SyncPeer() {
 	//fmt.Println("NotifyManager::SyncPeer")
 }
 
-func (notify *NotifyManager) isExist(addr string , isExist bool) bool {
-	for _ , peer := range notify.peerMap {
-		if res := strings.Compare(peer.peerAddr , addr); res == 0 {
+func (notify *NotifyManager) isExist(addr string, isExist bool) bool {
+	for _, peer := range notify.peerMap {
+		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
 			return true
 		}
 	}
@@ -152,24 +151,30 @@ func (notify *NotifyManager) isExist(addr string , isExist bool) bool {
 	return false
 }
 
+func (notify *NotifyManager) GetPeerInfo(id uint64) string {
+	notify.Lock()
+	defer notify.Unlock()
 
+	log.Debug("GetPeerInfo")
 
+	peer := notify.peerMap[id]
+	if peer == nil {
+		return ""
+	}
 
+	return peer.GetPeerAddr()
 
+}
 
+//GetPeersAddr get peer addr
+func (notify *NotifyManager) GetPeersAddr() []string {
+	notify.Lock()
+	defer notify.Unlock()
 
+	var addrs []string
+	for _, value := range notify.peerMap {
+		addrs = append(addrs, value.peerAddr)
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return addrs
+}

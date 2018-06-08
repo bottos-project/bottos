@@ -32,35 +32,35 @@
 package p2pserver
 
 import (
-	"fmt"
-	"sync"
-	"errors"
 	"crypto/rsa"
 	"encoding/json"
-	"io/ioutil"
-	"time"
+	"errors"
+	"fmt"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
+	"io/ioutil"
+	"sync"
+	"time"
 )
 
 var actorEnv *env.ActorEnv
 
 //
-type P2PServer struct{
-	serv          *NetServer
-	p2pConfig     *P2PConfig
+type P2PServer struct {
+	serv      *NetServer
+	p2pConfig *P2PConfig
 
-	p2pLock        sync.RWMutex
+	p2pLock sync.RWMutex
 }
 
 type P2PConfig struct {
-	ServAddr    string
-	ServPort    int
-	PeerLst     []string
+	ServAddr string
+	ServPort int
+	PeerLst  []string
 }
 
 //parse json configuration
-func ReadFile(filename string) *P2PConfig{
+func ReadFile(filename string) *P2PConfig {
 
 	if filename == "" {
 		fmt.Println("*ERROR* parmeter is null")
@@ -70,13 +70,13 @@ func ReadFile(filename string) *P2PConfig{
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to read the config: ",filename)
-		return  &P2PConfig{}
+		fmt.Println("*ERROR* Failed to read the config: ", filename)
+		return &P2PConfig{}
 	}
 
-	str:=string(bytes)
+	str := string(bytes)
 
-	if err := json.Unmarshal([]byte(str), &pc) ; err != nil{
+	if err := json.Unmarshal([]byte(str), &pc); err != nil {
 		fmt.Println("Unmarshal: ", err.Error())
 		return &P2PConfig{}
 	}
@@ -85,18 +85,18 @@ func ReadFile(filename string) *P2PConfig{
 }
 
 //
-func NewServ() *P2PServer{
+func NewServ() *P2PServer {
 	fmt.Println("NewServ()")
 
 	//config file for test
 	p2pconfig := ReadFile(CONF_FILE)
 	/*
-	prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
-	if err != nil {
-		panic(err)
-	}
+		prvKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+		if err != nil {
+			panic(err)
+		}
 
-	fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
+		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
 	var p2pserv *P2PServer = nil
@@ -105,7 +105,7 @@ func NewServ() *P2PServer{
 			serv:      NewNetServer(),
 			p2pConfig: p2pconfig,
 		}
-	}else{
+	} else {
 		p2pserv = &P2PServer{
 			serv:      NewNetServerTst(p2pconfig),
 			p2pConfig: p2pconfig,
@@ -119,7 +119,6 @@ func (p2p *P2PServer) Init() error {
 	fmt.Println("p2pServer::Init()")
 	return nil
 }
-
 
 //it is the entry of p2p
 func (p2p *P2PServer) Start() error {
@@ -138,9 +137,17 @@ func (p2p *P2PServer) Start() error {
 		p2p.serv.Start()
 	}
 
+	//start udp server
+	go p2p.serv.StartUdpServer()
+
 	//connect to other seed nodes
 	go p2p.serv.activeTimedTask()
-	go p2p.testBlock()
+	if TST == 0 {
+		go p2p.testBlock()
+	}
+
+	//peer neighbor exchange
+	go p2p.serv.PneStart()
 
 	//get all seeds or wait for 3 seconds
 	//go p2p.serv.initSync()
@@ -151,38 +158,38 @@ func (p2p *P2PServer) Start() error {
 }
 
 //run a heart beat to watch the network status
-func  (p2p *P2PServer) RunHeartBeat() error {
+func (p2p *P2PServer) RunHeartBeat() error {
 	fmt.Println("p2pServer::RunHeartBeat()")
 	return nil
 }
 
-func  (p2p *P2PServer) SetTrxActor (trxActorPid *actor.PID)  {
+func (p2p *P2PServer) SetTrxActor(trxActorPid *actor.PID) {
 	p2p.serv.notify.trxActorPid = trxActorPid
 }
 
-func  (p2p *P2PServer) SetChainActor (chainActorPid *actor.PID)  {
+func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
-func  (p2p *P2PServer) SetChainActorPid (tpid *actor.PID)  {
+func (p2p *P2PServer) SetChainActorPid(tpid *actor.PID) {
 	p2p.serv.notify.chainActorPid = tpid
 }
 
-func (p2p *P2PServer) SetActorEnv (env *env.ActorEnv)  {
+func (p2p *P2PServer) SetActorEnv(env *env.ActorEnv) {
 	p2p.serv.actorEnv = env
-	actorEnv          = env
+	actorEnv = env
 }
 
 //A interface for call from other component
-func  (p2p *P2PServer) BroadCast (m interface{} , call_type uint8) error {
+func (p2p *P2PServer) BroadCast(m interface{}, call_type uint8) error {
 	fmt.Println("p2pServer::BroadCast()")
 	var res error
-	switch call_type{
+	switch call_type {
 	case TRANSACTION:
-		res = p2p.serv.broadCastImpl(m , CRX_BROADCAST)
+		res = p2p.serv.broadCastImpl(m, CRX_BROADCAST)
 
 	case BLOCK:
-		res = p2p.serv.broadCastImpl(m , BLK_BROADCAST)
+		res = p2p.serv.broadCastImpl(m, BLK_BROADCAST)
 
 	}
 
@@ -222,7 +229,6 @@ type PubKey interface {
 	Verify(data []byte, sig []byte) (bool, error)
 }
 
-
 /*
 // Generates a keypair
 func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, error) {
@@ -238,18 +244,18 @@ func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, e
 }
 */
 
-func (p2p *P2PServer)testBlock() {
+func (p2p *P2PServer) testBlock() {
 	var timeInterval *time.Timer = time.NewTimer(3 * time.Second)
-	var blockNum  uint32
+	var blockNum uint32
 	var headerNum uint32
 
 	for {
 		select {
-		case <- timeInterval.C:
+		case <-timeInterval.C:
 
-			blockNum  = actorEnv.Chain.LastConsensusBlockNum()
+			blockNum = actorEnv.Chain.LastConsensusBlockNum()
 			headerNum = actorEnv.Chain.HeadBlockNum()
-			SuperPrint(AUQA_PRINT , "P2PServer::TestBlock() blockNum: ",blockNum," , headerNum: ", headerNum)
+			SuperPrint(AUQA_PRINT, "P2PServer::TestBlock() blockNum: ", blockNum, " , headerNum: ", headerNum)
 
 			timeInterval.Stop()
 			timeInterval.Reset(time.Second * 3)
@@ -257,8 +263,4 @@ func (p2p *P2PServer)testBlock() {
 	}
 
 }
-
-
-
-
 

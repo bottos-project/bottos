@@ -32,10 +32,23 @@
 package p2pserver
 
 const (
-	CONF_FILE      = "config.json"
-	TIME_INTERVAL  = 10
-	//*WRAN* set the variable as "true" before starting test
+	//CONF_FILE is definition of config file name
+	CONF_FILE = "config.json"
+	//TIME_INTERVAL is definition of time interval
+	TIME_INTERVAL = 10
+	//TST *WRAN* set the variable as "true" before starting test
 	TST            = 0
-	MIN_NODE_NUM   = 2
+	//MIN_NODE_NUM min peer before sync
+	MIN_NODE_NUM = 2
+	//INIT_SYNC_WAIT wait time before sync when startup
 	INIT_SYNC_WAIT = 3
+
+	//TIME_PNE_START start wait time , Minute
+	TIME_PNE_START = 2
+	//TIME_PNE_EXCHANGE exchange time , Minute
+	TIME_PNE_EXCHANGE = 1
+	//MAX_NEIGHBOR_NUM  max neighbor number
+	MAX_NEIGHBOR_NUM = 200
+	//NEIGHBOR_DISCOVER_COUNT  bunch of neighbor when discover at the same time
+	NEIGHBOR_DISCOVER_COUNT = 10
 )

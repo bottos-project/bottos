@@ -33,23 +33,25 @@ package p2pserver
 
 import (
 	"fmt"
-	"unsafe"
 	"hash/fnv"
+	"unsafe"
 )
 
 //message type
 const (
-	REQUEST  = iota   //0
+	REQUEST = iota //0
 	RESPONSE
 	CRX_BROADCAST
 	BLK_BROADCAST
+	PEERNEIGHBOR_REQ
+	PEERNEIGHBOR_RSP
 	DEFAULT
 )
 
 //connection state
 const (
-	ESTABLISH   = 10 //receive peer`s verack
-	INACTIVITY  = 11       //link broken
+	ESTABLISH  = 10 //receive peer`s verack
+	INACTIVITY = 11 //link broken
 )
 
 //p2p call type
@@ -73,10 +75,10 @@ const (
 )
 
 type CommonMessage struct {
-	Src       string
-	Dst       string
-	MsgType   uint8
-	Content   []byte
+	Src     string
+	Dst     string
+	MsgType uint8
+	Content []byte
 }
 
 type BlockInfo struct {
@@ -98,11 +100,10 @@ func Hash(str string) uint32 {
 	return h.Sum32()
 }
 
-func SuperPrint(color uint8 , args ...interface{}) {
+func SuperPrint(color uint8, args ...interface{}) {
 	for _, v := range args {
-		fmt.Printf("%c[%d;%d;%dm%v%c[0m", 0x1B, 123 , 40 , color, v, 0x1B)
+		fmt.Printf("%c[%d;%d;%dm%v%c[0m", 0x1B, 123, 40, color, v, 0x1B)
 	}
 	fmt.Printf("\n")
 }
-
 
