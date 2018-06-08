@@ -50,6 +50,6 @@
     "api_service_version": "3.0.0",
 	"enable_stale_report": true,
 	"option_db":"",
-    "log_config":"log.xml",
+    "log_config":"corelog.xml",
     "chain_id":"00000000000000000000000000000000"
 }

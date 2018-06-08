@@ -3,7 +3,7 @@
         <filter levels="info,debug,critical,error">
             <buffered formatid="log" size="10000" flushperiod="1000">
                 <!--<console/>-->
-                <rollingfile type="size" filename="./asset.log" maxsize="20971520" maxrolls="10"/>
+                <rollingfile type="size" filename="./core.log" maxsize="20971520" maxrolls="10"/>
             </buffered>
         </filter>
     </outputs>
