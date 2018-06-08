@@ -61,6 +61,5 @@ func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, erro
 		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
 	})
 
-	fmt.Println("New Eelected: ", newSchedule)
 	return newSchedule, nil
 }
