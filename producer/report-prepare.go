@@ -26,7 +26,6 @@
 package producer
 
 import (
-	"fmt"
 	"math"
 
 	log "github.com/cihub/seelog"
@@ -136,7 +135,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		}
 	}
 	if !found {
-		fmt.Printf("current delegate: %v, not found in this node\n", accountName)
+		log.Infof("current delegate: %v, not found in this node\n", accountName)
 		return false
 	}
 
