@@ -240,7 +240,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(serializeData)))
-	//h.Write([]byte(config.Param.ChainId))	
+	h.Write([]byte(config.Param.ChainId))	
 	hashData := h.Sum(nil)
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)

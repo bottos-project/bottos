@@ -31,74 +31,82 @@
 
 package p2pserver
 
-import  (
-	"net"
-	"fmt"
+import (
 	"errors"
+	"fmt"
+	"net"
 )
 
+//Peer peer info
 type Peer struct {
-	peerAddr     string
-	servPort     int
-	peerId       uint32
-	publicKey    string
+	peerAddr  string
+	servPort  int
+	peerId    uint32
+	publicKey string
 
-	peerSock    *net.UDPAddr
-	conn         net.Conn
+	peerSock *net.UDPAddr
+	conn     net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
 }
 
-func NewPeer(addr_name string , serv_port int , conn net.Conn) *Peer {
+//NewPeer new a peer
+func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
 	return &Peer{
-		peerAddr:   addr_name,
-		servPort:   serv_port,
-		peerId:     0,
-		conn:       conn,
-		syncState:  0,
+		peerAddr:  addrName,
+		servPort:  servPort,
+		peerId:    0,
+		conn:      conn,
+		syncState: 0,
 	}
 }
 
+//GetPeerAddr get peer addr
 func (p *Peer) GetPeerAddr() string {
 	return p.peerAddr
 }
 
+//SetPeerAddr set peer addr
 func (p *Peer) SetPeerAddr(addr string) {
 	p.peerAddr = addr
 }
 
+//SetPeerState set peer sync state
 func (p *Peer) SetPeerState(state uint32) {
 	p.syncState = state
 }
 
+//GetPeerState get peer sync state
 func (p *Peer) GetPeerState() uint32 {
 	return p.syncState
 }
 
+//GetId get peer id from peer address
 func (p *Peer) GetId() uint64 {
 	if p.peerId == 0 {
-		addr_port := p.peerAddr + ":" + fmt.Sprint(p.servPort)
-		p.peerId   = Hash(addr_port)
+		addrPort := p.peerAddr + ":" + fmt.Sprint(p.servPort)
+		p.peerId = Hash(addrPort)
 	}
 
 	return uint64(p.peerId)
 }
 
+//SendTo create connection and send
 func (p *Peer) SendTo(buf []byte, isSync bool) error {
 
 	conn, err := net.Dial("tcp", p.peerAddr+":"+fmt.Sprint(p.servPort))
 	if err != nil {
-		SuperPrint(RED_PRINT,"*ERROR* Failed to create a connection for remote server !!! err: ",err.Error())
+		SuperPrint(RED_PRINT, "*ERROR* Failed to create a connection for remote server !!! err: ", err.Error())
 		return err
 	}
 
-	len , err := conn.Write(buf)
+	len, err := conn.Write(buf)
 	if err != nil {
-		SuperPrint(RED_PRINT ,"*ERROR* Failed to send data !!! len: ",len,err.Error() )
+		SuperPrint(RED_PRINT, "*ERROR* Failed to send data !!! len: ", len, err.Error())
 		return errors.New("*ERROR* Failed to send data !!!")
-	}else if len <= 0 {
-		SuperPrint(RED_PRINT , "*ERROR* Failed to send data !!! len: ",len,err.Error() )
+	} else if len <= 0 {
+		SuperPrint(RED_PRINT, "*ERROR* Failed to send data !!! len: ", len, err.Error())
 		return errors.New("*ERROR* Failed to send data !!!")
 	}
 

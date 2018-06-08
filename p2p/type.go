@@ -32,9 +32,10 @@
 package p2pserver
 
 import (
-	log "github.com/cihub/seelog"
-	"unsafe"
 	"hash/fnv"
+	"unsafe"
+
+	log "github.com/cihub/seelog"
 )
 
 //message type
@@ -74,6 +75,7 @@ const (
 	WHITE_PRINT        = 37
 )
 
+//CommonMessage message struct
 type CommonMessage struct {
 	Src     string
 	Dst     string
@@ -81,11 +83,13 @@ type CommonMessage struct {
 	Content []byte
 }
 
+//BlockInfo block info
 type BlockInfo struct {
 	BlockNum  uint32
 	HeaderNum uint32
 }
 
+//BlockReq block request message
 type BlockReq struct {
 	BlockNum uint32
 }
@@ -94,12 +98,14 @@ func bytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
+//Hash hash calc
 func Hash(str string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(str))
 	return h.Sum32()
 }
 
+//SuperPrint log with color
 func SuperPrint(color uint8, args ...interface{}) {
 	for _, v := range args {
 		log.Infof("%c[%d;%d;%dm%v%c[0m", 0x1B, 123, 40, color, v, 0x1B)
