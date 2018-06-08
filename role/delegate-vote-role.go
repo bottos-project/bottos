@@ -5,12 +5,11 @@ import (
 
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/bottos-project/bottos/common"
-
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 // DelegateVotesObjectName is definition of delegate vote object name
@@ -129,7 +128,7 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 	}
 
 	if currentTermTime.Cmp(new(big.Int).Sub(common.MaxUint128(), termTimeToFinish)) == -1 {
-		fmt.Println("ERROR currentTermTime time overflow", currentTermTime)
+		log.Error("ERROR currentTermTime time overflow", currentTermTime)
 		return
 	}
 	termFinishTime := new(big.Int).Add(currentTermTime, termTimeToFinish)
@@ -143,7 +142,7 @@ func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, cu
 func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
-		fmt.Println("ERROR failed ", err)
+		log.Error("ERROR failed ", err)
 		return nil, err
 	}
 	var dgates = []*DelegateVotes{}

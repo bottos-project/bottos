@@ -26,7 +26,7 @@
 package kvdb
 
 import (
-	"fmt"
+	
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
@@ -105,9 +105,9 @@ func (k *KVDatabase) CallSeek(prefixKey []byte) ([]string, error) {
 	for iter.Next() {
 		//ptrKey := iter.Key()
 		value := iter.Value()
-		fmt.Printf("CallSeek: %x\n", value)
+		log.Infof("CallSeek: %x\n", value)
 		valueList = append(valueList, string(value))
-		fmt.Println("CallSeek1: ", valueList)
+		log.Info("CallSeek1: ", valueList)
 	}
 	iter.Release()
 	err := iter.Error()

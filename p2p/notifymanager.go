@@ -32,7 +32,6 @@
 package p2pserver
 
 import (
-	"fmt"
 	"sync"
 	//"reflect"
 	"strings"
@@ -71,7 +70,7 @@ func (notify *NotifyManager) Start() {
 
 func (notify *NotifyManager) broadcastByte(buf []byte, isSync bool) {
 
-	fmt.Println("NotifyManager::broadcastByte")
+	log.Info("NotifyManager::broadcastByte")
 	peerMap := notify.getPeerMap()
 
 	for _, peer := range peerMap {
