@@ -35,18 +35,19 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/action/env"
 	"io/ioutil"
 	"sync"
 	"time"
+
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/env"
 
 	log "github.com/cihub/seelog"
 )
 
 var actorEnv *env.ActorEnv
 
-//
+//P2PServer p2p server struct
 type P2PServer struct {
 	serv      *NetServer
 	p2pConfig *P2PConfig
@@ -54,13 +55,14 @@ type P2PServer struct {
 	p2pLock sync.RWMutex
 }
 
+//P2PConfig p2p configration
 type P2PConfig struct {
 	ServAddr string
 	ServPort int
 	PeerLst  []string
 }
 
-//parse json configuration
+//ReadFile parse json configuration
 func ReadFile(filename string) *P2PConfig {
 
 	if filename == "" {
@@ -85,7 +87,7 @@ func ReadFile(filename string) *P2PConfig {
 	return &pc
 }
 
-//
+//NewServ create a p2p server
 func NewServ() *P2PServer {
 	log.Info("NewServ()")
 
@@ -100,7 +102,7 @@ func NewServ() *P2PServer {
 		fmt.Println("prvKey = ",prvKey," , pubKey = ",pubKey)
 	*/
 
-	var p2pserv *P2PServer = nil
+	var p2pserv *P2PServer
 	if TST == 0 {
 		p2pserv = &P2PServer{
 			serv:      NewNetServer(),
@@ -116,12 +118,13 @@ func NewServ() *P2PServer {
 	return p2pserv
 }
 
+//Init init
 func (p2p *P2PServer) Init() error {
 	log.Info("p2pServer::Init()")
 	return nil
 }
 
-//it is the entry of p2p
+//Start it is the entry of p2p
 func (p2p *P2PServer) Start() error {
 	log.Info("p2pServer::Start()")
 
@@ -158,34 +161,38 @@ func (p2p *P2PServer) Start() error {
 	return nil
 }
 
-//run a heart beat to watch the network status
+//RunHeartBeat run a heart beat to watch the network status
 func (p2p *P2PServer) RunHeartBeat() error {
 	log.Info("p2pServer::RunHeartBeat()")
 	return nil
 }
 
+//SetTrxActor set trx actor instance
 func (p2p *P2PServer) SetTrxActor(trxActorPid *actor.PID) {
 	p2p.serv.notify.trxActorPid = trxActorPid
 }
 
+//SetChainActor set chain actor instance
 func (p2p *P2PServer) SetChainActor(chainActorPid *actor.PID) {
 	p2p.serv.notify.chainActorPid = chainActorPid
 }
 
+//SetChainActorPid set chain actor pid
 func (p2p *P2PServer) SetChainActorPid(tpid *actor.PID) {
 	p2p.serv.notify.chainActorPid = tpid
 }
 
+//SetActorEnv set actor env
 func (p2p *P2PServer) SetActorEnv(env *env.ActorEnv) {
 	p2p.serv.actorEnv = env
 	actorEnv = env
 }
 
-//A interface for call from other component
-func (p2p *P2PServer) BroadCast(m interface{}, call_type uint8) error {
+//BroadCast A interface for call from other component
+func (p2p *P2PServer) BroadCast(m interface{}, callType uint8) error {
 	log.Info("p2pServer::BroadCast()")
 	var res error
-	switch call_type {
+	switch callType {
 	case TRANSACTION:
 		res = p2p.serv.broadCastImpl(m, CRX_BROADCAST)
 
@@ -197,6 +204,7 @@ func (p2p *P2PServer) BroadCast(m interface{}, call_type uint8) error {
 	return res
 }
 
+//RsaKeyPair key
 type RsaKeyPair struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
@@ -223,6 +231,7 @@ type PrivKey interface {
 	GetPublic() PubKey
 }
 
+//PubKey key
 type PubKey interface {
 	Key
 
