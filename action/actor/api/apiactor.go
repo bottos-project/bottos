@@ -26,8 +26,8 @@
 package apiactor
 
 import (
-    log "github.com/cihub/seelog"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	log "github.com/cihub/seelog"
 )
 
 //ApiActorPid is actor pid
@@ -65,7 +65,7 @@ func handleSystemMsg(context actor.Context) {
 	case *actor.Stopping:
 		log.Info("ApiActor received stopping msg")
 	case *actor.Restart:
-	    log.Info("ApiActor received restart msg")
+		log.Info("ApiActor received restart msg")
 	case *actor.Restarting:
 		log.Info("ApiActor received restarting msg")
 	}

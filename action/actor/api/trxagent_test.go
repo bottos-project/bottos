@@ -47,7 +47,7 @@ func TestPushTrxTest(t *testing.T) {
 	var trxPool = transaction.InitTrxPool(dbInst)
 	trxactor.SetTrxPool(trxPool)
 
-    log.Info("Test PushTrxTest will called")
+	log.Info("Test PushTrxTest will called")
 	trxTest := &types.Transaction{
 		Cursor:      11,
 		CursorLabel: 22,

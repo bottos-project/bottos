@@ -26,8 +26,6 @@
 package chain
 
 import (
-	
-
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/db"

@@ -26,13 +26,13 @@
 package actionactor
 
 import (
-    log "github.com/cihub/seelog"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	apiactor "github.com/bottos-project/bottos/action/actor/api"
 	chainactor "github.com/bottos-project/bottos/action/actor/chain"
 	netactor "github.com/bottos-project/bottos/action/actor/net"
 	produceractor "github.com/bottos-project/bottos/action/actor/producer"
 	trxactor "github.com/bottos-project/bottos/action/actor/transaction"
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/action/env"
 )
@@ -41,6 +41,7 @@ var apiActorPid *actor.PID
 var netActorPid *actor.PID
 var trxActorPid *actor.PID
 var chainActorPid *actor.PID
+
 //MultiActor actor group
 type MultiActor struct {
 	apiActorPid      *actor.PID
@@ -53,6 +54,7 @@ type MultiActor struct {
 func (m *MultiActor) GetTrxActor() *actor.PID {
 	return m.trxActorPid
 }
+
 //GetNetActor get net actor PID
 func (m *MultiActor) GetNetActor() *actor.PID {
 	return m.netActorPid
@@ -74,8 +76,8 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 
 func registerActorMsgTbl(m *MultiActor) {
 
-    log.Info("RegisterActorMsgTbl")
-	apiactor.SetTrxActorPid(m.trxActorPid)          // api --> trx
+	log.Info("RegisterActorMsgTbl")
+	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid)
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
@@ -83,8 +85,8 @@ func registerActorMsgTbl(m *MultiActor) {
 	produceractor.SetNetActorPid(m.netActorPid)     // producer --> chain
 	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
 
-	netactor.SetTrxActorPid(m.trxActorPid)          //p2p --> trx
-	netactor.SetChainActorPid(m.chainActorPid)      //p2p --> chain
+	netactor.SetTrxActorPid(m.trxActorPid)     //p2p --> trx
+	netactor.SetChainActorPid(m.chainActorPid) //p2p --> chain
 }
 
 //GetTrxActorPID get trx actor pid

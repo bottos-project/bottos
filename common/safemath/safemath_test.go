@@ -29,7 +29,6 @@ import (
 	log "github.com/cihub/seelog"
 	"math"
 	"testing"
-	
 
 	"github.com/stretchr/testify/assert"
 )
