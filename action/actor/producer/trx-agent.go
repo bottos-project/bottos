@@ -72,3 +72,5 @@ func VerifyTransactions(trx *types.Transaction) (bool, error) {
 	   	pass, _, _ := trxApply.ApplyTransaction(trx)
 	   	return pass, nil */
 }
+func PushTransaction(trx *types.Transaction) {
+}
