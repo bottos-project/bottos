@@ -26,7 +26,7 @@ package role
 
 import (
 	//	"encoding/json"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math/big"
 	"testing"
 
@@ -37,7 +37,7 @@ func TestDelegateVotes_writedb(t *testing.T) {
 	ins := db.NewDbService("./file2", "./file2/db.db", "")
 	err := CreateDelegateVotesRole(ins)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	value := &DelegateVotes{
 		OwnerAccount: "nodepad",
@@ -50,41 +50,41 @@ func TestDelegateVotes_writedb(t *testing.T) {
 	}
 	err = SetDelegateVotesRole(ins, value.OwnerAccount, value)
 	if err != nil {
-		fmt.Println("SetDelegateVotesRole", err)
+		log.Error("SetDelegateVotesRole", err)
 	}
 
 	value, err = GetDelegateVotesRoleByAccountName(ins, value.OwnerAccount)
 	if err != nil {
-		fmt.Println("GetDelegateVotesRoleByAccountName", err)
+		log.Error("GetDelegateVotesRoleByAccountName", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 
 	value, err = GetDelegateVotesRoleByVote(ins, value.Serve.Votes)
 	if err != nil {
-		fmt.Println("GetDelegateVotesRoleByVote", err)
+		log.Error("GetDelegateVotesRoleByVote", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 
 	value, err = GetDelegateVotesRoleByFinishTime(ins, value.Serve.TermFinishTime)
 	if err != nil {
-		fmt.Println("GetDelegateVotesRoleByFinishTime", err)
+		log.Error("GetDelegateVotesRoleByFinishTime", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 
 	values, nerr := GetAllDelegateVotesRole(ins)
 	if nerr != nil {
-		fmt.Println("GetAllDelegateVotes", nerr)
+		log.Error("GetAllDelegateVotes", nerr)
 	}
-	fmt.Println(len(values))
+	log.Info(len(values))
 
 	svotes, nerr := GetAllSortVotesDelegates(ins)
 	if nerr != nil {
-		fmt.Println("GetAllSortVotesDelegates", nerr)
+		log.Error("GetAllSortVotesDelegates", nerr)
 	}
-	fmt.Println(len(svotes))
+	log.Info(len(svotes))
 	tvotes, nerr := GetAllSortFinishTimeDelegates(ins)
 	if nerr != nil {
-		fmt.Println("GetAllSortFinishTimeDelegates", nerr)
+		log.Error("GetAllSortFinishTimeDelegates", nerr)
 	}
-	fmt.Println(len(tvotes))
+	log.Info(len(tvotes))
 }

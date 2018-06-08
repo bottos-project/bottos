@@ -33,6 +33,7 @@ package p2pserver
 
 import (
 	"fmt"
+	log "github.com/cihub/seelog"
 	"net"
 	"sync"
 	"time"
@@ -101,7 +102,7 @@ func NewNetServer() *NetServer {
 //for UT
 func NewNetServerTst(config *P2PConfig) *NetServer {
 	if config == nil {
-		fmt.Println("*ERROR* Parmeter is empty !!!")
+		log.Error("*ERROR* Parmeter is empty !!!")
 		return nil
 	}
 
@@ -119,7 +120,7 @@ func NewNetServerTst(config *P2PConfig) *NetServer {
 
 //start listener
 func (serv *NetServer) Start() error {
-	fmt.Println("netServer::Start()")
+	log.Info("netServer::Start()")
 
 	go serv.Listening()
 
@@ -128,10 +129,10 @@ func (serv *NetServer) Start() error {
 
 //run accept
 func (serv *NetServer) Listening() {
-	fmt.Println("NetServer::Listening()")
+	log.Info("NetServer::Listening()")
 	listener, err := net.Listen("tcp", ":"+fmt.Sprint(serv.port))
 	if err != nil {
-		fmt.Println("*ERROR* Failed to listen at port: "+fmt.Sprint(serv.port))
+		log.Error("*ERROR* Failed to listen at port: "+fmt.Sprint(serv.port))
 		return
 	}
 
@@ -141,7 +142,7 @@ func (serv *NetServer) Listening() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("NetServer::Listening() Failed to accept")
+			log.Error("NetServer::Listening() Failed to accept")
 			continue
 		}
 
@@ -176,13 +177,13 @@ func (serv *NetServer) handleMessage(conn net.Conn) {
 
 	len , err := conn.Read(data)
 	if err != nil {
-		fmt.Println("*WRAN* Can't read data from remote peer !!!")
+		log.Warn("*WRAN* Can't read data from remote peer !!!")
 		return
 	}
 
 	err = json.Unmarshal(data[0:len] , &msg)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 
@@ -216,7 +217,7 @@ func (serv *NetServer) handleMessage(conn net.Conn) {
 }
 
 func (serv *NetServer) activeTimedTask() error {
-	fmt.Println("p2pServer::ActiveSeeds()")
+	log.Info("p2pServer::ActiveSeeds()")
 	for {
 		select {
 		case <- serv.timeInterval.C:
@@ -230,7 +231,7 @@ func (serv *NetServer) activeTimedTask() error {
 
 func (serv *NetServer) appendList(conn net.Conn , msg CommonMessage) error {
 	//package remote peer info as "peer" struct and add it into peer list
-	fmt.Println("NetServer::AppendList")
+	log.Info("NetServer::AppendList")
 	peer := NewPeer(msg.Src , serv.port , conn)
 	peer.SetPeerState(ESTABLISH)
 	serv.notify.addPeer(peer)
@@ -273,17 +274,17 @@ func (serv *NetServer) connectSeeds() error {
 
 //to connect specified peer
 func (serv *NetServer) SendTo (conn net.Conn , msg []byte , isExist bool) error {
-	fmt.Println("p2pServer::SendTo")
+	log.Info("p2pServer::SendTo")
 	if conn == nil {
 		return errors.New("*ERROR* Invalid parameter !!!")
 	}
 
 	len , err := conn.Write(msg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
 
@@ -295,16 +296,16 @@ func (serv *NetServer) Send (addr string , msg []byte , isExist bool) error {
 	addrPort := addr+":"+fmt.Sprint(serv.port)
 	conn , err := net.Dial("tcp", addrPort)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return err
 	}
 
 	len , err := conn.Write(msg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return err
 	}
 
@@ -324,7 +325,7 @@ func (serv *NetServer) ConnectUDP(addr string , msg []byte , isExist bool) error
 
 	_ , err = serv.socket.WriteToUDP(msg , remoteAddr)
 	if err != nil { //todo check len
-		fmt.Println("*ERROR* Failed to send Test message to remote peer !!! ",err)
+		log.Error("*ERROR* Failed to send Test message to remote peer !!! ",err)
 		return errors.New("*ERROR* Failed to send Test message to remote peer !!!")
 	}
 
@@ -345,11 +346,11 @@ func (serv *NetServer) watchStatus() {
 }
 
 func  (serv *NetServer) broadCastImpl(m interface{} , msgType uint8) error {
-	fmt.Println("P2PServer::BroadCastImpl")
+	log.Info("P2PServer::BroadCastImpl")
 
 	contentByte , err := json.Marshal(m)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -361,7 +362,7 @@ func  (serv *NetServer) broadCastImpl(m interface{} , msgType uint8) error {
 
 	msgByte , err := json.Marshal(msg)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -403,7 +404,7 @@ func (serv *NetServer) sendBklInfo (peer *Peer) {
 
 	blockInfoByte , err := json.Marshal(blockInfo)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the blockinfo to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the blockinfo to broadcast : ", err)
 		return
 	}
 
@@ -416,7 +417,7 @@ func (serv *NetServer) sendBklInfo (peer *Peer) {
 
 	msgByte , err := json.Marshal(msg)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return
 	}
 
@@ -465,7 +466,7 @@ func (serv *NetServer) reqBlock (addr string , blockId uint32) error {
 
 	blockReqByte , err := json.Marshal(blockReq)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the blockinfo to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the blockinfo to broadcast : ", err)
 		return err
 	}
 
@@ -478,7 +479,7 @@ func (serv *NetServer) reqBlock (addr string , blockId uint32) error {
 
 	msgByte , err := json.Marshal(msg)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return err
 	}
 
@@ -498,25 +499,26 @@ func (serv *NetServer) handleRequest (msg CommonMessage) {
 		MsgType:  RESPONSE,
 	}
 
+	log.Warn()
 	data , err := json.Marshal(rsp)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the response message : ", err)
+		log.Error("*WRAN* Failed to package the response message : ", err)
 		return
 	}
 
 	//create a new conn to response the remote peer
 	remoteConn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return
 	}
 
 	len , err := remoteConn.Write(data)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return
 	}
 
@@ -534,7 +536,7 @@ func (serv *NetServer) handleResponse (msg CommonMessage) {
 
 	remoteConn , err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return
 	}
 	//remoteConn.SetDeadline(time.Now().Add(20 * time.Second))
@@ -547,7 +549,7 @@ func (serv *NetServer) handleCrxBroadcast (msg CommonMessage) {
 	var newCrx types.Transaction
 	err := json.Unmarshal(msg.Content , &newCrx)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 
@@ -557,7 +559,7 @@ func (serv *NetServer) handleCrxBroadcast (msg CommonMessage) {
 	SuperPrint(YELLO_PRINT , "******************* NetServer::HandleMessage from:",msg.Src," newCrx = ",newCrx)
 
 	if serv.notify.trxActorPid != nil {
-		fmt.Println("NetServer::HandleMessage() send new crx to trxActor: ",recvTrx)
+		log.Error("NetServer::HandleMessage() send new crx to trxActor: ",recvTrx)
 		serv.notify.trxActorPid.Tell(&recvTrx)
 	}
 
@@ -569,7 +571,7 @@ func (serv *NetServer) handleBlkBroadcast (msg CommonMessage) {
 	var newBlk types.Block
 	err := json.Unmarshal(msg.Content , &newBlk)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 
@@ -592,7 +594,7 @@ func (serv *NetServer) handleBlkInfo (msg CommonMessage) {
 	var blockInfo BlockInfo
 	err := json.Unmarshal(msg.Content , &blockInfo)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 
@@ -604,14 +606,14 @@ func (serv *NetServer) handleBlkReq (msg CommonMessage) {
 	var blockReq BlockReq
 	err := json.Unmarshal(msg.Content , &blockReq)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 
 	blk := actorEnv.Chain.GetBlockByNumber(blockReq.BlockNum)
 	blkByte , err := json.Marshal(blk)
 	if err != nil{
-		fmt.Println("*WRAN* Failed to package the trx message to broadcast : ", err)
+		log.Error("*WRAN* Failed to package the trx message to broadcast : ", err)
 		return
 	}
 
@@ -636,7 +638,7 @@ func (serv *NetServer) handleBlkRes (msg CommonMessage) {
 	var newBlk types.Block
 	err := json.Unmarshal(msg.Content , &newBlk)
 	if err != nil {
-		fmt.Println("*WRAN* Can't unmarshal data from remote peer !!!")
+		log.Error("*WRAN* Can't unmarshal data from remote peer !!!")
 		return
 	}
 

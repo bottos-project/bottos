@@ -1,7 +1,7 @@
 package role
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 
 	"github.com/bottos-project/bottos/common/types"
@@ -13,6 +13,6 @@ func TestPersistanceRole_writedb(t *testing.T) {
 	block := &types.Block{}
 	err := ApplyPersistanceRole(ins, block)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 }

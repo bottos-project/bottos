@@ -33,8 +33,9 @@
 package p2pserver
 
 import (
-	"testing"
 	"fmt"
+	log "github.com/cihub/seelog"
+	"testing"
 	"net"
 	"os"
 	"encoding/json"
@@ -44,12 +45,12 @@ import (
 
 
 func TestP2PServ(t *testing.T)  {
-	fmt.Println("p2p_server::TestP2PServ")
+	log.Info("p2p_server::TestP2PServ")
 
 	if TST == 0 {
 		err := config.LoadConfig()
 		if err != nil {
-			fmt.Println("Load config fail")
+			log.Info("Load config fail")
 			os.Exit(1)
 		}
 	}
@@ -64,13 +65,13 @@ func TestP2PServ(t *testing.T)  {
 
 
 func TestTrxSend(t *testing.T) {
-	fmt.Println("p2p_server::TestTrxSend")
+	log.Info("p2p_server::TestTrxSend")
 
 	p2pconfig := ReadFile(CONF_FILE)
 	addrPort  := p2pconfig.PeerLst[0]+":"+fmt.Sprint(p2pconfig.ServPort)
 	conn , err := net.Dial("tcp", addrPort)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to create a connection for remote server !!! err: ",err)
+		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ",err)
 		return
 	}
 
@@ -96,7 +97,7 @@ func TestTrxSend(t *testing.T) {
 
 	byteTrx , err := json.Marshal(trx)
 	if err != nil{
-		fmt.Println("*ERROR* Failed to package the message : ", err)
+		log.Error("*ERROR* Failed to package the message : ", err)
 		return
 	}
 
@@ -109,16 +110,16 @@ func TestTrxSend(t *testing.T) {
 
 	byteMsg , err := json.Marshal(msg)
 	if err != nil{
-		fmt.Println("*ERROR* Failed to package the message : ", err)
+		log.Error("*ERROR* Failed to package the message : ", err)
 	}
 
 
 	len , err := conn.Write(byteMsg)
 	if err != nil {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return
 	} else if len < 0 {
-		fmt.Println("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
+		log.Error("*ERROR* Failed to send data to the remote server addr !!! err: ",err)
 		return
 	}
 

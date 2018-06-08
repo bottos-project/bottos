@@ -26,7 +26,7 @@ package role
 
 import (
 	//	"encoding/json"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 
 	"github.com/bottos-project/bottos/db"
@@ -36,7 +36,7 @@ func TestDelegate_writedb(t *testing.T) {
 	ins := db.NewDbService("./file1", "./file1/db.db", "")
 	err := CreateDelegateRole(ins)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	value := &Delegate{
 		AccountName:           "lmq",
@@ -46,27 +46,27 @@ func TestDelegate_writedb(t *testing.T) {
 		LastConfirmedBlockNum: 2}
 	err = SetDelegateRole(ins, value.AccountName, value)
 	if err != nil {
-		fmt.Println("SetDelegateRole", err)
+		log.Error("SetDelegateRole", err)
 	}
 
 	value, err = GetDelegateRoleByAccountName(ins, value.AccountName)
 	if err != nil {
-		fmt.Println("GetDelegateRoleByAccountName", err)
+		log.Error("GetDelegateRoleByAccountName", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 
 	value, err = GetDelegateRoleBySignKey(ins, value.ReportKey)
 	if err != nil {
-		fmt.Println("GetDelegateRoleByAccountName", err)
+		log.Error("GetDelegateRoleByAccountName", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 }
 
 func TestDelegate_WritedbTheSameKey(t *testing.T) {
 	ins := db.NewDbService("./file2", "./file2/db2.db", "")
 	err := CreateDelegateRole(ins)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	value1 := &Delegate{
 		AccountName:           "lmq1",
@@ -82,23 +82,23 @@ func TestDelegate_WritedbTheSameKey(t *testing.T) {
 		LastConfirmedBlockNum: 2}
 	err = SetDelegateRole(ins, value1.AccountName, value1)
 	if err != nil {
-		fmt.Println("SetDelegateRole", err)
+		log.Error("SetDelegateRole", err)
 	}
 
 	err = SetDelegateRole(ins, value2.AccountName, value2)
 	if err != nil {
-		fmt.Println("SetDelegateRole", err)
+		log.Error("SetDelegateRole", err)
 	}
 
 	value, err1 := GetDelegateRoleByAccountName(ins, value1.AccountName)
 	if err1 != nil {
-		fmt.Println("GetDelegateRoleByAccountName", err)
+		log.Error("GetDelegateRoleByAccountName", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 
 	value, err = GetDelegateRoleBySignKey(ins, value2.ReportKey)
 	if err != nil {
-		fmt.Println("GetDelegateRoleByAccountName", err)
+		log.Error("GetDelegateRoleByAccountName", err)
 	}
-	fmt.Println(value)
+	log.Info(value)
 }

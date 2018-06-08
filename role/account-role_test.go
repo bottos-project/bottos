@@ -25,19 +25,19 @@
 package role
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 func TestAccount_writedb(t *testing.T) {
 	ins := db.NewDbService("./file", "./file/db.db", "")
 	err := CreateAccountRole(ins)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	value1 := &Account{
 		AccountName:  "account1",
@@ -77,5 +77,5 @@ func TestAccount_writedb(t *testing.T) {
 	if value.AccountName != value1.AccountName {
 		t.Fatal("Account Name error")
 	}
-	fmt.Println(value)
+	log.Info(value)
 }

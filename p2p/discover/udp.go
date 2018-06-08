@@ -30,6 +30,7 @@
 package discover
 
 import (
+	log "github.com/cihub/seelog"
 	"bytes"
 	"crypto/ecdsa"
 	"errors"
@@ -428,7 +429,7 @@ func decodePacket(buf []byte) (udpPacket, NodeID, []byte, error) {
 		return nil, NodeID{}, nil, errTooSmall
 	}
 	hash, sig, sigdata := buf[:macSize], buf[macSize:headSize], buf[headSize:]
-	fmt.Println(sig)
+	log.Info(sig)
 	var shouldhash []byte
 	if !bytes.Equal(hash, shouldhash) {
 		return nil, NodeID{}, nil, errBadHash

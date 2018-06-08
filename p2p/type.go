@@ -32,7 +32,7 @@
 package p2pserver
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"unsafe"
 	"hash/fnv"
 )
@@ -100,9 +100,9 @@ func Hash(str string) uint32 {
 
 func SuperPrint(color uint8 , args ...interface{}) {
 	for _, v := range args {
-		fmt.Printf("%c[%d;%d;%dm%v%c[0m", 0x1B, 123 , 40 , color, v, 0x1B)
+		log.Infof("%c[%d;%d;%dm%v%c[0m", 0x1B, 123 , 40 , color, v, 0x1B)
 	}
-	fmt.Printf("\n")
+	log.Info("\n")
 }
 
 

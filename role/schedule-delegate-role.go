@@ -3,7 +3,7 @@ package role
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
 	"math/big"
 	"sort"
 
@@ -24,7 +24,7 @@ type ScheduleDelegate struct {
 func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
-		fmt.Println("Set object", ScheduleDelegateObjectName, "failed")
+		log.Error("Set object", ScheduleDelegateObjectName, "failed")
 		return err
 	}
 
@@ -35,7 +35,7 @@ func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 	value, err := ldb.GetObject(ScheduleDelegateObjectName, "my")
 	if err != nil {
-		fmt.Println("GetObject object", ScheduleDelegateObjectName, "failed")
+		log.Error("GetObject object", ScheduleDelegateObjectName, "failed")
 		return nil, err
 	}
 
@@ -53,22 +53,22 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
-		fmt.Println("err")
+		log.Error("err")
 		return "", err
 	}
 	currentSlotNum := chainObject.CurrentAbsoluteSlot + slotNum
 	currentCoreState, err := GetCoreStateRole(ldb)
-	//fmt.Println("currentSlotNum", currentSlotNum)
+	//log.Info("currentSlotNum", currentSlotNum)
 	if err != nil {
-		fmt.Println("err")
+		log.Error("err")
 		return "", err
 	}
 	size := uint64(len(currentCoreState.CurrentDelegates))
 	if size == 0 {
 		return "", errors.New("delegate is null, please check configuration")
 	}
-	//fmt.Println("dddd", currentCoreState.CurrentDelegates)
-	//fmt.Println("size", size)
+	//log.Info("dddd", currentCoreState.CurrentDelegates)
+	//log.Info("size", size)
 	accountName := currentCoreState.CurrentDelegates[currentSlotNum%size]
 	return accountName, nil
 

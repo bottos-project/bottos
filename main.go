@@ -22,18 +22,19 @@ import (
 	actionenv "github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/transaction"
 	"github.com/micro/go-micro"
+	log "github.com/cihub/seelog"
 )
 
 func main() {
 	err := config.LoadConfig()
 	if err != nil {
-		fmt.Println("Load config fail")
+		log.Error("Load config fail")
 		os.Exit(1)
 	}
 
 	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"), config.Param.OptionDb)
 	if dbInst == nil {
-		fmt.Println("Create DB service fail")
+		log.Error("Create DB service fail")
 		os.Exit(1)
 	}
 
@@ -42,13 +43,13 @@ func main() {
 
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
-		fmt.Println("Create Native Contract error: ", err)
+		log.Info("Create Native Contract error: ", err)
 		os.Exit(1)
 	}
 
 	chain, err := chain.CreateBlockChain(dbInst, roleIntf, nc)
 	if err != nil {
-		fmt.Println("Create BlockChain error: ", err)
+		log.Error("Create BlockChain error: ", err)
 		os.Exit(1)
 	}
 
@@ -96,7 +97,7 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 		<-sigc
 		actors.ActorsStop()
 		chain.Close()
-		fmt.Println("System shutdown")
+		log.Info("System shutdown")
 		close(exit)
 	}()
 

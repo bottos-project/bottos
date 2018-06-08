@@ -25,7 +25,7 @@
 package role
 
 import (
-	"fmt"
+	log "github.com/cihub/seelog"
 	"testing"
 	"time"
 
@@ -38,7 +38,7 @@ func startup() RoleInterface {
 	config.LoadConfig()
 	dbInst := db.NewDbService("./temp/db", "./temp/codedb", "")
 	if dbInst == nil {
-		fmt.Println("Create DB service fail")
+		log.Error("Create DB service fail")
 	}
 	roleIntf := NewRole(dbInst)
 
@@ -49,17 +49,17 @@ func TestReporter_GetSlotAtTime(t *testing.T) {
 	ins := startup()
 	cbegin := time.Time{}
 	slot := ins.GetSlotAtTime(uint64(cbegin.Unix()))
-	fmt.Println(slot)
+	log.Info(slot)
 	cUnix := cbegin.Unix()
-	fmt.Println(cUnix)
+	log.Info(cUnix)
 	//	slot = ins.GetSlotAtTime(cUnix)
-	//	fmt.Println(slot)
+	//	log.Info(slot)
 	now := common.NowToSeconds()
 	slot = ins.GetSlotAtTime(now)
-	fmt.Println(slot)
+	log.Info(slot)
 
 	nowMicroSec := common.NowToSlotSec(time.Now(), 500000)
 	slot = ins.GetSlotAtTime(nowMicroSec)
-	fmt.Println(slot)
+	log.Info(slot)
 
 }
