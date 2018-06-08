@@ -26,8 +26,10 @@
 package producer
 
 import (
-	log "github.com/cihub/seelog"
+	"fmt"
 	"math"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
@@ -125,6 +127,19 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		log.Infof("find delegate by account failed", accountName)
 		return false
 	}
+
+	found := false
+	for _, v := range config.Param.Delegates {
+		if accountName == v {
+			found = true
+			break
+		}
+	}
+	if !found {
+		fmt.Printf("current delegate: %v, not found in this node\n", accountName)
+		return false
+	}
+
 	prate := r.roleIntf.GetDelegateParticipationRate()
 
 	if prate < config.DELEGATE_PATICIPATION {

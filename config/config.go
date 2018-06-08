@@ -28,9 +28,10 @@ package config
 import (
 	"bytes"
 	"encoding/json"
-	log "github.com/cihub/seelog"
 	"io/ioutil"
 	"os"
+
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -54,6 +55,7 @@ type Parameter struct {
 	ServAddr          string    `json:"serv_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
+	Delegates         []string  `json:"delegates"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
 	ApiServiceName    string    `json:"api_service_name"`
 	ApiServiceVersion string    `json:"api_service_version"`
