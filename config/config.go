@@ -28,7 +28,6 @@ package config
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	log "github.com/cihub/seelog"
 	"io/ioutil"
 	"os"
@@ -88,21 +87,21 @@ type InitDelegate struct {
 func LoadConfig() error {
 	file, e := loadConfigJson(CONFIG_FILE_NAME)
 	if e != nil {
-		fmt.Println("Read config file error: ", e)
+		log.Error("Read config file error: ", e)
 		return e
 	}
 
 	param := Parameter{}
 	e = json.Unmarshal(file, &param)
 	if e != nil {
-		fmt.Println("Unmarshal config file error: ", e)
+		log.Error("Unmarshal config file error: ", e)
 		return e
 	}
 	Param = &param
 
 	file, e = loadConfigJson(param.GenesisJson)
 	if e != nil {
-		fmt.Println("Read genesis file error: ", e)
+		log.Error("Read genesis file error: ", e)
 		return e
 	}
 
@@ -111,12 +110,10 @@ func LoadConfig() error {
 	genesisConfig := GenesisConfig{}
 	e = json.Unmarshal(file, &genesisConfig)
 	if e != nil {
-		fmt.Println("Unmarshal genesis file error: ", e)
+		log.Error("Unmarshal genesis file error: ", e)
 		return e
 	}
 	Genesis = &genesisConfig
-
-	//fmt.Println(Param, Genesis)
 
 	return nil
 }
