@@ -6,7 +6,6 @@
     "p2p_port": 9868,
     "serv_addr":"127.0.0.1",
     "peer_list": [
-        "127.0.0.1"
     ],
     "key_pairs": [{
             "private_key": "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45",
