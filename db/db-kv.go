@@ -60,3 +60,8 @@ func (d *DBService) Seek(prefixKey []byte) ([]string, error) {
 
 	return d.kvRepo.CallSeek(prefixKey)
 }
+
+func (d *DBService) NewIterator() iterator.Iterator {
+
+	return d.kvRepo.CallNewIterator()
+}
