@@ -690,14 +690,14 @@ func (serv *NetServer) initSync() {
 }
 
 func (serv *NetServer) StartUdpServer() {
-	addr := &net.UDPAddr{IP: net.ParseIP(serv.addr), Port: serv.port + 1}
+	addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: serv.port + 1}
 	go func() {
 		log.Info("StartUdpServer")
 
 		listen, err := net.ListenUDP("udp", addr)
 		if err != nil {
 			log.Critical("udp listen error")
-			panic("udp listen error")
+			return
 		}
 
 		defer listen.Close()
@@ -721,7 +721,7 @@ func (serv *NetServer) StartUdpServer() {
 func (serv *NetServer) HandleUdpMessage(data []byte, n int, raddr *net.UDPAddr) {
 	var msg CommonMessage
 
-	log.Info("HandleUdpMessage")
+	log.Debug("HandleUdpMessage")
 	err := json.Unmarshal(data[0:n], &msg)
 	if err != nil {
 		log.Error("HandleMessage Can't unmarshal data from remote peer !!!")
@@ -775,7 +775,7 @@ func (serv *NetServer) PneStart() {
 
 //sendPneRequest process peer's pne response
 func (serv *NetServer) sendPneRequest(id uint64) {
-	log.Info("sendPneRequest")
+	log.Debug("sendPneRequest")
 
 	peerAddr := serv.notify.GetPeerInfo(id)
 	if peerAddr == "" {
@@ -791,7 +791,7 @@ func (serv *NetServer) sendPneRequest(id uint64) {
 
 	req, err := json.Marshal(msg)
 	if err != nil {
-		log.Debugf("req marshal err: %s", err)
+		log.Errorf("req marshal err: %s", err)
 		return
 	}
 
@@ -860,8 +860,6 @@ func (serv *NetServer) ProcessPneResponse(recvMsg CommonMessage) {
 
 //ConnectPneNeighbor connect pne neighbor
 func (serv *NetServer) ConnectPneNeighbor() error {
-	log.Debugf("ConnectPneNeighbor")
-
 	neighbors := serv.pne.NextPneNeighbors()
 
 	for i := range neighbors {
