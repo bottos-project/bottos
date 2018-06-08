@@ -142,8 +142,8 @@ func (p2p *P2PServer) Start() error {
 
 	//connect to other seed nodes
 	go p2p.serv.activeTimedTask()
-	if TST == 0 {
-		go p2p.testBlock()
+	if TST == 1 {
+		go p2p.reportBlock()
 	}
 
 	//peer neighbor exchange
@@ -244,7 +244,7 @@ func GenerateKeyPairWithReader(typ, bits int, src io.Reader) (PrivKey, PubKey, e
 }
 */
 
-func (p2p *P2PServer) testBlock() {
+func (p2p *P2PServer) reportBlock() {
 	var timeInterval *time.Timer = time.NewTimer(3 * time.Second)
 	var blockNum uint32
 	var headerNum uint32
@@ -255,7 +255,7 @@ func (p2p *P2PServer) testBlock() {
 
 			blockNum = actorEnv.Chain.LastConsensusBlockNum()
 			headerNum = actorEnv.Chain.HeadBlockNum()
-			SuperPrint(AUQA_PRINT, "P2PServer::TestBlock() blockNum: ", blockNum, " , headerNum: ", headerNum)
+			SuperPrint(AUQA_PRINT, "P2PServer::reportBlock() blockNum: ", blockNum, " , headerNum: ", headerNum)
 
 			timeInterval.Stop()
 			timeInterval.Reset(time.Second * 3)

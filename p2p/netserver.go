@@ -63,30 +63,30 @@ func GetSyncStatus() bool {
 }
 
 type NetServer struct {
-	config *P2PConfig
-	port   int
-	addr   string
+	config       *P2PConfig
+	port         int
+	addr         string
 
-	notify *NotifyManager
-	pne    *PneManager
+	notify       *NotifyManager
+	pne          *PneManager
 
-	listener net.Listener
+	listener     net.Listener
 
-	seedPeer    []string
-	connPeerNum int
+	seedPeer     []string
+	connPeerNum  int
 
 	neighborList []*net.UDPAddr
 	serverAddr   *net.UDPAddr
 	udpSocket    *net.UDPConn
 
 	//todo publicKey to identify credit peer
-	publicKey string
+	publicKey    string
 
 	timeInterval *time.Timer
 	syncLock     sync.RWMutex
 
-	actorEnv *env.ActorEnv
-	isSync   bool
+	actorEnv     *env.ActorEnv
+	isSync       bool
 
 	sync.RWMutex
 }
