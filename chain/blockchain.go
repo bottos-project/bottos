@@ -259,8 +259,12 @@ func (bc *BlockChain) LoadBlockDb() error {
 
 func (bc *BlockChain) updateCoreState(block *types.Block) {
 	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
-		schedule := bc.roleIntf.ElectNextTermDelegates()
-		newCoreState, _ := bc.roleIntf.GetCoreState()
+		schedule := bc.roleIntf.ElectNextTermDelegates(block)
+
+		newCoreState, err := bc.roleIntf.GetCoreState()
+		if err != nil {
+			return
+		}
 		newCoreState.CurrentDelegates = schedule
 		bc.roleIntf.SetCoreState(newCoreState)
 	}
