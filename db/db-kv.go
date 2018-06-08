@@ -25,6 +25,9 @@
 
 package db
 
+import (
+	"github.com/syndtr/goleveldb/leveldb/iterator"
+)
 //Put is to put record by key and value.
 func (d *DBService) Put(key []byte, value []byte) error {
 	return d.kvRepo.CallPut(key, value)
@@ -52,8 +55,8 @@ func (d *DBService) Close() {
 	d.kvRepo.CallClose()
 }
 
-//Seek is to seek record by prefix
-func (d *DBService) Seek(prefixKey []byte) ([]interface{}, error) {
+//Seek is to Seek db.
+func (d *DBService) Seek(prefixKey []byte) ([]string, error) {
 
 	return d.kvRepo.CallSeek(prefixKey)
 }
