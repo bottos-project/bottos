@@ -26,19 +26,20 @@ package codedb
 
 import (
 	//	"encoding/json"
-	"fmt"
+	//"fmt"
 	"testing"
 
 	"github.com/tidwall/buntdb"
+	log "github.com/cihub/seelog"
 )
 
 func TestCodeDbRepository_CallCreatObjectIndex(t *testing.T) {
 	ins, _ := NewCodeDbRepository("./b.db")
-	fmt.Printf("abc")
+	log.Info("abc")
 
 	rtx, err := ins.db.Begin(true)
 	if err != nil {
-		fmt.Printf("gdfddd")
+		log.Info("gdfddd")
 	}
 	rtx.CreateIndex("account_name", "account*", buntdb.IndexJSON("account_name"))
 	rtx.Set("accountebc", `{"account_name":"ebc","vm_type":"123","vm_version":123,"code_version":"1","creation_date":"20171121","code":"{dfdfd,dfdfd,dfdfd}"}`, nil)
@@ -49,11 +50,11 @@ func TestCodeDbRepository_CallCreatObjectIndex(t *testing.T) {
 	//rtx.Commit()
 	//	//rtx.Rollback()
 	rtx.Ascend("account_name", func(key, value string) bool {
-		fmt.Printf("ddd%s: %s\n", key, value)
+		log.Infof("ddd%s: %s\n", key, value)
 		return true
 	})
 	value, _ := rtx.Get("accountebc")
-	fmt.Println(value)
+	log.Info(value)
 	//	defer func() {
 	//		if err != nil {
 	//			// The caller returned an error. We must rollback.

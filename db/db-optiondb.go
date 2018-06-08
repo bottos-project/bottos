@@ -32,7 +32,6 @@ import (
 //Insert is to insert record to option db
 func (d *DBService) Insert(collection string, value interface{}) error {
 	if d.optDbRepo == nil {
-		//fmt.Println("error optiondb is not init")
 		return nil
 	}
 	return d.optDbRepo.InsertOptionDb(collection, value)
@@ -41,7 +40,6 @@ func (d *DBService) Insert(collection string, value interface{}) error {
 //Find is to find record in option db
 func (d *DBService) Find(collection string, key string, value interface{}) (interface{}, error) {
 	if d.optDbRepo == nil {
-		//fmt.Println("error optiondb is not init")
 		return nil, errors.New("error optiondb is not init")
 	}
 	return d.optDbRepo.OptionDbFind(collection, key, value)
@@ -50,7 +48,6 @@ func (d *DBService) Find(collection string, key string, value interface{}) (inte
 //Update is to update record in option db
 func (d *DBService) Update(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
 	if d.optDbRepo == nil {
-		//fmt.Println("error optiondb is not init")
 		return errors.New("error optiondb is not init")
 	}
 

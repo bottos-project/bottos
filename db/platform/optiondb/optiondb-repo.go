@@ -28,11 +28,12 @@ package optiondb
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	//"fmt"
 
 	"github.com/bottos-project/bottos/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	log "github.com/cihub/seelog"
 )
 
 //OptionDbRepository is the option db struct
@@ -59,11 +60,11 @@ func GetSession(url string) (*MongoContext, error) {
 	// tried doing this - doesn't work as intended
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Detected panic")
+			log.Error("Detected panic")
 			var ok bool
 			err, ok := r.(error)
 			if !ok {
-				fmt.Printf("pkg:  %v,  error: %s", r, err)
+				log.Errorf("pkg:  %v,  error: %s", r, err)
 			}
 		}
 	}()
@@ -71,7 +72,7 @@ func GetSession(url string) (*MongoContext, error) {
 	//maxWait := time.Duration(5 * time.Second)
 	mgoSession, err := mgo.Dial(url)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return nil, errors.New("Dial faild" + url)
 	}
 	return &MongoContext{mgoSession.Clone()}, nil

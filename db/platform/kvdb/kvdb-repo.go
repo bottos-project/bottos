@@ -26,12 +26,13 @@
 package kvdb
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	log "github.com/cihub/seelog"
 )
 
 //OpenFileLimit is to limiting the size of open leveldb
@@ -94,7 +95,7 @@ func (k *KVDatabase) CallFlush() error {
 func (k *KVDatabase) CallClose() {
 
 	k.db.Close()
-	fmt.Println("flushed and closed db:", k.fn)
+	log.Info("flushed and closed db:", k.fn)
 }
 
 //CallSeek is to seek object

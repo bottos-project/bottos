@@ -25,27 +25,29 @@
 package db
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
+
+	log "github.com/cihub/seelog"
 )
 
 func TestDBService_Callput(t *testing.T) {
-	fmt.Println("abc")
+	log.Info("abc")
 	ins := NewDbService("./db")
 	ins.Put([]byte("abc"), []byte("123"))
 	res, _ := ins.Get([]byte("abc"))
-	fmt.Println(res)
+	log.Info(res)
 	ins.Close()
 }
 func TestDBService_CallGet(t *testing.T) {
-	fmt.Println("abc")
+	log.Info("abc")
 	ins := NewDbService("./db")
 	ins.Put([]byte("abc"), []byte("123"))
 	res, _ := ins.Get([]byte("abc"))
-	fmt.Println(res)
+	log.Info(res)
 }
 func TestDBService_CallFlush(t *testing.T) {
-	fmt.Println("abc")
+	log.Info("abc")
 	ins := NewDbService("./db")
 	ins.Put([]byte("abc"), []byte("123"))
 	ins.Flush()
