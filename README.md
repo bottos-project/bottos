@@ -31,10 +31,16 @@ And you also have multiple services below which are dedicated designed for AI ec
 
 Following the instructions below, you can build and deploy your own test node.
 
+## One-Click Deploy a Bottos Node
 
-## Bottos Node Environment Deployment
-**One-Click Deployment script is coming in the following day**
+[One-Click Deployment Script](https://github.com/bottos-project/magiccube/tree/master/service/node/scripts/startup.sh)
 
+- **Install**: Login as root, and execute *./startup.sh deploy*
+- **Update source code**: Create user bottos and switch to bottos, and execute *./startup.sh update*
+- **Run**: Execute *./startup.sh buildstart* to build the source code and run bottos chain
+- **Stop**: Execute *start  / stop* to stop  
+
+## Deploy a Bottos Node Manually
 
    To build a Bottos single node environment originally, following steps need to be done.
 *	Precondition
