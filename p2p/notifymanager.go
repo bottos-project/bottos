@@ -42,14 +42,14 @@ import (
 
 //NotifyManager its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-	p2p      *P2PServer
-	stopSync chan bool
+	p2p              *P2PServer
+	stopSync          chan bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
-	peerMap map[uint64]*Peer
+	peerMap           map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
@@ -144,6 +144,10 @@ func (notify *NotifyManager) SyncPeer() {
 }
 
 func (notify *NotifyManager) isExist(addr string, isExist bool) bool {
+	if len(notify.peerMap) == 0 {
+		return false
+	}
+
 	for _, peer := range notify.peerMap {
 		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
 			return true
