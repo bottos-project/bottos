@@ -353,7 +353,7 @@ func (serv *NetServer) watchStatus() {
 
 		SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() blockNum: ", blockNum, " , headerNum: ", headerNum)
 	}
-
+	SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() serv.notify.peerMap: ",serv.notify.peerMap)
 	for _, peer := range serv.notify.peerMap {
 		SuperPrint(BLUE_PRINT, "*** NetServer::WatchStatus() current status: peer = ", peer.peerAddr, " ***")
 	}
@@ -564,7 +564,7 @@ func (serv *NetServer) handleCrxBroadcast(msg CommonMessage) {
 		return
 	}
 
-	recvTrx := msgDef.NotifyTrx{
+	recvTrx := msgDef.ReceiveTrx{
 		Trx: &newCrx,
 	}
 	SuperPrint(YELLO_PRINT, "******************* NetServer::HandleMessage from:", msg.Src, " newCrx = ", newCrx)
