@@ -97,7 +97,7 @@ func (t *TrxActor) Receive(context actor.Context) {
 
 		trxPool.HandleTransactionFromFront(context, msg.Trx)
 
-	case *message.NotifyTrx:
+	case *message.ReceiveTrx:
 
 		trxPool.HandleTransactionFromP2P(context, msg.Trx)
 
