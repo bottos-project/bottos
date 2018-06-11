@@ -53,7 +53,7 @@ func GetAllPendingTrx() []*types.Transaction {
 	}
 
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-	log.Infof("pending transaction number ", len(mesg.Trxs))
+	log.Info("pending transaction number ", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
 	for i := 0; i < len(mesg.Trxs); i++ {
 		dbtag := new(types.Transaction)
