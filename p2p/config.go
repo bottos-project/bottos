@@ -41,7 +41,7 @@ const (
 	//MIN_NODE_NUM min peer before sync
 	MIN_NODE_NUM = 2
 	//INIT_SYNC_WAIT wait time before sync when startup
-	INIT_SYNC_WAIT = 3
+	INIT_SYNC_WAIT = 30
 
 	//TIME_PNE_START start wait time , Minute
 	TIME_PNE_START = 2
