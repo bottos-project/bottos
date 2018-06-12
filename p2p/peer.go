@@ -35,20 +35,26 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 )
 
 //Peer peer info
 type Peer struct {
-	peerAddr  string
-	servPort  int
-	peerId    uint32
-	publicKey string
+	peerAddr     string
+	servPort     int
+	peerId       uint32
+	publicKey    string
 
-	peerSock *net.UDPAddr
-	conn     net.Conn
+	blockHeight  uint32
+	headerHeight uint32
+
+	peerSock    *net.UDPAddr
+	conn         net.Conn
 
 	syncState    uint32
 	neighborNode []*Peer
+
+	sync.RWMutex
 }
 
 //NewPeer new a peer

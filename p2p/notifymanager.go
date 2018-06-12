@@ -111,7 +111,7 @@ func (notify *NotifyManager) getPeerMap() map[uint64]*Peer {
 	return notify.peerMap
 }
 
-func (notify *NotifyManager) getPeerCnt() uint32 {
+func (notify *NotifyManager) getPeerActiveCnt() uint32 {
 	notify.RLock()
 	defer notify.RUnlock()
 

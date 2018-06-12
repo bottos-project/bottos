@@ -53,43 +53,44 @@ const (
 	SYN_BLK_NUM = 10
 )
 
-var isSynced bool = true
-var syncLock sync.RWMutex
+var finishSynced bool = true
+//
+var syncLock     sync.RWMutex
 
 //GetSyncStatus get sync status
 func GetSyncStatus() bool {
 	syncLock.RLock()
 	defer syncLock.RUnlock()
 
-	return isSynced
+	return finishSynced
 }
 
 //NetServer net server
 type NetServer struct {
-	config *P2PConfig
-	port   int
-	addr   string
+	config       *P2PConfig
+	port          int
+	addr          string
 
-	notify *NotifyManager
-	pne    *PneManager
+	notify       *NotifyManager
+	pne          *PneManager
 
-	listener net.Listener
+	listener     net.Listener
 
-	seedPeer    []string
-	connPeerNum int
+	seedPeer     []string
+	connPeerNum  int
 
 	neighborList []*net.UDPAddr
 	serverAddr   *net.UDPAddr
 	udpSocket    *net.UDPConn
 
 	//todo publicKey to identify credit peer
-	publicKey string
+	publicKey     string
 
 	timeInterval *time.Timer
-	syncLock     sync.RWMutex
+	syncLock      sync.RWMutex
 
-	actorEnv *env.ActorEnv
-	isSync   bool
+	actorEnv     *env.ActorEnv
+	isSync        bool
 
 	sync.RWMutex
 }
@@ -356,13 +357,10 @@ func (serv *NetServer) ConnectUDP(addr string, port string, msg []byte, isExist 
 
 func (serv *NetServer) watchStatus() {
 
-	if TST == 0 {
-		blockNum := serv.actorEnv.Chain.LastConsensusBlockNum()
-		headerNum := serv.actorEnv.Chain.HeadBlockNum()
+	blockNum := serv.actorEnv.Chain.LastConsensusBlockNum()
+	headerNum := serv.actorEnv.Chain.HeadBlockNum()
 
-		SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() blockNum: ", blockNum, " , headerNum: ", headerNum)
-	}
-	SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() serv.notify.peerMap: ",serv.notify.peerMap)
+	SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() blockNum: ", blockNum, " , headerNum: ", headerNum)
 	for _, peer := range serv.notify.peerMap {
 		SuperPrint(BLUE_PRINT, "*** NetServer::WatchStatus() current status: peer = ", peer.peerAddr, " ***")
 	}
@@ -464,16 +462,16 @@ func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockI
 	//Get block info at local
 	//blockNum  := actorEnv.Chain.LastConsensusBlockNum()
 	headerNum := actorEnv.Chain.HeadBlockNum()
-	gap := blockInfo.BlockNum - headerNum
+	gap       := blockInfo.BlockNum - headerNum
 	if gap <= 0 {
 		syncLock.Lock()
 		defer syncLock.Unlock()
-		isSynced = true
+		finishSynced = true
 		return nil
 	}
 
 	syncLock.Lock()
-	isSynced = false
+	finishSynced = false
 	syncLock.Unlock()
 
 	//if local header_num < remote header_num , request remote peer to sync
@@ -583,10 +581,11 @@ func (serv *NetServer) handleCrxBroadcast(msg CommonMessage) {
 	recvTrx := msgDef.ReceiveTrx{
 		Trx: &newCrx,
 	}
-	SuperPrint(YELLO_PRINT, "******************* NetServer::HandleMessage from:", msg.Src, " newCrx = ", newCrx)
+
+	SuperPrint(YELLO_PRINT, "******************* NetServer::handleCrxBroadcast from:", msg.Src, " newCrx = ", newCrx)
 
 	if serv.notify.trxActorPid != nil {
-		log.Error("NetServer::HandleMessage() send new crx to trxActor: ", recvTrx)
+		log.Error("NetServer::handleCrxBroadcast() send new crx to trxActor: ", recvTrx)
 		serv.notify.trxActorPid.Tell(&recvTrx)
 	}
 
@@ -606,14 +605,19 @@ func (serv *NetServer) handleBlkBroadcast(msg CommonMessage) {
 	recvBlk := msgDef.ReceiveBlock{
 		Block: &newBlk,
 	}
-	SuperPrint(YELLO_PRINT, "<<<<<<<<<<<<<<<<<<<<<< NetServer::HandleMessage from:", msg.Src, " newBlk = ", newBlk)
+	SuperPrint(YELLO_PRINT, "<<<<<<<<<<<<<<<<<<<<<< NetServer::handleBlkBroadcast from:", msg.Src, " newBlk = ", newBlk)
 
 	if serv.notify.chainActorPid != nil {
-		SuperPrint(YELLO_PRINT, "NetServer::HandleMessage() send new crx to chainActor")
+		SuperPrint(YELLO_PRINT, "NetServer::handleBlkBroadcast() send new crx to chainActor")
 		serv.notify.chainActorPid.Tell(&recvBlk)
 	}
 
 	//todo broadcast to other peers
+	/*
+	 * 1. check if it had existed
+	 * 2. check sign
+	 * 3. check blkNum
+	 */
 }
 
 func (serv *NetServer) handleBlkInfo(msg CommonMessage) {
@@ -683,7 +687,7 @@ func (serv *NetServer) handleBlkRes(msg CommonMessage) {
 }
 
 func (serv *NetServer) matchMinConnection() bool {
-	return int(serv.notify.getPeerCnt())+1 >= MIN_NODE_NUM
+	return int(serv.notify.getPeerActiveCnt())+1 >= MIN_NODE_NUM
 }
 
 func (serv *NetServer) syncFinished() bool {
@@ -693,18 +697,37 @@ func (serv *NetServer) syncFinished() bool {
 
 //goruntine,
 func (serv *NetServer) initSync() {
+	//if the node can connect enough to nodes , we can think it had synchronsized
 	if serv.matchMinConnection() {
 		syncLock.Lock()
-		isSynced = true
+		finishSynced = true
 		syncLock.Unlock()
 
 		return
 	}
 
 	time.Sleep(INIT_SYNC_WAIT * time.Second)
-	syncLock.Lock()
-	isSynced = true
-	syncLock.Unlock()
+	/*if wait for INIT_SYNC_WAIT second , we will pass the wait , and to check two point
+	 * 1. if it had connected enough to neigher nodes ?
+	 * 2. if 1 is yes , if it had finished the synchronsizion with the latest block ?
+	 */
+
+	var timeInterval *time.Timer = time.NewTimer(3 * time.Second)
+
+	for {
+		select {
+		case <-timeInterval.C:
+
+			if serv.matchMinConnection() /* && match condition 2 */ {
+				syncLock.Lock()
+				finishSynced = true
+				syncLock.Unlock()
+			}
+
+			timeInterval.Stop()
+			timeInterval.Reset(time.Second * 3)
+		}
+	}
 
 	return
 }

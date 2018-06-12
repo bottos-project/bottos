@@ -52,7 +52,7 @@ type P2PServer struct {
 	serv      *NetServer
 	p2pConfig *P2PConfig
 
-	p2pLock sync.RWMutex
+	p2pLock    sync.RWMutex
 }
 
 //P2PConfig p2p configration
@@ -146,14 +146,12 @@ func (p2p *P2PServer) Start() error {
 
 	//connect to other seed nodes
 	go p2p.serv.activeTimedTask()
-	if TST == 1 {
-		go p2p.reportBlock()
-	}
+	go p2p.reportBlock()
 
 	//peer neighbor exchange
 	go p2p.serv.StartPne()
 
-	//get all seeds or wait for 3 seconds
+	//get all seeds or wait for 30 seconds
 	//go p2p.serv.initSync()
 	// Todo ping/pong
 	go p2p.RunHeartBeat()
