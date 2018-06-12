@@ -164,7 +164,7 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 // HandleTransactionFromFront is handling trx from front
 func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	log.Infof("rcv trx %v from front,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
+	log.Infof("rcv trx %v from front,sender %v, contract %v, method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
@@ -190,7 +190,6 @@ func (trxPool *TrxPool) GetAllPendingTransactions(context actor.Context) {
 
 // RemoveTransactions is interface to remove trxs in trx pool
 func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
-
 	for _, trx := range trxs {
 		delete(trxPool.pending, trx.Hash())
 	}
@@ -198,7 +197,6 @@ func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 
 // RemoveSingleTransaction is interface to remove single trx in trx pool
 func (trxPool *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
-
 	delete(trxPool.pending, trx.Hash())
 }
 

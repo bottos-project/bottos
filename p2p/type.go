@@ -78,7 +78,9 @@ const (
 //CommonMessage message struct
 type CommonMessage struct {
 	Src     string
+	SrcPort int
 	Dst     string
+	DstPort int
 	MsgType uint8
 	Content []byte
 }
