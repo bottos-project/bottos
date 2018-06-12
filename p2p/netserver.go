@@ -38,7 +38,8 @@ import (
 	"net"
 	"sync"
 	"time"
-
+    "strings"
+	"strconv"
 	"github.com/bottos-project/bottos/action/env"
 	msgDef "github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common"
@@ -242,7 +243,7 @@ func (serv *NetServer) activeTimedTask() error {
 func (serv *NetServer) appendList(conn net.Conn, msg CommonMessage) error {
 	//package remote peer info as "peer" struct and add it into peer list
 	log.Info("NetServer::AppendList")
-	peer := NewPeer(msg.Src, serv.port, conn)
+	peer := NewPeer(msg.Src, msg.SrcPort, conn)
 	peer.SetPeerState(ESTABLISH)
 	serv.notify.addPeer(peer)
 
@@ -263,13 +264,21 @@ func (serv *NetServer) connectSeeds() error {
 
 	for _, peer := range serv.seedPeer {
 		//check if the new peer is in peer list
-		if serv.notify.isExist(peer, false) {
+		peerInfo := strings.Split(peer, ":")
+		peerAddr := peerInfo[0]
+		peerPort, err := strconv.Atoi(peerInfo[1])
+    	if err != nil {
+        	panic(err)
+    	} 
+		if serv.notify.isExist(peerAddr, false) {
 			continue
 		}
-
+  
 		var msg = CommonMessage{
 			Src:     serv.addr,
-			Dst:     peer,
+			SrcPort: serv.port,
+			Dst:     peerAddr,
+			DstPort: peerPort,
 			MsgType: REQUEST,
 		}
 
@@ -279,7 +288,7 @@ func (serv *NetServer) connectSeeds() error {
 		}
 
 		//connect remote seed peer , if it's successful , add it into remote peer list
-		go serv.Send(peer, req, false)
+		go serv.Send(peerAddr, peerPort, req, false)
 	}
 
 	return nil
@@ -305,8 +314,8 @@ func (serv *NetServer) SendTo(conn net.Conn, msg []byte, isExist bool) error {
 }
 
 //Send to connect to certain peer proactively
-func (serv *NetServer) Send(addr string, msg []byte, isExist bool) error {
-	addrPort := addr + ":" + fmt.Sprint(serv.port)
+func (serv *NetServer) Send(addr string, port int, msg []byte, isExist bool) error {
+	addrPort := addr + ":" + fmt.Sprint(port)
 	conn, err := net.Dial("tcp", addrPort)
 	if err != nil {
 		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ", err)
@@ -328,9 +337,9 @@ func (serv *NetServer) Send(addr string, msg []byte, isExist bool) error {
 }
 
 //ConnectUDP to connect certain peer with udp
-func (serv *NetServer) ConnectUDP(addr string, msg []byte, isExist bool) error {
+func (serv *NetServer) ConnectUDP(addr string, port string, msg []byte, isExist bool) error {
 
-	addrPort := addr + ":" + fmt.Sprint(serv.port)
+	addrPort := addr + ":" + port
 	remoteAddr, err := net.ResolveUDPAddr("udp4", addrPort)
 	if err != nil {
 		return errors.New("*ERROR* Failed to create a remote server addr !!!")
@@ -371,6 +380,7 @@ func (serv *NetServer) broadCastImpl(m interface{}, msgType uint8) error {
 
 	msg := CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		MsgType: msgType, // the type to notify other peers new crx
 		Content: contentByte,
 	}
@@ -425,7 +435,9 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 
 	msg := CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		Dst:     peer.peerAddr,
+		DstPort: peer.servPort,
 		MsgType: BLOCK_INFO, // the type to notify other peers new crx
 		Content: blockInfoByte,
 	}
@@ -441,7 +453,7 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 	return
 }
 
-func (serv *NetServer) syncBlock(srcAddr string, blockInfo *BlockInfo) error {
+func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockInfo) error {
 	//if true means it is synchronsizing else to start synchronsize
 	//it enable just one goruntine is running for the function
 	if serv.requestSyncLock() {
@@ -468,13 +480,13 @@ func (serv *NetServer) syncBlock(srcAddr string, blockInfo *BlockInfo) error {
 	//blockNum < blockInfo.BlockNum
 	for i := headerNum + 1; i <= blockInfo.HeaderNum; i++ {
 		//use block id to require block from other peer
-		serv.reqBlock(srcAddr, i)
+		serv.reqBlock(srcAddr,srcPort, i)
 	}
 
 	return nil
 }
 
-func (serv *NetServer) reqBlock(addr string, blockId uint32) error {
+func (serv *NetServer) reqBlock(addr string, port int, blockId uint32) error {
 	blockReq := BlockReq{
 		BlockNum: blockId,
 	}
@@ -487,7 +499,9 @@ func (serv *NetServer) reqBlock(addr string, blockId uint32) error {
 
 	msg := CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		Dst:     addr,
+		DstPort: port,
 		MsgType: BLOCK_REQ, // the type to notify other peers new crx
 		Content: blockReqByte,
 	}
@@ -498,7 +512,7 @@ func (serv *NetServer) reqBlock(addr string, blockId uint32) error {
 		return err
 	}
 
-	serv.Send(addr, msgByte, false)
+	serv.Send(addr, port, msgByte, false)
 
 	SuperPrint(PURPLISH_RED_PRINT, "NetServer::ReqBlock()  sync blk req: ", msg)
 
@@ -509,7 +523,9 @@ func (serv *NetServer) handleRequest(msg CommonMessage) {
 	//receive a connection request from other peer passively
 	rsp := CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		Dst:     msg.Src,
+		DstPort: msg.SrcPort,
 		MsgType: RESPONSE,
 	}
 
@@ -520,7 +536,7 @@ func (serv *NetServer) handleRequest(msg CommonMessage) {
 	}
 
 	//create a new conn to response the remote peer
-	remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+	remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(msg.SrcPort))
 	if err != nil {
 		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 		return
@@ -546,7 +562,7 @@ func (serv *NetServer) handleResponse(msg CommonMessage) {
 		return
 	}
 
-	remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(serv.port))
+	remoteConn, err := net.Dial("tcp", msg.Src+":"+fmt.Sprint(msg.SrcPort))
 	if err != nil {
 		log.Error("*ERROR* Failed to create a connection for remote server !!! err: ", err)
 		return
@@ -610,7 +626,7 @@ func (serv *NetServer) handleBlkInfo(msg CommonMessage) {
 	}
 
 	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::HandleMessage() blockInfo: ", blockInfo ," , msg= " , msg)
-	go serv.syncBlock(msg.Src, &blockInfo)
+	go serv.syncBlock(msg.Src, msg.SrcPort, &blockInfo)
 }
 
 func (serv *NetServer) handleBlkReq(msg CommonMessage) {
@@ -630,7 +646,9 @@ func (serv *NetServer) handleBlkReq(msg CommonMessage) {
 
 	var req = CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		Dst:     msg.Src,
+		DstPort: msg.SrcPort,
 		MsgType: BLOCK_RES,
 		Content: blkByte,
 	}
@@ -641,7 +659,7 @@ func (serv *NetServer) handleBlkReq(msg CommonMessage) {
 	}
 
 	SuperPrint(PURPLISH_RED_PRINT, "NetServer::SyncBlock()  BLOCK_REQ  send back : ", msg.Src)
-	serv.Send(msg.Src, reqByte, false)
+	serv.Send(msg.Src, msg.SrcPort, reqByte, false)
 }
 
 func (serv *NetServer) handleBlkRes(msg CommonMessage) {
@@ -781,15 +799,17 @@ func (serv *NetServer) StartPne() {
 func (serv *NetServer) sendPneRequest(id uint64) {
 	log.Debug("sendPneRequest")
 
-	peerAddr := serv.notify.GetPeerInfo(id)
-	if peerAddr == "" {
+	peer := serv.notify.GetPeerInfo(id)
+	if peer == nil {
 		log.Info("no peer id: %d", id)
 		return
 	}
 
 	var msg = CommonMessage{
 		Src:     serv.addr,
-		Dst:     peerAddr,
+		SrcPort: serv.port,
+		Dst:     peer.peerAddr,
+		DstPort: peer.servPort,
 		MsgType: PEERNEIGHBOR_REQ,
 	}
 
@@ -799,7 +819,7 @@ func (serv *NetServer) sendPneRequest(id uint64) {
 		return
 	}
 
-	serv.SendUdpMsg(req, peerAddr)
+	serv.SendUdpMsg(req, peer.peerAddr, peer.servPort)
 
 }
 
@@ -825,7 +845,9 @@ func (serv *NetServer) ProcessPneRequest(recvMsg CommonMessage, raddr *net.UDPAd
 
 	msg := CommonMessage{
 		Src:     serv.addr,
+		SrcPort: serv.port,
 		Dst:     recvMsg.Src,
+		DstPort: recvMsg.SrcPort,
 		MsgType: PEERNEIGHBOR_RSP,
 		Content: byteAddrs,
 	}
@@ -836,7 +858,7 @@ func (serv *NetServer) ProcessPneRequest(recvMsg CommonMessage, raddr *net.UDPAd
 		return
 	}
 
-	serv.SendUdpMsg(byteMsg, recvMsg.Src)
+	serv.SendUdpMsg(byteMsg, recvMsg.Src, recvMsg.SrcPort)
 
 }
 
@@ -865,13 +887,20 @@ func (serv *NetServer) ProcessPneResponse(recvMsg CommonMessage) {
 //ConnectPneNeighbor connect pne neighbor
 func (serv *NetServer) ConnectPneNeighbor() error {
 	neighbors := serv.pne.NextPneNeighbors()
-
+    
 	for i := range neighbors {
-		log.Debugf("conect to neighbor:%s", neighbors[i])
-
+		log.Debugf("conect to neighbor:%s", neighbors[i][0])
+        neighborInfo := strings.Split(neighbors[i], ":")
+		neighborAddr := neighborInfo[0]
+		neighborPort, err := strconv.Atoi(neighborInfo[1])
+		if err != nil {
+        	panic(err)
+    	}
 		var msg = CommonMessage{
 			Src:     serv.addr,
-			Dst:     neighbors[i],
+			SrcPort: serv.port,
+			Dst:     neighborAddr,
+			DstPort: neighborPort,
 			MsgType: REQUEST,
 		}
 
@@ -880,14 +909,14 @@ func (serv *NetServer) ConnectPneNeighbor() error {
 			return err
 		}
 
-		go serv.Send(neighbors[i], req, false)
+		go serv.Send(neighborAddr, neighborPort, req, false)
 	}
 
 	return nil
 }
 
 //SendUdpMsg send message
-func (serv *NetServer) SendUdpMsg(msg []byte, raddr string) error {
+func (serv *NetServer) SendUdpMsg(msg []byte, raddr string, port int) error {
 
 	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
 
@@ -901,10 +930,10 @@ func (serv *NetServer) SendUdpMsg(msg []byte, raddr string) error {
 }
 
 //SendUdpMsgConn create new connection and send message
-func (serv *NetServer) SendUdpMsgConn(msg []byte, raddr string) error {
+func (serv *NetServer) SendUdpMsgConn(msg []byte, raddr string, port int) error {
 
 	srcAddr := &net.UDPAddr{IP: net.ParseIP(serv.addr), Port: 0}
-	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: serv.port}
+	dstAddr := &net.UDPAddr{IP: net.ParseIP(raddr), Port: port}
 
 	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
 	if err != nil {
