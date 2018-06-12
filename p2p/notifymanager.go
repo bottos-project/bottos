@@ -145,8 +145,8 @@ func (notify *NotifyManager) SyncPeer() {
 
 func (notify *NotifyManager) isExist(addr string, isExist bool) bool {
 	if len(notify.peerMap) == 0 {
-+		return false
-+	}
+		return false
+	}
 
 	for _, peer := range notify.peerMap {
 		if res := strings.Compare(peer.peerAddr, addr); res == 0 {
