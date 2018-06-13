@@ -437,7 +437,7 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 		Src:     serv.addr,
 		SrcPort: serv.port,
 		Dst:     peer.peerAddr,
-		DstPort: peer.servPort,
+		DstPort: peer.peerPort,
 		MsgType: BLOCK_INFO, // the type to notify other peers new crx
 		Content: blockInfoByte,
 	}
@@ -455,42 +455,24 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 
 //func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockInfo) error {
 func (serv *NetServer) syncBlock() error {
-	//if true means it is synchronsizing else to start synchronsize
-	//it enable just one goruntine is running for the function
-	if serv.requestSyncLock() {
-		return nil
-	}
-	defer serv.releaseSyncLock()
 
-	//Get block info at local
-	//blockNum  := actorEnv.Chain.LastConsensusBlockNum()
-	//headerNum := actorEnv.Chain.HeadBlockNum()
-	/*
-	gap       := blockInfo.BlockNum - headerNum
+	//local latest block's number
+	headerNum := actorEnv.Chain.HeadBlockNum()
+	//Get a peer which blkNum is the best
+	bestPeer  := serv.notify.getBestPeer()
+	gap       := bestPeer.headerHeight - headerNum
 	if gap <= 3 {
 		syncLock.Lock()
 		defer syncLock.Unlock()
 		finishSynced = true
 		return nil
 	}
-	*/
 
-	//Update remote peer's header block height
-	//remotePeer := serv.notify.getPeer(srcAddr+":"+strconv.Itoa(srcPort))
-	//remotePeer.SetHeaderHeight(headerNum)
-
-	//syncLock.Lock()
-	//finishSynced = false
-	//syncLock.Unlock()
-
-	//if local header_num < remote header_num , request remote peer to sync
-	//blockNum < blockInfo.BlockNum
-	/*
-	for i := headerNum + 1; i <= blockInfo.HeaderNum; i++ {
+	for i := headerNum + 1; i <= bestPeer.headerHeight; i++ {
 		//use block id to require block from other peer
-		serv.reqBlock(srcAddr,srcPort, i)
+		serv.reqBlock(bestPeer.peerAddr , bestPeer.peerPort,  i)
 	}
-	*/
+
 	return nil
 }
 
@@ -854,7 +836,7 @@ func (serv *NetServer) sendPneRequest(id uint64) {
 		Src:     serv.addr,
 		SrcPort: serv.port,
 		Dst:     peer.peerAddr,
-		DstPort: peer.servPort,
+		DstPort: peer.peerPort,
 		MsgType: PEERNEIGHBOR_REQ,
 	}
 
@@ -864,7 +846,7 @@ func (serv *NetServer) sendPneRequest(id uint64) {
 		return
 	}
 
-	serv.SendUdpMsg(req, peer.peerAddr, peer.servPort)
+	serv.SendUdpMsg(req, peer.peerAddr, peer.peerPort)
 
 }
 

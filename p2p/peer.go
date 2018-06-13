@@ -41,7 +41,7 @@ import (
 //Peer peer info
 type Peer struct {
 	peerAddr     string
-	servPort     int
+	peerPort     int
 	peerId       uint32
 	publicKey    string
 
@@ -63,7 +63,7 @@ type Peer struct {
 func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
 	return &Peer{
 		peerAddr:     addrName,
-		servPort:     servPort,
+		peerPort:     servPort,
 		peerId:       0,
 		blockHeight:  0,
 		headerHeight: 0,
@@ -111,7 +111,7 @@ func (p *Peer) SetHeaderHeight(blockHeight uint32) {
 //GetId get peer id from peer address
 func (p *Peer) GetId() uint64 {
 	if p.peerId == 0 {
-		addrPort := p.peerAddr + ":" + fmt.Sprint(p.servPort)
+		addrPort := p.peerAddr + ":" + fmt.Sprint(p.peerPort)
 		p.peerId = Hash(addrPort)
 	}
 
@@ -121,7 +121,7 @@ func (p *Peer) GetId() uint64 {
 //SendTo create connection and send
 func (p *Peer) SendTo(buf []byte, isSync bool) error {
 
-	conn, err := net.Dial("tcp", p.peerAddr+":"+fmt.Sprint(p.servPort))
+	conn, err := net.Dial("tcp", p.peerAddr+":"+fmt.Sprint(p.peerPort))
 	if err != nil {
 		SuperPrint(RED_PRINT, "*ERROR* Failed to create a connection for remote server !!! err: ", err.Error())
 		return err
