@@ -42,14 +42,14 @@ import (
 
 //NotifyManager its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
-	p2p      *P2PServer
-	stopSync chan bool
+	p2p              *P2PServer
+	stopSync          chan bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
-	peerMap map[uint64]*Peer
+	peerMap           map[uint64]*Peer
 	//for reading/writing peerlist
 	sync.RWMutex
 }
@@ -74,7 +74,7 @@ func (notify *NotifyManager) broadcastByte(buf []byte, isSync bool) {
 	peerMap := notify.getPeerMap()
 
 	for _, peer := range peerMap {
-		if peer.GetPeerState() == ESTABLISH {
+		if peer.GetConnState() == ESTABLISH {
 			peer.SendTo(buf, false)
 		}
 	}
@@ -100,8 +100,17 @@ func (notify *NotifyManager) delPeer(peer *Peer) {
 	}
 }
 
-func (notify *NotifyManager) getPeer(addr string) {
+func (notify *NotifyManager) getPeer(addrPort string) *Peer {
+	peerId := Hash(addrPort)
 
+	notify.RLock()
+	defer notify.RUnlock()
+
+	if peer , ok := notify.peerMap[uint64(peerId)]; ok {
+		return peer
+	}
+
+	return nil
 }
 
 func (notify *NotifyManager) getPeerMap() map[uint64]*Peer {
@@ -121,11 +130,34 @@ func (notify *NotifyManager) getPeerActiveCnt() uint32 {
 
 	var cnt uint32
 	for _, peer := range notify.peerMap {
-		if ESTABLISH == peer.GetPeerState() {
+		if ESTABLISH == peer.GetConnState() {
 			cnt++
 		}
 	}
 	return cnt
+}
+
+//Get a peer which blkNum is the best
+func (notify *NotifyManager) getBestPeer() *Peer {
+	notify.RLock()
+	defer notify.RUnlock()
+
+	var bestPeer *Peer   = nil
+	var bestNum   uint32 = 0
+
+	for _ , peer := range notify.peerMap {
+		if peer.GetConnState() != ESTABLISH {
+			continue
+		}
+
+		if peer.headerHeight > bestNum {
+			bestNum  = peer.headerHeight
+			bestPeer = peer
+		}
+
+	}
+
+	return bestPeer
 }
 
 //BroadcastBlk todo sync blk info with other peer

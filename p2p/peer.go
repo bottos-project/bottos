@@ -51,20 +51,24 @@ type Peer struct {
 	peerSock    *net.UDPAddr
 	conn         net.Conn
 
+	connState    uint32
 	syncState    uint32
 	neighborNode []*Peer
 
+	//the mutex for headerHeight
 	sync.RWMutex
 }
 
 //NewPeer new a peer
 func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
 	return &Peer{
-		peerAddr:  addrName,
-		servPort:  servPort,
-		peerId:    0,
-		conn:      conn,
-		syncState: 0,
+		peerAddr:     addrName,
+		servPort:     servPort,
+		peerId:       0,
+		blockHeight:  0,
+		headerHeight: 0,
+		conn:         conn,
+		syncState:    0,
 	}
 }
 
@@ -78,14 +82,30 @@ func (p *Peer) SetPeerAddr(addr string) {
 	p.peerAddr = addr
 }
 
-//SetPeerState set peer sync state
-func (p *Peer) SetPeerState(state uint32) {
+//SetConnState set peer conn state
+func (p *Peer) SetConnState(state uint32) {
+	p.connState = state
+}
+
+//GetConnState get peer conn state
+func (p *Peer) GetConnState() uint32 {
+	return p.connState
+}
+
+func (p *Peer) SetSyncState(state uint32) {
 	p.syncState = state
 }
 
-//GetPeerState get peer sync state
-func (p *Peer) GetPeerState() uint32 {
+func (p *Peer) GetSyncState() uint32 {
 	return p.syncState
+}
+
+func (p *Peer) SetBlockHigh(blockHeight uint32) {
+	p.blockHeight = blockHeight
+}
+
+func (p *Peer) SetHeaderHeight(blockHeight uint32) {
+	p.headerHeight = blockHeight
 }
 
 //GetId get peer id from peer address

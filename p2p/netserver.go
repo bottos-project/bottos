@@ -51,6 +51,7 @@ import (
 const (
 	//SYN_BLK_NUM sync block number
 	SYN_BLK_NUM = 10
+	MINI_BLK_CONN_NUM = 3
 )
 
 var finishSynced bool = true
@@ -235,6 +236,7 @@ func (serv *NetServer) activeTimedTask() error {
 			serv.connectSeeds()
 			serv.watchStatus()
 			serv.broadcastBlkInfo()
+			serv.syncBlock()
 			serv.ConnectPneNeighbor()
 			serv.resetTimer()
 		}
@@ -245,7 +247,7 @@ func (serv *NetServer) appendList(conn net.Conn, msg CommonMessage) error {
 	//package remote peer info as "peer" struct and add it into peer list
 	log.Info("NetServer::AppendList")
 	peer := NewPeer(msg.Src, msg.SrcPort, conn)
-	peer.SetPeerState(ESTABLISH)
+	peer.SetConnState(ESTABLISH)
 	serv.notify.addPeer(peer)
 
 	serv.pne.AddPnePeer(peer.GetId())
@@ -357,7 +359,7 @@ func (serv *NetServer) ConnectUDP(addr string, port string, msg []byte, isExist 
 
 func (serv *NetServer) watchStatus() {
 
-	blockNum := serv.actorEnv.Chain.LastConsensusBlockNum()
+	blockNum  := serv.actorEnv.Chain.LastConsensusBlockNum()
 	headerNum := serv.actorEnv.Chain.HeadBlockNum()
 
 	SuperPrint(BLUE_PRINT, "NetServer::WatchStatus() blockNum: ", blockNum, " , headerNum: ", headerNum)
@@ -412,7 +414,7 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 		return
 	}
 
-	blockNum := serv.actorEnv.Chain.LastConsensusBlockNum()
+	blockNum  := serv.actorEnv.Chain.LastConsensusBlockNum()
 	headerNum := serv.actorEnv.Chain.HeadBlockNum()
 
 	//no generated blk and return
@@ -451,7 +453,8 @@ func (serv *NetServer) sendBklInfo(peer *Peer) {
 	return
 }
 
-func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockInfo) error {
+//func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockInfo) error {
+func (serv *NetServer) syncBlock() error {
 	//if true means it is synchronsizing else to start synchronsize
 	//it enable just one goruntine is running for the function
 	if serv.requestSyncLock() {
@@ -461,26 +464,33 @@ func (serv *NetServer) syncBlock(srcAddr string, srcPort int,  blockInfo *BlockI
 
 	//Get block info at local
 	//blockNum  := actorEnv.Chain.LastConsensusBlockNum()
-	headerNum := actorEnv.Chain.HeadBlockNum()
+	//headerNum := actorEnv.Chain.HeadBlockNum()
+	/*
 	gap       := blockInfo.BlockNum - headerNum
-	if gap <= 0 {
+	if gap <= 3 {
 		syncLock.Lock()
 		defer syncLock.Unlock()
 		finishSynced = true
 		return nil
 	}
+	*/
 
-	syncLock.Lock()
-	finishSynced = false
-	syncLock.Unlock()
+	//Update remote peer's header block height
+	//remotePeer := serv.notify.getPeer(srcAddr+":"+strconv.Itoa(srcPort))
+	//remotePeer.SetHeaderHeight(headerNum)
+
+	//syncLock.Lock()
+	//finishSynced = false
+	//syncLock.Unlock()
 
 	//if local header_num < remote header_num , request remote peer to sync
 	//blockNum < blockInfo.BlockNum
+	/*
 	for i := headerNum + 1; i <= blockInfo.HeaderNum; i++ {
 		//use block id to require block from other peer
 		serv.reqBlock(srcAddr,srcPort, i)
 	}
-
+	*/
 	return nil
 }
 
@@ -614,9 +624,9 @@ func (serv *NetServer) handleBlkBroadcast(msg CommonMessage) {
 
 	//todo broadcast to other peers
 	/*
-	 * 1. check if it had existed
-	 * 2. check sign
-	 * 3. check blkNum
+	 * todo 1. check if it had existed
+	 * todo 2. check sign
+	 * todo 3. check blkNum
 	 */
 }
 
@@ -629,8 +639,14 @@ func (serv *NetServer) handleBlkInfo(msg CommonMessage) {
 		return
 	}
 
+	headerNum := actorEnv.Chain.HeadBlockNum()
+
+	//To update remote peer's header block height
+	remotePeer := serv.notify.getPeer(msg.Src+":"+strconv.Itoa(msg.SrcPort))
+	remotePeer.SetHeaderHeight(headerNum)
+
 	//SuperPrint(PURPLISH_RED_PRINT , "NetServer::HandleMessage() blockInfo: ", blockInfo ," , msg= " , msg)
-	go serv.syncBlock(msg.Src, msg.SrcPort, &blockInfo)
+	//go serv.syncBlock(msg.Src, msg.SrcPort, &blockInfo)
 }
 
 func (serv *NetServer) handleBlkReq(msg CommonMessage) {
@@ -686,19 +702,25 @@ func (serv *NetServer) handleBlkRes(msg CommonMessage) {
 	}
 }
 
-func (serv *NetServer) matchMinConnection() bool {
+func (serv *NetServer) isMinConnection() bool {
 	return int(serv.notify.getPeerActiveCnt())+1 >= MIN_NODE_NUM
 }
 
+
+
 func (serv *NetServer) syncFinished() bool {
 	//check all peers about blk height
+	if len(serv.notify.peerMap) >= MINI_BLK_CONN_NUM {
+		//
+	}
+
 	return true
 }
 
 //goruntine,
 func (serv *NetServer) initSync() {
 	//if the node can connect enough to nodes , we can think it had synchronsized
-	if serv.matchMinConnection() {
+	if serv.isMinConnection() {
 		syncLock.Lock()
 		finishSynced = true
 		syncLock.Unlock()
@@ -718,7 +740,7 @@ func (serv *NetServer) initSync() {
 		select {
 		case <-timeInterval.C:
 
-			if serv.matchMinConnection() /* && match condition 2 */ {
+			if serv.isMinConnection() /* && match condition 2 */ {
 				syncLock.Lock()
 				finishSynced = true
 				syncLock.Unlock()
