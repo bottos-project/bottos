@@ -55,10 +55,9 @@ const (
 )
 
 var finishSynced bool = true
-//
 var syncLock     sync.RWMutex
 
-//GetSyncStatus get sync status
+//GetSyncStatus get sync status to other actor
 func GetSyncStatus() bool {
 	syncLock.RLock()
 	defer syncLock.RUnlock()
@@ -228,6 +227,7 @@ func (serv *NetServer) handleMessage(conn net.Conn) {
 	return
 }
 
+//goruntine
 func (serv *NetServer) activeTimedTask() error {
 	log.Info("p2pServer::ActiveSeeds()")
 	for {
@@ -458,9 +458,14 @@ func (serv *NetServer) syncBlock() error {
 
 	//local latest block's number
 	headerNum := actorEnv.Chain.HeadBlockNum()
-	//Get a peer which blkNum is the best
+	//Get a peer which blkNum is the latest among the record
 	bestPeer  := serv.notify.getBestPeer()
-	gap       := bestPeer.headerHeight - headerNum
+	if bestPeer == nil {
+		//it means the node hasn't neighbor , it can't sync and wait for next time to continue to check
+		return nil
+	}
+
+	gap := bestPeer.headerHeight - headerNum
 	if gap <= 3 {
 		syncLock.Lock()
 		defer syncLock.Unlock()
