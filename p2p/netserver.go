@@ -50,12 +50,18 @@ import (
 
 const (
 	//SYN_BLK_NUM sync block number
-	SYN_BLK_NUM = 10
+	SYN_BLK_NUM       = 10
 	MINI_BLK_CONN_NUM = 3
+	PERMIT_SYNC_GAP   = 3
 )
 
-var finishSynced bool = true
+//it provides the signal(finish-synchronsizion) to notify other actors
+var finishSynced bool = false
 var syncLock     sync.RWMutex
+
+//it provides the signal(mini-connection) to notify other actors
+var connNeighbor bool = false
+var connLock     sync.RWMutex
 
 //GetSyncStatus get sync status to other actor
 func GetSyncStatus() bool {
@@ -63,6 +69,13 @@ func GetSyncStatus() bool {
 	defer syncLock.RUnlock()
 
 	return finishSynced
+}
+
+func GetConnStatus() bool {
+	connLock.RLock()
+	defer connLock.RUnlock()
+
+	return connNeighbor
 }
 
 //NetServer net server
@@ -229,7 +242,7 @@ func (serv *NetServer) handleMessage(conn net.Conn) {
 
 //goruntine
 func (serv *NetServer) activeTimedTask() error {
-	log.Info("p2pServer::ActiveSeeds()")
+	log.Info("p2pServer::activeTimedTask()")
 	for {
 		select {
 		case <-serv.timeInterval.C:
@@ -237,6 +250,7 @@ func (serv *NetServer) activeTimedTask() error {
 			serv.watchStatus()
 			serv.broadcastBlkInfo()
 			serv.syncBlock()
+			serv.checkConnNum()
 			serv.ConnectPneNeighbor()
 			serv.resetTimer()
 		}
@@ -466,7 +480,8 @@ func (serv *NetServer) syncBlock() error {
 	}
 
 	gap := bestPeer.headerHeight - headerNum
-	if gap <= 3 {
+	if gap <= PERMIT_SYNC_GAP {
+		//if  blk height gap between local and best peer is less than PERMIT_SYNC_GAP , we can think the node had finished synchronsizion
 		syncLock.Lock()
 		defer syncLock.Unlock()
 		finishSynced = true
@@ -617,6 +632,7 @@ func (serv *NetServer) handleBlkBroadcast(msg CommonMessage) {
 	 */
 }
 
+//Handle latest blk height info , update it into local map list
 func (serv *NetServer) handleBlkInfo(msg CommonMessage) {
 	//Receive broadcast from other peers
 	var blockInfo BlockInfo
@@ -627,6 +643,12 @@ func (serv *NetServer) handleBlkInfo(msg CommonMessage) {
 	}
 
 	headerNum := actorEnv.Chain.HeadBlockNum()
+	gap       := blockInfo.HeaderNum - headerNum
+	if gap >= PERMIT_SYNC_GAP {
+		syncLock.Lock()
+		finishSynced = false
+		syncLock.Unlock()
+	}
 
 	//To update remote peer's header block height
 	remotePeer := serv.notify.getPeer(msg.Src+":"+strconv.Itoa(msg.SrcPort))
@@ -704,38 +726,15 @@ func (serv *NetServer) syncFinished() bool {
 	return true
 }
 
-//goruntine,
-func (serv *NetServer) initSync() {
+//goruntine, make a cycle to check the mini-connection
+func (serv *NetServer) checkConnNum() {
 	//if the node can connect enough to nodes , we can think it had synchronsized
 	if serv.isMinConnection() {
-		syncLock.Lock()
-		finishSynced = true
-		syncLock.Unlock()
+		connLock.Lock()
+		connNeighbor = true
+		connLock.Unlock()
 
 		return
-	}
-
-	time.Sleep(INIT_SYNC_WAIT * time.Second)
-	/*if wait for INIT_SYNC_WAIT second , we will pass the wait , and to check two point
-	 * 1. if it had connected enough to neigher nodes ?
-	 * 2. if 1 is yes , if it had finished the synchronsizion with the latest block ?
-	 */
-
-	var timeInterval *time.Timer = time.NewTimer(3 * time.Second)
-
-	for {
-		select {
-		case <-timeInterval.C:
-
-			if serv.isMinConnection() /* && match condition 2 */ {
-				syncLock.Lock()
-				finishSynced = true
-				syncLock.Unlock()
-			}
-
-			timeInterval.Stop()
-			timeInterval.Reset(time.Second * 3)
-		}
 	}
 
 	return

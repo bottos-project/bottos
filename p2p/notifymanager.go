@@ -43,13 +43,17 @@ import (
 //NotifyManager its function to sync the trx , blk and peer info with other p2p other
 type NotifyManager struct {
 	p2p              *P2PServer
+
 	stopSync          chan bool
+	//it means the nodes had finished synchronsizion with its active nodes
+	isSync            bool
 
 	trxActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 
 	peerMap           map[uint64]*Peer
+
 	//for reading/writing peerlist
 	sync.RWMutex
 }
