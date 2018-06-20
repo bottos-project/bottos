@@ -277,8 +277,8 @@ type GoodsProReq struct {
 
 // NodeClusterReg is definition for node cluster reg
 type NodeClusterReg struct {
-	NodeIP    string `json:"nodeip"`
-	ClusterIP string `json:"clusterip"`
+	NodeIP    string `bson:"seedip"`
+	ClusterIP string `bson:"slaveiplist"`
 }
 
 // NodeBaseInfo is definition for node base info
