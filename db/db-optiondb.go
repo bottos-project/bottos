@@ -53,3 +53,10 @@ func (d *DBService) Update(collection string, key string, value interface{}, upd
 
 	return d.optDbRepo.OptionDbUpdate(collection, key, value, updatekey, updatevalue)
 }
+
+func (d *DBService) IsOpDbConfigured() bool {
+	if d.optDbRepo == nil {
+		return false
+	}
+	return true
+}

@@ -607,6 +607,9 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 // ApplyPersistanceRole is to apply persistence
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
+	if ! ldb.IsOpDbConfigured() {
+		return nil
+	}
 	oids := make([]bson.ObjectId, len(block.Transactions))
 	for i := range block.Transactions {
 		oids[i] = bson.NewObjectId()

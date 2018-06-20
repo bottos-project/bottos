@@ -85,6 +85,7 @@ type DBApi interface {
 	Reset() //TODO
 
 	//optiondb interface
+	IsOpDbConfigured() bool
 	Insert(collection string, value interface{}) error
 	Find(collection string, key string, value interface{}) (interface{}, error)
 	Update(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error
