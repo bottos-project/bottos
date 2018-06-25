@@ -26,10 +26,11 @@
 package chain
 
 import (
-	log "github.com/cihub/seelog"
 	"sort"
 	"sync"
 	"unsafe"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -175,6 +176,15 @@ func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 		return nil
 	}
 	return bc.GetBlock(hash)
+}
+
+func (bc *BlockChain) GetHeaderByNumber(number uint32) *types.Header {
+	block := bc.GetBlockByNumber(number)
+	if block != nil {
+		return block.Header
+	}
+
+	return nil
 }
 
 //GetBlockHashByNumber get block hash from chain by number

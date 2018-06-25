@@ -40,6 +40,7 @@ type BlockChainInterface interface {
 	HasBlock(hash common.Hash) bool
 	GetBlockByHash(hash common.Hash) *types.Block
 	GetBlockByNumber(number uint32) *types.Block
+	GetHeaderByNumber(number uint32) *types.Header
 
 	HeadBlockTime() uint64
 	HeadBlockNum() uint32
