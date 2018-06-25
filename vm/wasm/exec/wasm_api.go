@@ -61,6 +61,7 @@ const (
 	CALL_DEP_LIMIT = 5
 	// CALL_WID_LIMIT config the max width of call
 	CALL_WID_LIMIT = 10
+
 )
 
 // ParamList define param array
@@ -130,7 +131,7 @@ type wasmEngine struct {
 	vmEngineLock *sync.Mutex
 
 	//the channel is to communicate with each vm
-	vmChannel chan []byte
+	vmChannel    chan []byte
 }
 
 type wasmInterface interface {
@@ -163,10 +164,10 @@ func GetInstance() *wasmEngine {
 //GetFuncInfo is to get function information
 func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
-	index := vm.funcInfo.funcEntry.Index
+	index     := vm.funcInfo.funcEntry.Index
 	typeIndex := vm.module.Function.Types[int(index)]
 
-	vm.funcInfo.funcType = vm.module.Types.Entries[int(typeIndex)]
+	vm.funcInfo.funcType  = vm.module.Types.Entries[int(typeIndex)]
 	vm.funcInfo.funcIndex = int64(index)
 
 	var err error
@@ -218,10 +219,10 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 
 // NewWASM Search the CTX infor at the database according to applyContext
 func NewWASM(ctx *contract.Context) *VM {
-	var err error
-	var wasmCode []byte
-
+	var err         error
+	var wasmCode    []byte
 	var codeVersion uint32
+
 	accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
 	if err != nil {
 		log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
@@ -320,19 +321,22 @@ func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, rec
 // Process the function is to be used for direct parameter insert
 func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
 
-	var pos int
-	var err error
-	var divisor time.Duration
+	var pos      int
+	var err      error
+	var divisor  time.Duration
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM
+	var vm *VM = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
+		if vm == nil {
+			return nil, errors.New("*ERROR* Failed to create a new VM instance !!!")
+		}
 
 		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline = time.Now().Add(divisor)
+		deadline   = time.Now().Add(divisor)
 
 		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
 			vm:         vm,
@@ -345,24 +349,28 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 
 	} else {
 		vm = vmInst.vm
+		if vm == nil {
+			return nil, errors.New("*ERROR* Failed to get a VM instance from memory !!!")
+		}
+
 		vm.SetContract(ctx)
 	}
 
-	method := ENTRY_FUNCTION
+	method        := ENTRY_FUNCTION
 	funcEntry, ok := vm.module.Export.Entries[method]
 	if ok == false {
 		return nil, errors.New("*ERROR* Failed to find the method from the wasm module !!!")
 	}
 
 	findex := funcEntry.Index
-	ftype := vm.module.Function.Types[int(findex)]
+	ftype  := vm.module.Function.Types[int(findex)]
 
 	funcParams := make([]interface{}, 1)
 	//Get function's string first char
 	funcParams[0] = int([]byte(ctx.Trx.Method)[0])
 
 	paramLength := len(funcParams)
-	parameters := make([]uint64, paramLength)
+	parameters  := make([]uint64, paramLength)
 
 	if paramLength != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
 		return nil, errors.New("*ERROR* Parameters count is not right")
