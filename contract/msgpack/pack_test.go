@@ -323,30 +323,33 @@ func TestUserReg(t *testing.T) {
 
 func TestAssetReg(t *testing.T) {
 	type TestSubStruct struct {
-		V1  string
-		V2  string
-		V3  string
-		V4  string
-		V5  string
-		V6  string
-		V7  string
-		V8  string
-		V9  uint32
-		V10 uint64
-		V11 string
-		V12 uint32
-		V13 string
+		UserName    string
+		AssetName   string
+		AssetType   uint64
+		FeatureTag  string
+		SampleHash  string
+		StorageHash string
+		ExpireTime  uint32
+		OpType      uint32
+		Price       uint64
+		Description string
+		Signature   string
 	}
 
 	type TestStruct struct {
 		V1 string
-		V2 *TestSubStruct
+		V2 TestSubStruct
 	}
 	fmt.Println("TestAssetReg...")
 
 	ts := TestStruct{
 		V1: "23456789012345678901",
-		V2: &TestSubStruct{V1: "usernametest", V2: "assetname", V3: "assettypetest", V4: "tagtest", V5: "pathtest", V6: "hasttest", V7: "storepathtest", V8: "12345678901234567890", V9: 11, V10: 22, V11: "desctriptest", V12: 333, V13: "signtest"},
+		V2: TestSubStruct{UserName: "usernametest", AssetName: "assetname",
+			AssetType: 11, FeatureTag: "tagtest",
+			SampleHash: "hasttest", StorageHash: "12345678901234567890",
+			ExpireTime: 1521990, OpType: 22,
+			Price: 1, Description: "desctriptest",
+			Signature: "signtest"},
 	}
 	b, err := Marshal(ts)
 
@@ -356,20 +359,26 @@ func TestAssetReg(t *testing.T) {
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
+	bb, _ := HexToBytes("dc0002da00203531653864633130373735393131653862343236643930383735383530383438dc000ada00056565656565da000474657374cf000000000000000bda0005312d312d31da0000da004033333236366339326365643038613861393634326134363465373663643230613537386233613536303435663436376539306639373439633533636532336265ce00000000ce00000001cf000000003b9aca00da0003313233")
+	//bb, _ := HexToBytes("dc0002da00203632366431613530373734623131653838306536316633313030663634656561dc000ada0007626f74746f7331da00106865616c746820636172652064617461cf000000000000000bda000869642d6e616d652dda004034336363343433323962626331323238626331383631373431663064656535336264663064326338336666323736666139326132656137366261366332383665da004037336561626366363337643137633731626334356133303266326565633839636264383632333737303833303561313861376433656638376537383137326131ce00000000ce00000001cf000000000bebc200da001074657374206865616c74682064617461")
+	err = Unmarshal(bb, &ts1)
+	fmt.Println("ts1 ", ts1, err)
 }
 
 func TestDataReqReg(t *testing.T) {
 	type TestSubStruct struct {
-		V1  string
-		V2  string
-		V3  uint64
-		V4  uint64
-		V5  string
-		V6  uint64
-		V7  uint32
-		V8  uint64
-		V9  uint32
-		V10 string
+		V1 string
+		V2 string
+		V3 uint64
+		V4 uint64
+		V5 string
+		V6 uint64
+		V7 uint32
+		V8 uint64
+		V9 string
+
+		V10 uint32
+		V11 string
 	}
 
 	type TestStruct struct {
@@ -380,7 +389,8 @@ func TestDataReqReg(t *testing.T) {
 
 	ts := TestStruct{
 		V1: "12345678901234567890",
-		V2: &TestSubStruct{V1: "usernametest", V2: "reqnametest", V3: 111, V4: 222, V5: "hasttest", V6: 222, V7: 2, V8: 333, V9: 444, V10: "desctriptest"},
+		V2: &TestSubStruct{V1: "usernametest", V2: "reqnametest", V3: 111, V4: 222, V5: "hasttest",
+			V6: 222, V7: 2, V8: 333, V9: "bto", V10: 444, V11: "desctriptest"},
 	}
 	b, err := Marshal(ts)
 
