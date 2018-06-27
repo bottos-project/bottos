@@ -31,6 +31,7 @@ import (
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/role"
 )
@@ -361,7 +362,7 @@ func deployCode(ctx *Context) ContractError {
 }
 
 func checkAbi(abiRaw []byte) error {
-	_, err := ParseAbi(abiRaw)
+	_, err := abi.ParseAbi(abiRaw)
 	if err != nil {
 		return fmt.Errorf("ABI Parse error: %v", err)
 	}
