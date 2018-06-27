@@ -19,36 +19,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package exec provides functions for executing WebAssembly bytecode.
-
-/*
- * file description: the interface for WASM execution
- * @Author: Stewart Li
- * @Date:   2018-02-08
- * @Last Modified by:
- * @Last Modified time:
- */
-
-package p2pserver
+package p2p
 
 const (
-	//CONF_FILE is definition of config file name
-	CONF_FILE = "config.json"
-	//TIME_INTERVAL is definition of time interval
-	TIME_INTERVAL = 10
-	//TST *WRAN* set the variable as "true" before starting test
-	TST            = 0
-	//MIN_NODE_NUM min peer before sync
-	MIN_NODE_NUM = 2
-	//INIT_SYNC_WAIT wait time before sync when startup
-	INIT_SYNC_WAIT = 30
+	MAX_PACKET_SIZE = 4096
+	MAX_GET_PEERS   = 30
+)
 
-	//TIME_PNE_START start wait time , Minute
-	TIME_PNE_START = 2
-	//TIME_PNE_EXCHANGE exchange time , Minute
-	TIME_PNE_EXCHANGE = 1
-	//MAX_NEIGHBOR_NUM  max neighbor number
-	MAX_NEIGHBOR_NUM = 200
-	//NEIGHBOR_DISCOVER_COUNT  bunch of neighbor when discover at the same time
-	NEIGHBOR_DISCOVER_COUNT = 10
+const (
+	PEER_STATE_INIT       = 1
+	PEER_STATE_HANDSHAKE  = 2
+	PEER_STATE_CONNECT    = 3
+	PEER_STATE_DISCONNECT = 4
 )
