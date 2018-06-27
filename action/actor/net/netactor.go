@@ -28,44 +28,37 @@ package netactor
 import (
 	log "github.com/cihub/seelog"
 	//"encoding/json"
-	"github.com/bottos-project/bottos/action/message"
-	//"github.com/bottos-project/core/common/types"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
-	p2pserv "github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/config"
+	netprotocal "github.com/bottos-project/bottos/protocal"
+	netpacket "github.com/bottos-project/bottos/protocal/common"
 )
 
-var NetActorPid *actor.PID = nil
-
-var trxActorPid *actor.PID = nil
-var chainActorPid *actor.PID = nil
-
-var p2p *p2pserv.P2PServer = nil
-
-var actorEnv *env.ActorEnv
-
 type NetActor struct {
-	props *actor.Props
+	actorEnv *env.ActorEnv
+	protocal netprotocal.ProtocalInstance
 }
 
-func ContructNetActor() *NetActor {
-	return &NetActor{}
-}
+var netactor *NetActor
 
 func NewNetActor(env *env.ActorEnv) *actor.PID {
-	actorEnv = env
 
-	p2p = p2pserv.NewServ()
-	p2p.SetActorEnv(env)
-	go p2p.Start()
+	netactor = &NetActor{
+		actorEnv: env,
+	}
 
-	props := actor.FromProducer(func() actor.Actor { return ContructNetActor() })
+	props := actor.FromProducer(func() actor.Actor { return netactor })
 
-	var err error
-	NetActorPid, err = actor.SpawnNamed(props, "NetActor")
-
+	pid, err := actor.SpawnNamed(props, "NetActor")
 	if err == nil {
-		return NetActorPid
+
+		netactor.protocal = netprotocal.MakeProtocal(config.Param, env.Chain)
+		netactor.protocal.Start()
+
+		env.Protocal = netactor.protocal
+		return pid
 	} else {
 		panic(log.Errorf("NetActor SpawnNamed error: ", err))
 	}
@@ -74,7 +67,7 @@ func NewNetActor(env *env.ActorEnv) *actor.PID {
 }
 
 //main loop
-func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
+func (n *NetActor) handleSystemMsg(context actor.Context) {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
@@ -90,35 +83,39 @@ func (NetActor *NetActor) handleSystemMsg(context actor.Context) {
 		log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123, 40, 35, "<======================== NetActor received Transaction msg  , msg.Trx: ", msg.Trx, 0x1B)
-		go p2p.BroadCast(msg.Trx, p2pserv.TRANSACTION)
+		n.protocal.Send(netpacket.TRX_PACKET, true, msg.Trx, nil)
 
 	case *message.NotifyBlock:
-		log.Infof("%c[%d;%d;%dm%v: %v %c[0m ", 0x1B, 123, 40, 32, "<======================== NetActor received Block msg , msg.Block: ", msg.Block, 0x1B)
-		go p2p.BroadCast(msg.Block, p2pserv.BLOCK)
+		n.protocal.Send(netpacket.BLOCK_PACKET, true, msg.Block, nil)
 
 	}
 
 }
 
-func (NetActor *NetActor) Receive(context actor.Context) {
-	NetActor.handleSystemMsg(context)
+func (n *NetActor) Receive(context actor.Context) {
+	n.handleSystemMsg(context)
+}
 
-	switch msg := context.Message().(type) {
+func (n *NetActor) setChainActor(tpid *actor.PID) {
+	n.protocal.SetChainActor(tpid)
+}
 
-	}
+func (n *NetActor) setTrxActor(tpid *actor.PID) {
+	n.protocal.SetTrxActor(tpid)
+}
+
+func (n *NetActor) setProducerActor(tpid *actor.PID) {
+	n.protocal.SetTrxActor(tpid)
 }
 
 func SetChainActorPid(tpid *actor.PID) {
-	//chainActorPid = tpid
-	p2p.SetChainActor(tpid)
-}
-
-func GetChainActorPid() *actor.PID {
-	return chainActorPid
+	netactor.setChainActor(tpid)
 }
 
 func SetTrxActorPid(tpid *actor.PID) {
-	//trxActorPid = tpid
-	p2p.SetTrxActor(tpid)
+	netactor.setTrxActor(tpid)
+}
+
+func SetProducerActorPid(tpid *actor.PID) {
+	netactor.setProducerActor(tpid)
 }
