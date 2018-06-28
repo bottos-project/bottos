@@ -16,7 +16,8 @@ import (
 const (
 	TIMER_FAST_SYNC_LAST_BLOCK_NUMBER   = 1
 	TIMER_NORMAL_SYNC_LAST_BLOCK_NUMBER = 4
-	//SYNC_LAST_BLOCK_NUMBER_COUNTER counter of no last block number response to set a peer expired
+	//SYNC_LAST_BLOCK_NUMBER_COUNTER counter of no response of last block number request
+	// than set a peer expired
 	SYNC_LAST_BLOCK_NUMBER_COUNTER = 10
 
 	TIMER_SYNC_STATE_CHECK = 7
@@ -203,6 +204,8 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		if s.sendupBlock(update.block) {
 			s.updateLocalNumber(number)
 			s.updateRemoteNumber(number, false)
+
+			s.broadcastNewBlock(update)
 		}
 		return
 	}
@@ -215,8 +218,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			s.syncStateJudge()
 			log.Debugf("drop block: %d when in sync null status", number)
 		} else if s.set.state == SET_SYNC_BLOCK {
-			setsync := s.set.recvBlock(update.block)
-			if setsync {
+			if s.set.recvBlock(update.block) {
 				s.sendupBundleBlock()
 			}
 		} else {
@@ -477,7 +479,7 @@ func (s *synchronizes) sendupBundleBlock() {
 
 func (s *synchronizes) sendupBlock(block *types.Block) bool {
 	for i := 0; i < 5; i++ {
-		msg := message.ReceiveBlock{Block: block}
+		msg := &message.ReceiveBlock{Block: block}
 
 		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
@@ -497,6 +499,26 @@ func (s *synchronizes) sendupBlock(block *types.Block) bool {
 	}
 
 	return false
+}
+
+func (s *synchronizes) broadcastNewBlock(update *blockUpdate) {
+	buf, err := json.Marshal(update.block)
+	if err != nil {
+		log.Errorf("block send marshal error")
+	}
+
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
+		PacketType: BLOCK_UPDATE,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	msg := p2p.MsgPacket{Index: []uint16{update.index},
+		P: packet}
+
+	p2p.Runner.SendBroadcast(msg)
 }
 
 type blockset struct {
