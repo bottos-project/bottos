@@ -23,32 +23,57 @@
  * @Last Modified time:
  */
 
-package contract
+package abi
 
 import (
 	"bytes"
 	"encoding/json"
 )
 
-//ABI struct for contracts
+//ABIAction abi Action(Method)
+type ABIAction struct {
+	ActionName string `json:"action_name"`
+	Type       string `json:"type"`
+}
+
+//ABIStruct parameter struct for abi Action(Method)
+type ABIStruct struct {
+	Name   string    `json:"name"`
+	Base   string    `json:"base"`
+	Fields *FeildMap `json:"fields"`
+}
+
+//ABI struct for abi
 type ABI struct {
 	Types   []interface{} `json:"types"`
+	Structs []ABIStruct   `json:"structs"`
+	Actions []ABIAction   `json:"actions"`
+	Tables  []interface{} `json:"tables"`
+}
+
+//ABI structs for ABI
+type ABIStructs struct {
 	Structs []struct {
 		Name   string            `json:"name"`
 		Base   string            `json:"base"`
 		Fields map[string]string `json:"fields"`
 	} `json:"structs"`
-	Actions []struct {
-		ActionName string `json:"action_name"`
-		Type       string `json:"type"`
-	} `json:"actions"`
-	Tables []interface{} `json:"tables"`
 }
 
 //ParseAbi parse abiraw to struct for contracts
 func ParseAbi(abiRaw []byte) (*ABI, error) {
+	abis := &ABIStructs{}
+	err := json.Unmarshal(abiRaw, abis)
+	if err != nil {
+		return &ABI{}, err
+	}
+
 	abi := &ABI{}
-	err := json.Unmarshal(abiRaw, abi)
+	abi.Structs = make([]ABIStruct, len(abis.Structs))
+	for i := range abi.Structs {
+		abi.Structs[i].Fields = New()
+	}
+	err = json.Unmarshal(abiRaw, abi)
 	if err != nil {
 		return &ABI{}, err
 	}

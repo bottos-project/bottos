@@ -32,7 +32,7 @@ import (
 
 	coreapi "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
@@ -114,11 +114,11 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 	if nil != err {
 		return "", err
 	}
-	
+
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(data)))
 	chainId, err := GetChainId()
-	h.Write([]byte(hex.EncodeToString(chainId)))	
+	h.Write([]byte(hex.EncodeToString(chainId)))
 	hashData := h.Sum(nil)
 	seckey, err := GetDefaultKey()
 	signdata, err := crypto.Sign(hashData, seckey)
@@ -412,7 +412,7 @@ func (cli *CLI) deploycode(name string, path string) {
 }
 
 func checkAbi(abiRaw []byte) error {
-	_, err := contract.ParseAbi(abiRaw)
+	_, err := abi.ParseAbi(abiRaw)
 	if err != nil {
 		return fmt.Errorf("ABI Parse error: %v", err)
 	}
@@ -456,7 +456,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 	tempAbi := make([]byte, fi.Size())
 	f.Read(tempAbi)
-	abi, err := contract.ParseAbi(tempAbi)
+	abi, err := abi.ParseAbi(tempAbi)
 	if err != nil {
 		fmt.Printf("Abi Parse Error Hex: %x, Str: %v", tempAbi, string(tempAbi))
 		return

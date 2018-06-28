@@ -32,6 +32,7 @@ import (
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/role"
 )
@@ -113,6 +114,59 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 	return trxs, nil
 }
 
+func createNativeContractABI() *abi.ABI {
+	a := &abi.ABI{}
+
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "newaccount", Type: "NewAccount"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "transfer", Type: "Transfer"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "setdelegate", Type: "SetDelegate"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "grantcredit", Type: "GrantCredit"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "cancelcredit", Type: "CancelCredit"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "transferfrom", Type: "TransferFrom"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "deploycode", Type: "DeployCode"})
+	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "deployabi", Type: "DeployABI"})
+
+	s := abi.ABIStruct{Name: "NewAccount", Fields: abi.New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("pubkey", "string")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "Transfer", Fields: abi.New()}
+	s.Fields.Set("from", "string")
+	s.Fields.Set("to", "string")
+	s.Fields.Set("value", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "SetDelegate", Fields: abi.New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("pubkey", "string")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "GrantCredit", Fields: abi.New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("spender", "string")
+	s.Fields.Set("limit", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "CancelCredit", Fields: abi.New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("spender", "string")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "TransferFrom", Fields: abi.New()}
+	s.Fields.Set("from", "string")
+	s.Fields.Set("to", "string")
+	s.Fields.Set("value", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "DeployCode", Fields: abi.New()}
+	s.Fields.Set("contract", "string")
+	s.Fields.Set("vm_type", "uint8")
+	s.Fields.Set("vm_version", "uint8")
+	s.Fields.Set("contract_code", "bytes")
+	a.Structs = append(a.Structs, s)
+	s = abi.ABIStruct{Name: "DeployABI", Fields: abi.New()}
+	s.Fields.Set("contract", "string")
+	s.Fields.Set("contract_abi", "bytes")
+	a.Structs = append(a.Structs, s)
+
+	return a
+}
+
 //CreateNativeContractAccount is to create native contract account
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
@@ -122,10 +176,13 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	}
 
 	pubkey, _ := common.HexToBytes(config.Param.KeyPairs[0].PublicKey)
+	a := createNativeContractABI()
+	abijson, _ := abi.AbiToJson(a)
 	bto := &role.Account{
 		AccountName: config.BOTTOS_CONTRACT_NAME,
 		CreateTime:  config.Genesis.GenesisTime,
 		PublicKey:   pubkey,
+		ContractAbi: []byte(abijson),
 	}
 	roleIntf.SetAccount(bto.AccountName, bto)
 

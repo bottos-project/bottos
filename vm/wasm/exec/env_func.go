@@ -145,10 +145,10 @@ func setStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valuePos := int(params[4])
-	valueLen := int(params[5])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
+	valuePos  := int(params[4])
+	valueLen  := int(params[5])
 
 	// length check
 
