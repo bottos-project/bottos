@@ -64,7 +64,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("get_param",        getParam)
 	envFunc.Register("call_trx",         callTrx)
 	envFunc.Register("assert",           assert)
-	envFunc.Register("get_ctx_name",     getCtxName)
+	envFunc.Register("getCtxName",     getCtxName)
 
 	return &envFunc
 }
