@@ -80,30 +80,30 @@ type VM struct {
 	memory        []byte
 	compiledFuncs []compiledFunction
 
-	funcTable [256]func()
+	funcTable     [256]func()
 
-	memPos int
+	memPos        int
 	//To avoid the too much the number of recursion execution(dep) in contract
-	callDep int
+	callDep       int
 	//To limit the too much the number of new contract execution(wid) in contract
-	callWid int
+	callWid       int
 	// define a map relationship between memory address and data's type
-	memType map[uint64]*typeInfo
+	memType       map[uint64]*typeInfo
 	//define env function
-	envFunc  *EnvFunc
-	funcInfo FuncInfo
+	envFunc      *EnvFunc
+	funcInfo      FuncInfo
 
-	contract *contract.Context
+	contract     *contract.Context
 
-	vmLock *sync.Mutex
+	vmLock       *sync.Mutex
 	//the channel be used to communcate with vm_engine
-	vmChannel chan []byte
+	vmChannel     chan []byte
 
 	//record sub-trx for recursive call[wid]
-	subTrxLst []*types.Transaction
-	subCtnLst []*contract.Context
+	subTrxLst     []*types.Transaction
+	subCtnLst     []*contract.Context
 
-	codeVersion uint32
+	codeVersion   uint32
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -342,7 +342,8 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 	vm.ctx.pc = 0
 	vm.ctx.code = compiled.code
 	vm.ctx.curFunc = fnIndex
-
+	fmt.Println("VM::ExecCode compiled: ",compiled.code," , fnIndex: ",fnIndex)
+	//记录最外层参数
 	for i, arg := range args {
 		vm.ctx.locals[i] = arg
 	}
@@ -370,6 +371,7 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 
 func (vm *VM) execCode(compiled compiledFunction) uint64 {
 	if compiled.funcProp.EnvFunc == true {
+		fmt.Println("VM::execCode compiled.funcProp.Method: ",compiled.funcProp.Method)
 		vm.ExecEnvFunc(compiled)
 	}
 outer:
@@ -466,9 +468,9 @@ func (vm *VM) GetFuncParams() []uint64 {
 
 // ExecEnvFunc exec function
 func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
-
+	fmt.Println("VM::ExecEnvFunc vm.ctx.locals: ",vm.ctx.locals)
 	vm.envFunc.envFuncParam = vm.ctx.locals
-	vm.envFunc.envFuncCtx = vm.ctx
+	vm.envFunc.envFuncCtx   = vm.ctx
 	oldCtx := vm.ctx
 
 	if compiled.returns {
