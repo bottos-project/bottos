@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
 	pcommon "github.com/bottos-project/bottos/protocal/common"
 	log "github.com/cihub/seelog"
@@ -57,9 +58,11 @@ func (t *Transaction) Send(broadcast bool, data interface{}, peers []uint16) {
 }
 
 func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
-	var trx message.NotifyTrx
+	var trx types.Transaction
 	err := json.Unmarshal(p.Data, &trx)
+
+	msg := message.ReceiveTrx{Trx: &trx}
 	if err != nil {
-		t.actor.Tell(&trx)
+		t.actor.Tell(&msg)
 	}
 }
