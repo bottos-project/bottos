@@ -1,11 +1,11 @@
-package protocal
+package protocol
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
-type ProtocalInstance interface {
-	ProtocalInterface
+type ProtocolInstance interface {
+	ProtocolInterface
 	Start()
 	Send(ptype uint16, broadcast bool, data interface{}, peers []uint16)
 	SetChainActor(tpid *actor.PID)
@@ -13,6 +13,6 @@ type ProtocalInstance interface {
 	SetProducerActor(tpid *actor.PID)
 }
 
-type ProtocalInterface interface {
+type ProtocolInterface interface {
 	GetBlockSyncState() bool
 }

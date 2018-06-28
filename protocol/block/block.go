@@ -6,7 +6,7 @@ import (
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"time"
 )
@@ -87,7 +87,7 @@ func (b *Block) Send(broadcast bool, data interface{}, peers []uint16) {
 		log.Errorf("block send marshal error")
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
 	}
 
@@ -202,7 +202,7 @@ func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_HEADER_RSP,
 	}
 
@@ -221,7 +221,7 @@ func (b *Block) sendBlockRsp(index uint16, block *types.Block) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
 	}
 

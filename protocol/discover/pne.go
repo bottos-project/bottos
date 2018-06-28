@@ -6,7 +6,7 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"strings"
 	"sync"
@@ -112,7 +112,7 @@ func (p *pne) sendPneRequest(index uint16) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_NEIGHBOR_REQ,
 	}
 
@@ -145,7 +145,7 @@ func (p *pne) sendPneResponse(index uint16) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_NEIGHBOR_RSP,
 	}
 

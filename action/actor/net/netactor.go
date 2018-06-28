@@ -32,13 +32,13 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/config"
-	netprotocal "github.com/bottos-project/bottos/protocal"
-	netpacket "github.com/bottos-project/bottos/protocal/common"
+	netprotocol "github.com/bottos-project/bottos/protocol"
+	netpacket "github.com/bottos-project/bottos/protocol/common"
 )
 
 type NetActor struct {
 	actorEnv *env.ActorEnv
-	protocal netprotocal.ProtocalInstance
+	protocal netprotocol.ProtocolInstance
 }
 
 var netactor *NetActor
@@ -54,7 +54,7 @@ func NewNetActor(env *env.ActorEnv) *actor.PID {
 	pid, err := actor.SpawnNamed(props, "NetActor")
 	if err == nil {
 
-		netactor.protocal = netprotocal.MakeProtocal(config.Param, env.Chain)
+		netactor.protocal = netprotocol.MakeProtocal(config.Param, env.Chain)
 		netactor.protocal.Start()
 
 		env.Protocal = netactor.protocal

@@ -7,7 +7,7 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"sort"
 	"time"
@@ -293,7 +293,7 @@ func (s *synchronizes) updateRemoteNumber(number uint32, force bool) {
 }
 
 func (s *synchronizes) sendLastBlockNumberReq() {
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: LAST_BLOCK_NUMBER_REQ,
 	}
 
@@ -314,7 +314,7 @@ func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: LAST_BLOCK_NUMBER_RSP,
 	}
 
@@ -355,7 +355,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_HEADER_REQ,
 	}
 
@@ -420,7 +420,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.BLOCK_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_REQ,
 	}
 
