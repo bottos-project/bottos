@@ -32,7 +32,7 @@ import (
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/protocal"
+	"github.com/bottos-project/bottos/protocol"
 )
 
 //ReportState is recording the state of reporters
@@ -43,7 +43,7 @@ type ReportState struct {
 	IsReporting       bool
 	CheckFlag         uint32
 	ReportEnable      bool
-	ProtocalInterface protocal.ProtocalInterface
+	ProtocolInterface protocol.ProtocolInterface
 }
 
 //IsReady is check if repoter state
@@ -101,7 +101,7 @@ func (r *ReportState) SetCheckFlag(flag uint32) {
 
 //IsSynced is to check synced flags
 func (r *Reporter) IsSynced() bool {
-	if r.state.ProtocalInterface.GetBlockSyncState() == true {
+	if r.state.ProtocolInterface.GetBlockSyncState() == true {
 		return true
 	}
 	return false

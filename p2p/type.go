@@ -12,7 +12,7 @@ const (
 )
 
 type Head struct {
-	ProtocalType uint16
+	ProtocolType uint16
 	PacketType   uint16
 	Pad          uint16
 }

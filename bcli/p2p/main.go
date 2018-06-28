@@ -5,7 +5,7 @@ import (
 	"github.com/bottos-project/bottos/bcli/p2p/stub"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/protocal"
+	"github.com/bottos-project/bottos/protocol"
 	log "github.com/cihub/seelog"
 	"io/ioutil"
 )
@@ -42,13 +42,13 @@ func main() {
 	}
 
 	log.Info("blocknumber:", chain.BlockNumber)
-	protocal := protocal.MakeProtocal(&param, bc)
+	p := protocol.MakeProtocol(&param, bc)
 
 	actor := stub.NewDumActor()
 
-	protocal.SetChainActor(actor)
+	p.SetChainActor(actor)
 
-	go protocal.Start()
+	go p.Start()
 
 	select {}
 }

@@ -49,7 +49,7 @@ type ProducerActor struct {
 // NewProducerActor is to create actor for producer
 func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
-	ins := producer.New(env.Chain, env.RoleIntf, env.Protocal)
+	ins := producer.New(env.Chain, env.RoleIntf, env.Protocol)
 	props := actor.FromProducer(func() actor.Actor {
 		return &ProducerActor{env.RoleIntf, ins}
 	})

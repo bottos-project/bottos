@@ -2,7 +2,7 @@ package discover
 
 import (
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"sync/atomic"
 	"time"
@@ -104,7 +104,7 @@ func (k *keeplive) counterPeer(index uint16) {
 }
 
 func (k *keeplive) sendPing() {
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_PING,
 	}
 
@@ -120,7 +120,7 @@ func (k *keeplive) sendPing() {
 }
 
 func (k *keeplive) sendPong(index uint16) {
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_PONG,
 	}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 )
 
@@ -39,7 +39,7 @@ func (t *Transaction) Send(broadcast bool, data interface{}, peers []uint16) {
 		log.Errorf("Transaction send marshal error")
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.TRX_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.TRX_PACKET,
 		PacketType: TRX_UPDATE,
 	}
 

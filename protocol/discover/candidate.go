@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocal/common"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"sync"
 	"time"
@@ -319,7 +319,7 @@ func (c *candidates) getCandidate(index uint16) *list.Element {
 }
 
 func (c *candidates) sendPeerInfoReq(candi *candidate) {
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_INFO_REQ,
 	}
 
@@ -345,7 +345,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_INFO_RSP,
 	}
 
@@ -364,7 +364,7 @@ func (c *candidates) sendHandshakeReq(candi *candidate) {
 		return
 	}
 
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_REQ,
 	}
 
@@ -374,7 +374,7 @@ func (c *candidates) sendHandshakeReq(candi *candidate) {
 }
 
 func (c *candidates) sendHandshakeRsp(candi *candidate) {
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_RSP,
 	}
 
@@ -384,7 +384,7 @@ func (c *candidates) sendHandshakeRsp(candi *candidate) {
 }
 
 func (c *candidates) sendHandshakeRspAck(candi *candidate) {
-	head := p2p.Head{ProtocalType: pcommon.P2P_PACKET,
+	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_RSP_ACK,
 	}
 

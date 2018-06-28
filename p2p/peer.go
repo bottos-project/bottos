@@ -91,7 +91,7 @@ func (p *Peer) Send(packet Packet) error {
 
 	err = binary.Write(buf, binary.BigEndian, packet.H)
 	if err != nil {
-		log.Error("send write packet ProtocalType error")
+		log.Error("send write packet protocolType error")
 		return err
 	}
 
@@ -166,7 +166,7 @@ func (p *Peer) recvRoutine() {
 
 		var packet Packet
 
-		packet.H.ProtocalType = uint16(binary.BigEndian.Uint16(buf))
+		packet.H.ProtocolType = uint16(binary.BigEndian.Uint16(buf))
 		packet.H.PacketType = uint16(binary.BigEndian.Uint16(buf[2:]))
 
 		if packetLen > headsize {
