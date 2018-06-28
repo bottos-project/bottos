@@ -122,9 +122,13 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	err := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
-		resp := &message.InsertBlockRsp{
-			Hash:  req.Block.Hash(),
-			Error: err,
+		resp := &message.ReceiveBlockResp{
+			BlockNum: req.Block.GetNumber(),
+		}
+		if err != nil {
+			resp.ErrorNo = 1
+		} else {
+			resp.ErrorNo = 0
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
