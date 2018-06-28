@@ -457,7 +457,7 @@ func (s *synchronizes) sendupBundleBlock() {
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
 		msg := message.ReceiveBlock{Block: s.set.blocks[j]}
-		s.chain.Tell(msg)
+		s.chain.Tell(&msg)
 		j++
 	}
 
