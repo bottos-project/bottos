@@ -203,10 +203,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		s.updateLocalNumber(number)
 		s.updateRemoteNumber(number, false)
 
-		msg := message.ReceiveBlock{
-			Block: update.block,
-		}
-		s.chain.Tell(&msg)
+		s.sendupBlock(update.block)
 		return
 	}
 
@@ -432,7 +429,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32) {
 	msg := p2p.MsgPacket{Index: []uint16{index},
 		P: packet}
 
-	log.Debugf("sendBlockReq blockï¼?d", number)
+	log.Debugf("sendBlockReq block %d", number)
 	p2p.Runner.SendUnicast(msg)
 }
 
@@ -456,8 +453,7 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
-		msg := message.ReceiveBlock{Block: s.set.blocks[j]}
-		s.chain.Tell(&msg)
+		s.sendupBlock(s.set.blocks[j])
 		j++
 	}
 
@@ -472,6 +468,11 @@ func (s *synchronizes) sendupBundleBlock() {
 	if s.lastLocal < s.lastRemote {
 		s.syncBlockHeader()
 	}
+}
+
+func (s *synchronizes) sendupBlock(block *types.Block) {
+	msg := message.ReceiveBlock{Block: block}
+	s.chain.Tell(&msg)
 }
 
 type blockset struct {
