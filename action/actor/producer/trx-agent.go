@@ -52,6 +52,9 @@ func GetAllPendingTrx() []*types.Transaction {
 		log.Info("get all trx req exec error")
 	}
 
+	if nil == getTrxsResult {
+		return nil
+	}
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
 	log.Info("pending transaction number ", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
