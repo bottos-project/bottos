@@ -21,7 +21,7 @@ type protocol struct {
 	c *consensus.Consensus
 }
 
-func MakeProtocal(config *config.Parameter, chain chain.BlockChainInterface) ProtocolInstance {
+func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) ProtocolInstance {
 	runner := p2p.MakeP2PServer(config)
 
 	p := &protocol{

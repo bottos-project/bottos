@@ -38,7 +38,7 @@ import (
 
 type NetActor struct {
 	actorEnv *env.ActorEnv
-	protocal netprotocol.ProtocolInstance
+	protocol netprotocol.ProtocolInstance
 }
 
 var netactor *NetActor
@@ -54,10 +54,10 @@ func NewNetActor(env *env.ActorEnv) *actor.PID {
 	pid, err := actor.SpawnNamed(props, "NetActor")
 	if err == nil {
 
-		netactor.protocal = netprotocol.MakeProtocal(config.Param, env.Chain)
-		netactor.protocal.Start()
+		netactor.protocol = netprotocol.MakeProtocol(config.Param, env.Chain)
+		netactor.protocol.Start()
 
-		env.Protocol = netactor.protocal
+		env.Protocol = netactor.protocol
 		return pid
 	} else {
 		panic(log.Errorf("NetActor SpawnNamed error: ", err))
@@ -83,10 +83,10 @@ func (n *NetActor) handleSystemMsg(context actor.Context) {
 		log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-		n.protocal.Send(netpacket.TRX_PACKET, true, msg.Trx, nil)
+		n.protocol.Send(netpacket.TRX_PACKET, true, msg.Trx, nil)
 
 	case *message.NotifyBlock:
-		n.protocal.Send(netpacket.BLOCK_PACKET, true, msg.Block, nil)
+		n.protocol.Send(netpacket.BLOCK_PACKET, true, msg.Block, nil)
 
 	}
 
@@ -97,15 +97,15 @@ func (n *NetActor) Receive(context actor.Context) {
 }
 
 func (n *NetActor) setChainActor(tpid *actor.PID) {
-	n.protocal.SetChainActor(tpid)
+	n.protocol.SetChainActor(tpid)
 }
 
 func (n *NetActor) setTrxActor(tpid *actor.PID) {
-	n.protocal.SetTrxActor(tpid)
+	n.protocol.SetTrxActor(tpid)
 }
 
 func (n *NetActor) setProducerActor(tpid *actor.PID) {
-	n.protocal.SetTrxActor(tpid)
+	n.protocol.SetTrxActor(tpid)
 }
 
 func SetChainActorPid(tpid *actor.PID) {

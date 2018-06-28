@@ -42,7 +42,7 @@ func main() {
 	}
 
 	log.Info("blocknumber:", chain.BlockNumber)
-	p := protocol.MakeProtocal(&param, bc)
+	p := protocol.MakeProtocol(&param, bc)
 
 	actor := stub.NewDumActor()
 
