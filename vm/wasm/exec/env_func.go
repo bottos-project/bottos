@@ -91,10 +91,10 @@ func getStrValue(vm *VM) (bool, error) {
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos := int(params[2])
-	objectLen := int(params[3])
-	keyPos := int(params[4])
-	keyLen := int(params[5])
+	objectPos   := int(params[2])
+	objectLen   := int(params[3])
+	keyPos      := int(params[4])
+	keyLen      := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 

@@ -320,6 +320,12 @@ func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, rec
 
 // Process the function is to be used for direct parameter insert
 func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Infof(err.(string))
+			return
+		}
+	}()
 
 	var pos      int
 	var err      error
@@ -365,7 +371,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	findex := funcEntry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
-	funcParams := make([]interface{}, 1)
+	funcParams  := make([]interface{}, 1)
 	//Get function's string first char
 	funcParams[0] = int([]byte(ctx.Trx.Method)[0])
 
