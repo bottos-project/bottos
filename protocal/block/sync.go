@@ -432,7 +432,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32) {
 	msg := p2p.MsgPacket{Index: []uint16{index},
 		P: packet}
 
-	log.Debugf("sendBlockReq blockï¼?d", number)
+	log.Debugf("sendBlockReq block %d", number)
 	p2p.Runner.SendUnicast(msg)
 }
 
