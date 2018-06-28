@@ -161,7 +161,7 @@ func (s *synchronizes) syncRoutine() {
 				s.syncBlockHeader()
 			}
 		case <-s.syncBlockTimer.C:
-			s.setSyncStateCheckTimer()
+			s.setSyncStateCheck()
 		}
 	}
 }
@@ -200,10 +200,10 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 
 	if (s.state && number == s.lastLocal+1) ||
 		(!s.state && s.set.state == SET_SYNC_NULL && s.lastLocal+1 == number) {
-		s.updateLocalNumber(number)
-		s.updateRemoteNumber(number, false)
-
-		s.sendupBlock(update.block)
+		if s.sendupBlock(update.block) {
+			s.updateLocalNumber(number)
+			s.updateRemoteNumber(number, false)
+		}
 		return
 	}
 
@@ -267,6 +267,9 @@ func (s *synchronizes) syncStateJudge() {
 		} else if s.state {
 			log.Debugf("syncStateJudge not sync")
 			s.state = false
+			s.syncBlockHeader()
+		} else if s.set.state == SET_SYNC_NULL {
+			log.Debugf("continue sync")
 			s.syncBlockHeader()
 		}
 	} else {
@@ -433,7 +436,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32) {
 	p2p.Runner.SendUnicast(msg)
 }
 
-func (s *synchronizes) setSyncStateCheckTimer() {
+func (s *synchronizes) setSyncStateCheck() {
 	if s.set.state != SET_SYNC_BLOCK {
 		return
 	}
@@ -449,11 +452,13 @@ func (s *synchronizes) setSyncStateCheckTimer() {
 func (s *synchronizes) sendupBundleBlock() {
 	log.Debugf("sync bundle of block finish")
 
-	s.set.state = SET_SYNC_FINISH
-
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
-		s.sendupBlock(s.set.blocks[j])
+		if !s.sendupBlock(s.set.blocks[j]) {
+			s.set.blocks[j] = nil
+			s.syncBundleBlock()
+			return
+		}
 		j++
 	}
 
@@ -470,9 +475,28 @@ func (s *synchronizes) sendupBundleBlock() {
 	}
 }
 
-func (s *synchronizes) sendupBlock(block *types.Block) {
-	msg := message.ReceiveBlock{Block: block}
-	s.chain.Tell(&msg)
+func (s *synchronizes) sendupBlock(block *types.Block) bool {
+	for i := 0; i < 5; i++ {
+		msg := message.ReceiveBlock{Block: block}
+
+		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
+		if err != nil {
+			log.Errorf("send block request error:%s", err)
+			time.Sleep(10000)
+			continue
+		}
+
+		rsp := result.(*message.ReceiveBlockResp)
+
+		if rsp.ErrorNo != 0 {
+			log.Errorf("send block return error:%d", rsp.ErrorNo)
+			return false
+		}
+
+		return true
+	}
+
+	return false
 }
 
 type blockset struct {
