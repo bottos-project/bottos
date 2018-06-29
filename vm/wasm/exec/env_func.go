@@ -58,11 +58,11 @@ func NewEnvFunc() *EnvFunc {
 
 	envFunc.Register("printi",           printi)
 	envFunc.Register("prints",           prints)
-	envFunc.Register("get_str_value",    getStrValue)
-	envFunc.Register("set_str_value",    setStrValue)
-	envFunc.Register("remove_str_value", removeStrValue)
-	envFunc.Register("get_param",        getParam)
-	envFunc.Register("call_trx",         callTrx)
+	envFunc.Register("getStrValue",      getStrValue)
+	envFunc.Register("setStrValue",      setStrValue)
+	envFunc.Register("removeStrValue",   removeStrValue)
+	envFunc.Register("getParam",         getParam)
+	envFunc.Register("callTrx",          callTrx)
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
 
@@ -199,7 +199,7 @@ func removeStrValue(vm *VM) (bool, error) {
 	object := make([]byte, objectLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
-	key := make([]byte, keyLen)
+	key    := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(object), len(object), string(key), len(key))
