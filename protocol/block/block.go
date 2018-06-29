@@ -3,6 +3,7 @@ package block
 import (
 	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
@@ -78,14 +79,19 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	}
 }
 
-func (b *Block) Send(broadcast bool, data interface{}, peers []uint16) {
+func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
+	b.sendPacket(true, notify.Block, nil)
+}
+
+func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	block := data.(*types.Block)
-	b.s.sendc <- block.GetNumber()
 
 	buf, err := json.Marshal(data)
 	if err != nil {
 		log.Errorf("block send marshal error")
 	}
+
+	b.s.sendc <- block.GetNumber()
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
@@ -121,12 +127,12 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 		return
 	}
 
-	info := blockNumberInfo{
+	info := peerSyncInfo{
 		index: index,
 		last:  blocknumber,
 	}
 
-	b.s.numberc <- &info
+	b.s.infoc <- &info
 }
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
@@ -179,6 +185,9 @@ func (b *Block) processBlockReq(index uint16, data []byte) {
 	}
 
 	block := b.chainIf.GetBlockByNumber(blocknumber)
+	if block == nil {
+		return
+	}
 
 	b.sendBlockRsp(index, block)
 }

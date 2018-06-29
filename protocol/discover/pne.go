@@ -23,8 +23,9 @@ type pne struct {
 }
 
 const (
+	TIME_FAST_PNE_EXCHANGE = 8
 	//TIME_PNE_EXCHANGE time to exchange peer neighbor info, minute
-	TIME_PNE_EXCHANGE = 1
+	TIME_PNE_EXCHANGE = 60
 )
 
 func makePne(config *config.Parameter) *pne {
@@ -71,7 +72,8 @@ func (p *pne) parseSeeds(config *config.Parameter) {
 func (p *pne) pneTimer() {
 	log.Debug("pneTimer")
 
-	exchange := time.NewTimer(TIME_PNE_EXCHANGE * time.Minute)
+	tripple := 0
+	exchange := time.NewTimer(TIME_FAST_PNE_EXCHANGE * time.Second)
 
 	defer func() {
 		log.Debug("pneTimer stop")
@@ -81,13 +83,19 @@ func (p *pne) pneTimer() {
 	for {
 		select {
 		case <-exchange.C:
-			index := p.nextPeer()
-			if index != 0 {
-				log.Debugf("pneTimer peer index: %d", index)
-				p.sendPneRequest(index)
+			if tripple < 3 {
+				log.Debugf("pneTimer send pne request")
+				p.sendPneRequest(0)
+				tripple++
+				exchange.Reset(TIME_FAST_PNE_EXCHANGE * time.Second)
+			} else {
+				index := p.nextPeer()
+				if index != 0 {
+					log.Debugf("pneTimer peer index: %d", index)
+					p.sendPneRequest(index)
+				}
+				exchange.Reset(TIME_PNE_EXCHANGE * time.Second)
 			}
-
-			exchange.Reset(TIME_PNE_EXCHANGE * time.Minute)
 		}
 	}
 }
@@ -107,9 +115,11 @@ func (p *pne) nextPeer() uint16 {
 
 func (p *pne) sendPneRequest(index uint16) {
 	//check peer is exist or not
-	ok := p2p.Runner.IsPeerExist(index)
-	if !ok {
-		return
+	if index != 0 {
+		ok := p2p.Runner.IsPeerExist(index)
+		if !ok {
+			return
+		}
 	}
 
 	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
@@ -118,15 +128,25 @@ func (p *pne) sendPneRequest(index uint16) {
 
 	packet := p2p.Packet{H: head}
 
-	send := p2p.MsgPacket{
-		Index: []uint16{index},
-		P:     packet,
+	if index > 0 {
+		send := p2p.MsgPacket{
+			Index: []uint16{index},
+			P:     packet,
+		}
+
+		p2p.Runner.SendUnicast(send)
+
+		// add back to queue
+		p.pushPeerIndex(index)
+	} else {
+		send := p2p.MsgPacket{
+			Index: nil,
+			P:     packet,
+		}
+
+		p2p.Runner.SendBroadcast(send)
 	}
 
-	p2p.Runner.SendUnicast(send)
-
-	// add back to queue
-	p.pushPeerIndex(index)
 }
 
 func (p *pne) sendPneResponse(index uint16) {
