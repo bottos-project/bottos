@@ -2,6 +2,7 @@ package stub
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
 )
 
 type DumActor struct {
@@ -27,8 +28,22 @@ func NewDumActor() *actor.PID {
 
 func (n *DumActor) Receive(context actor.Context) {
 	n.handleSystemMsg(context)
+	switch msg := context.Message().(type) {
+	case *message.ReceiveBlock:
+		n.HandleReceiveBlock(context, msg)
+	}
 }
 
 func (n *DumActor) handleSystemMsg(context actor.Context) {
+
+}
+
+func (n *DumActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
+	rsp := &message.ReceiveBlockResp{
+		BlockNum: req.Block.GetNumber(),
+		ErrorNo:  0,
+	}
+
+	ctx.Sender().Request(rsp, ctx.Self())
 
 }

@@ -32,17 +32,16 @@ const (
 	SET_SYNC_NULL   = 0
 	SET_SYNC_HEADER = 1
 	SET_SYNC_BLOCK  = 2
-	SET_SYNC_FINISH = 3
 )
 
-type blockNumberInfo struct {
+type peerSyncInfo struct {
 	index uint16
 	last  uint32
 
 	counter int16
 }
 
-type syncset []blockNumberInfo
+type syncset []peerSyncInfo
 
 func (s syncset) Len() int {
 	return len(s)
@@ -51,45 +50,42 @@ func (s syncset) Len() int {
 func (s syncset) Less(i, j int) bool {
 	return s[i].last > s[j].last
 }
+
 func (s syncset) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
 type synchronizes struct {
-	peers map[uint16]*blockNumberInfo
-
-	numberc chan *blockNumberInfo
-	sendc   chan uint32
-	recvc   chan *blockUpdate
-
-	syncc     chan *blockHeaderRsp
-	remoteupc chan uint32
-
+	peers      map[uint16]*peerSyncInfo
 	lastLocal  uint32
 	lastRemote uint32
-	//synchronize status , true is synchronized,  false is unsynchronized
-	state bool
-	//have synchronized one time or not when start up
-	once bool
+	state      bool //synchronize status , true is synchronized,  false is unsynchronized
+	once       bool //have synchronized one time or not when start up
 
+	infoc chan *peerSyncInfo
+	sendc chan uint32
+	recvc chan *blockUpdate
+
+	set             *blockset
+	syncc           chan *blockHeaderRsp
 	syncHeaderTimer *time.Timer
 	syncBlockTimer  *time.Timer
+	endc            chan uint32
 
-	set   *blockset
 	chain *actor.PID
 }
 
 func MakeSynchronizes() *synchronizes {
 	return &synchronizes{
-		peers:     make(map[uint16]*blockNumberInfo),
-		numberc:   make(chan *blockNumberInfo, 10),
-		sendc:     make(chan uint32),
-		recvc:     make(chan *blockUpdate),
-		syncc:     make(chan *blockHeaderRsp),
-		remoteupc: make(chan uint32),
-		state:     false,
-		once:      false,
-		set:       makeBlockSet(),
+		peers: make(map[uint16]*peerSyncInfo),
+		infoc: make(chan *peerSyncInfo, 10),
+		sendc: make(chan uint32),
+		recvc: make(chan *blockUpdate),
+		syncc: make(chan *blockHeaderRsp),
+		endc:  make(chan uint32),
+		state: false,
+		once:  false,
+		set:   makeBlockSet(),
 	}
 }
 
@@ -131,7 +127,7 @@ func (s *synchronizes) recvRoutine() {
 
 	for {
 		select {
-		case info := <-s.numberc:
+		case info := <-s.infoc:
 			s.recvPeerBlockNumberInfo(info)
 		case number := <-s.sendc:
 			s.sendUpdateLocalNumber(number)
@@ -155,7 +151,7 @@ func (s *synchronizes) syncRoutine() {
 				s.syncHeaderTimer.Stop()
 				s.syncBundleBlock()
 			}
-		case number := <-s.remoteupc:
+		case number := <-s.endc:
 			s.set.updateRemoteNumber(number)
 		case <-s.syncHeaderTimer.C:
 			if s.set.state == SET_SYNC_HEADER {
@@ -167,7 +163,7 @@ func (s *synchronizes) syncRoutine() {
 	}
 }
 
-func (s *synchronizes) recvPeerBlockNumberInfo(info *blockNumberInfo) {
+func (s *synchronizes) recvPeerBlockNumberInfo(info *peerSyncInfo) {
 	info.counter = 0
 
 	peer := s.peers[info.index]
@@ -210,7 +206,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		return
 	}
 
-	info := blockNumberInfo{index: update.index, last: number}
+	info := peerSyncInfo{index: update.index, last: number}
 	s.recvPeerBlockNumberInfo(&info)
 
 	if s.state == false {
@@ -246,13 +242,16 @@ func (s *synchronizes) syncStateCheck() {
 		}
 	}
 
-	//remote block number be smaller, wo should reset all
+	//remote block number be smaller, wo should reset it
 	if remote < s.lastRemote {
 		log.Errorf("syncStateCheck remote block number change smaller")
 		if remote > 0 {
 			s.updateRemoteNumber(remote, true)
-
+			s.endc <- remote
 		}
+
+		//judge by the next time, if no peer exist, sync is always false
+		return
 	} else if remote > s.lastRemote {
 		log.Errorf("syncStateCheck remote block number change bigger")
 		s.updateRemoteNumber(remote, false)
@@ -336,6 +335,8 @@ func (s *synchronizes) syncBlockHeader() {
 		return
 	}
 
+	s.set.reset()
+
 	if s.lastLocal+SYNC_BLOCK_BUNDLE > s.lastRemote {
 		s.set.begin = s.lastLocal + 1
 		s.set.end = s.lastRemote
@@ -378,6 +379,10 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 }
 
 func (s *synchronizes) syncBundleBlock() {
+	if s.set.end < s.set.begin {
+		return
+	}
+
 	var numbers []uint32
 	lenght := s.set.end + 1 - s.set.begin
 	for i := 0; i < int(lenght) && i < SYNC_BLOCK_BUNDLE; i++ {
@@ -454,6 +459,10 @@ func (s *synchronizes) setSyncStateCheck() {
 func (s *synchronizes) sendupBundleBlock() {
 	log.Debugf("sync bundle of block finish")
 
+	if s.set.end < s.set.begin {
+		return
+	}
+
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
 		if !s.sendupBlock(s.set.blocks[j]) {
@@ -465,12 +474,7 @@ func (s *synchronizes) sendupBundleBlock() {
 	}
 
 	s.lastLocal = s.set.end
-
-	s.set.state = SET_SYNC_NULL
-	s.set.end = 0
-	s.set.begin = 0
-	s.set.resetHeader()
-	s.set.resetBlock()
+	s.set.reset()
 
 	if s.lastLocal < s.lastRemote {
 		s.syncBlockHeader()
@@ -541,17 +545,21 @@ func (set *blockset) recvBlockHeader(rsp *blockHeaderRsp) bool {
 		return false
 	}
 
+	if set.end < set.begin {
+		return false
+	}
+
 	if uint32(len(rsp.set)) != (set.end + 1 - set.begin) {
 		log.Errorf("recvBlockHeader rsp length error")
 		return false
 	}
 
-	check := true
+	check := false
 	j := 0
 	for i := set.begin; i <= set.end; i++ {
 		if rsp.set[j].GetNumber() != i {
 			log.Errorf("recvBlockHeader rsp info error number:%d", rsp.set[j].GetNumber())
-			check = false
+			check = true
 			break
 		}
 
@@ -559,7 +567,7 @@ func (set *blockset) recvBlockHeader(rsp *blockHeaderRsp) bool {
 		j++
 	}
 
-	if !check {
+	if check {
 		set.resetHeader()
 		return false
 	}
@@ -590,10 +598,25 @@ func (set *blockset) recvBlock(block *types.Block) bool {
 
 //updateRemoteNumber update peer max block number if some peer is disconnect
 func (set *blockset) updateRemoteNumber(number uint32) {
-	if set.end > number {
+	if set.end > number && set.state != SET_SYNC_NULL {
 		log.Debugf("update syn set max block number: %d", number)
 		set.end = number
 	}
+}
+
+func (set *blockset) setSyncStateJudge() bool {
+	if set.end < set.begin {
+		return true
+	}
+
+	lenght := set.end + 1 - set.begin
+	for i := 0; i < int(lenght) && i < SYNC_BLOCK_BUNDLE; i++ {
+		if set.blocks[i] == nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (set *blockset) resetHeader() {
@@ -608,6 +631,14 @@ func (set *blockset) resetBlock() {
 	}
 }
 
+func (set *blockset) reset() {
+	set.state = SET_SYNC_NULL
+	set.end = 0
+	set.begin = 0
+	set.resetHeader()
+	set.resetBlock()
+}
+
 func (set *blockset) isBlockHeadSame(a *types.Header, b *types.Header) bool {
 	if a.Number == b.Number &&
 		a.Version == b.Version &&
@@ -618,16 +649,4 @@ func (set *blockset) isBlockHeadSame(a *types.Header, b *types.Header) bool {
 	} else {
 		return false
 	}
-}
-
-func (set *blockset) setSyncStateJudge() bool {
-
-	lenght := set.end + 1 - set.begin
-	for i := 0; i < int(lenght) && i < SYNC_BLOCK_BUNDLE; i++ {
-		if set.blocks[i] == nil {
-			return false
-		}
-	}
-
-	return true
 }

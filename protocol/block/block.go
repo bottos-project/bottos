@@ -121,12 +121,12 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 		return
 	}
 
-	info := blockNumberInfo{
+	info := peerSyncInfo{
 		index: index,
 		last:  blocknumber,
 	}
 
-	b.s.numberc <- &info
+	b.s.infoc <- &info
 }
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
