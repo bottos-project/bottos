@@ -83,7 +83,8 @@ func registerActorMsgTbl(m *MultiActor) {
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
 	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> trx
 	produceractor.SetNetActorPid(m.netActorPid)     // producer --> chain
-	chainactor.SetTrxActorPid(m.trxActorPid)        //chain --> trx
+	chainactor.SetTrxActorPid(m.trxActorPid)        // chain --> trx
+	chainactor.SetNetActorPid(m.netActorPid)        // chain --> net
 
 	netactor.SetTrxActorPid(m.trxActorPid)     //p2p --> trx
 	netactor.SetChainActorPid(m.chainActorPid) //p2p --> chain
