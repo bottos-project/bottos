@@ -33,7 +33,6 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/config"
 	netprotocol "github.com/bottos-project/bottos/protocol"
-	netpacket "github.com/bottos-project/bottos/protocol/common"
 )
 
 type NetActor struct {
@@ -83,11 +82,13 @@ func (n *NetActor) handleSystemMsg(context actor.Context) {
 		log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-		n.protocol.Send(netpacket.TRX_PACKET, true, msg.Trx, nil)
+		n.protocol.ProcessNewTrx(msg)
 
 	case *message.NotifyBlock:
-		n.protocol.Send(netpacket.BLOCK_PACKET, true, msg.Block, nil)
+		n.protocol.ProcessNewBlock(msg)
 
+	default:
+		log.Error("netactor receive unknown message")
 	}
 
 }

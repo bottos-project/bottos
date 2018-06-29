@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/p2p"
@@ -68,18 +69,6 @@ func (p *protocol) GetBlockSyncState() bool {
 	return p.b.GetSyncState()
 }
 
-func (p *protocol) Send(ptype uint16, broadcast bool, data interface{}, peers []uint16) {
-	if ptype == common.TRX_PACKET {
-		p.t.Send(broadcast, data, peers)
-	} else if ptype == common.BLOCK_PACKET {
-		p.b.Send(broadcast, data, peers)
-	} else if ptype == common.CONSENSUS_PACKET {
-		p.c.Send(broadcast, data, peers)
-	} else {
-		log.Errorf("wrong packet type")
-	}
-}
-
 func (p *protocol) SetChainActor(tpid *actor.PID) {
 	p.b.SetActor(tpid)
 }
@@ -90,4 +79,12 @@ func (p *protocol) SetTrxActor(tpid *actor.PID) {
 
 func (p *protocol) SetProducerActor(tpid *actor.PID) {
 	p.c.SetActor(tpid)
+}
+
+func (p *protocol) ProcessNewTrx(notify *message.NotifyTrx) {
+	p.t.SendNewTrx(notify)
+}
+
+func (p *protocol) ProcessNewBlock(notify *message.NotifyBlock) {
+	p.b.SendNewBlock(notify)
 }

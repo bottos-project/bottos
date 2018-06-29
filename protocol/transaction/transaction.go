@@ -33,7 +33,11 @@ func (t *Transaction) Dispatch(index uint16, p *p2p.Packet) {
 	}
 }
 
-func (t *Transaction) Send(broadcast bool, data interface{}, peers []uint16) {
+func (t *Transaction) SendNewTrx(notify *message.NotifyTrx) {
+	t.sendPacket(true, notify.Trx, nil)
+}
+
+func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	buf, err := json.Marshal(data)
 	if err != nil {
 		log.Errorf("Transaction send marshal error")
