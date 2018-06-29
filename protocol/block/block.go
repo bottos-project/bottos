@@ -185,6 +185,9 @@ func (b *Block) processBlockReq(index uint16, data []byte) {
 	}
 
 	block := b.chainIf.GetBlockByNumber(blocknumber)
+	if block == nil {
+		return
+	}
 
 	b.sendBlockRsp(index, block)
 }
