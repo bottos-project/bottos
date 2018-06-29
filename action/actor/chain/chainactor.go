@@ -37,6 +37,7 @@ import (
 var ChainActorPid *actor.PID
 var actorEnv *env.ActorEnv
 var trxactorPid *actor.PID
+var NetActorPid *actor.PID
 
 //ChainActor is actor props
 type ChainActor struct {
@@ -51,6 +52,11 @@ func ContructChainActor() *ChainActor {
 //SetTrxActorPid set trx actor pid
 func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
+}
+
+//SetNetActorPid set trx actor pid
+func SetNetActorPid(pid *actor.PID) {
+	NetActorPid = pid
 }
 
 //NewChainActor spawn a named actor
@@ -121,17 +127,17 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 //HandleReceiveBlock receive block
 func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	err := actorEnv.Chain.InsertBlock(req.Block)
-	if ctx.Sender() != nil {
-		resp := &message.ReceiveBlockResp{
-			BlockNum: req.Block.GetNumber(),
-		}
-		if err != nil {
-			resp.ErrorNo = 1
-		} else {
-			resp.ErrorNo = 0
-		}
-		ctx.Sender().Request(resp, ctx.Self())
+
+	resp := &message.ReceiveBlockResp{
+		BlockNum: req.Block.GetNumber(),
 	}
+	if err != nil {
+		resp.ErrorNo = 1
+	} else {
+		resp.ErrorNo = 0
+	}
+	NetActorPid.Tell(resp)
+
 	if err == nil {
 		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
 		trxactorPid.Tell(req)
