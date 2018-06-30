@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"math/rand"
+	"reflect"
 	"sort"
 
 	log "github.com/cihub/seelog"
@@ -92,7 +93,7 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 }
 
 //ElectNextTermDelegatesRole is to elect next term delegates
-func ElectNextTermDelegatesRole(ldb *db.DBService, block *types.Block) []string {
+func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	var tmpList []string
 	var eligibleList []string
 	var eligibles []string
@@ -124,6 +125,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService, block *types.Block) []string 
 	if err != nil {
 		return nil
 	}
+	log.Info("finish delegates", finishdelegates)
 
 	if len(filterDgates) == 0 {
 		eligibleList = finishdelegates
@@ -152,26 +154,38 @@ func ElectNextTermDelegatesRole(ldb *db.DBService, block *types.Block) []string 
 	if err != nil {
 		return nil
 	}
-
 	if (config.BLOCKS_PER_ROUND >= uint32(len(finishdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
 		ResetCandidatesTerm(ldb)
 	} else {
 		SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
 
-	h := block.Hash()
-	label := h.Label()
-	log.Info("Label: %v", label)
-	r := rand.New(rand.NewSource(int64(label)))
-
-	log.Info("New Eelected, beafor shuffle: ", reporterList)
-
-	r.Shuffle(len(reporterList), func(i, j int) {
-		reporterList[i], reporterList[j] = reporterList[j], reporterList[i]
-	})
-
-	log.Info("New Eelected: ", reporterList)
+	log.Info("elect next term", reporterList)
 
 	return reporterList
 
+}
+
+//ShuffleEelectCandidateList is to shuffle the candidates in one round
+func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]string, error) {
+	newSchedule := ElectNextTermDelegatesRole(ldb)
+	currentState, err := GetCoreStateRole(ldb)
+	if err != nil {
+		return nil, err
+	}
+	changes := common.Filter(currentState.CurrentDelegates, newSchedule)
+	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
+	if equal == false {
+		log.Info("invalid block changes")
+		return nil, errors.New("Unexpected round changes in new block header")
+	}
+
+	h := block.Hash()
+	label := h.Label()
+	rand.New(rand.NewSource(int64(label)))
+	rand.Shuffle(len(newSchedule), func(i, j int) {
+		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
+	})
+
+	return newSchedule, nil
 }

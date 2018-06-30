@@ -57,35 +57,35 @@ type AccountInfo struct {
 
 // BlockInfo is definition of block
 type BlockInfo struct {
-	ID              bson.ObjectId `bson:"_id"`
-	BlockHash       string/*common.Hash*/ `bson:"block_hash"`
-	PrevBlockHash   string/*[]byte*/ `bson:"prev_block_hash"`
-	BlockNumber     uint32 `bson:"block_number"`
-	Timestamp       uint64 `bson:"timestamp"`
-	MerkleRoot      string/*[]byte*/ `bson:"merkle_root"`
-	DelegateAccount string          `bson:"delegate"`
-	DelegateSign    string          `bson:"delegate_sign"`
-	Transactions    []bson.ObjectId `bson:"transactions"`
-	CreateTime      time.Time       `bson:"create_time"`
+	ID              bson.ObjectId          `bson:"_id"`
+	BlockHash       string /*common.Hash*/ `bson:"block_hash"`
+	PrevBlockHash   string /*[]byte*/      `bson:"prev_block_hash"`
+	BlockNumber     uint32                 `bson:"block_number"`
+	Timestamp       uint64                 `bson:"timestamp"`
+	MerkleRoot      string /*[]byte*/      `bson:"merkle_root"`
+	DelegateAccount string                 `bson:"delegate"`
+	DelegateSign    string                 `bson:"delegate_sign"`
+	Transactions    []bson.ObjectId        `bson:"transactions"`
+	CreateTime      time.Time              `bson:"create_time"`
 }
 
 // TxInfo is definition of tx
 type TxInfo struct {
-	ID            bson.ObjectId `bson:"_id"`
-	BlockNum      uint32        `bson:"block_number"`
-	TransactionID string/*common.Hash*/ `bson:"transaction_id"`
-	SequenceNum   uint32 `bson:"sequence_num"`
-	BlockHash     string/*common.Hash*/ `bson:"block_hash"`
-	CursorNum     uint32 `bson:"cursor_num"`
-	CursorLabel   uint32 `bson:"cursor_label"`
-	Lifetime      uint64 `bson:"lifetime"`
-	Sender        string `bson:"sender"`
-	Contract      string `bson:"contract"`
-	Method        string `bson:"method"`
-	Param         TParam `bson:"param"`
-	SigAlg        uint32 `bson:"sig_alg"`
-	Signature     string/*[]byte*/ `bson:"signature"`
-	CreateTime    time.Time `bson:"create_time"`
+	ID            bson.ObjectId          `bson:"_id"`
+	BlockNum      uint32                 `bson:"block_number"`
+	TransactionID string /*common.Hash*/ `bson:"transaction_id"`
+	SequenceNum   uint32                 `bson:"sequence_num"`
+	BlockHash     string /*common.Hash*/ `bson:"block_hash"`
+	CursorNum     uint32                 `bson:"cursor_num"`
+	CursorLabel   uint32                 `bson:"cursor_label"`
+	Lifetime      uint64                 `bson:"lifetime"`
+	Sender        string                 `bson:"sender"`
+	Contract      string                 `bson:"contract"`
+	Method        string                 `bson:"method"`
+	Param         TParam                 `bson:"param"`
+	SigAlg        uint32                 `bson:"sig_alg"`
+	Signature     string /*[]byte*/      `bson:"signature"`
+	CreateTime    time.Time              `bson:"create_time"`
 }
 
 /**======Internal Contract struct definition====*/
@@ -124,9 +124,10 @@ type CancelCreditParam struct {
 
 // TransferFromParam is interface definition of transfer from method
 type TransferFromParam struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Value uint64 `json:"value"`
+	From      string `json:"from"`
+	To        string `json:"to"`
+	TokenType string `json:"tokenType"`
+	Value     uint64 `json:"value"`
 }
 
 // TParam is interface definition
@@ -171,6 +172,7 @@ type AssetInfo struct {
 	StorageHash string `json:"storagehash"`
 	ExpireTime  uint32 `json:"expiretime"`
 	OpType      uint32 `json:"optype"`
+	TokenType   string `json:"tokenType"`
 	Price       uint64 `json:"price"`
 	Description string `json:"description"`
 }
@@ -265,6 +267,7 @@ type DataReqInfo struct {
 	SampleHash  string `json:"samplehash"`
 	ExpireTime  uint64 `json:"expiretime"`
 	OpType      uint32 `json:"optype"`
+	TokenType   string `json:"tokenType"`
 	Price       uint64 `json:"price"`
 	FavoriFlag  uint32 `json:"favoriflag"`
 	Description string `json:"description"`

@@ -50,19 +50,6 @@ func blockNumberToKey(blockNumber uint32) string {
 
 // CreateBlockHistoryRole is to init block history
 func CreateBlockHistoryRole(ldb *db.DBService) error {
-	for i := 0; i < 65536; i++ {
-		value := &BlockHistory{}
-		jsonvalue, err := json.Marshal(value)
-		if err != nil {
-			return err
-		}
-
-		err = ldb.SetObject(BlockHistoryObjectName, blockNumberToKey(uint32(i)), string(jsonvalue))
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

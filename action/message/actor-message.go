@@ -129,3 +129,9 @@ type ReceiveTrx struct {
 type ReceiveBlock struct {
 	Block *types.Block
 }
+
+//ReceiveBlockResp chainactor->p2pactor
+type ReceiveBlockResp struct {
+	BlockNum uint32
+	ErrorNo  uint16
+}

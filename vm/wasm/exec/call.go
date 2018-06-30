@@ -33,7 +33,7 @@ import "errors"
 
 func (vm *VM) doCall(compiled compiledFunction, index int64) {
 	newStack := make([]uint64, compiled.maxDepth)
-	locals := make([]uint64, compiled.totalLocalVars)
+	locals   := make([]uint64, compiled.totalLocalVars)
 
 	for i := compiled.args - 1; i >= 0; i-- {
 		locals[i] = vm.popUint64()

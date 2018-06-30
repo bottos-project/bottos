@@ -30,6 +30,7 @@ import (
 	"github.com/bottos-project/bottos/chain/extra"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/contract/contractdb"
+	"github.com/bottos-project/bottos/protocol"
 	"github.com/bottos-project/bottos/role"
 )
 
@@ -40,4 +41,5 @@ type ActorEnv struct {
 	Chain      chain.BlockChainInterface
 	TxStore    *txstore.TransactionStore
 	NcIntf     contract.NativeContractInterface
+	Protocol   protocol.ProtocolInterface
 }

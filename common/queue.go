@@ -46,3 +46,7 @@ func (q *Queue) Pop() interface{} {
 func (q *Queue) Push(data interface{}) {
 	q.l.PushBack(data)
 }
+
+func (q *Queue) Length() int {
+	return q.l.Len()
+}

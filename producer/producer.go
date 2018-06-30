@@ -30,6 +30,7 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/protocol"
 	"github.com/bottos-project/bottos/role"
 	log "github.com/cihub/seelog"
 )
@@ -48,8 +49,8 @@ type ReporterRepo interface {
 }
 
 //New is to create new reporter
-func New(b chain.BlockChainInterface, roleIntf role.RoleInterface) ReporterRepo {
-	stat := ReportState{0, "", "", false, 0, false}
+func New(b chain.BlockChainInterface, roleIntf role.RoleInterface, protocolInterface protocol.ProtocolInterface) ReporterRepo {
+	stat := ReportState{0, "", "", false, 0, false, protocolInterface}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 

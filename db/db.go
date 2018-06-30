@@ -48,7 +48,11 @@ func NewDbService(path string, codedbPath string, optPath string) *DBService {
 		return nil
 	}
 	db, err := codedb.NewCodeDbRepository(codedbPath)
-	log.Info(err)
+	if err != nil {
+		log.Info(err)
+		return nil
+	}
+
 	if optPath == "" {
 		return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: nil}
 	}

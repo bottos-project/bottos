@@ -1,142 +1,178 @@
-// Copyright 2017~2022 The Bottos Authors
-// This file is part of the Bottos Chain library.
-// Created by Rocket Core Team of Bottos.
-
-// This program is free software: you can distribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Bottos.  If not, see <http://www.gnu.org/licenses/>.
-
-// Copyright 2017 The go-interpreter Authors.  All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// Package exec provides functions for executing WebAssembly bytecode.
-
-/*
- * file description: the interface for WASM execution
- * @Author: Stewart Li
- * @Date:   2018-02-08
- * @Last Modified by:
- * @Last Modified time:
- */
-
-package p2pserver
+package p2p
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
 	"errors"
-	"fmt"
+	log "github.com/cihub/seelog"
+	"io"
 	"net"
-	"sync"
+	"strings"
 )
 
-//Peer peer info
+type PeerInfo struct {
+	Id   string
+	Addr string
+	Port string
+}
+
+func (a *PeerInfo) Equal(b PeerInfo) bool {
+	return (a.Id == b.Id && a.Id != "" && b.Id != "") || (a.Addr == b.Addr && a.Port == b.Port)
+}
+
+func (a *PeerInfo) IsIncomplete() bool {
+	return a.Id == "" || a.Addr == "" || a.Port == ""
+}
+
+//Bigger 1 a > b;  0 a = b ; -1 a < b
+func (a *PeerInfo) Bigger(b PeerInfo) int {
+	return strings.Compare(a.Id, b.Id)
+}
+
 type Peer struct {
-	peerAddr     string
-	peerPort     int
-	peerId       uint32
-	publicKey    string
+	Info  PeerInfo
+	Index uint16
 
-	blockHeight  uint32
-	headerHeight uint32
+	/*peer state*/
+	State int
 
-	peerSock    *net.UDPAddr
-	conn         net.Conn
+	conn   net.Conn
+	isconn bool
+	reader *bufio.Reader
 
-	connState    uint32
-	syncState    uint32
-	neighborNode []*Peer
+	In bool
 
-	//the mutex for headerHeight
-	sync.RWMutex
+	sendup SendupCb
 }
 
-//NewPeer new a peer
-func NewPeer(addrName string, servPort int, conn net.Conn) *Peer {
+func CreatePeer(info PeerInfo, conn net.Conn, in bool, sendup SendupCb) *Peer {
 	return &Peer{
-		peerAddr:     addrName,
-		peerPort:     servPort,
-		peerId:       0,
-		blockHeight:  0,
-		headerHeight: 0,
-		conn:         conn,
-		syncState:    0,
+		Info:   info,
+		State:  PEER_STATE_INIT,
+		conn:   conn,
+		isconn: true,
+		reader: bufio.NewReader(conn),
+		In:     in,
+		sendup: sendup,
 	}
 }
 
-//GetPeerAddr get peer addr
-func (p *Peer) GetPeerAddr() string {
-	return p.peerAddr
+func (p *Peer) Start() {
+	go p.recvRoutine()
 }
 
-//SetPeerAddr set peer addr
-func (p *Peer) SetPeerAddr(addr string) {
-	p.peerAddr = addr
+func (p *Peer) Stop() {
+	p.conn.Close()
 }
 
-//SetConnState set peer conn state
-func (p *Peer) SetConnState(state uint32) {
-	p.connState = state
-}
+func (p *Peer) Send(packet Packet) error {
+	var length uint32
+	var head Head
+	headsize := uint32(binary.Size(head))
 
-//GetConnState get peer conn state
-func (p *Peer) GetConnState() uint32 {
-	return p.connState
-}
-
-func (p *Peer) SetSyncState(state uint32) {
-	p.syncState = state
-}
-
-func (p *Peer) GetSyncState() uint32 {
-	return p.syncState
-}
-
-func (p *Peer) SetBlockHigh(blockHeight uint32) {
-	p.blockHeight = blockHeight
-}
-
-func (p *Peer) SetHeaderHeight(blockHeight uint32) {
-	p.headerHeight = blockHeight
-}
-
-//GetId get peer id from peer address
-func (p *Peer) GetId() uint64 {
-	if p.peerId == 0 {
-		addrPort := p.peerAddr + ":" + fmt.Sprint(p.peerPort)
-		p.peerId = Hash(addrPort)
+	if packet.Data == nil {
+		length = headsize
+	} else {
+		length = headsize + uint32(len(packet.Data))
 	}
 
-	return uint64(p.peerId)
-}
+	if length > MAX_PACKET_LEN {
+		log.Errorf("Send packet length large than max packet length")
+		return errors.New("large than max packet length")
+	}
 
-//SendTo create connection and send
-func (p *Peer) SendTo(buf []byte, isSync bool) error {
-
-	conn, err := net.Dial("tcp", p.peerAddr+":"+fmt.Sprint(p.peerPort))
+	buf := &bytes.Buffer{}
+	err := binary.Write(buf, binary.BigEndian, length)
 	if err != nil {
-		SuperPrint(RED_PRINT, "*ERROR* Failed to create a connection for remote server !!! err: ", err.Error())
+		log.Error("send write packet length error")
 		return err
 	}
 
-	len, err := conn.Write(buf)
+	err = binary.Write(buf, binary.BigEndian, packet.H)
 	if err != nil {
-		SuperPrint(RED_PRINT, "*ERROR* Failed to send data !!! len: ", len, err.Error())
-		return errors.New("*ERROR* Failed to send data !!!")
-	} else if len <= 0 {
-		SuperPrint(RED_PRINT, "*ERROR* Failed to send data !!! len: ", len, err.Error())
-		return errors.New("*ERROR* Failed to send data !!!")
+		log.Error("send write packet protocolType error")
+		return err
 	}
 
-	conn.Close()
+	_, err = buf.Write(packet.Data)
+	if err != nil {
+		log.Error("send write packet Data error")
+		return err
+	}
 
-	return nil
+	_, err = p.conn.Write(buf.Bytes())
+	return err
+}
+
+func (p *Peer) recvRoutine() {
+	bl := make([]byte, 4)
+	var packetLen uint32
+	var len int
+	var head Head
+	readerr := false
+	headsize := uint32(binary.Size(head))
+
+	for {
+		_, err := io.ReadFull(p.reader, bl)
+		if err != nil {
+			log.Errorf("recvRoutine read head error:%s", err)
+			p.isconn = false
+			break
+		}
+
+		packetLen = binary.BigEndian.Uint32(bl)
+		if packetLen < headsize || packetLen > MAX_PACKET_LEN {
+			log.Errorf("recvRoutine drop packet wrong packet lenght %d", packetLen)
+			continue
+		}
+
+		buf := make([]byte, packetLen)
+		len, err = io.ReadFull(p.reader, buf)
+		if err != nil {
+			log.Errorf("recvRoutine read data error:%s", err)
+			p.isconn = false
+			break
+		}
+
+		if uint32(len) < packetLen {
+			for {
+				length, err := io.ReadFull(p.reader, buf[len:])
+				if err != nil {
+					log.Errorf("recvRoutine continue read data error:%s", err)
+					p.isconn = false
+					readerr = true
+					return
+				}
+
+				len += length
+
+				if uint32(len) < packetLen {
+					continue
+				} else if uint32(len) == packetLen {
+					break
+				} else {
+					log.Errorf("recvRoutine continue read data length wrong packet length:%d, read:%d", packetLen, len)
+					readerr = true
+					break
+				}
+			}
+		}
+
+		if readerr {
+			readerr = false
+			continue
+		}
+
+		var packet Packet
+
+		packet.H.ProtocolType = uint16(binary.BigEndian.Uint16(buf))
+		packet.H.PacketType = uint16(binary.BigEndian.Uint16(buf[2:]))
+
+		if packetLen > headsize {
+			packet.Data = buf[headsize:packetLen]
+		}
+
+		p.sendup(p.Index, &packet)
+	}
 }

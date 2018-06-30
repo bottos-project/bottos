@@ -28,13 +28,13 @@ package exec
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	log "github.com/cihub/seelog"
 	"os"
 	"sync"
 	"time"
-
+	"fmt"
+	"io/ioutil"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
@@ -61,7 +61,12 @@ const (
 	CALL_DEP_LIMIT = 5
 	// CALL_WID_LIMIT config the max width of call
 	CALL_WID_LIMIT = 10
-
+	// CTX_WASM_FILE config ctx wasm file
+	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	// SUB_WASM_FILE config sub wasm file
+	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
+	// TST Test status
+	TST = true
 )
 
 // ParamList define param array
@@ -217,6 +222,7 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 	return binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
 }
 
+
 // NewWASM Search the CTX infor at the database according to applyContext
 func NewWASM(ctx *contract.Context) *VM {
 	var err         error
@@ -252,57 +258,70 @@ func NewWASM(ctx *contract.Context) *VM {
 	return vm
 }
 
-func (engine *wasmEngine) Find(contractName string) (*vmInstance, error) {
-	if len(engine.vmMap) == 0 {
-		return nil, errors.New("*WARN* Can't find the vm instance !!!")
-	}
 
-	vmInst, ok := engine.vmMap[contractName]
-	if !ok {
-		return nil, errors.New("*WARN* Can't find the vm instance !!!")
-	}
+//Search the CTX infor at the database according to apply_context
+func NewWASMTst ( ctx *contract.Context ) *VM {
 
-	return vmInst, nil
-}
+	fmt.Println("NewWASM")
 
-func (engine *wasmEngine) startSubCrx(event []byte) error {
-	if event == nil {
-		return errors.New("*ERROR* empty parameter !!!")
-	}
+	var err       error
+	var wasm_code []byte
 
-	//unpack the crx from byte to struct
-	var subCrx contract.Context
-
-	if err := json.Unmarshal(event, &subCrx); err != nil {
-		log.Infof("Unmarshal: ", err.Error())
-		return errors.New("*ERROR* Failed to unpack contract from byte array to struct !!!")
-	}
-
-	//execute a new sub wasm crx
-	go engine.Start(&subCrx, 1, false)
-
-	return nil
-}
-
-//the function is called as a goruntine and to handle new vm request or other request
-func (engine *wasmEngine) StartHandler() error {
-
-	var event []byte //it means a MSG struct from ctx execution
-	var ok bool
-
-	for {
-		event, ok = <-engine.vmChannel
-		if !ok {
-			continue
+	//if non-Test condition , get wasm_code from Accout
+	var codeVersion uint32 = 0
+	if !TST {
+		//db handler will be invoked from Msg struct
+		accountObj, err := ctx.RoleIntf.GetAccount(ctx.Trx.Contract)
+		if err != nil {
+			log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
+			return nil
 		}
 
-		if len(event) == 1 && event[0] == 0 {
-			break
+		/*
+		if ctx.Trx.Version != accountObj.CodeVersion{
+			//check wasm file's hash
+			//err = errors.New("*ERROR* Fail to match account's information !!!")
+
+			return nil
 		}
-		engine.startSubCrx(event)
+		*/
+
+		codeVersion = binary.LittleEndian.Uint32(accountObj.CodeVersion.Bytes())
+		wasm_code   = accountObj.ContractCode
+	} else {
+		var wasm_file string
+		if ctx.Trx.Contract == "sub" {
+			wasm_file = SUB_WASM_FILE
+		} else {
+			wasm_file = CTX_WASM_FILE
+		}
+
+		wasm_code, err = ioutil.ReadFile(wasm_file)
+		if err != nil {
+			log.Infof("*ERROR*  error in read file", err.Error())
+			return nil
+		}
 	}
 
-	return nil
+	module, err := wasm.ReadModule(bytes.NewBuffer(wasm_code), importer)
+	if err != nil {
+		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
+		return nil
+	}
+
+	if module.Export == nil  {
+		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
+		return nil
+	}
+
+	vm , err := NewVM(module)
+	if err != nil {
+		return nil
+	}
+
+	vm.codeVersion = codeVersion
+
+	return vm
 }
 
 func (engine *wasmEngine) StopHandler() error {
@@ -320,6 +339,12 @@ func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, rec
 
 // Process the function is to be used for direct parameter insert
 func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Infof(err.(string))
+			return
+		}
+	}()
 
 	var pos      int
 	var err      error
@@ -327,7 +352,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	var deadline time.Time
 
 	//search matched VM struct according to CTX
-	var vm *VM = nil
+	var vm       *VM = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
@@ -353,6 +378,25 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 			return nil, errors.New("*ERROR* Failed to get a VM instance from memory !!!")
 		}
 
+		//if code's version in local memory is differsnt with the code's version , delete old one and update it
+		if vm.codeVersion != ctx.Trx.Version {
+			delete(engine.vmMap , ctx.Trx.Contract)
+			vm = NewWASM(ctx)
+			if vm == nil {
+				return nil, errors.New("*ERROR* Failed to create a new VM instance !!!")
+			}
+
+			divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
+			deadline   = time.Now().Add(divisor)
+
+			engine.vmMap[ctx.Trx.Contract] = &vmInstance{
+				vm:         vm,
+				createTime: time.Now(),
+				endTime:    deadline,
+			}
+			vm.SetChannel(engine.vmChannel)
+		}
+
 		vm.SetContract(ctx)
 	}
 
@@ -365,7 +409,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	findex := funcEntry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
-	funcParams := make([]interface{}, 1)
+	funcParams  := make([]interface{}, 1)
 	//Get function's string first char
 	funcParams[0] = int([]byte(ctx.Trx.Method)[0])
 
@@ -419,5 +463,5 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	copy(value, vm.subTrxLst)
 	vm.subTrxLst = vm.subTrxLst[:0]
 
-	return value, nil
+	return value, err
 }
