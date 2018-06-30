@@ -78,6 +78,7 @@ type RoleInterface interface {
 	GetSlotTime(slotNum uint64) uint64
 
 	ElectNextTermDelegates(block *types.Block) []string
+	ShuffleEelectCandidateList(block *types.Block) ([]string, error)
 
 	ApplyPersistance(block *types.Block) error
 }
@@ -252,7 +253,12 @@ func (r *Role) GetTransactionExpiration(txHash common.Hash) (*TransactionExpirat
 
 //ElectNextTermDelegates is to elect next term delegates
 func (r *Role) ElectNextTermDelegates(block *types.Block) []string {
-	return ElectNextTermDelegatesRole(r.Db, block)
+	return ElectNextTermDelegatesRole(r.Db)
+}
+
+//ShuffleEelectCandidateList is to elect next term delegates
+func (r *Role) ShuffleEelectCandidateList(block *types.Block) ([]string, error) {
+	return ShuffleEelectCandidateListRole(r.Db, block)
 }
 
 //ApplyPersistance is to apply persistence blocks to option db
