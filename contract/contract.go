@@ -33,8 +33,9 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
+	log "github.com/cihub/seelog"
 )
 
 //NewNativeContract is to create a new native contract
@@ -60,7 +61,7 @@ func newTransaction(contract string, method string, param []byte) *types.Transac
 }
 
 //NativeContractInitChain is to init
-func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractInterface) ([]*types.Transaction, error) {
+func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncIntf NativeContractInterface) ([]*types.Transaction, error) {
 	err := CreateNativeContractAccount(roleIntf)
 	if err != nil {
 		return nil, err
@@ -78,7 +79,18 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			Name:   name,
 			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
-		nparam, _ := msgpack.Marshal(nps)
+
+		Abi, err1 := role.GetAbi(ldb, config.BOTTOS_CONTRACT_NAME)
+		if err1 != nil {
+			log.Info("role.GetAbi failed for :", name)
+			continue
+		}
+		nparam, err2 := abi.MarshalAbi(nps, &Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
+		if err2 != nil {
+			log.Info("abi.MarshalAbi failed for new account:", name)
+			continue
+		}
+
 		trx := newTransaction(config.BOTTOS_CONTRACT_NAME, "newaccount", nparam)
 		trxs = append(trxs, trx)
 
@@ -88,7 +100,13 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			To:    name,
 			Value: uint64(config.Genesis.InitDelegates[i].Balance),
 		}
-		tparam, _ := msgpack.Marshal(tps)
+
+		tparam, err3 := abi.MarshalAbi(tps, &Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
+		if err3 != nil {
+			log.Info("abi.MarshalAbi failed for transfer with account:", name)
+			continue
+		}
+
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "transfer", tparam)
 		trxs = append(trxs, trx)
 
@@ -97,7 +115,12 @@ func NativeContractInitChain(roleIntf role.RoleInterface, ncIntf NativeContractI
 			Name:   name,
 			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
-		sparam, _ := msgpack.Marshal(sps)
+
+		sparam, err4 := abi.MarshalAbi(sps, &Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
+		if err4 != nil {
+			log.Info("abi.MarshalAbi failed for setdegelage with account:", name)
+			continue
+		}
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
 		trxs = append(trxs, trx)
 	}

@@ -28,15 +28,18 @@ package role
 import (
 	"errors"
 	log "github.com/cihub/seelog"
-	//"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	abi "github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
+	nodeApi "github.com/bottos-project/magiccube/service/node/api"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -140,6 +143,12 @@ type DeployCodeParam struct {
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode []byte `json:"contract_code"`
+}
+
+// DeployAbiParam is interface definition of deploy code method
+type DeployAbiParam struct {
+	Name        string `json:"contract"`
+	ContractAbi []byte `json:"contract_abi"`
 }
 
 // mgo_DeployCodeParam is interface definition of mgo deploy code
@@ -277,8 +286,9 @@ type GoodsProReq struct {
 
 // NodeClusterReg is definition for node cluster reg
 type NodeClusterReg struct {
-	NodeIP    string `bson:"seedip"`
-	ClusterIP string `bson:"slaveiplist"`
+	NodeIP    string `bson:"seedip" json:"nodeIP"`
+	ClusterIP string `bson:"slaveiplist" json:"clusterIP"`
+	NodeUUID  string `bson:"nodeuuid" json:"uuid"`
 }
 
 // NodeBaseInfo is definition for node base info
@@ -298,8 +308,23 @@ func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) 
 	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
+//getMyPublicIPaddr function
+func getMyPublicIPaddr() (string, error) {
+	resp, err1 := http.Get("http://members.3322.org/dyndns/getip")
+	if err1 != nil {
+		return "", err1
+	}
+	defer resp.Body.Close()
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		return "", err2
+	}
+	//log.Info("getMyPublicIPaddr"+ string(body))
+	return string(body), nil
+}
+
 // ParseParam is to parase param by method
-func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
+func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string) (interface{}, error) {
 	var decodedParam interface{}
 	if Contract == "bottos" {
 		if Method == "newaccount" {
@@ -316,6 +341,8 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 			decodedParam = &CancelCreditParam{}
 		} else if Method == "transferfrom" {
 			decodedParam = &TransferFromParam{}
+		} else if Method == "deployabi" {
+			decodedParam = &DeployAbiParam{}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
 			return nil, errors.New("Not supported")
@@ -370,6 +397,10 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 		}
 	} else if Contract == "nodeclustermng" {
 		if Method == "reg" {
+			myPublicIP, err := getMyPublicIPaddr()
+			if err == nil && len(myPublicIP) > 0 {
+				nodeApi.SaveIpPonixToBlockchain(myPublicIP)
+			}
 			decodedParam = &NodeClusterReg{}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
@@ -388,6 +419,18 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 	}
 
 	err := msgpack.Unmarshal(Param, decodedParam)
+
+	if Contract == "nodeclustermng" {
+		decodedParam := &NodeClusterReg{}
+		Abi, errval := GetAbi(ldb, "nodeclustermng")
+		if errval != nil {
+			return nil, errors.New("nodeclustermng: Get Abi failed!!")
+		}
+		err = abi.UnmarshalAbi(Contract, &Abi, Method, Param, decodedParam)
+		if err != nil {
+			return nil, errors.New("UnmarshalAbi failed for contract nodeclustermng")
+		}
+	}
 
 	if Contract == "bottos" && Method == "deploycode" {
 		//p, ok := decodedParam.(DeployCodeParam)
@@ -441,7 +484,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 			CreateTime: time.Now(),
 		}
 
-		decodedParam, err := ParseParam(trx.Param, newtrx.Contract, newtrx.Method)
+		decodedParam, err := ParseParam(ldb, trx.Param, newtrx.Contract, newtrx.Method)
 
 		if err != nil {
 			return err
@@ -607,7 +650,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 // ApplyPersistanceRole is to apply persistence
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
-	if ! ldb.IsOpDbConfigured() {
+	if !ldb.IsOpDbConfigured() {
 		return nil
 	}
 	oids := make([]bson.ObjectId, len(block.Transactions))

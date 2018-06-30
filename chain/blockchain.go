@@ -102,7 +102,7 @@ func (bc *BlockChain) initChain() error {
 		Timestamp: config.Genesis.GenesisTime,
 		Delegate:  []byte(config.BOTTOS_CONTRACT_NAME),
 	}
-	trxs, err := contract.NativeContractInitChain(bc.roleIntf, bc.nc)
+	trxs, err := contract.NativeContractInitChain(bc.blockDb, bc.roleIntf, bc.nc)
 	if err != nil {
 		return err
 	}

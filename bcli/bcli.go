@@ -33,7 +33,6 @@ import (
 	coreapi "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro"
@@ -145,7 +144,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		To:     to,
 		Amount: value,
 	}
-	param, _ := msgpack.Marshal(tp)
+	param, _ := abi.MarshalAbi(tp, nil, "bottos", "transfer")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -220,14 +219,14 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	// 1, new account trx
 	type NewAccountParam struct {
-		Name   string
-		Pubkey string
+		Name   string `json:"name"`
+		Pubkey string `json:"pubkey"`
 	}
 	nps := &NewAccountParam{
 		Name:   name,
 		Pubkey: pubkey,
 	}
-	param, _ := msgpack.Marshal(nps)
+	param, _ := abi.MarshalAbi(nps, nil, "bottos", "newaccount")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -326,7 +325,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	type DeployCodeParam struct {
-		Name         string `json:"name"`
+		Name         string `json:"contract"`
 		VMType       byte   `json:"vm_type"`
 		VMVersion    byte   `json:"vm_version"`
 		ContractCode []byte `json:"contract_code"`
@@ -340,7 +339,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	dcp.ContractCode = make([]byte, fi.Size())
 	f.Read(dcp.ContractCode)
 	//fmt.Printf("Code %x", dcp.ContractCode)
-	param, _ := msgpack.Marshal(dcp)
+	param, _ := abi.MarshalAbi(dcp, nil, "bottos", "deploycode")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -447,7 +446,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	type DeployAbiParam struct {
-		Name        string `json:"name"`
+		Name        string `json:"contract"`
 		ContractAbi []byte `json:"contract_abi"`
 	}
 
@@ -456,20 +455,20 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 	tempAbi := make([]byte, fi.Size())
 	f.Read(tempAbi)
-	abi, err := abi.ParseAbi(tempAbi)
+	Abi, err := abi.ParseAbi(tempAbi)
 	if err != nil {
 		fmt.Printf("Abi Parse Error Hex: %x, Str: %v", tempAbi, string(tempAbi))
 		return
 	}
 
-	dcp.ContractAbi, err = json.Marshal(abi)
+	dcp.ContractAbi, err = json.Marshal(Abi)
 	if err != nil {
-		fmt.Printf("Abi Reformat Error: %v", abi)
+		fmt.Printf("Abi Reformat Error: %v", Abi)
 		return
 	}
 
 	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
-	param, _ := msgpack.Marshal(dcp)
+	param, _ := abi.MarshalAbi(dcp, nil, "bottos", "deployabi")
 
 	trx1 := &coreapi.Transaction{
 		Version:     1,

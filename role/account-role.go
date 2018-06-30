@@ -27,9 +27,12 @@ package role
 
 import (
 	"encoding/json"
-
+	"errors"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
+
+	"github.com/bottos-project/bottos/contract/abi"
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -83,4 +86,27 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	}
 
 	return res, nil
+}
+
+//GetAbi function
+func GetAbi(ldb *db.DBService, contract string) (abi.ABI, error) {
+
+	account, err := GetAccountRole(ldb, contract)
+	if err != nil {
+		return abi.ABI{}, nil
+	}
+
+	if len(account.ContractAbi) > 0 {
+
+		Abi, err := abi.ParseAbi(account.ContractAbi)
+		if err != nil {
+			log.Info("Parse abistring", account.ContractAbi, " to abi failed!")
+			return abi.ABI{}, err
+		}
+
+		return *Abi, nil
+	}
+	
+	// TODO
+	return abi.ABI{}, errors.New("Get Abi failed!")
 }

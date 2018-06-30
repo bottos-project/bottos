@@ -2,39 +2,44 @@ package abi
 
 import (
 	"encoding/json"
-	"errors"
+	//"errors"
 	"sort"
 	"strings"
 )
 
-var NoValueError = errors.New("No value for this key")
+//NoValueError value
+//var NoValueError = errors.New("No value for this key")
 
-//KeyIndex
+//KeyIndex struct
 type KeyIndex struct {
 	Key   string
 	Index int
 }
 
-//ByIndex
+//ByIndex struct
 type ByIndex []KeyIndex
 
 func (a ByIndex) Len() int           { return len(a) }
 func (a ByIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByIndex) Less(i, j int) bool { return a[i].Index < a[j].Index }
 
+//Pair struct
 type Pair struct {
 	key   string
 	value interface{}
 }
 
+//Key function
 func (kv *Pair) Key() string {
 	return kv.key
 }
 
+//Value function
 func (kv *Pair) Value() interface{} {
 	return kv.value
 }
 
+//ByPair function
 type ByPair struct {
 	Pairs    []*Pair
 	LessFunc func(a *Pair, j *Pair) bool
@@ -44,11 +49,13 @@ func (a ByPair) Len() int           { return len(a.Pairs) }
 func (a ByPair) Swap(i, j int)      { a.Pairs[i], a.Pairs[j] = a.Pairs[j], a.Pairs[i] }
 func (a ByPair) Less(i, j int) bool { return a.LessFunc(a.Pairs[i], a.Pairs[j]) }
 
+//StringPair struct
 type StringPair struct {
 	Key   string
 	Value string
 }
 
+//FeildMap struct
 type FeildMap struct {
 	keys   []string
 	values map[string]interface{}
@@ -76,7 +83,7 @@ func (o *FeildMap) GetStringVal(key string) (string, bool) {
 	return "", false
 }
 
-//GetStringVal get key value pairs
+//GetStringPair get key value pairs
 func (o *FeildMap) GetStringPair() []StringPair {
 	pairs := make([]StringPair, len(o.keys))
 	for i, k := range o.keys {
@@ -144,7 +151,7 @@ func (o *FeildMap) Sort(lessFunc func(a *Pair, b *Pair) bool) {
 	}
 }
 
-//UnmarshalJSON
+//UnmarshalJSON function
 func (o *FeildMap) UnmarshalJSON(b []byte) error {
 	var err error
 	err = mapStringToFeildMap(string(b), o)
@@ -154,6 +161,7 @@ func (o *FeildMap) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+//mapStringToFeildMap function
 func mapStringToFeildMap(s string, o *FeildMap) error {
 	// parse string into map
 	m := map[string]interface{}{}
@@ -163,7 +171,7 @@ func mapStringToFeildMap(s string, o *FeildMap) error {
 	}
 	// Get the order of the keys
 	orderedKeys := []KeyIndex{}
-	for k, _ := range m {
+	for k := range m {
 		kEscaped := strings.Replace(k, `"`, `\"`, -1)
 		kQuoted := `"` + kEscaped + `"`
 		// Find how much content exists before this key.
@@ -195,7 +203,7 @@ func mapStringToFeildMap(s string, o *FeildMap) error {
 				valueStr := s[startOfValueIndex : len(s)-1]
 				valueStr = strings.TrimSpace(valueStr)
 				if len(valueStr) > 0 && valueStr[0] == ':' {
-					valueStr = valueStr[1:len(valueStr)]
+					valueStr = valueStr[1:]
 				}
 				valueStr = strings.TrimSpace(valueStr)
 				if valueStr[0] == '{' {
@@ -343,7 +351,7 @@ func sliceStringToSliceWithFeildMaps(valueStr string, newSlice *[]interface{}) e
 	return nil
 }
 
-//MarshalJSON
+//MarshalJSON function
 func (o FeildMap) MarshalJSON() ([]byte, error) {
 	s := "{"
 	for _, k := range o.keys {
