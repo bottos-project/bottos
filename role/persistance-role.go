@@ -160,6 +160,11 @@ type mgoDeployCodeParam struct {
 	ContractCode string `json:"contract_code"`
 }
 
+type mgoDeployAbiParam struct {
+	Name        string `json:"contract"`
+	ContractAbi string `json:"contract_abi"`
+}
+
 /**======External Contract struct definition====*/
 
 // AssetInfo is definition of asset info
@@ -292,6 +297,7 @@ type NodeClusterReg struct {
 	NodeIP    string `bson:"seedip" json:"nodeIP"`
 	ClusterIP string `bson:"slaveiplist" json:"clusterIP"`
 	NodeUUID  string `bson:"nodeuuid" json:"uuid"`
+	StorageCapacity string `bson:"capacity" json:"capacity"`
 }
 
 // NodeBaseInfo is definition for node base info
@@ -420,10 +426,51 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 		return nil, errors.New("Not supported")
 	}
+	
+	Abi, errval := GetAbi(ldb, Contract)
+	if errval != nil {
+		log.Error("Get Abi failed for Contract: ", Contract, ", Method: ", Method)
+		return nil, errors.New("ParseParam: Get Abi failed")
+	}
+	
+	if Contract == "bottos" && Method == "deploycode" {
+		//p, ok := decodedParam.(DeployCodeParam)
 
-	err := msgpack.Unmarshal(Param, decodedParam)
+		var tmpval = &DeployCodeParam{}
+		err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, tmpval)
+		if err != nil {
+			return nil, errors.New("ParseParam: UnmarshalAbi failed")
+		}
+		//if ok {
+		var mgoParam = mgoDeployCodeParam{}
+		mgoParam.Name = tmpval.Name
+		mgoParam.VMType = tmpval.VMType
+		mgoParam.VMVersion = tmpval.VMVersion
+		mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
+		return mgoParam, nil
 
-	if Contract == "nodeclustermng" {
+		return nil, errors.New("Decode DeployCodeParam failed.")
+	} else if Contract == "bottos" && Method == "DeployAbiParam" {
+		var tmpval = &DeployAbiParam{}
+		err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, tmpval)
+		if err != nil {
+			return nil, errors.New("ParseParam: UnmarshalAbi failed")
+		}
+		
+		var mgoParam = mgoDeployAbiParam{}
+		mgoParam.Name = tmpval.Name
+		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
+		return mgoParam, nil
+	}
+
+	//err := msgpack.Unmarshal(Param, decodedParam)
+	
+	err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, decodedParam)
+	if err != nil {
+		return nil, errors.New("ParseParam: UnmarshalAbi failed")
+	}
+
+	/*if Contract == "nodeclustermng" {
 		decodedParam := &NodeClusterReg{}
 		Abi, errval := GetAbi(ldb, "nodeclustermng")
 		if errval != nil {
@@ -433,26 +480,9 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		if err != nil {
 			return nil, errors.New("UnmarshalAbi failed for contract nodeclustermng")
 		}
-	}
+	}*/
 
-	if Contract == "bottos" && Method == "deploycode" {
-		//p, ok := decodedParam.(DeployCodeParam)
-
-		var tmpval = &DeployCodeParam{}
-		err = msgpack.Unmarshal(Param, tmpval)
-		//if ok {
-		if err == nil {
-			var mgoParam = mgoDeployCodeParam{}
-			mgoParam.Name = tmpval.Name
-			mgoParam.VMType = tmpval.VMType
-			mgoParam.VMVersion = tmpval.VMVersion
-			mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
-			return mgoParam, nil
-		}
-
-		return nil, errors.New("Decode DeployCodeParam failed.")
-	}
-
+ 
 	if err != nil {
 		//log.Info("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
 		return nil, err
