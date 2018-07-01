@@ -36,6 +36,11 @@ import (
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro"
+	
+	"strings"
+	"github.com/bitly/go-simplejson"
+        "net/http"
+
 )
 
 // CLI responsible for processing command line arguments
@@ -144,7 +149,13 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		To:     to,
 		Amount: value,
 	}
-	param, _ := abi.MarshalAbi(tp, nil, "bottos", "transfer")
+        
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+	
+	param, _ := abi.MarshalAbi(tp, &Abi, "bottos", "transfer")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -210,6 +221,45 @@ func (cli *CLI) jsonPrint(data []byte) {
 	fmt.Println(string(out.Bytes()))
 }
 
+//getAbibyContractName function
+func getAbibyContractName(contractname string) (abi.ABI, error) {
+	var abistring string
+	NodeIp := "127.0.0.1"
+	addr := "http://" + NodeIp + ":8080/rpc"
+	params := `service=bottos&method=CoreApi.QueryAbi&request={
+			"contract":"%s"}`
+	s := fmt.Sprintf(params, contractname)
+	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
+		strings.NewReader(s))
+
+	if err != nil {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	defer respBody.Body.Close()
+	body, err := ioutil.ReadAll(respBody.Body)
+	if err != nil {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	jss, _ := simplejson.NewJson([]byte(body))
+	abistring = jss.Get("result").MustString()
+	if len(abistring) <= 0 {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	Abi, err := abi.ParseAbi([]byte(abistring))
+	if err != nil {
+		fmt.Println("Parse abistring", abistring, " to abi failed!")
+		return abi.ABI{}, err
+	}
+
+	return *Abi, nil
+}
+
 func (cli *CLI) newaccount(name string, pubkey string) {
 	chainInfo, err := cli.queryChainInfo()
 	if err != nil {
@@ -226,7 +276,13 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		Name:   name,
 		Pubkey: pubkey,
 	}
-	param, _ := abi.MarshalAbi(nps, nil, "bottos", "newaccount")
+	
+        Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+
+	param, _ := abi.MarshalAbi(nps, &Abi, "bottos", "newaccount")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -339,7 +395,13 @@ func (cli *CLI) deploycode(name string, path string) {
 	dcp.ContractCode = make([]byte, fi.Size())
 	f.Read(dcp.ContractCode)
 	//fmt.Printf("Code %x", dcp.ContractCode)
-	param, _ := abi.MarshalAbi(dcp, nil, "bottos", "deploycode")
+        
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+	
+	param, _ := abi.MarshalAbi(dcp, &Abi, "bottos", "deploycode")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -468,7 +530,13 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
-	param, _ := abi.MarshalAbi(dcp, nil, "bottos", "deployabi")
+        
+	Abi2, abierr2 := getAbibyContractName("bottos")
+        if abierr2 != nil {
+           return
+        }
+
+	param, _ := abi.MarshalAbi(dcp, &Abi2, "bottos", "deployabi")
 
 	trx1 := &coreapi.Transaction{
 		Version:     1,

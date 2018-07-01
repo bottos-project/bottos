@@ -29,14 +29,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/bitly/go-simplejson"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	log "github.com/cihub/seelog"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"reflect"
-	"strings"
 )
 
 //ABIAction abi Action(Method)
@@ -106,19 +102,17 @@ func jsonFormat(data []byte) string {
 	return string(out.Bytes())
 }
 
-//MarshalAbi is to serialize the message: ServerLayer->Abi should be nil, CoreLayer or bcli->Abi should be inputed from outside
+//MarshalAbi is to serialize the message
 func MarshalAbi(v interface{}, Abi *ABI, contractName string, method string) ([]byte, error) {
 	var err error
 	var abi ABI
 
 	if Abi == nil {
-		abi, err = getAbibyContractName(contractName)
-		if err != nil {
-			return []byte{}, err
-		}
-	} else {
-		abi = *Abi
+		return []byte{}, err
 	}
+	
+	abi = *Abi
+	
 
 	writer := &bytes.Buffer{}
 	err = EncodeAbi(contractName, method, writer, v, abi, "")
@@ -128,43 +122,6 @@ func MarshalAbi(v interface{}, Abi *ABI, contractName string, method string) ([]
 	return writer.Bytes(), nil
 }
 
-func getAbibyContractName(contractname string) (ABI, error) {
-	var abistring string
-	NodeIp := "127.0.0.1"
-	addr := "http://" + NodeIp + ":8080/rpc"
-	params := `service=bottos&method=CoreApi.QueryAbi&request={
-			"contract":"%s"}`
-	s := fmt.Sprintf(params, contractname)
-	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
-		strings.NewReader(s))
-
-	if err != nil {
-		log.Info(err)
-		return ABI{}, err
-	}
-
-	defer respBody.Body.Close()
-	body, err := ioutil.ReadAll(respBody.Body)
-	if err != nil {
-		log.Info(err)
-		return ABI{}, err
-	}
-
-	jss, _ := simplejson.NewJson([]byte(body))
-	abistring = jss.Get("result").MustString()
-	if len(abistring) <= 0 {
-		log.Info(err)
-		return ABI{}, err
-	}
-
-	abi, err := ParseAbi([]byte(abistring))
-	if err != nil {
-		log.Info("Parse abistring", abistring, " to abi failed!")
-		return ABI{}, err
-	}
-
-	return *abi, nil
-}
 
 func getAbiFieldsByAbi(contractname string, method string, abi ABI, subStructName string) map[string]interface{} {
 	for _, subaction := range abi.Actions {
@@ -373,13 +330,10 @@ func UnmarshalAbi(contractName string, Abi *ABI, method string, data []byte, dst
 	var err error
 	var abi ABI
 	if Abi == nil {
-		abi, err = getAbibyContractName(contractName)
-		if err != nil {
-			return err
-		}
-	} else {
-		abi = *Abi
+	    return err
 	}
+	
+	abi = *Abi
 
 	r := bytes.NewReader(data)
 	err = DecodeAbi(contractName, method, r, dst, abi, "")

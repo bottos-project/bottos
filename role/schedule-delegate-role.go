@@ -166,7 +166,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 
 }
 
-//ShuffleEelectCandidateList is to shuffle the candidates in one round
+//ShuffleEelectCandidateListRole is to shuffle the candidates in one round
 func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]string, error) {
 	newSchedule := ElectNextTermDelegatesRole(ldb)
 	currentState, err := GetCoreStateRole(ldb)
