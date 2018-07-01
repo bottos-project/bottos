@@ -37,7 +37,6 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	abi "github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
 	nodeApi "github.com/bottos-project/magiccube/service/node/api"
 	"gopkg.in/mgo.v2/bson"
@@ -462,13 +461,8 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
 		return mgoParam, nil
 	}
-
-	//err := msgpack.Unmarshal(Param, decodedParam)
 	
 	err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, decodedParam)
-	if err != nil {
-		return nil, errors.New("ParseParam: UnmarshalAbi failed")
-	}
 
 	/*if Contract == "nodeclustermng" {
 		decodedParam := &NodeClusterReg{}
@@ -484,7 +478,7 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 
  
 	if err != nil {
-		//log.Info("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+		log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
 		return nil, err
 	}
 	return decodedParam, nil
@@ -598,6 +592,12 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if err != nil {
 		return err
 	}
+	
+	Abi, errval := GetAbi(ldb, trx.Contract)
+	if errval != nil {
+		log.Error("Get Abi failed for Contract: ", trx.Contract, ", Method: ", trx.Method)
+		return errval
+	}
 
 	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
@@ -618,8 +618,10 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if trx.Method == "transfer" {
 
 		data := &transferparam{}
-		err := msgpack.Unmarshal(trx.Param, data)
-		//fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
+		err := abi.UnmarshalAbi(trx.Contract, &Abi, trx.Method, trx.Param, data)
+		if err != nil{
+			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
+		}
 
 		FromAccountName := data.From
 		ToAccountName := data.To
@@ -653,8 +655,9 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	} else if trx.Method == "newaccount" {
 
 		data := &newaccountparam{}
-		err := msgpack.Unmarshal(trx.Param, data)
-		if err != nil {
+		err := abi.UnmarshalAbi(trx.Contract, &Abi, trx.Method, trx.Param, data)
+		if err != nil{
+			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
 		}
 
