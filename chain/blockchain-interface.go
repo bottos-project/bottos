@@ -30,6 +30,16 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 )
 
+
+const (
+	//InsertBlockSuccess insert block successfully
+	InsertBlockSuccess uint32 = 0
+	//InsertBlockErrorGeneral general error
+	InsertBlockErrorGeneral uint32 = 1
+	//InsertBlockErrorNotLinked the block not linked to the chain
+	InsertBlockErrorNotLinked uint32 = 2
+)
+
 //HandledBlockCallback call back
 type HandledBlockCallback func(*types.Block)
 
@@ -49,7 +59,7 @@ type BlockChainInterface interface {
 	LastConsensusBlockNum() uint32
 	GenesisTimestamp() uint64
 
-	InsertBlock(block *types.Block) error
+	InsertBlock(block *types.Block) uint32
 
 	RegisterHandledBlockCallback(cb HandledBlockCallback)
 }
