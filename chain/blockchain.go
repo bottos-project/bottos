@@ -446,30 +446,30 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) error {
 }
 
 //InsertBlock write a new block
-func (bc *BlockChain) InsertBlock(block *types.Block) error {
+func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
 	err := bc.ValidateBlock(block)
 	if err != nil {
 		log.Infof("Validate Block error: ", err)
-		return err
+		return InsertBlockErrorGeneral
 	}
 
 	// push to cache, block must link now
 	_, err = bc.blockCache.Insert(block)
 	if err != nil {
 		log.Infof("blockCache insert error: ", err)
-		return err
+		return InsertBlockErrorNotLinked
 	}
 
 	err = bc.HandleBlock(block)
 	if err != nil {
 		log.Infof("InsertBlock error: ", err)
-		return err
+		return InsertBlockErrorGeneral
 	}
 
 	log.Infof("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 
-	return nil
+	return InsertBlockSuccess
 }
