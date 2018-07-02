@@ -26,11 +26,13 @@
 package chainactor
 
 import (
+	"fmt"
 	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/chain"
 )
 
 //ChainActorPid is chain actor pid
