@@ -90,7 +90,9 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 
 //GetAbi function
 func GetAbi(ldb *db.DBService, contract string) (abi.ABI, error) {
-
+	if ldb == nil {
+		return abi.ABI{}, nil
+	}
 	account, err := GetAccountRole(ldb, contract)
 	if err != nil {
 		return abi.ABI{}, nil
@@ -100,7 +102,7 @@ func GetAbi(ldb *db.DBService, contract string) (abi.ABI, error) {
 
 		Abi, err := abi.ParseAbi(account.ContractAbi)
 		if err != nil {
-			log.Info("Parse abistring", account.ContractAbi, " to abi failed!")
+			log.Error("Parse abistring", account.ContractAbi, " to abi failed!")
 			return abi.ABI{}, err
 		}
 
