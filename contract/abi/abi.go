@@ -153,7 +153,6 @@ func DecodeAbi(contractName string, method string, r io.Reader, dst interface{},
 	if abiFields == nil {
 		return fmt.Errorf("DecodeAbi: getAbiFieldsByAbi failed: %s", abi)
 	}
-
 	v := reflect.ValueOf(dst)
 
 	if !v.IsValid() {
@@ -181,8 +180,9 @@ func DecodeAbi(contractName string, method string, r io.Reader, dst interface{},
 	vt = vt.Elem()
 
 	count := v.NumField()
-
+	
 	for i := 0; i < count; i++ {
+		
 		field := v.Field(i)
 		feildAddr := field.Addr().Interface()
 
@@ -228,7 +228,7 @@ func DecodeAbi(contractName string, method string, r io.Reader, dst interface{},
 			}
 			ptr := feildAddr.(*uint64)
 			*ptr = val
-		case "[]byte":
+		case "bytes":
 			t := reflect.TypeOf(v.Field(i).Interface())
 			if t.Elem().Kind() == reflect.Uint8 {
 				val, err := msgpack.UnpackBin16(r)

@@ -38,7 +38,6 @@ import (
 	"github.com/bottos-project/bottos/config"
 	abi "github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/db"
-	nodeApi "github.com/bottos-project/magiccube/service/node/api"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -405,10 +404,6 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		}
 	} else if Contract == "nodeclustermng" {
 		if Method == "reg" {
-			myPublicIP, err := getMyPublicIPaddr()
-			if err == nil && len(myPublicIP) > 0 {
-				nodeApi.SaveIpPonixToBlockchain(myPublicIP)
-			}
 			decodedParam = &NodeClusterReg{}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
