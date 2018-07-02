@@ -14,6 +14,7 @@ type p2pConfig struct {
 	ServAddr string
 	ServPort string
 	PeerLst  []string
+	ChainId  string
 }
 
 type chainConfig struct {
@@ -31,6 +32,7 @@ func main() {
 	param := config.Parameter{ServAddr: pc.ServAddr,
 		P2PPort:  pc.ServPort,
 		PeerList: pc.PeerLst,
+		ChainId:  pc.ChainId,
 	}
 
 	bc := stub.MakeBlockChainStub()

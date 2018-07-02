@@ -155,7 +155,7 @@ func (c *candidates) processPeerInfoReq(index uint16, date []byte) {
 
 	e := c.getCandidate(index)
 	if e == nil {
-		log.Debug("ProcessPeerInfoReq candi not exist index: %d", index)
+		log.Debugf("ProcessPeerInfoReq candi not exist index: %d", index)
 		return
 	}
 
@@ -184,6 +184,12 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 
 	if rsp.Info.IsIncomplete() {
 		log.Error("ProcessPeerInfoRsp rsp info error")
+		return
+	}
+
+	if rsp.Info.ChainId != p2p.LocalPeerInfo.ChainId {
+		log.Error("not on the same chain, drop candidate")
+		c.deleteCandidate(e, true)
 		return
 	}
 
@@ -330,9 +336,10 @@ func (c *candidates) sendPeerInfoReq(candi *candidate) {
 
 func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 	info := p2p.PeerInfo{
-		Id:   p2p.LocalPeerInfo.Id,
-		Addr: p2p.LocalPeerInfo.Addr,
-		Port: p2p.LocalPeerInfo.Port,
+		Id:      p2p.LocalPeerInfo.Id,
+		Addr:    p2p.LocalPeerInfo.Addr,
+		Port:    p2p.LocalPeerInfo.Port,
+		ChainId: p2p.LocalPeerInfo.ChainId,
 	}
 
 	rsp := PeerInfoRsp{
