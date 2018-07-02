@@ -26,11 +26,13 @@
 package chainactor
 
 import (
+	"fmt"
 	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/chain"
 )
 
 //ChainActorPid is chain actor pid
@@ -110,15 +112,15 @@ func (c *ChainActor) Receive(context actor.Context) {
 
 //HandleNewProducedBlock new block msg
 func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
-	err := actorEnv.Chain.InsertBlock(req.Block)
+	errcode := actorEnv.Chain.InsertBlock(req.Block)
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
 			Hash:  req.Block.Hash(),
-			Error: err,
+			Error: fmt.Errorf("Block Insert error, code: %v", errcode),
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
-	if err == nil {
+	if errcode == chain.InsertBlockSuccess {
 		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
 		trxactorPid.Tell(req)
 	}
@@ -126,21 +128,17 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 
 //HandleReceiveBlock receive block
 func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
-	err := actorEnv.Chain.InsertBlock(req.Block)
+	errcode := actorEnv.Chain.InsertBlock(req.Block)
 
 	if ctx.Sender() != nil {
 		resp := &message.ReceiveBlockResp{
 			BlockNum: req.Block.GetNumber(),
-		}
-		if err != nil {
-			resp.ErrorNo = 1
-		} else {
-			resp.ErrorNo = 0
+			ErrorNo:  errcode,
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 
-	if err == nil {
+	if errcode == chain.InsertBlockSuccess {
 		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
 		trxactorPid.Tell(req)
 	}

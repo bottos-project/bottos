@@ -1,7 +1,7 @@
 package p2p
 
-//Packet if it is a unicast packet , ids is peer id to send to , and if
-// it is a boradcast packet, ids is filter peers id
+//Packet if it is a unicast packet , Index is peer id to send to , or if
+// it is a boradcast packet, Index is filter peers id
 type MsgPacket struct {
 	Index []uint16
 	P     Packet

@@ -12,9 +12,10 @@ import (
 )
 
 type PeerInfo struct {
-	Id   string
-	Addr string
-	Port string
+	Id      string
+	Addr    string
+	Port    string
+	ChainId string
 }
 
 func (a *PeerInfo) Equal(b PeerInfo) bool {
@@ -22,7 +23,7 @@ func (a *PeerInfo) Equal(b PeerInfo) bool {
 }
 
 func (a *PeerInfo) IsIncomplete() bool {
-	return a.Id == "" || a.Addr == "" || a.Port == ""
+	return a.Id == "" || a.Addr == "" || a.Port == "" || a.ChainId == ""
 }
 
 //Bigger 1 a > b;  0 a = b ; -1 a < b
