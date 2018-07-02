@@ -71,7 +71,7 @@ type TransferFromParam struct {
 
 //DeployCodeParam struct to deploy code
 type DeployCodeParam struct {
-	Name         string `json:"name"`
+	Name         string `json:"contract"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode []byte `json:"contract_code"`
@@ -79,7 +79,7 @@ type DeployCodeParam struct {
 
 //DeployABIParam struct to deploy abi
 type DeployABIParam struct {
-	Name        string `json:"name"`
+	Name        string `json:"contract"`
 	ContractAbi []byte `json:"contract_abi"`
 }
 

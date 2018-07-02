@@ -404,10 +404,6 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		}
 	} else if Contract == "nodeclustermng" {
 		if Method == "reg" {
-			myPublicIP, err := getMyPublicIPaddr()
-			if err == nil && len(myPublicIP) > 0 {
-				//SaveIpPonixToBlockchain(myPublicIP)
-			}
 			decodedParam = &NodeClusterReg{}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
