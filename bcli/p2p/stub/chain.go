@@ -62,8 +62,8 @@ func (b *BlockChainStub) GenesisTimestamp() uint64 {
 	return 0
 }
 
-func (b *BlockChainStub) InsertBlock(block *types.Block) error {
-	return nil
+func (b *BlockChainStub) InsertBlock(block *types.Block) uint32 {
+	return 0
 }
 
 func (b *BlockChainStub) RegisterHandledBlockCallback(cb chain.HandledBlockCallback) {

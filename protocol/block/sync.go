@@ -494,12 +494,19 @@ func (s *synchronizes) sendupBlock(block *types.Block) bool {
 
 		rsp := result.(*message.ReceiveBlockResp)
 
-		if rsp.ErrorNo != 0 {
-			log.Errorf("send block return error:%d", rsp.ErrorNo)
+		if rsp.ErrorNo == chain.InsertBlockSuccess {
+			return true
+		} else if rsp.ErrorNo == chain.InsertBlockErrorGeneral {
+			log.Errorf("block insert general error")
+			return false
+		} else if rsp.ErrorNo == chain.InsertBlockErrorNotLinked {
+			log.Errorf("block insert link error")
+			time.Sleep(1000 * 1000 * 60 * 5)
+			return false
+		} else {
+			log.Errorf("block insert unkown error")
 			return false
 		}
-
-		return true
 	}
 
 	return false
