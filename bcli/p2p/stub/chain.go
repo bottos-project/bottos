@@ -132,3 +132,7 @@ func (b *BlockChainStub) NewBlockMsg() *message.NotifyBlock {
 
 	return msg
 }
+
+func (b *BlockChainStub) ValidateBlock(block *types.Block) uint32 {
+	return 0
+}
