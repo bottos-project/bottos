@@ -65,6 +65,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("callTrx",          callTrx)
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
+	envFunc.Register("getSender",        getSender)
 
 	return &envFunc
 }
@@ -348,6 +349,29 @@ func getCtxName(vm *VM) (bool, error) {
 	}
 
 	copy(vm.memory[pos:pos+len], []byte(ctxName))
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushInt32(int32(0))
+	}
+
+	return true, nil
+}
+
+func getSender(vm *VM) (bool, error) {
+
+	senderName    := vm.contract.Trx.Sender
+	senderNameLen := uint64(len(senderName))
+
+	pos := vm.envFunc.envFuncParam[0]
+	len := vm.envFunc.envFuncParam[1]
+	if len < senderNameLen {
+		log.Infof("*ERROR* Invaild string length \n")
+		if vm.envFunc.envFuncRtn {
+			vm.pushInt32(int32(1))
+		}
+	}
+
+	copy(vm.memory[pos:pos+len], []byte(senderName))
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(0))
