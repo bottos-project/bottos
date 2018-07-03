@@ -111,7 +111,7 @@ func (bc *BlockChain) initChain() error {
 
 	// execute trxs
 	for _, trx := range trxs {
-		ctx := &contract.Context{ContractDB:&contractdb.ContractDB{Db:bc.blockDb}, RoleIntf: bc.roleIntf, Trx: trx}
+		ctx := &contract.Context{ContractDB: &contractdb.ContractDB{Db: bc.blockDb}, RoleIntf: bc.roleIntf, Trx: trx}
 		err := bc.nc.ExecuteNativeContract(ctx)
 		if err != contract.ERROR_NONE {
 			log.Infof("NativeContractInitChain Error: ", trx, err)
@@ -365,6 +365,10 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 
 	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(delegates) / 100
 	sort.Sort(lastConfirmedNums)
+	if consensusIndex >= len(lastConfirmedNums) {
+		log.Errorf("out of range: index=%v, len=%v", consensusIndex, len(lastConfirmedNums))
+		return
+	}
 	newLastConsensusBlockNum := lastConfirmedNums[consensusIndex]
 	if newLastConsensusBlockNum > chainSate.LastConsensusBlockNum {
 		chainSate.LastConsensusBlockNum = newLastConsensusBlockNum
@@ -384,7 +388,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 			if block != nil {
 				bc.WriteBlock(block)
 			} else {
-				log.Infof("block num = %v not found\n", i)
+				log.Errorf("block num = %v not found\n", i)
 			}
 		}
 
