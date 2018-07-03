@@ -129,8 +129,8 @@ func (p *pne) sendPneRequest(index uint16) {
 	packet := p2p.Packet{H: head}
 
 	if index > 0 {
-		send := p2p.MsgPacket{
-			Index: []uint16{index},
+		send := p2p.UniMsgPacket{
+			Index: index,
 			P:     packet,
 		}
 
@@ -139,9 +139,9 @@ func (p *pne) sendPneRequest(index uint16) {
 		// add back to queue
 		p.pushPeerIndex(index)
 	} else {
-		send := p2p.MsgPacket{
-			Index: nil,
-			P:     packet,
+		send := p2p.BcastMsgPacket{
+			Indexs: nil,
+			P:      packet,
 		}
 
 		p2p.Runner.SendBroadcast(send)
@@ -173,8 +173,8 @@ func (p *pne) sendPneResponse(index uint16) {
 		Data: data,
 	}
 
-	send := p2p.MsgPacket{
-		Index: []uint16{index},
+	send := p2p.UniMsgPacket{
+		Index: index,
 		P:     packet,
 	}
 

@@ -193,17 +193,14 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 		return
 	}
 
-	candi.peer.Info.Id = rsp.Info.Id
 	//check peer addr and port if the connection is our init
-	if !candi.peer.In {
-		if candi.peer.Info.Addr != rsp.Info.Addr &&
-			candi.peer.Info.Port != rsp.Info.Port {
-			log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
-			return
-		}
+	if !candi.peer.In &&
+		candi.peer.Info.Addr != rsp.Info.Addr &&
+		candi.peer.Info.Port != rsp.Info.Port {
+		log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
+		return
 	} else {
-		candi.peer.Info.Addr = rsp.Info.Addr
-		candi.peer.Info.Port = rsp.Info.Port
+		candi.peer.Info = rsp.Info
 	}
 	candi.peer.State = p2p.PEER_STATE_HANDSHAKE
 

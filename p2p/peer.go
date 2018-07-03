@@ -31,6 +31,25 @@ func (a *PeerInfo) Bigger(b PeerInfo) int {
 	return strings.Compare(a.Id, b.Id)
 }
 
+type PeerData struct {
+	Id    string
+	Index uint16
+}
+
+type PeerDataSet []PeerData
+
+func (s PeerDataSet) Len() int {
+	return len(s)
+}
+
+func (s PeerDataSet) Less(i, j int) bool {
+	return s[i].Id > s[j].Id
+}
+
+func (s PeerDataSet) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
 type Peer struct {
 	Info  PeerInfo
 	Index uint16

@@ -96,26 +96,33 @@ func (c *collection) getPeers() []PeerInfo {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	count := 0
 	var peers []PeerInfo
 	for _, p := range c.peers {
 		peers = append(peers, p.Info)
-		count++
-		if count >= MAX_GET_PEERS {
-			break
-		}
 	}
 
 	return peers
 }
 
-func (c *collection) send(msg *MsgPacket) {
+func (c *collection) getPeersData() PeerDataSet {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	peer, ok := c.peers[msg.Index[0]]
+	var peers PeerDataSet
+	for _, p := range c.peers {
+		peers = append(peers, PeerData{Id: p.Info.Id, Index: p.Index})
+	}
+
+	return peers
+}
+
+func (c *collection) send(msg *UniMsgPacket) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	peer, ok := c.peers[msg.Index]
 	if !ok {
-		log.Errorf("peer not exist %s", msg.Index[0])
+		log.Errorf("peer not exist %s", msg.Index)
 		return
 	}
 
@@ -123,19 +130,19 @@ func (c *collection) send(msg *MsgPacket) {
 
 }
 
-func (c *collection) sendBroadcast(msg *MsgPacket) {
+func (c *collection) sendBroadcast(msg *BcastMsgPacket) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for id, peer := range c.peers {
-		if len(msg.Index) == 0 {
+		if len(msg.Indexs) == 0 {
 			go peer.Send(msg.P)
 			continue
 		}
 
 		//filter index by msg index set
 		bsend := true
-		for _, eid := range msg.Index {
+		for _, eid := range msg.Indexs {
 			if id == eid {
 				bsend = false
 				break
