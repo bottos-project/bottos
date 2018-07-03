@@ -489,7 +489,7 @@ func (s *synchronizes) sendupBlock(block *types.Block) bool {
 		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
 			log.Errorf("send block request error:%s", err)
-			time.Sleep(10000)
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 
@@ -502,7 +502,7 @@ func (s *synchronizes) sendupBlock(block *types.Block) bool {
 			return false
 		} else if rsp.ErrorNo == chain.InsertBlockErrorNotLinked {
 			log.Errorf("block insert link error")
-			time.Sleep(1000 * 1000 * 60 * 5)
+			time.Sleep(5 * time.Minute)
 			return false
 		} else {
 			log.Errorf("block insert unkown error")
