@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/bottos-project/bottos/bcli/p2p/stub"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/protocol"
 	log "github.com/cihub/seelog"
 	"io/ioutil"
+	"time"
 )
 
 type p2pConfig struct {
@@ -15,6 +17,7 @@ type p2pConfig struct {
 	ServPort string
 	PeerLst  []string
 	ChainId  string
+	Producer bool
 }
 
 type chainConfig struct {
@@ -39,26 +42,54 @@ func main() {
 
 	chain := readChainConfig("chainconfig.json")
 	if chain != nil {
-		bc.SetBlockNumber(chain.BlockNumber)
-		bc.SetBlocks(chain.Blocks)
+		if chain.BlockNumber > uint32(len(chain.Blocks)) {
+			fmt.Printf("chain cfg number error")
+			return
+		}
+		bc.SetBlocks(chain.Blocks[0:chain.BlockNumber])
 	}
 
 	log.Info("blocknumber:", chain.BlockNumber)
 	p := protocol.MakeProtocol(&param, bc)
 
-	actor := stub.NewDumActor()
+	actor := stub.NewDumActor(bc)
 
 	p.SetChainActor(actor)
 
 	go p.Start()
 
+	if pc.Producer {
+		go newBlockTimer(bc, p)
+	}
+	/*new block timer*/
+
 	select {}
+}
+
+func newBlockTimer(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
+	time.Sleep(1 * time.Minute)
+
+	blockTimer := time.NewTimer(3 * time.Second)
+
+	for {
+		select {
+		case <-blockTimer.C:
+			newBlock(bc, p)
+			blockTimer.Reset(3 * time.Second)
+		}
+	}
+}
+
+func newBlock(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
+	msg := bc.NewBlockMsg()
+	p.ProcessNewBlock(msg)
 }
 
 //ReadFile parse json configuration
 func readP2PConfig(filename string) *p2pConfig {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
+		fmt.Printf("read p2p config error:%s", err)
 		return nil
 	}
 
@@ -66,6 +97,7 @@ func readP2PConfig(filename string) *p2pConfig {
 
 	var pc p2pConfig
 	if err := json.Unmarshal([]byte(str), &pc); err != nil {
+		fmt.Printf("p2p config unmarshall error:%s", err)
 		return nil
 	}
 
@@ -76,6 +108,7 @@ func readP2PConfig(filename string) *p2pConfig {
 func readChainConfig(filename string) *chainConfig {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
+		fmt.Printf("read chain config error:%s", err)
 		return nil
 	}
 
@@ -83,6 +116,7 @@ func readChainConfig(filename string) *chainConfig {
 
 	var pc chainConfig
 	if err := json.Unmarshal([]byte(str), &pc); err != nil {
+		fmt.Printf("chain config unmarshall error:%s", err)
 		return nil
 	}
 

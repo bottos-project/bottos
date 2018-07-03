@@ -110,9 +110,9 @@ func (k *keeplive) sendPing() {
 
 	packet := p2p.Packet{H: head}
 
-	ping := p2p.MsgPacket{
-		Index: nil,
-		P:     packet,
+	ping := p2p.BcastMsgPacket{
+		Indexs: nil,
+		P:      packet,
 	}
 
 	p2p.Runner.SendBroadcast(ping)
@@ -126,8 +126,8 @@ func (k *keeplive) sendPong(index uint16) {
 
 	packet := p2p.Packet{H: head}
 
-	pong := p2p.MsgPacket{
-		Index: []uint16{index},
+	pong := p2p.UniMsgPacket{
+		Index: index,
 		P:     packet,
 	}
 

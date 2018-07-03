@@ -12,6 +12,8 @@ const (
 
 	BLOCK_HEADER_REQ = 5
 	BLOCK_HEADER_RSP = 6
+
+	BLOCK_HEADER_UPDATE = 7
 )
 
 type blockHeaderReq struct {
@@ -26,4 +28,9 @@ type blockHeaderRsp struct {
 type blockUpdate struct {
 	index uint16
 	block *types.Block
+}
+
+type headerUpdate struct {
+	index  uint16
+	header *types.Header
 }
