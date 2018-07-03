@@ -344,14 +344,14 @@ func getCtxName(vm *VM) (bool, error) {
 	if len < ctxNameLen {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
-			vm.pushInt32(int32(1))
+			vm.pushInt32(int32(0))
 		}
 	}
 
 	copy(vm.memory[pos:pos+len], []byte(ctxName))
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushInt32(int32(0))
+		vm.pushInt32(int32(ctxNameLen))
 	}
 
 	return true, nil
@@ -367,14 +367,14 @@ func getSender(vm *VM) (bool, error) {
 	if len < senderNameLen {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
-			vm.pushInt32(int32(1))
+			vm.pushInt32(int32(0))
 		}
 	}
 
 	copy(vm.memory[pos:pos+len], []byte(senderName))
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushInt32(int32(0))
+		vm.pushInt32(int32(senderNameLen))
 	}
 
 	return true, nil
