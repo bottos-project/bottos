@@ -38,6 +38,8 @@ import (
 	log "github.com/cihub/seelog"
 )
 
+
+
 //NewNativeContract is to create a new native contract
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
 	intf, err := NewNativeContractHandler()
@@ -80,12 +82,8 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
 
-		Abi, err1 := role.GetAbi(ldb, config.BOTTOS_CONTRACT_NAME)
-		if err1 != nil {
-			log.Info("role.GetAbi failed for :", name)
-			continue
-		}
-		nparam, err2 := abi.MarshalAbi(nps, &Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
+		Abi := GetAbi()
+		nparam, err2 := abi.MarshalAbi(nps, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
 		if err2 != nil {
 			log.Info("abi.MarshalAbi failed for new account:", name)
 			continue
@@ -101,7 +99,7 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 			Value: uint64(config.Genesis.InitDelegates[i].Balance),
 		}
 
-		tparam, err3 := abi.MarshalAbi(tps, &Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
+		tparam, err3 := abi.MarshalAbi(tps, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
 		if err3 != nil {
 			log.Info("abi.MarshalAbi failed for transfer with account:", name)
 			continue
@@ -116,7 +114,7 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
 		}
 
-		sparam, err4 := abi.MarshalAbi(sps, &Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
+		sparam, err4 := abi.MarshalAbi(sps, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
 		if err4 != nil {
 			log.Info("abi.MarshalAbi failed for setdegelage with account:", name)
 			continue
@@ -137,9 +135,15 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 	return trxs, nil
 }
 
-func createNativeContractABI() *abi.ABI {
-	a := &abi.ABI{}
+var a  *abi.ABI
 
+func GetAbi() *abi.ABI {
+	return a
+}
+
+func createNativeContractABI() *abi.ABI {
+
+	a = &abi.ABI{}
 	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "newaccount", Type: "NewAccount"})
 	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "transfer", Type: "Transfer"})
 	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "setdelegate", Type: "SetDelegate"})
@@ -187,6 +191,7 @@ func createNativeContractABI() *abi.ABI {
 	s.Fields.Set("contract_abi", "bytes")
 	a.Structs = append(a.Structs, s)
 
+	role.AbiAttr = a
 	return a
 }
 

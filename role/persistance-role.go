@@ -41,6 +41,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+var AbiAttr *abi.ABI
+
 // AccountInfo is definition of account
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
@@ -138,7 +140,7 @@ type TParam interface {
 
 // DeployCodeParam is interface definition of deploy code method
 type DeployCodeParam struct {
-	Name         string `json:"name"`
+	Name         string `json:"contract"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode []byte `json:"contract_code"`
@@ -152,7 +154,7 @@ type DeployAbiParam struct {
 
 // mgo_DeployCodeParam is interface definition of mgo deploy code
 type mgoDeployCodeParam struct {
-	Name         string `json:"name"`
+	Name         string `json:"contract"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode string `json:"contract_code"`
@@ -331,8 +333,9 @@ func getMyPublicIPaddr() (string, error) {
 }
 
 // ParseParam is to parase param by method
-func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string) (interface{}, error) {
+func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
 	var decodedParam interface{}
+	var Abi *abi.ABI = nil
 	if Contract == "bottos" {
 		if Method == "newaccount" {
 			decodedParam = &newaccountparam{}
@@ -405,6 +408,11 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 	} else if Contract == "nodeclustermng" {
 		if Method == "reg" {
 			decodedParam = &NodeClusterReg{}
+			var err error
+			Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
+			if err != nil {
+				return nil, errors.New("Get Abi failed!")
+			}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 			return nil, errors.New("Not supported")
@@ -421,17 +429,14 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		return nil, errors.New("Not supported")
 	}
 	
-	Abi, errval := GetAbi(ldb, Contract)
-	if errval != nil {
-		log.Error("Get Abi failed for Contract: ", Contract, ", Method: ", Method)
-		return nil, errors.New("ParseParam: Get Abi failed")
+	if Abi == nil {
+		Abi = GetAbi()
 	}
-	
 	if Contract == "bottos" && Method == "deploycode" {
 		//p, ok := decodedParam.(DeployCodeParam)
 
 		var tmpval = &DeployCodeParam{}
-		err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, tmpval)
+		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
 		if err != nil {
 			return nil, errors.New("ParseParam: UnmarshalAbi failed")
 		}
@@ -443,10 +448,9 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
 		return mgoParam, nil
 
-		return nil, errors.New("Decode DeployCodeParam failed.")
-	} else if Contract == "bottos" && Method == "DeployAbiParam" {
+	} else if Contract == "bottos" && Method == "deployabi" {
 		var tmpval = &DeployAbiParam{}
-		err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, tmpval)
+		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
 		if err != nil {
 			return nil, errors.New("ParseParam: UnmarshalAbi failed")
 		}
@@ -457,21 +461,8 @@ func ParseParam(ldb *db.DBService, Param []byte, Contract string, Method string)
 		return mgoParam, nil
 	}
 	
-	err := abi.UnmarshalAbi(Contract, &Abi, Method, Param, decodedParam)
+	err := abi.UnmarshalAbi(Contract, Abi, Method, Param, decodedParam)
 
-	/*if Contract == "nodeclustermng" {
-		decodedParam := &NodeClusterReg{}
-		Abi, errval := GetAbi(ldb, "nodeclustermng")
-		if errval != nil {
-			return nil, errors.New("nodeclustermng: Get Abi failed!!")
-		}
-		err = abi.UnmarshalAbi(Contract, &Abi, Method, Param, decodedParam)
-		if err != nil {
-			return nil, errors.New("UnmarshalAbi failed for contract nodeclustermng")
-		}
-	}*/
-
- 
 	if err != nil {
 		log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
 		return nil, err
@@ -506,7 +497,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 			CreateTime: time.Now(),
 		}
 
-		decodedParam, err := ParseParam(ldb, trx.Param, newtrx.Contract, newtrx.Method)
+		decodedParam, err := ParseParam(r, trx.Param, newtrx.Contract, newtrx.Method)
 
 		if err != nil {
 			return err
@@ -588,11 +579,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		return err
 	}
 	
-	Abi, errval := GetAbi(ldb, trx.Contract)
-	if errval != nil {
-		log.Error("Get Abi failed for Contract: ", trx.Contract, ", Method: ", trx.Method)
-		return errval
-	}
+	Abi := GetAbi()
 
 	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
@@ -613,7 +600,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if trx.Method == "transfer" {
 
 		data := &transferparam{}
-		err := abi.UnmarshalAbi(trx.Contract, &Abi, trx.Method, trx.Param, data)
+		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
 		if err != nil{
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 		}
@@ -650,7 +637,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	} else if trx.Method == "newaccount" {
 
 		data := &newaccountparam{}
-		err := abi.UnmarshalAbi(trx.Contract, &Abi, trx.Method, trx.Param, data)
+		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
 		if err != nil{
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
@@ -699,3 +686,28 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 func StartRetroBlock(ldb *db.DBService) {
 
 }
+
+func GetAbi() *abi.ABI {
+	return AbiAttr
+}
+
+//GetAbi function
+func GetAbiForExternalContract(r *Role, contract string) (*abi.ABI, error) {
+	account, err := r.GetAccount(contract)
+	if err != nil {
+		return nil, errors.New("Get account fail")
+	}
+
+	if len(account.ContractAbi) > 0 {
+
+		Abi, err := abi.ParseAbi(account.ContractAbi)
+		if err != nil {
+			return nil, err
+		}
+		return Abi, nil
+	}
+	
+	// TODO
+	return nil, errors.New("Get Abi failed!")
+}
+

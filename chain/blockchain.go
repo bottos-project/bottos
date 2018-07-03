@@ -36,7 +36,6 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract"
-	"github.com/bottos-project/bottos/contract/contractdb"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
 )
@@ -111,7 +110,7 @@ func (bc *BlockChain) initChain() error {
 
 	// execute trxs
 	for _, trx := range trxs {
-		ctx := &contract.Context{ContractDB:&contractdb.ContractDB{Db:bc.blockDb}, RoleIntf: bc.roleIntf, Trx: trx}
+		ctx := &contract.Context{RoleIntf: bc.roleIntf, Trx: trx}
 		err := bc.nc.ExecuteNativeContract(ctx)
 		if err != contract.ERROR_NONE {
 			log.Infof("NativeContractInitChain Error: ", trx, err)
