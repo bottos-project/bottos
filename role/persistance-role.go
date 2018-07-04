@@ -37,6 +37,7 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	abi "github.com/bottos-project/bottos/contract/abi"
+	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -313,6 +314,14 @@ type NodeInfoReq struct {
 	Info   NodeBaseInfo
 }
 
+//TransferDTOStruct defination
+type TransferDTOStruct struct {
+   From      string
+   To        string
+   TokenType string
+   Value     uint64
+}
+
 func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
 	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
@@ -423,6 +432,17 @@ func ParseParam(r *Role, Param []byte, Contract string, Method string) (interfac
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 			return nil, errors.New("Not supported")
+		}
+	} else if Contract == "bottoscontract"  {
+        	if Method == "transfer" {
+			decodedParam = &TransferDTOStruct{}
+			err := msgpack.Unmarshal(Param, decodedParam)
+
+			if err != nil {
+				log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+				return nil, err
+			}
+			return decodedParam, nil
 		}
 	} else {
 		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
