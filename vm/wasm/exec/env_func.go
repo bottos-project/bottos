@@ -30,11 +30,12 @@
 package exec
 
 import (
-	"fmt"
 	"errors"
-	log "github.com/cihub/seelog"
+	"fmt"
+
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
+	log "github.com/cihub/seelog"
 )
 
 // EnvFunc defines env for func execution
@@ -56,16 +57,20 @@ func NewEnvFunc() *EnvFunc {
 		envFuncParamIdx: 0,
 	}
 
-	envFunc.Register("printi",           printi)
-	envFunc.Register("prints",           prints)
-	envFunc.Register("getStrValue",      getStrValue)
-	envFunc.Register("setStrValue",      setStrValue)
-	envFunc.Register("removeStrValue",   removeStrValue)
-	envFunc.Register("getParam",         getParam)
-	envFunc.Register("callTrx",          callTrx)
-	envFunc.Register("assert",           assert)
-	envFunc.Register("getCtxName",       getCtxName)
-	envFunc.Register("getSender",        getSender)
+	envFunc.Register("printi", printi)
+	envFunc.Register("prints", prints)
+	// envFunc.Register("getStrValue", getStrValue)
+	// envFunc.Register("setStrValue", setStrValue)
+	// envFunc.Register("removeStrValue", removeStrValue)
+	
+	envFunc.Register("getStrValue", getBinValue)
+	envFunc.Register("setStrValue", setBinValue)
+	envFunc.Register("removeStrValue", removeBinValue)
+	envFunc.Register("getParam", getParam)
+	envFunc.Register("callTrx", callTrx)
+	envFunc.Register("assert", assert)
+	envFunc.Register("getCtxName", getCtxName)
+	envFunc.Register("getSender", getSender)
 
 	return &envFunc
 }
@@ -86,16 +91,16 @@ func getStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 	if len(params) != 8 {
 		return false, errors.New("parameter count error while call getStrValue")
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos   := int(params[2])
-	objectLen   := int(params[3])
-	keyPos      := int(params[4])
-	keyLen      := int(params[5])
+	objectPos := int(params[2])
+	objectLen := int(params[3])
+	keyPos := int(params[4])
+	keyLen := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 
@@ -104,10 +109,10 @@ func getStrValue(vm *VM) (bool, error) {
 	contract := make([]byte, contractLen)
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
 
-	object   := make([]byte, objectLen)
+	object := make([]byte, objectLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
-	key      := make([]byte, keyLen)
+	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
@@ -146,20 +151,20 @@ func setStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
-	valuePos  := int(params[4])
-	valueLen  := int(params[5])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+	valuePos := int(params[4])
+	valueLen := int(params[5])
 
 	// length check
 
 	object := make([]byte, objectLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
-	key    := make([]byte, keyLen)
+	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
-	value  := make([]byte, valueLen)
+	value := make([]byte, valueLen)
 	copy(value, vm.memory[valuePos:valuePos+valueLen])
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
@@ -192,15 +197,15 @@ func removeStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
 
 	// length check
 
 	object := make([]byte, objectLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
-	key    := make([]byte, keyLen)
+	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(object), len(object), string(key), len(key))
@@ -217,6 +222,145 @@ func removeStrValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof("VM: from contract:%v, method:%v, func removeStrValue:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
+
+	return true, nil
+}
+
+func getBinValue(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract()
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 8 {
+		return false, errors.New("parameter count error while call getStrValue")
+	}
+	contractPos := int(params[0])
+	contractLen := int(params[1])
+	objectPos := int(params[2])
+	objectLen := int(params[3])
+	keyPos := int(params[4])
+	keyLen := int(params[5])
+	valueBufPos := int(params[6])
+	valueBufLen := int(params[7])
+
+	// length check
+
+	contract := make([]byte, contractLen)
+	copy(contract, vm.memory[contractPos:contractPos+contractLen])
+
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
+
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
+	value, err := contractCtx.ContractDB.GetBinValue(string(contract), string(object), string(key))
+
+	valueLen := 0
+	if err == nil {
+		valueLen = len(value)
+		// check buf len
+		if valueLen <= valueBufLen {
+			copy(vm.memory[valueBufPos:valueBufPos+valueLen], value)
+		} else {
+			valueLen = 0
+		}
+	}
+
+	//1. recover the vm context
+	//2. if the call returns value,push the result to the stack
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(valueLen))
+	}
+
+	log.Infof("VM: from contract:%v, method:%v, func get_bin_value:(contract=%v, objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, contract, object, key, value)
+
+	return true, nil
+}
+
+func setBinValue(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract()
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 6 {
+		return false, errors.New("parameter count error while call setBinValue")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+	valuePos := int(params[4])
+	valueLen := int(params[5])
+
+	// length check
+
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
+
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	value := make([]byte, valueLen)
+	copy(value, vm.memory[valuePos:valuePos+valueLen])
+
+	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
+	err := contractCtx.ContractDB.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
+
+	result := 1
+	if err != nil {
+		result = 0
+	}
+
+	//1. recover the vm context
+	//2. if the call returns value,push the result to the stack
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(result))
+	}
+
+	log.Infof("VM: from contract:%v, method:%v, func setBinValue:(objname=%v, key=%v, value=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key, value)
+
+	return true, nil
+}
+
+func removeBinValue(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract()
+
+	envFunc := vm.envFunc
+	params := envFunc.envFuncParam
+	if len(params) != 4 {
+		return false, errors.New("parameter count error while call removeBinValue")
+	}
+	objectPos := int(params[0])
+	objectLen := int(params[1])
+	keyPos := int(params[2])
+	keyLen := int(params[3])
+
+	// length check
+
+	object := make([]byte, objectLen)
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
+
+	key := make([]byte, keyLen)
+	copy(key, vm.memory[keyPos:keyPos+keyLen])
+
+	log.Infof(string(object), len(object), string(key), len(key))
+	err := contractCtx.ContractDB.RemoveBinValue(contractCtx.Trx.Contract, string(object), string(key))
+
+	result := 1
+	if err != nil {
+		result = 0
+	}
+
+	vm.ctx = envFunc.envFuncCtx
+	if envFunc.envFuncRtn {
+		vm.pushUint64(uint64(result))
+	}
+
+	log.Infof("VM: from contract:%v, method:%v, func removeBinValue:(objname=%v, key=%v)\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, object, key)
 
 	return true, nil
 }
@@ -250,13 +394,13 @@ func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("parameter count error while call memcpy")
 	}
 
-	bufPos   := int(params[0])
-	bufLen   := int(params[1])
+	bufPos := int(params[0])
+	bufLen := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
@@ -276,7 +420,7 @@ func getParam(vm *VM) (bool, error) {
 func callTrx(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 
 	if len(params) != 4 {
 		return false, errors.New("*ERROR* Parameter count error while call memcpy")
@@ -336,12 +480,12 @@ func assert(vm *VM) (bool, error) {
 
 func getCtxName(vm *VM) (bool, error) {
 
-	ctxName    := vm.contract.Trx.Contract
+	ctxName := vm.contract.Trx.Contract
 	ctxNameLen := uint64(len(ctxName))
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < ctxNameLen + 1 {
+	if len < ctxNameLen+1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
@@ -359,12 +503,12 @@ func getCtxName(vm *VM) (bool, error) {
 
 func getSender(vm *VM) (bool, error) {
 
-	senderName    := vm.contract.Trx.Sender
+	senderName := vm.contract.Trx.Sender
 	senderNameLen := uint64(len(senderName))
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < senderNameLen + 1 {
+	if len < senderNameLen+1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
