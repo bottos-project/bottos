@@ -59,9 +59,13 @@ func NewEnvFunc() *EnvFunc {
 
 	envFunc.Register("printi", printi)
 	envFunc.Register("prints", prints)
-	envFunc.Register("getStrValue", getStrValue)
-	envFunc.Register("setStrValue", setStrValue)
-	envFunc.Register("removeStrValue", removeStrValue)
+	// envFunc.Register("getStrValue", getStrValue)
+	// envFunc.Register("setStrValue", setStrValue)
+	// envFunc.Register("removeStrValue", removeStrValue)
+	
+	envFunc.Register("getStrValue", getBinValue)
+	envFunc.Register("setStrValue", setBinValue)
+	envFunc.Register("removeStrValue", removeBinValue)
 	envFunc.Register("getParam", getParam)
 	envFunc.Register("callTrx", callTrx)
 	envFunc.Register("assert", assert)
