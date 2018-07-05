@@ -28,8 +28,8 @@ package codedb
 import (
 	//"fmt"
 
-	"github.com/tidwall/buntdb"
 	log "github.com/cihub/seelog"
+	"github.com/tidwall/buntdb"
 )
 
 //CallGetObject is to get object by key
@@ -48,7 +48,7 @@ func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string,
 
 //CallGetAllObjectKeys is to get all objects by objectName
 func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, error) {
-	var objectValue []string
+	var objectValue = make([]string, 0, 500)
 	var err error
 
 	k.db.View(func(tx *buntdb.Tx) error {
@@ -65,7 +65,7 @@ func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, er
 
 //CallGetAllObjects is to get all objects by keyName which is indexname
 func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
-	var objectValue []string
+	var objectValue = make([]string, 0, 500)
 	var err error
 	k.db.View(func(tx *buntdb.Tx) error {
 		err = tx.Ascend(keyName, func(key, value string) bool {
@@ -87,7 +87,6 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 	err := k.db.View(func(tx *buntdb.Tx) error {
 		return tx.AscendGreaterOrEqual(indexName, `{`+indexName+":"+indexValue+`}`, func(key, value string) bool {
 			objectValue = value
-			log.Info(value)
 			return true
 		})
 	})
@@ -98,15 +97,16 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 
 //CallGetAllObjectsSortByIndex is to get all objects by sort indexName
 func (k *CodeDbRepository) CallGetAllObjectsSortByIndex(indexName string) ([]string, error) {
-	var objectValue []string
+	var objectValue = make([]string, 0, 500)
+	var tag string
 	var err error
 
 	err = k.db.View(func(tx *buntdb.Tx) error {
 		return tx.Ascend(indexName, func(key, value string) bool {
-			objectValue = append(objectValue, value)
+			tag = value
+			objectValue = append(objectValue, tag)
 			return true
 		})
 	})
-
 	return objectValue, err
 }
