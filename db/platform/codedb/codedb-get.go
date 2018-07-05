@@ -28,8 +28,8 @@ package codedb
 import (
 	//"fmt"
 
-	log "github.com/cihub/seelog"
 	"github.com/tidwall/buntdb"
+	log "github.com/cihub/seelog"
 )
 
 //CallGetObject is to get object by key
@@ -59,7 +59,7 @@ func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, er
 		return err
 	})
 
-	return objectValue, err
+	return objectValue, nil
 
 }
 

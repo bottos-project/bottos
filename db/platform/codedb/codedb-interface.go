@@ -37,6 +37,8 @@ type CodeDbRepo interface {
 	CallGetAllObjectKeys(objectName string) ([]string, error)
 	CallGetAllObjects(keyName string) ([]string, error)
 	CallGetAllObjectsSortByIndex(indexName string) ([]string, error)
+        CallGlobalLock()
+	CallGlobalUnLock()
 	CallCommit() error
 	CallRollback() error
 }

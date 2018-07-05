@@ -38,6 +38,7 @@ type CodeDbRepository struct {
 	fn string     // filename for reporting
 	db *buntdb.DB // LevelDB instance
 	tx *buntdb.Tx
+        globalSignal   sync.RWMutex // global signal for all state
 }
 
 //NewCodeDbRepository is to create new code db
@@ -51,7 +52,16 @@ func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 		db: codedb,
 	}, nil
 }
-
+//CallGlobalLock is to lock
+func (m *MultindexDB) CallGlobalLock() {
+	log.Info("CallGlobalLock")
+	m.globalSignal.Lock()
+}
+//CallGlobalUnLock is to unlock
+func (m *MultindexDB) CallGlobalUnLock() {
+	log.Info("CallGlobalUnLock")
+	m.globalSignal.Unlock()
+}
 //CallStartUndoSession is to start undo session
 func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
 	k.tx, _ = k.db.Begin(true)
