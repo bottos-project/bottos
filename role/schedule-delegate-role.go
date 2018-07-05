@@ -23,7 +23,9 @@ const ScheduleDelegateObjectName string = "scheduledelegate"
 type ScheduleDelegate struct {
 	CurrentTermTime *big.Int
 }
-
+func CreateScheduleDelegateRole(ldb *db.DBService) error {
+	return nil
+}
 //SetScheduleDelegateRole is seting scheduled delegate role
 func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	jsonvalue, err := json.Marshal(value)
@@ -53,8 +55,8 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 
 }
 
-//GetCandidateBySlot is to get candidate by slot
-func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
+//GetCandidateRoleBySlot is to get candidate by slot
+func GetCandidateRoleBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		log.Error("err")
@@ -125,7 +127,6 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	if err != nil {
 		return nil
 	}
-	log.Info("finish delegates", finishdelegates)
 
 	if len(filterDgates) == 0 {
 		eligibleList = finishdelegates
@@ -154,6 +155,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	if err != nil {
 		return nil
 	}
+
 	if (config.BLOCKS_PER_ROUND >= uint32(len(finishdelegates))) && (newCandidates.TermFinishTime.Cmp(common.MaxUint128()) == -1) {
 		ResetCandidatesTerm(ldb)
 	} else {

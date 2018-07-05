@@ -218,7 +218,7 @@ func (r *Role) GetAllDelegateVotes() ([]*DelegateVotes, error) {
 
 //GetCandidateBySlot is getting candidate by slot
 func (r *Role) GetCandidateBySlot(slotNum uint64) (string, error) {
-	return GetCandidateBySlot(r.Db, slotNum)
+	return GetCandidateRoleBySlot(r.Db, slotNum)
 }
 
 //SetBlockHistory is setting block history
@@ -278,6 +278,7 @@ func (r *Role) initRole() {
 
 	CreateDelegateRole(r.Db)
 	CreateDelegateVotesRole(r.Db)
+	CreateScheduleDelegateRole(r.Db)
 
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)
