@@ -28,17 +28,21 @@ package role
 import (
 	"errors"
 	log "github.com/cihub/seelog"
-	//"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	abi "github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var AbiAttr *abi.ABI
 
 // AccountInfo is definition of account
 type AccountInfo struct {
@@ -137,18 +141,29 @@ type TParam interface {
 
 // DeployCodeParam is interface definition of deploy code method
 type DeployCodeParam struct {
-	Name         string `json:"name"`
+	Name         string `json:"contract"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode []byte `json:"contract_code"`
 }
 
+// DeployAbiParam is interface definition of deploy code method
+type DeployAbiParam struct {
+	Name        string `json:"contract"`
+	ContractAbi []byte `json:"contract_abi"`
+}
+
 // mgo_DeployCodeParam is interface definition of mgo deploy code
 type mgoDeployCodeParam struct {
-	Name         string `json:"name"`
+	Name         string `json:"contract"`
 	VMType       byte   `json:"vm_type"`
 	VMVersion    byte   `json:"vm_version"`
 	ContractCode string `json:"contract_code"`
+}
+
+type mgoDeployAbiParam struct {
+	Name        string `json:"contract"`
+	ContractAbi string `json:"contract_abi"`
 }
 
 /**======External Contract struct definition====*/
@@ -280,8 +295,10 @@ type GoodsProReq struct {
 
 // NodeClusterReg is definition for node cluster reg
 type NodeClusterReg struct {
-	NodeIP    string `bson:"seedip"`
-	ClusterIP string `bson:"slaveiplist"`
+	NodeIP    string `bson:"seedip" json:"nodeIP"`
+	ClusterIP string `bson:"slaveiplist" json:"clusterIP"`
+	NodeUUID  string `bson:"nodeuuid" json:"uuid"`
+	StorageCapacity string `bson:"capacity" json:"capacity"`
 }
 
 // NodeBaseInfo is definition for node base info
@@ -297,13 +314,37 @@ type NodeInfoReq struct {
 	Info   NodeBaseInfo
 }
 
+//TransferDTOStruct defination
+type TransferDTOStruct struct {
+   From      string
+   To        string
+   TokenType string
+   Value     uint64
+}
+
 func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
 	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
+//getMyPublicIPaddr function
+func getMyPublicIPaddr() (string, error) {
+	resp, err1 := http.Get("http://members.3322.org/dyndns/getip")
+	if err1 != nil {
+		return "", err1
+	}
+	defer resp.Body.Close()
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		return "", err2
+	}
+	//log.Info("getMyPublicIPaddr"+ string(body))
+	return string(body), nil
+}
+
 // ParseParam is to parase param by method
-func ParseParam(Param []byte, Contract string, Method string) (interface{}, error) {
+func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
 	var decodedParam interface{}
+	var Abi *abi.ABI = nil
 	if Contract == "bottos" {
 		if Method == "newaccount" {
 			decodedParam = &newaccountparam{}
@@ -319,6 +360,8 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 			decodedParam = &CancelCreditParam{}
 		} else if Method == "transferfrom" {
 			decodedParam = &TransferFromParam{}
+		} else if Method == "deployabi" {
+			decodedParam = &DeployAbiParam{}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
 			return nil, errors.New("Not supported")
@@ -374,6 +417,11 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 	} else if Contract == "nodeclustermng" {
 		if Method == "reg" {
 			decodedParam = &NodeClusterReg{}
+			var err error
+			Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
+			if err != nil {
+				return nil, errors.New("Get Abi failed!")
+			}
 		} else {
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 			return nil, errors.New("Not supported")
@@ -385,33 +433,58 @@ func ParseParam(Param []byte, Contract string, Method string) (interface{}, erro
 			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 			return nil, errors.New("Not supported")
 		}
+	} else if Contract == "bottoscontract"  {
+        	if Method == "transfer" {
+			decodedParam = &TransferDTOStruct{}
+			err := msgpack.Unmarshal(Param, decodedParam)
+
+			if err != nil {
+				log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+				return nil, err
+			}
+			return decodedParam, nil
+		}
 	} else {
 		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
 		return nil, errors.New("Not supported")
 	}
-
-	err := msgpack.Unmarshal(Param, decodedParam)
-
+	
+	if Abi == nil {
+		Abi = GetAbi()
+	}
 	if Contract == "bottos" && Method == "deploycode" {
 		//p, ok := decodedParam.(DeployCodeParam)
 
 		var tmpval = &DeployCodeParam{}
-		err = msgpack.Unmarshal(Param, tmpval)
-		//if ok {
-		if err == nil {
-			var mgoParam = mgoDeployCodeParam{}
-			mgoParam.Name = tmpval.Name
-			mgoParam.VMType = tmpval.VMType
-			mgoParam.VMVersion = tmpval.VMVersion
-			mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
-			return mgoParam, nil
+		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
+		if err != nil {
+			return nil, errors.New("ParseParam: UnmarshalAbi failed")
 		}
+		//if ok {
+		var mgoParam = mgoDeployCodeParam{}
+		mgoParam.Name = tmpval.Name
+		mgoParam.VMType = tmpval.VMType
+		mgoParam.VMVersion = tmpval.VMVersion
+		mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
+		return mgoParam, nil
 
-		return nil, errors.New("Decode DeployCodeParam failed.")
+	} else if Contract == "bottos" && Method == "deployabi" {
+		var tmpval = &DeployAbiParam{}
+		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
+		if err != nil {
+			return nil, errors.New("ParseParam: UnmarshalAbi failed")
+		}
+		
+		var mgoParam = mgoDeployAbiParam{}
+		mgoParam.Name = tmpval.Name
+		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
+		return mgoParam, nil
 	}
+	
+	err := abi.UnmarshalAbi(Contract, Abi, Method, Param, decodedParam)
 
 	if err != nil {
-		//log.Info("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+		log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
 		return nil, err
 	}
 	return decodedParam, nil
@@ -444,7 +517,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 			CreateTime: time.Now(),
 		}
 
-		decodedParam, err := ParseParam(trx.Param, newtrx.Contract, newtrx.Method)
+		decodedParam, err := ParseParam(r, trx.Param, newtrx.Contract, newtrx.Method)
 
 		if err != nil {
 			return err
@@ -525,6 +598,8 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if err != nil {
 		return err
 	}
+	
+	Abi := GetAbi()
 
 	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
@@ -545,8 +620,10 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if trx.Method == "transfer" {
 
 		data := &transferparam{}
-		err := msgpack.Unmarshal(trx.Param, data)
-		//fmt.Printf("transfer struct: %v, msgpack: %x\n", trx.Param, data)
+		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
+		if err != nil{
+			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
+		}
 
 		FromAccountName := data.From
 		ToAccountName := data.To
@@ -580,8 +657,9 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	} else if trx.Method == "newaccount" {
 
 		data := &newaccountparam{}
-		err := msgpack.Unmarshal(trx.Param, data)
-		if err != nil {
+		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
+		if err != nil{
+			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
 		}
 
@@ -610,7 +688,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 // ApplyPersistanceRole is to apply persistence
 func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
-	if ! ldb.IsOpDbConfigured() {
+	if !ldb.IsOpDbConfigured() {
 		return nil
 	}
 	oids := make([]bson.ObjectId, len(block.Transactions))
@@ -628,3 +706,28 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 func StartRetroBlock(ldb *db.DBService) {
 
 }
+
+func GetAbi() *abi.ABI {
+	return AbiAttr
+}
+
+//GetAbi function
+func GetAbiForExternalContract(r *Role, contract string) (*abi.ABI, error) {
+	account, err := r.GetAccount(contract)
+	if err != nil {
+		return nil, errors.New("Get account fail")
+	}
+
+	if len(account.ContractAbi) > 0 {
+
+		Abi, err := abi.ParseAbi(account.ContractAbi)
+		if err != nil {
+			return nil, err
+		}
+		return Abi, nil
+	}
+	
+	// TODO
+	return nil, errors.New("Get Abi failed!")
+}
+

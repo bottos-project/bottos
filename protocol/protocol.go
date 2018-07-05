@@ -28,7 +28,7 @@ func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) Pro
 	p := &protocol{
 		d: discover.MakeDiscover(config),
 		t: transaction.MakeTransaction(),
-		b: block.MakeBlock(chain),
+		b: block.MakeBlock(chain, true), //we should get node type here
 		c: consensus.MakeConsensus(),
 	}
 

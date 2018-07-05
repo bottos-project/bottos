@@ -33,10 +33,14 @@ import (
 	coreapi "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro"
+	
+	"strings"
+	"github.com/bitly/go-simplejson"
+        "net/http"
+
 )
 
 // CLI responsible for processing command line arguments
@@ -145,7 +149,13 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		To:     to,
 		Amount: value,
 	}
-	param, _ := msgpack.Marshal(tp)
+        
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+	
+	param, _ := abi.MarshalAbi(tp, &Abi, "bottos", "transfer")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -211,6 +221,45 @@ func (cli *CLI) jsonPrint(data []byte) {
 	fmt.Println(string(out.Bytes()))
 }
 
+//getAbibyContractName function
+func getAbibyContractName(contractname string) (abi.ABI, error) {
+	var abistring string
+	NodeIp := "127.0.0.1"
+	addr := "http://" + NodeIp + ":8080/rpc"
+	params := `service=bottos&method=CoreApi.QueryAbi&request={
+			"contract":"%s"}`
+	s := fmt.Sprintf(params, contractname)
+	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
+		strings.NewReader(s))
+
+	if err != nil {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	defer respBody.Body.Close()
+	body, err := ioutil.ReadAll(respBody.Body)
+	if err != nil {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	jss, _ := simplejson.NewJson([]byte(body))
+	abistring = jss.Get("result").MustString()
+	if len(abistring) <= 0 {
+		fmt.Println(err)
+		return abi.ABI{}, err
+	}
+
+	Abi, err := abi.ParseAbi([]byte(abistring))
+	if err != nil {
+		fmt.Println("Parse abistring", abistring, " to abi failed!")
+		return abi.ABI{}, err
+	}
+
+	return *Abi, nil
+}
+
 func (cli *CLI) newaccount(name string, pubkey string) {
 	chainInfo, err := cli.queryChainInfo()
 	if err != nil {
@@ -220,14 +269,20 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	// 1, new account trx
 	type NewAccountParam struct {
-		Name   string
-		Pubkey string
+		Name   string `json:"name"`
+		Pubkey string `json:"pubkey"`
 	}
 	nps := &NewAccountParam{
 		Name:   name,
 		Pubkey: pubkey,
 	}
-	param, _ := msgpack.Marshal(nps)
+	
+        Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+
+	param, _ := abi.MarshalAbi(nps, &Abi, "bottos", "newaccount")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -326,7 +381,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	type DeployCodeParam struct {
-		Name         string `json:"name"`
+		Name         string `json:"contract"`
 		VMType       byte   `json:"vm_type"`
 		VMVersion    byte   `json:"vm_version"`
 		ContractCode []byte `json:"contract_code"`
@@ -340,7 +395,13 @@ func (cli *CLI) deploycode(name string, path string) {
 	dcp.ContractCode = make([]byte, fi.Size())
 	f.Read(dcp.ContractCode)
 	//fmt.Printf("Code %x", dcp.ContractCode)
-	param, _ := msgpack.Marshal(dcp)
+        
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+	
+	param, _ := abi.MarshalAbi(dcp, &Abi, "bottos", "deploycode")
 
 	trx := &coreapi.Transaction{
 		Version:     1,
@@ -447,7 +508,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	type DeployAbiParam struct {
-		Name        string `json:"name"`
+		Name        string `json:"contract"`
 		ContractAbi []byte `json:"contract_abi"`
 	}
 
@@ -456,20 +517,26 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 	tempAbi := make([]byte, fi.Size())
 	f.Read(tempAbi)
-	abi, err := abi.ParseAbi(tempAbi)
+	Abi, err := abi.ParseAbi(tempAbi)
 	if err != nil {
 		fmt.Printf("Abi Parse Error Hex: %x, Str: %v", tempAbi, string(tempAbi))
 		return
 	}
 
-	dcp.ContractAbi, err = json.Marshal(abi)
+	dcp.ContractAbi, err = json.Marshal(Abi)
 	if err != nil {
-		fmt.Printf("Abi Reformat Error: %v", abi)
+		fmt.Printf("Abi Reformat Error: %v", Abi)
 		return
 	}
 
 	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
-	param, _ := msgpack.Marshal(dcp)
+        
+	Abi2, abierr2 := getAbibyContractName("bottos")
+        if abierr2 != nil {
+           return
+        }
+
+	param, _ := abi.MarshalAbi(dcp, &Abi2, "bottos", "deployabi")
 
 	trx1 := &coreapi.Transaction{
 		Version:     1,

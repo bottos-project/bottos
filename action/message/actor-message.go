@@ -133,5 +133,5 @@ type ReceiveBlock struct {
 //ReceiveBlockResp chainactor->p2pactor
 type ReceiveBlockResp struct {
 	BlockNum uint32
-	ErrorNo  uint16
+	ErrorNo  uint32
 }

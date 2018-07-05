@@ -102,7 +102,7 @@ func (bc *BlockChain) initChain() error {
 		Timestamp: config.Genesis.GenesisTime,
 		Delegate:  []byte(config.BOTTOS_CONTRACT_NAME),
 	}
-	trxs, err := contract.NativeContractInitChain(bc.roleIntf, bc.nc)
+	trxs, err := contract.NativeContractInitChain(bc.blockDb, bc.roleIntf, bc.nc)
 	if err != nil {
 		return err
 	}
@@ -370,6 +370,10 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 
 	consensusIndex := (100 - int(config.CONSENSUS_BLOCKS_PERCENT)) * len(delegates) / 100
 	sort.Sort(lastConfirmedNums)
+	if consensusIndex >= len(lastConfirmedNums) {
+		log.Errorf("out of range: index=%v, len=%v", consensusIndex, len(lastConfirmedNums))
+		return
+	}
 	newLastConsensusBlockNum := lastConfirmedNums[consensusIndex]
 	if newLastConsensusBlockNum > chainSate.LastConsensusBlockNum {
 		chainSate.LastConsensusBlockNum = newLastConsensusBlockNum
@@ -389,7 +393,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 			if block != nil {
 				bc.WriteBlock(block)
 			} else {
-				log.Infof("block num = %v not found\n", i)
+				log.Errorf("block num = %v not found\n", i)
 			}
 		}
 
@@ -432,49 +436,51 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 }
 
 //ValidateBlock verify a block
-func (bc *BlockChain) ValidateBlock(block *types.Block) error {
+func (bc *BlockChain) ValidateBlock(block *types.Block) uint32 {
 	prevBlockHash := block.GetPrevBlockHash()
 	if prevBlockHash != bc.HeadBlockHash() {
-		return log.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
+		log.Errorf("Block Prev Hash error, head block Hash = %x, block PrevBlockHash = %x", bc.HeadBlockHash(), prevBlockHash)
+		return InsertBlockErrorValidateFail
 	}
 
 	if block.GetNumber() != bc.HeadBlockNum()+1 {
-		return log.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
+		log.Errorf("Block Number error, head block Number = %v, block Number = %v", bc.HeadBlockNum(), block.GetNumber())
+		return InsertBlockErrorValidateFail
 	}
 
 	// block timestamp check
 	if block.GetTimestamp() <= bc.HeadBlockTime() && bc.HeadBlockNum() != 0 {
-		return log.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		log.Errorf("Block Timestamp error, head block time=%v, block time=%v", bc.HeadBlockTime(), block.GetTimestamp())
+		return InsertBlockErrorValidateFail
 	}
 
-	return nil
+	return InsertBlockSuccess
 }
 
 //InsertBlock write a new block
-func (bc *BlockChain) InsertBlock(block *types.Block) error {
+func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
-	err := bc.ValidateBlock(block)
-	if err != nil {
-		log.Infof("Validate Block error: ", err)
-		return err
+	errcode := bc.ValidateBlock(block)
+	if errcode != InsertBlockSuccess {
+		return errcode
 	}
 
 	// push to cache, block must link now
-	_, err = bc.blockCache.Insert(block)
+	_, err := bc.blockCache.Insert(block)
 	if err != nil {
 		log.Infof("blockCache insert error: ", err)
-		return err
+		return InsertBlockErrorNotLinked
 	}
 
 	err = bc.HandleBlock(block)
 	if err != nil {
 		log.Infof("InsertBlock error: ", err)
-		return err
+		return InsertBlockErrorGeneral
 	}
 
 	log.Infof("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
 
-	return nil
+	return InsertBlockSuccess
 }

@@ -12,9 +12,10 @@ import (
 )
 
 type PeerInfo struct {
-	Id   string
-	Addr string
-	Port string
+	Id      string
+	Addr    string
+	Port    string
+	ChainId string
 }
 
 func (a *PeerInfo) Equal(b PeerInfo) bool {
@@ -22,12 +23,31 @@ func (a *PeerInfo) Equal(b PeerInfo) bool {
 }
 
 func (a *PeerInfo) IsIncomplete() bool {
-	return a.Id == "" || a.Addr == "" || a.Port == ""
+	return a.Id == "" || a.Addr == "" || a.Port == "" || a.ChainId == ""
 }
 
 //Bigger 1 a > b;  0 a = b ; -1 a < b
 func (a *PeerInfo) Bigger(b PeerInfo) int {
 	return strings.Compare(a.Id, b.Id)
+}
+
+type PeerData struct {
+	Id    string
+	Index uint16
+}
+
+type PeerDataSet []PeerData
+
+func (s PeerDataSet) Len() int {
+	return len(s)
+}
+
+func (s PeerDataSet) Less(i, j int) bool {
+	return s[i].Id > s[j].Id
+}
+
+func (s PeerDataSet) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
 
 type Peer struct {

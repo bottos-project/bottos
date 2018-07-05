@@ -155,7 +155,7 @@ func (c *candidates) processPeerInfoReq(index uint16, date []byte) {
 
 	e := c.getCandidate(index)
 	if e == nil {
-		log.Debug("ProcessPeerInfoReq candi not exist index: %d", index)
+		log.Debugf("ProcessPeerInfoReq candi not exist index: %d", index)
 		return
 	}
 
@@ -187,17 +187,20 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 		return
 	}
 
-	candi.peer.Info.Id = rsp.Info.Id
+	if rsp.Info.ChainId != p2p.LocalPeerInfo.ChainId {
+		log.Error("not on the same chain, drop candidate")
+		c.deleteCandidate(e, true)
+		return
+	}
+
 	//check peer addr and port if the connection is our init
-	if !candi.peer.In {
-		if candi.peer.Info.Addr != rsp.Info.Addr &&
-			candi.peer.Info.Port != rsp.Info.Port {
-			log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
-			return
-		}
+	if !candi.peer.In &&
+		candi.peer.Info.Addr != rsp.Info.Addr &&
+		candi.peer.Info.Port != rsp.Info.Port {
+		log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
+		return
 	} else {
-		candi.peer.Info.Addr = rsp.Info.Addr
-		candi.peer.Info.Port = rsp.Info.Port
+		candi.peer.Info = rsp.Info
 	}
 	candi.peer.State = p2p.PEER_STATE_HANDSHAKE
 
@@ -330,9 +333,10 @@ func (c *candidates) sendPeerInfoReq(candi *candidate) {
 
 func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 	info := p2p.PeerInfo{
-		Id:   p2p.LocalPeerInfo.Id,
-		Addr: p2p.LocalPeerInfo.Addr,
-		Port: p2p.LocalPeerInfo.Port,
+		Id:      p2p.LocalPeerInfo.Id,
+		Addr:    p2p.LocalPeerInfo.Addr,
+		Port:    p2p.LocalPeerInfo.Port,
+		ChainId: p2p.LocalPeerInfo.ChainId,
 	}
 
 	rsp := PeerInfoRsp{

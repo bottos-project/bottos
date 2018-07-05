@@ -480,3 +480,110 @@ func TestDataDeal_BuyAssetReq(t *testing.T) {
 	err = Unmarshal(b, &ts1)
 	fmt.Println("ts1 ", ts1, err)
 }
+
+
+
+
+func TestNodeManStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 string
+	}
+
+	ts := TestStruct{
+		V1: "1234",
+		V2: "12345678",
+	}
+	fmt.Println("TestNodeManStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}
+
+
+
+
+
+func TestCreateTokenStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string		
+		V2 uint64
+		V3 string
+	}
+
+	ts := TestStruct{
+		V1: "DTO",		
+		V2: 1000000000,
+		V3: "bottoscontract",
+	}
+	fmt.Println("TestCreateTokenStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}
+
+
+
+func TestIssueTokenStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 string
+		V3 uint64
+	}
+
+	ts := TestStruct{
+		V1: "DTO",
+		V2: "bottoscontract",
+		V3: 1000000000,
+	}
+	fmt.Println("TestIssueTokenStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}
+
+
+
+func TestTransferTokenStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 string
+		V3 string
+		V4 uint64
+	}
+
+	ts := TestStruct{
+		V1: "bottoscontract",
+		V2: "saletest",
+		V3: "DTO",
+		V4: 1000000000,
+	}
+	fmt.Println("TestTransferTokenStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}

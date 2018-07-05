@@ -53,12 +53,13 @@ func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint1
 		Data: buf,
 	}
 
-	msg := p2p.MsgPacket{Index: peers,
-		P: packet}
-
 	if broadcast {
+		msg := p2p.BcastMsgPacket{Indexs: peers,
+			P: packet}
 		p2p.Runner.SendBroadcast(msg)
 	} else {
+		msg := p2p.UniMsgPacket{Index: peers[0],
+			P: packet}
 		p2p.Runner.SendUnicast(msg)
 	}
 }

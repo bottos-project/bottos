@@ -23,8 +23,8 @@ const (
 	WAIT_LOCAL_BLOCK_TIMER = 3
 )
 
-func MakeBlock(chain chain.BlockChainInterface) *Block {
-	return &Block{s: MakeSynchronizes(),
+func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
+	return &Block{s: MakeSynchronizes(nodeType),
 		chainIf: chain}
 }
 
@@ -76,6 +76,8 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 		b.processBlockHeaderReq(index, p.Data)
 	case BLOCK_HEADER_RSP:
 		b.processBlockHeaderRsp(index, p.Data)
+	case BLOCK_HEADER_UPDATE:
+		b.processBlockHeaderUpdate(index, p.Data)
 	}
 }
 
@@ -101,12 +103,13 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 		Data: buf,
 	}
 
-	msg := p2p.MsgPacket{Index: peers,
-		P: packet}
-
 	if broadcast {
+		msg := p2p.BcastMsgPacket{Indexs: peers,
+			P: packet}
 		p2p.Runner.SendBroadcast(msg)
 	} else {
+		msg := p2p.UniMsgPacket{Index: peers[0],
+			P: packet}
 		p2p.Runner.SendUnicast(msg)
 	}
 }
@@ -154,7 +157,7 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	for i := req.Begin; i <= req.End; i++ {
 		head := b.chainIf.GetHeaderByNumber(i)
 		if head == nil {
-			log.Errorf("processBlockHeaderReq header not exist")
+			log.Errorf("processBlockHeaderReq header:%d not exist", i)
 			return
 		} else {
 			rsp.set = append(rsp.set, *head)
@@ -201,7 +204,7 @@ func (b *Block) processBlockInfo(index uint16, data []byte) {
 
 	update := blockUpdate{index: index, block: &block}
 
-	b.s.recvc <- &update
+	b.s.blockc <- &update
 }
 
 func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
@@ -217,7 +220,7 @@ func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
 
 	packet := p2p.Packet{H: head, Data: data}
 
-	msg := p2p.MsgPacket{Index: []uint16{index},
+	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
 	p2p.Runner.SendUnicast(msg)
@@ -236,8 +239,20 @@ func (b *Block) sendBlockRsp(index uint16, block *types.Block) {
 
 	packet := p2p.Packet{H: head, Data: data}
 
-	msg := p2p.MsgPacket{Index: []uint16{index},
+	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
 	p2p.Runner.SendUnicast(msg)
+}
+
+func (b *Block) processBlockHeaderUpdate(index uint16, data []byte) {
+	var header types.Header
+	err := json.Unmarshal(data, &header)
+	if err != nil {
+		log.Errorf("processBlockHeaderUpdate Unmarshal error:%s", err)
+	}
+
+	update := headerUpdate{index: index, header: &header}
+
+	b.s.headerc <- &update
 }

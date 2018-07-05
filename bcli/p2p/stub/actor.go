@@ -6,13 +6,14 @@ import (
 )
 
 type DumActor struct {
+	bc *BlockChainStub
 }
 
 var dumactor *DumActor
 
-func NewDumActor() *actor.PID {
+func NewDumActor(bc *BlockChainStub) *actor.PID {
 
-	dumactor = &DumActor{}
+	dumactor = &DumActor{bc: bc}
 
 	props := actor.FromProducer(func() actor.Actor { return dumactor })
 
@@ -39,6 +40,8 @@ func (n *DumActor) handleSystemMsg(context actor.Context) {
 }
 
 func (n *DumActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
+	n.bc.InsertBlock(req.Block)
+
 	rsp := &message.ReceiveBlockResp{
 		BlockNum: req.Block.GetNumber(),
 		ErrorNo:  0,

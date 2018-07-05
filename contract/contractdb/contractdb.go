@@ -85,6 +85,44 @@ func (cdb *ContractDB) RemoveStrValue(contract string, object string, key string
 	return nil
 }
 
+//SetBinValue is to create a record if key not exsit
+func (cdb *ContractDB) SetBinValue(contract string, object string, key string, value []byte) error {
+	objName := cdb.getObjectName(contract, object)
+	err := cdb.setBinValue(objName, key, value)
+
+	log.Info("SetBinValue: ", contract, object, key, objName, value)
+	if err != nil {
+		return fmt.Errorf("SetBin error, contract: %v, object: %v, key: %v, value: %x", contract, object, key, value)
+	}
+	return nil
+}
+
+//GetBinValue is to get contract by object and return contract value
+func (cdb *ContractDB) GetBinValue(contract string, object string, key string) ([]byte, error) {
+	objName := cdb.getObjectName(contract, object)
+	value, err := cdb.getBinValue(objName, key)
+
+	log.Info("GetBinValue: ", contract, object, key, objName, value)
+
+	if err != nil {
+		return []byte{}, fmt.Errorf("GetBin error, contract: %v, object: %v, key: %v", contract, object, key)
+	}
+	return value, nil
+}
+
+//RemoveBinValue is to Remove contrace value by object
+func (cdb *ContractDB) RemoveBinValue(contract string, object string, key string) error {
+	objName := cdb.getObjectName(contract, object)
+	err := cdb.removeBinValue(objName, key)
+
+	log.Info("RemoveBinValue: ", contract, object, key, objName)
+
+	if err != nil {
+		return fmt.Errorf("RemoveBin error, contract: %v, object: %v, key: %v", contract, object, key)
+	}
+	return nil
+}
+
 func (cdb *ContractDB) getObjectName(contract string, object string) string {
 	return ContractObjectNamePrefix + contract + object
 }

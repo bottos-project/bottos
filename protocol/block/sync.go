@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
+	"math"
 	"sort"
 	"time"
 )
@@ -20,10 +22,12 @@ const (
 	// than set a peer expired
 	SYNC_LAST_BLOCK_NUMBER_COUNTER = 10
 
-	TIMER_SYNC_STATE_CHECK = 7
+	TIMER_SYNC_STATE_CHECK = 5
 
 	TIMER_HEADER_SYNC = 2
 	TIMER_BLOCK_SYNC  = 2
+
+	TIMER_HEADER_UPDATE_CHECK = 1
 
 	SYNC_BLOCK_BUNDLE = 10
 )
@@ -39,6 +43,10 @@ type peerSyncInfo struct {
 	last  uint32
 
 	counter int16
+}
+
+type syncConfig struct {
+	nodeType bool
 }
 
 type syncset []peerSyncInfo
@@ -62,9 +70,12 @@ type synchronizes struct {
 	state      bool //synchronize status , true is synchronized,  false is unsynchronized
 	once       bool //have synchronized one time or not when start up
 
-	infoc chan *peerSyncInfo
-	sendc chan uint32
-	recvc chan *blockUpdate
+	infoc        chan *peerSyncInfo
+	sendc        chan uint32
+	blockc       chan *blockUpdate
+	headerc      chan *headerUpdate
+	headerCache  *headerUpdate
+	headercTimer *time.Timer
 
 	set             *blockset
 	syncc           chan *blockHeaderRsp
@@ -72,20 +83,23 @@ type synchronizes struct {
 	syncBlockTimer  *time.Timer
 	endc            chan uint32
 
-	chain *actor.PID
+	config syncConfig
+	chain  *actor.PID
 }
 
-func MakeSynchronizes() *synchronizes {
+func MakeSynchronizes(nodeType bool) *synchronizes {
 	return &synchronizes{
-		peers: make(map[uint16]*peerSyncInfo),
-		infoc: make(chan *peerSyncInfo, 10),
-		sendc: make(chan uint32),
-		recvc: make(chan *blockUpdate),
-		syncc: make(chan *blockHeaderRsp),
-		endc:  make(chan uint32),
-		state: false,
-		once:  false,
-		set:   makeBlockSet(),
+		peers:   make(map[uint16]*peerSyncInfo),
+		infoc:   make(chan *peerSyncInfo, 10),
+		sendc:   make(chan uint32),
+		blockc:  make(chan *blockUpdate),
+		headerc: make(chan *headerUpdate),
+		syncc:   make(chan *blockHeaderRsp),
+		endc:    make(chan uint32),
+		state:   false,
+		once:    false,
+		set:     makeBlockSet(),
+		config:  syncConfig{nodeType: nodeType},
 	}
 }
 
@@ -124,6 +138,7 @@ func (s *synchronizes) syncBlockNumberTimer() {
 
 func (s *synchronizes) recvRoutine() {
 	checkTimer := time.NewTimer(TIMER_SYNC_STATE_CHECK * time.Second)
+	s.headercTimer = time.NewTimer(TIMER_HEADER_UPDATE_CHECK * time.Second)
 
 	for {
 		select {
@@ -131,11 +146,15 @@ func (s *synchronizes) recvRoutine() {
 			s.recvPeerBlockNumberInfo(info)
 		case number := <-s.sendc:
 			s.sendUpdateLocalNumber(number)
-		case update := <-s.recvc:
+		case update := <-s.blockc:
 			s.recvBlock(update)
+		case update := <-s.headerc:
+			s.recvBlockHeader(update)
 		case <-checkTimer.C:
 			s.syncStateCheck()
 			checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
+		case <-s.headercTimer.C:
+			s.checkHeaderCheck()
 		}
 	}
 }
@@ -199,9 +218,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		(!s.state && s.set.state == SET_SYNC_NULL && s.lastLocal+1 == number) {
 		if s.sendupBlock(update.block) {
 			s.updateLocalNumber(number)
-			s.updateRemoteNumber(number, false)
-
-			s.broadcastNewBlock(update)
+			s.broadcastRcvNewBlock(update)
 		}
 		return
 	}
@@ -223,7 +240,47 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 	} else {
 		s.syncStateJudge()
 		log.Info("drop block %d to begin sync", number)
+	}
+}
 
+func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
+	number := update.header.GetNumber()
+	if number <= s.lastLocal {
+		log.Debugf("drop block header: %d is smaller than local", number)
+		return
+	}
+
+	if (s.state && number == s.lastLocal+1) ||
+		(!s.state && s.set.state == SET_SYNC_NULL && s.lastLocal+1 == number) {
+		s.cacheHeader(update)
+
+		return
+	}
+
+	info := peerSyncInfo{index: update.index, last: number}
+	s.recvPeerBlockNumberInfo(&info)
+
+	if s.state == false {
+		if s.set.state == SET_SYNC_NULL {
+			s.syncStateJudge()
+		}
+	} else {
+		s.syncStateJudge()
+	}
+}
+
+func (s *synchronizes) cacheHeader(update *headerUpdate) {
+	s.headerCache = update
+	s.headercTimer.Reset(TIMER_HEADER_UPDATE_CHECK * time.Second)
+}
+
+func (s *synchronizes) checkHeaderCheck() {
+	if s.headerCache != nil {
+		if s.headerCache.header.Number == s.lastLocal+1 {
+			s.sendBlockReq(s.headerCache.index, s.headerCache.header.Number)
+		}
+
+		s.headerCache = nil
 	}
 }
 
@@ -303,7 +360,7 @@ func (s *synchronizes) sendLastBlockNumberReq() {
 
 	packet := p2p.Packet{H: head}
 
-	msg := p2p.MsgPacket{Index: nil,
+	msg := p2p.BcastMsgPacket{Indexs: nil,
 		P: packet}
 
 	p2p.Runner.SendBroadcast(msg)
@@ -324,7 +381,7 @@ func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 
 	packet := p2p.Packet{H: head, Data: data}
 
-	msg := p2p.MsgPacket{Index: []uint16{index},
+	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
 	p2p.Runner.SendUnicast(msg)
@@ -369,7 +426,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 
 	for _, info := range s.peers {
 		if info.last >= end {
-			msg := p2p.MsgPacket{Index: []uint16{info.index},
+			msg := p2p.UniMsgPacket{Index: info.index,
 				P: packet}
 
 			p2p.Runner.SendUnicast(msg)
@@ -436,7 +493,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32) {
 
 	packet := p2p.Packet{H: head, Data: data}
 
-	msg := p2p.MsgPacket{Index: []uint16{index},
+	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
 	log.Debugf("sendBlockReq block %d", number)
@@ -488,24 +545,41 @@ func (s *synchronizes) sendupBlock(block *types.Block) bool {
 		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
 			log.Errorf("send block request error:%s", err)
-			time.Sleep(10000)
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 
 		rsp := result.(*message.ReceiveBlockResp)
 
-		if rsp.ErrorNo != 0 {
-			log.Errorf("send block return error:%d", rsp.ErrorNo)
+		if rsp.ErrorNo == chain.InsertBlockSuccess {
+			return true
+		} else if rsp.ErrorNo == chain.InsertBlockErrorGeneral {
+			log.Errorf("block insert general error")
+			return false
+		} else if rsp.ErrorNo == chain.InsertBlockErrorNotLinked {
+			log.Errorf("block insert link error")
+			time.Sleep(5 * time.Minute)
+			return false
+		} else {
+			log.Errorf("block insert unkown error")
 			return false
 		}
-
-		return true
 	}
 
 	return false
 }
 
-func (s *synchronizes) broadcastNewBlock(update *blockUpdate) {
+//if node is super node , only broadcast block hearder to some peer
+func (s *synchronizes) broadcastRcvNewBlock(update *blockUpdate) {
+	if s.config.nodeType {
+		s.broadcastNewBlockHeader(update, false)
+	} else {
+		s.broadcastNewBlock(update, false)
+		s.broadcastNewBlockHeader(update, true)
+	}
+}
+
+func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 	buf, err := json.Marshal(update.block)
 	if err != nil {
 		log.Errorf("block send marshal error")
@@ -519,10 +593,98 @@ func (s *synchronizes) broadcastNewBlock(update *blockUpdate) {
 		Data: buf,
 	}
 
-	msg := p2p.MsgPacket{Index: []uint16{update.index},
+	var indexs []uint16
+	if all {
+		indexs = append(indexs, update.index)
+	} else {
+		indexs := s.getBcastFilterPeers(update.index)
+		if indexs == nil {
+			return
+		}
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: indexs,
 		P: packet}
 
 	p2p.Runner.SendBroadcast(msg)
+}
+
+func (s *synchronizes) broadcastNewBlockHeader(update *blockUpdate, all bool) {
+	buf, err := json.Marshal(update.block.Header)
+	if err != nil {
+		log.Errorf("block send marshal error")
+	}
+
+	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
+		PacketType: BLOCK_HEADER_UPDATE,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	var indexs []uint16
+	if all {
+		indexs = append(indexs, update.index)
+	} else {
+		indexs = s.getBcastFilterPeers(update.index)
+		if indexs == nil {
+			return
+		}
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: indexs,
+		P: packet}
+
+	p2p.Runner.SendBroadcast(msg)
+}
+
+func (s *synchronizes) getBcastFilterPeers(index uint16) []uint16 {
+	peers := p2p.Runner.GetPeersData()
+	if len(peers) == 0 {
+		return nil
+	}
+
+	peers = append(peers, p2p.PeerData{Id: p2p.LocalPeerInfo.Id})
+
+	sort.Sort(peers)
+
+	k := 0
+	for ; k < len(peers); k++ {
+		if peers[k].Id == p2p.LocalPeerInfo.Id {
+			break
+		}
+	}
+
+	number := int(math.Sqrt(float64(len(peers))))
+
+	total := len(peers)
+	var filter []p2p.PeerData
+
+	if k+1+number < total {
+		if k == 0 {
+			filter = append(peers[0:0], peers[number:]...)
+		} else {
+			filter = append(peers[0:k+1], peers[k+1+number:]...)
+		}
+	} else if k+1+number == total {
+		filter = append(peers[0 : k+1])
+	} else {
+		if k+1 < total {
+			filter = append(peers[k+number-total+number-1 : k+1])
+		} else {
+			filter = append(peers[number:])
+		}
+	}
+
+	var indexs []uint16
+	for _, peer := range filter {
+		indexs = append(indexs, peer.Index)
+	}
+
+	indexs = append(indexs, index)
+
+	return indexs
 }
 
 type blockset struct {
