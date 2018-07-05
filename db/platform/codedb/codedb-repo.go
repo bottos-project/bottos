@@ -28,9 +28,10 @@ package codedb
 import (
 	"errors"
 	"fmt"
+        "sync"
 
-	"github.com/tidwall/buntdb"
 	log "github.com/cihub/seelog"
+	"github.com/tidwall/buntdb"
 )
 
 //CodeDbRepository is to build code db
@@ -38,6 +39,7 @@ type CodeDbRepository struct {
 	fn string     // filename for reporting
 	db *buntdb.DB // LevelDB instance
 	tx *buntdb.Tx
+        globalSignal   sync.RWMutex // global signal for all state
 }
 
 //NewCodeDbRepository is to create new code db
@@ -51,7 +53,16 @@ func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 		db: codedb,
 	}, nil
 }
-
+//CallGlobalLock is to lock
+func (m *CodeDbRepository) CallGlobalLock() {
+	log.Info("CallGlobalLock")
+	m.globalSignal.Lock()
+}
+//CallGlobalUnLock is to unlock
+func (m *CodeDbRepository) CallGlobalUnLock() {
+	log.Info("CallGlobalUnLock")
+	m.globalSignal.Unlock()
+}
 //CallStartUndoSession is to start undo session
 func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
 	k.tx, _ = k.db.Begin(true)
@@ -67,13 +78,15 @@ func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName str
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
 
-//CallCreatObjectMultiIndexs is to create object with multi indexs
-func (k *CodeDbRepository) CallCreatObjectMultiIndexs(objectName string, indexName string, indexJson string) error {
+//CallCreatObjectMultiIndex is to create object index
+func (k *CodeDbRepository) CallCreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error {
+
 	if k.tx == nil {
-		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+
+		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson), buntdb.IndexJSON(secKey))
 	}
 
-	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson), buntdb.IndexJSON(secKey))
 }
 
 //CallSetObject is to set object

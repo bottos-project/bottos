@@ -77,7 +77,7 @@ type RoleInterface interface {
 	GetSlotAtTime(current uint64) uint64
 	GetSlotTime(slotNum uint64) uint64
 
-	ElectNextTermDelegates(block *types.Block) []string
+	ElectNextTermDelegates(block *types.Block, writeState bool) []string
 	ShuffleEelectCandidateList(block *types.Block) ([]string, error)
 
 	ApplyPersistance(block *types.Block) error
@@ -218,7 +218,7 @@ func (r *Role) GetAllDelegateVotes() ([]*DelegateVotes, error) {
 
 //GetCandidateBySlot is getting candidate by slot
 func (r *Role) GetCandidateBySlot(slotNum uint64) (string, error) {
-	return GetCandidateBySlot(r.Db, slotNum)
+	return GetCandidateRoleBySlot(r.Db, slotNum)
 }
 
 //SetBlockHistory is setting block history
@@ -252,8 +252,8 @@ func (r *Role) GetTransactionExpiration(txHash common.Hash) (*TransactionExpirat
 }
 
 //ElectNextTermDelegates is to elect next term delegates
-func (r *Role) ElectNextTermDelegates(block *types.Block) []string {
-	return ElectNextTermDelegatesRole(r.Db)
+func (r *Role) ElectNextTermDelegates(block *types.Block, writeState bool) []string {
+	return ElectNextTermDelegatesRole(r.Db, writeState)
 }
 
 //ShuffleEelectCandidateList is to elect next term delegates
@@ -278,6 +278,7 @@ func (r *Role) initRole() {
 
 	CreateDelegateRole(r.Db)
 	CreateDelegateVotesRole(r.Db)
+	CreateScheduleDelegateRole(r.Db)
 
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)

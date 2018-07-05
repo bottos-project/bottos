@@ -436,13 +436,6 @@ func ParseParam(r *Role, Param []byte, Contract string, Method string) (interfac
 	} else if Contract == "bottoscontract"  {
         	if Method == "transfer" {
 			decodedParam = &TransferDTOStruct{}
-			err := msgpack.Unmarshal(Param, decodedParam)
-
-			if err != nil {
-				log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
-				return nil, err
-			}
-			return decodedParam, nil
 		}
 	} else {
 		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
@@ -479,6 +472,17 @@ func ParseParam(r *Role, Param []byte, Contract string, Method string) (interfac
 		mgoParam.Name = tmpval.Name
 		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
 		return mgoParam, nil
+	}
+	
+	if(Contract != "bottos" && Contract != "nodeclustermng") {
+		
+		err := msgpack.Unmarshal(Param, decodedParam)
+
+		if err != nil {
+			log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
+			return nil, err
+		}
+		return decodedParam, nil
 	}
 	
 	err := abi.UnmarshalAbi(Contract, Abi, Method, Param, decodedParam)

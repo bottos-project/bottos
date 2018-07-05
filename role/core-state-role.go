@@ -28,6 +28,7 @@ package role
 import (
 	"encoding/json"
 
+	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/db"
 )
 
@@ -86,8 +87,8 @@ func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	res := &CoreState{}
+	res := new(CoreState)
+	res.CurrentDelegates = make([]string, 0, config.MAX_DELEGATE_VOTES)
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
 		return nil, err
