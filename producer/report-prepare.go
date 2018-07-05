@@ -51,8 +51,8 @@ func (r *Reporter) IsReady() bool {
 	now := GetReportTimeNow()
 	r.state.SetCheckFlag(1)
 	if r.IsSynced() == false {
-		log.Info("p2p is syncing")
-		return false
+		//log.Info("p2p is syncing")
+		//return false
 	}
 	slot := r.roleIntf.GetSlotAtTime(now)
 	if slot == 0 {
