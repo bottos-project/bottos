@@ -28,6 +28,7 @@ package db
 import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 )
+
 //Put is to put record by key and value.
 func (d *DBService) Put(key []byte, value []byte) error {
 	return d.kvRepo.CallPut(key, value)

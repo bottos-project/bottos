@@ -36,6 +36,12 @@ func (d *DBService) CreatObjectIndex(objectName string, indexName string, indexJ
 	return d.codeRepo.CallCreatObjectIndex(objectName, indexName, indexJson)
 }
 
+//CreatObjectUintIndex is to create object index when one object's attributed is going to
+//search or sort.
+func (d *DBService) CreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error {
+	return d.codeRepo.CallCreatObjectMultiIndex(objectName, indexName, indexJson, secKey)
+}
+
 //SetObject is to set object by key and value. which should have key has create index.
 func (d *DBService) SetObject(objectName string, key string, objectValue string) error {
 	return d.codeRepo.CallSetObject(objectName, key, objectValue)
