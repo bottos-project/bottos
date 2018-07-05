@@ -7,5 +7,5 @@
 	  "192.168.2.159:6893"
   ],
   "chainId":"1",
-  "producer":true
+  "producer":false
 }

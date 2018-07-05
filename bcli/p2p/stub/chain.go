@@ -13,7 +13,8 @@ import (
 type BlockChainStub struct {
 	blocks []types.Block
 
-	l sync.Mutex
+	libNumber uint32
+	l         sync.Mutex
 }
 
 //func MakeBlockChainStub() chain.BlockChainInterface {
@@ -79,7 +80,7 @@ func (b *BlockChainStub) HeadBlockDelegate() string {
 }
 
 func (b *BlockChainStub) LastConsensusBlockNum() uint32 {
-	return 0
+	return b.libNumber
 }
 
 func (b *BlockChainStub) GenesisTimestamp() uint64 {
@@ -113,6 +114,10 @@ func (b *BlockChainStub) GetHeaderByNumber(number uint32) *types.Header {
 
 func (b *BlockChainStub) SetBlocks(blocks []types.Block) {
 	b.blocks = blocks
+}
+
+func (b *BlockChainStub) SetLibNumber(number uint32) {
+	b.libNumber = number
 }
 
 func (b *BlockChainStub) Tell(message interface{}) {
