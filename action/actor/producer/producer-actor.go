@@ -120,7 +120,8 @@ func (p *ProducerActor) working() {
 				log.Info("ApplyTransaction failed")
 				continue
 			}
-			pendingBlockSize += uint32(unsafe.Sizeof(trx))
+			data, _ := proto.Marshal(trx)
+			pendingBlockSize += uint32(unsafe.Sizeof(data))
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				log.Info("Warning pending block size reach MaxBlockSize")
