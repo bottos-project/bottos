@@ -277,7 +277,13 @@ func (bc *BlockChain) updateCoreState(block *types.Block) {
 		if err != nil {
 			return
 		}
-		newCoreState.CurrentDelegates = schedule
+		if uint32(len(schedule)) > config.BLOCKS_PER_ROUND {
+			log.Error("invalid schedule length which is greater than BLOCKS_PER_ROUND")
+			return
+		}
+
+		copy(newCoreState.CurrentDelegates, schedule)
+		//log.Info("CurrentDelegates", newCoreState.CurrentDelegates)
 		bc.roleIntf.SetCoreState(newCoreState)
 	}
 }

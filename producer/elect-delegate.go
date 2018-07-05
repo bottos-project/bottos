@@ -27,9 +27,10 @@ package producer
 
 import (
 	"errors"
-	log "github.com/cihub/seelog"
 	"math/rand"
 	"reflect"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -42,7 +43,7 @@ func StringSliceReflectEqual(a, b []string) bool {
 
 //ShuffleEelectCandidateList is to shuffle the candidates in one round
 func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, error) {
-	newSchedule := r.roleIntf.ElectNextTermDelegates(&block)
+	newSchedule := r.roleIntf.ElectNextTermDelegates(&block, true)
 	currentState, err := r.roleIntf.GetCoreState()
 	if err != nil {
 		return nil, err

@@ -73,7 +73,8 @@ type DBApi interface {
 	Flush() error
 	//code db interface can rollback
 	StartUndoSession()
-	CreatObjectIndex(objectName string, indexName string) error
+	CreatObjectIndex(objectName string, indexName string, indexJson string) error
+	CreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error
 	SetObject(objectName string, objectValue interface{}) error
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
 	SetObjectByMultiIndexs(objectName string, indexName []string, indexValue []interface{}, objectValue interface{}) error

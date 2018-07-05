@@ -26,13 +26,11 @@
 package kvdb
 
 import (
-	
-
+	log "github.com/cihub/seelog"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	log "github.com/cihub/seelog"
 )
 
 //OpenFileLimit is to limiting the size of open leveldb
@@ -105,9 +103,7 @@ func (k *KVDatabase) CallSeek(prefixKey []byte) ([]string, error) {
 	for iter.Next() {
 		//ptrKey := iter.Key()
 		value := iter.Value()
-		log.Infof("CallSeek: %x\n", value)
 		valueList = append(valueList, string(value))
-		log.Info("CallSeek1: ", valueList)
 	}
 	iter.Release()
 	err := iter.Error()

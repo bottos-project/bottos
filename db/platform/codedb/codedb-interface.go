@@ -29,6 +29,7 @@ package codedb
 type CodeDbRepo interface {
 	CallStartUndoSession(bool)
 	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error
+	CallCreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error
 	CallSetObject(objectName string, key string, objectValue string) error
 	CallGetObject(objectName string, key string) (string, error)
 	CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error)
@@ -36,6 +37,8 @@ type CodeDbRepo interface {
 	CallGetAllObjectKeys(objectName string) ([]string, error)
 	CallGetAllObjects(keyName string) ([]string, error)
 	CallGetAllObjectsSortByIndex(indexName string) ([]string, error)
+        CallGlobalLock()
+	CallGlobalUnLock()
 	CallCommit() error
 	CallRollback() error
 }
