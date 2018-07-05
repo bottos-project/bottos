@@ -131,7 +131,7 @@ func FilterOutgoingDelegate(ldb *db.DBService) []string {
 	if err != nil {
 		return nil
 	}
-	var accounts = []string{}
+	var accounts = make([]string, 0, len(objects))
 	for _, object := range objects {
 		res := &Delegate{}
 		err = json.Unmarshal([]byte(object), res)
