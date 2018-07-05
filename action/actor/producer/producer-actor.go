@@ -38,6 +38,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/producer"
 	"github.com/bottos-project/bottos/role"
+	proto "github.com/golang/protobuf/proto"
 )
 
 // ProducerActor is to define actor for producer
@@ -95,7 +96,6 @@ func (p *ProducerActor) Receive(context actor.Context) {
 func (p *ProducerActor) working() {
 
 	if p.ins.IsReady() {
-                p.db.Lock()
 		start := common.MeasureStart()
 		trxs := GetAllPendingTrx()
 		block := &types.Block{}
@@ -131,7 +131,6 @@ func (p *ProducerActor) working() {
 			}
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
-		p.db.UnLock()
 		block = p.ins.Woker(trxs)
 		trxs = nil
 		if block != nil {
