@@ -28,6 +28,7 @@ package codedb
 import (
 	"errors"
 	"fmt"
+        "sync"
 
 	log "github.com/cihub/seelog"
 	"github.com/tidwall/buntdb"
@@ -53,12 +54,12 @@ func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
 	}, nil
 }
 //CallGlobalLock is to lock
-func (m *MultindexDB) CallGlobalLock() {
+func (m *CodeDbRepository) CallGlobalLock() {
 	log.Info("CallGlobalLock")
 	m.globalSignal.Lock()
 }
 //CallGlobalUnLock is to unlock
-func (m *MultindexDB) CallGlobalUnLock() {
+func (m *CodeDbRepository) CallGlobalUnLock() {
 	log.Info("CallGlobalUnLock")
 	m.globalSignal.Unlock()
 }
