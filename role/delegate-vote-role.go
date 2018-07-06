@@ -20,9 +20,11 @@ const DelegateVotesObjectKeyName string = "owner_account"
 
 // DelegateVotesObjectIndexVote is definition of delegate vote object index name
 const DelegateVotesObjectIndexVote string = "votes"
+const DelegateVotesObjectIndexVoteJSON string = "serve.votes"
 
 // DelegateVotesObjectIndexFinishTime is definition of delegate vote object index finish time
 const DelegateVotesObjectIndexFinishTime string = "term_finish_time"
+const DelegateVotesObjectIndexFinishTimeJSON string = "serve.term_finish_time"
 
 // Serve is definition of serve
 type Serve struct {
@@ -44,11 +46,11 @@ func CreateDelegateVotesRole(ldb *db.DBService) error {
 	if err != nil {
 		return err
 	}
-	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, "serve.votes")
+	err = ldb.CreatObjectMultiIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, DelegateVotesObjectIndexVoteJSON, DelegateVotesObjectKeyName)
 	if err != nil {
 		return err
 	}
-	err = ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, "serve.term_finish_time")
+	err = ldb.CreatObjectMultiIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, DelegateVotesObjectIndexFinishTimeJSON, DelegateVotesObjectKeyName)
 	if err != nil {
 		return err
 	}
@@ -169,20 +171,22 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 		dvotes := object.StartNewTerm(big.NewInt(0))
 		dvotes.OwnerAccount = object.OwnerAccount
 		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
-		//fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
+		//log.Info("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
 	}
 }
 
 // SetDelegateListNewTerm is to set delegate list new term
 func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string) {
-	for _, accountName := range lists {
+	var mylists = make([]string, len(lists))
+	copy(mylists, lists)
+	for _, accountName := range mylists {
 		delegate, err := GetDelegateVotesRoleByAccountName(ldb, accountName)
 		if err != nil {
 			return
 		}
 		dvotes := delegate.StartNewTerm(termTime)
 		SetDelegateVotesRole(ldb, accountName, dvotes)
-		//fmt.Println("set delegate new term", accountName, dvotes)
+		//log.Info("set delegate new term", accountName, dvotes)
 
 	}
 }
@@ -214,29 +218,36 @@ func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
 
 // GetAllSortVotesDelegates is to get all sort votes delegates
 func GetAllSortVotesDelegates(ldb *db.DBService) ([]string, error) {
-	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexVote)
+	var objects []string
+	var err error
+	objects, err = ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexVote)
 	if err != nil {
 		return nil, err
 	}
-	var accounts = []string{}
+	var accounts []string
+
 	for _, object := range objects {
-		res := &DelegateVotes{}
+		res := new(DelegateVotes)
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
 			return nil, err
 		}
 		accounts = append(accounts, res.OwnerAccount)
 	}
-	return accounts, nil
+	var accountRtn = make([]string, len(accounts))
+	copy(accountRtn, accounts)
+	return accountRtn, nil
 }
 
 // GetAllSortFinishTimeDelegates is to get all sort finish time delegates
 func GetAllSortFinishTimeDelegates(ldb *db.DBService) ([]string, error) {
-	objects, err := ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexFinishTime)
+	var objects []string
+	var err error
+	objects, err = ldb.GetAllObjectsSortByIndex(DelegateVotesObjectIndexFinishTime)
 	if err != nil {
 		return nil, err
 	}
-	var accounts = []string{}
+	var accounts []string
 	for _, object := range objects {
 		res := &DelegateVotes{}
 		err = json.Unmarshal([]byte(object), res)
@@ -245,5 +256,7 @@ func GetAllSortFinishTimeDelegates(ldb *db.DBService) ([]string, error) {
 		}
 		accounts = append(accounts, res.OwnerAccount)
 	}
-	return accounts, nil
+	var accountRtn = make([]string, len(accounts))
+	copy(accountRtn, accounts)
+	return accountRtn, nil
 }

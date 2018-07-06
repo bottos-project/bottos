@@ -37,19 +37,9 @@ import (
 
 func newAccount(ctx *Context) ContractError {
 	newaccount := &NewAccountParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
 	
-	fmt.Println("newaccount: ctx.ContractDB.Db: ", ctx.ContractDB.Db)
-	
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-	
-	if errval != nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-
-	err := abi.UnmarshalAbi("bottos", &Abi, "newaccount", ctx.Trx.Param, newaccount)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "newaccount", ctx.Trx.Param, newaccount)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -93,15 +83,9 @@ func newAccount(ctx *Context) ContractError {
 
 func transfer(ctx *Context) ContractError {
 	transfer := &TransferParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
 	
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "transfer", ctx.Trx.Param, transfer)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "transfer", ctx.Trx.Param, transfer)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -146,14 +130,8 @@ func transfer(ctx *Context) ContractError {
 
 func setDelegate(ctx *Context) ContractError {
 	param := &SetDelegateParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "setdelegate", ctx.Trx.Param, param)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "setdelegate", ctx.Trx.Param, param)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -196,14 +174,8 @@ func setDelegate(ctx *Context) ContractError {
 
 func grantCredit(ctx *Context) ContractError {
 	param := &GrantCreditParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "grantcredit", ctx.Trx.Param, param)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "grantcredit", ctx.Trx.Param, param)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -250,14 +222,8 @@ func grantCredit(ctx *Context) ContractError {
 
 func cancelCredit(ctx *Context) ContractError {
 	param := &CancelCreditParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "cancelcredit", ctx.Trx.Param, param)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "cancelcredit", ctx.Trx.Param, param)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -288,14 +254,8 @@ func cancelCredit(ctx *Context) ContractError {
 
 func transferFrom(ctx *Context) ContractError {
 	transfer := &TransferFromParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "transferfrom", ctx.Trx.Param, transfer)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "transferfrom", ctx.Trx.Param, transfer)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -377,14 +337,8 @@ func checkCode(code []byte) error {
 
 func deployCode(ctx *Context) ContractError {
 	param := &DeployCodeParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "deploycode", ctx.Trx.Param, param)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "deploycode", ctx.Trx.Param, param)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
@@ -425,14 +379,8 @@ func checkAbi(abiRaw []byte) error {
 
 func deployAbi(ctx *Context) ContractError {
 	param := &DeployABIParam{}
-	if ctx.ContractDB == nil || ctx.ContractDB.Db == nil {
-		return ERROR_CONT_PARAM_PARSE_ERROR
-	}
-	Abi, errval := role.GetAbi(ctx.ContractDB.Db, "bottos")
-        if errval != nil {
-                return ERROR_CONT_PARAM_PARSE_ERROR
-        }
-	err := abi.UnmarshalAbi("bottos", &Abi, "deployabi", ctx.Trx.Param, param)
+	Abi := GetAbi()
+	err := abi.UnmarshalAbi("bottos", Abi, "deployabi", ctx.Trx.Param, param)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}

@@ -23,7 +23,6 @@ package p2p
 
 const (
 	MAX_PACKET_SIZE = 4096
-	MAX_GET_PEERS   = 30
 )
 
 const (

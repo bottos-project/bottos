@@ -23,7 +23,9 @@ const ScheduleDelegateObjectName string = "scheduledelegate"
 type ScheduleDelegate struct {
 	CurrentTermTime *big.Int
 }
-
+func CreateScheduleDelegateRole(ldb *db.DBService) error {
+	return nil
+}
 //SetScheduleDelegateRole is seting scheduled delegate role
 func SetScheduleDelegateRole(ldb *db.DBService, value *ScheduleDelegate) error {
 	jsonvalue, err := json.Marshal(value)
@@ -53,8 +55,8 @@ func GetScheduleDelegateRole(ldb *db.DBService) (*ScheduleDelegate, error) {
 
 }
 
-//GetCandidateBySlot is to get candidate by slot
-func GetCandidateBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
+//GetCandidateRoleBySlot is to get candidate by slot
+func GetCandidateRoleBySlot(ldb *db.DBService, slotNum uint64) (string, error) {
 	chainObject, err := GetChainStateRole(ldb)
 	if err != nil {
 		log.Error("err")
@@ -93,19 +95,27 @@ func SetCandidatesTerm(ldb *db.DBService, termTime *big.Int, list []string) {
 }
 
 //ElectNextTermDelegatesRole is to elect next term delegates
-func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
+func ElectNextTermDelegatesRole(ldb *db.DBService, writeState bool) []string {
 	var tmpList []string
 	var eligibleList []string
 	var eligibles []string
+	var dbDelegates []string
+	var err error
 
-	sortedDelegates, err := GetAllSortVotesDelegates(ldb)
+	dbDelegates, err = GetAllSortVotesDelegates(ldb)
 	if err != nil {
 		return nil
 	}
+	log.Info("dbDelegates", dbDelegates)
+
+	var sortedDelegates = make([]string, len(dbDelegates))
+	copy(sortedDelegates, dbDelegates)
+
+	//log.Info("sortedDelegates", sortedDelegates)
 
 	filterDgates := FilterOutgoingDelegate(ldb)
 
-	if len(filterDgates) == 0 {
+	if filterDgates == nil || len(filterDgates) == 0 {
 		tmpList = sortedDelegates
 	} else {
 		tmpList = common.Filter(sortedDelegates, filterDgates)
@@ -114,18 +124,19 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 		//panic("Not enough active producers registered to schedule a round")
 		return nil
 	}
-
-	candidates := tmpList[0:config.VOTED_DELEGATES_PER_ROUND]
-
+	log.Info("filterDgates", filterDgates)
+	var candidates []string
+	candidates = append(candidates, tmpList[0:config.VOTED_DELEGATES_PER_ROUND]...)
+	//log.Info("candidates", candidates)
 	//sort candidates by account name
 	sort.Strings(candidates)
-
+	//log.Info("sorted candidates", candidates)
 	//Check exist ownername
 	finishdelegates, err := GetAllSortFinishTimeDelegates(ldb)
 	if err != nil {
 		return nil
 	}
-	log.Info("finish delegates", finishdelegates)
+	//log.Info("finish delegates", finishdelegates)
 
 	if len(filterDgates) == 0 {
 		eligibleList = finishdelegates
@@ -149,7 +160,15 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	lastTermUp := eligibles[0] //count -1 = 0
 
 	//get final reporter lists
-	reporterList := append(candidates, lastTermUp)
+
+	var reporterList = make([]string, len(candidates)+1)
+	copy(reporterList, candidates)
+	reporterList[len(candidates)] = lastTermUp
+
+	var returnList = make([]string, len(reporterList))
+	copy(returnList, reporterList)
+
+	if writeState == true {
 	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp)
 	if err != nil {
 		return nil
@@ -159,20 +178,23 @@ func ElectNextTermDelegatesRole(ldb *db.DBService) []string {
 	} else {
 		SetCandidatesTerm(ldb, newCandidates.TermFinishTime, reporterList)
 	}
+	}
+	log.Info("elect next term", returnList)
 
-	log.Info("elect next term", reporterList)
-
-	return reporterList
+	return returnList
 
 }
 
 //ShuffleEelectCandidateListRole is to shuffle the candidates in one round
 func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]string, error) {
-	newSchedule := ElectNextTermDelegatesRole(ldb)
+	electSchedule := ElectNextTermDelegatesRole(ldb, true)
+	var newSchedule = make([]string, len(electSchedule))
+	copy(newSchedule, electSchedule)
 	currentState, err := GetCoreStateRole(ldb)
 	if err != nil {
 		return nil, err
 	}
+
 	changes := common.Filter(currentState.CurrentDelegates, newSchedule)
 	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
 	if equal == false {
@@ -182,8 +204,12 @@ func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]st
 
 	h := block.Hash()
 	label := h.Label()
-	rand.New(rand.NewSource(int64(label)))
-	rand.Shuffle(len(newSchedule), func(i, j int) {
+	log.Info("Label: ", label)
+	r := rand.New(rand.NewSource(int64(label)))
+
+	log.Info("New Eelected, beafor shuffle: ", electSchedule)
+
+	r.Shuffle(len(electSchedule), func(i, j int) {
 		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
 	})
 

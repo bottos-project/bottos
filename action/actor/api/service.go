@@ -285,7 +285,7 @@ func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 	contract := req.Contract
 	object := req.Object
 	key := req.Key
-	value, err := a.env.ContractDB.GetStrValue(contract, object, key)
+	value, err := a.env.ContractDB.GetBinValue(contract, object, key)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
@@ -296,7 +296,7 @@ func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 	resp.Result.Contract = contract
 	resp.Result.Object = object
 	resp.Result.Key = key
-	resp.Result.Value = value
+	resp.Result.Value = common.BytesToHex(value)
 	resp.Errcode = 0
 
 	return nil

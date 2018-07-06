@@ -30,9 +30,9 @@ import (
 	//"fmt"
 
 	"github.com/bottos-project/bottos/config"
+	log "github.com/cihub/seelog"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	log "github.com/cihub/seelog"
 )
 
 //OptionDbRepo is the interface for plugin db for user queries
@@ -40,6 +40,7 @@ type OptionDbRepo interface {
 	InsertOptionDb(collection string, value interface{}) error
 	OptionDbFind(collection string, key string, value interface{}) (interface{}, error)
 	OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error
+	CallClose()
 }
 
 var insertSession *MongoContext
@@ -120,4 +121,8 @@ func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value
 	_, err = getSession.mgoSession.DB(config.DEFAULT_OPTIONDB_NAME).C(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME).UpdateAll(selector, data)
 
 	return err
+}
+func (r *OptionDbRepository) CallClose() {
+	insertSession.Close()
+	getSession.Close()
 }

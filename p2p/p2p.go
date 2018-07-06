@@ -44,8 +44,8 @@ type P2PServer struct {
 	c      *collection
 	connCb NewconnCb
 
-	sendc  chan MsgPacket
-	bsendc chan MsgPacket
+	sendc  chan UniMsgPacket
+	bsendc chan BcastMsgPacket
 }
 
 type SendupCb func(index uint16, p *Packet)
@@ -61,8 +61,8 @@ func MakeP2PServer(p *config.Parameter) *P2PServer {
 
 	Runner = &P2PServer{
 		c:      createCollection(),
-		sendc:  make(chan MsgPacket, 30),
-		bsendc: make(chan MsgPacket, 30),
+		sendc:  make(chan UniMsgPacket, 30),
+		bsendc: make(chan BcastMsgPacket, 30),
 	}
 
 	return Runner
@@ -78,11 +78,11 @@ func (s *P2PServer) SetCallback(conn NewconnCb) {
 	s.connCb = conn
 }
 
-func (s *P2PServer) SendUnicast(packet MsgPacket) {
+func (s *P2PServer) SendUnicast(packet UniMsgPacket) {
 	s.sendc <- packet
 }
 
-func (s *P2PServer) SendBroadcast(packet MsgPacket) {
+func (s *P2PServer) SendBroadcast(packet BcastMsgPacket) {
 	s.bsendc <- packet
 }
 
@@ -104,6 +104,10 @@ func (s *P2PServer) IsPeerInfoExist(info PeerInfo) bool {
 
 func (s *P2PServer) GetPeers() []PeerInfo {
 	return s.c.getPeers()
+}
+
+func (s *P2PServer) GetPeersData() PeerDataSet {
+	return s.c.getPeersData()
 }
 
 func (s *P2PServer) listenRoutine() {
@@ -147,10 +151,10 @@ func (s *P2PServer) sendRoutine() {
 	}
 }
 
-func (s *P2PServer) send(packet *MsgPacket) {
+func (s *P2PServer) send(packet *UniMsgPacket) {
 	s.c.send(packet)
 }
 
-func (s *P2PServer) msend(packet *MsgPacket) {
+func (s *P2PServer) msend(packet *BcastMsgPacket) {
 	s.c.sendBroadcast(packet)
 }

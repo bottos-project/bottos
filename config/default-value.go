@@ -67,7 +67,7 @@ const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 
 // DEFAULT_MAX_LIFE_TIME define max life time for a transaction
-const DEFAULT_MAX_LIFE_TIME uint64 = 600 //unit: second
+const DEFAULT_MAX_LIFE_TIME uint64 = 10000 //unit: second
 
 // DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
 const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
