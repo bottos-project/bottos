@@ -68,6 +68,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("getCtxName",       getCtxName)
 	envFunc.Register("getSender",        getSender)
 	envFunc.Register("memset",           memset)
+	envFunc.Register("memcpy",           memcpy)
 
 	return &envFunc
 }
@@ -543,3 +544,23 @@ func memset(vm *VM) (bool, error) {
 	return true, nil
 }
 
+func memcpy(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call memcpy")
+	}
+	dst := int(params[0])
+	src := int(params[1])
+	len := int(params[2])
+
+	if dst < src && dst + len > src {
+		return false, errors.New("*ERROR* memcpy overlapped")
+	}
+
+	copy(vm.memory[dst:dst+len], vm.memory[src:src+len])
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(dst))
+	}
+
+	return true, nil //this return will be dropped in wasm
+}
