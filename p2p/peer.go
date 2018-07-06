@@ -140,7 +140,7 @@ func (p *Peer) recvRoutine() {
 		if err != nil {
 			log.Errorf("recvRoutine read head error:%s", err)
 			p.isconn = false
-			break
+			return
 		}
 
 		packetLen = binary.BigEndian.Uint32(bl)
@@ -163,7 +163,6 @@ func (p *Peer) recvRoutine() {
 				if err != nil {
 					log.Errorf("recvRoutine continue read data error:%s", err)
 					p.isconn = false
-					readerr = true
 					return
 				}
 

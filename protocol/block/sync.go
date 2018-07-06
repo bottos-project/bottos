@@ -647,6 +647,8 @@ func (s *synchronizes) sendupBundleBlock() {
 }
 
 func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
+	log.Debugf("send up block :%d", block.Header.Number)
+
 	for i := 0; i < 5; i++ {
 		msg := &message.ReceiveBlock{Block: block}
 
@@ -661,10 +663,6 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 
 		if rsp.ErrorNo != chain.InsertBlockSuccess {
 			log.Errorf("block insert error: %d", rsp.ErrorNo)
-		}
-
-		if rsp.ErrorNo == chain.InsertBlockErrorGeneral {
-			time.Sleep(5 * time.Minute)
 		}
 
 		return rsp.ErrorNo
