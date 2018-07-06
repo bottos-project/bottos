@@ -841,7 +841,7 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
-		} else if s.c.begin == s.lastLocal {
+		} else if s.c.begin == s.lastLocal+1 {
 			log.Errorf("catchup no link, start catchup from lib: %d", s.libLocal)
 			s.c.begin = s.libLocal + 1
 			s.c.current = s.c.begin
