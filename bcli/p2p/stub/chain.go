@@ -13,8 +13,9 @@ import (
 type BlockChainStub struct {
 	blocks []types.Block
 
-	libNumber uint32
-	l         sync.Mutex
+	beginNumber uint32
+	libNumber   uint32
+	l           sync.Mutex
 }
 
 //func MakeBlockChainStub() chain.BlockChainInterface {
@@ -57,11 +58,8 @@ func (b *BlockChainStub) HeadBlockNum() uint32 {
 	b.l.Lock()
 	defer b.l.Unlock()
 
-	if len(b.blocks) > 0 {
-		return b.blocks[len(b.blocks)-1].Header.Number
-	} else {
-		return 0
-	}
+	return uint32(len(b.blocks))
+
 }
 func (b *BlockChainStub) HeadBlockHash() common.Hash {
 	b.l.Lock()
@@ -87,11 +85,22 @@ func (b *BlockChainStub) GenesisTimestamp() uint64 {
 	return 0
 }
 
-func (b *BlockChainStub) InsertBlock(block *types.Block) uint32 {
+func (b *BlockChainStub) InsertBlock(new *types.Block) uint32 {
 	b.l.Lock()
 	defer b.l.Unlock()
 
-	b.blocks = append(b.blocks, *block)
+	for _, block := range b.blocks {
+		if block.Header.Number == new.Header.Number {
+			return 0
+		}
+	}
+
+	b.blocks = append(b.blocks, *new)
+
+	if len(b.blocks) > 100 {
+		b.libNumber = 100
+	}
+
 	return 0
 }
 
@@ -114,6 +123,8 @@ func (b *BlockChainStub) GetHeaderByNumber(number uint32) *types.Header {
 
 func (b *BlockChainStub) SetBlocks(blocks []types.Block) {
 	b.blocks = blocks
+
+	b.beginNumber = uint32(len(b.blocks))
 }
 
 func (b *BlockChainStub) SetLibNumber(number uint32) {
@@ -131,7 +142,7 @@ func (b *BlockChainStub) NewBlockMsg() *message.NotifyBlock {
 	new.Header.Number++
 	new.Header.PrevBlockHash = last.Header.Hash().Bytes()
 
-	b.blocks = append(b.blocks, *new)
+	b.InsertBlock(new)
 
 	msg := &message.NotifyBlock{Block: new}
 

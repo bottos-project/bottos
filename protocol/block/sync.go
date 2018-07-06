@@ -27,8 +27,8 @@ const (
 	TIMER_HEADER_SYNC = 2
 	TIMER_BLOCK_SYNC  = 2
 
-	TIMER_CATCHUP       = 2
-	CATCHUP_COUNTER_MAX = 10
+	TIMER_CATCHUP   = 2
+	CATCHUP_COUNTER = 10
 
 	TIMER_HEADER_UPDATE_CHECK = 1
 
@@ -79,7 +79,8 @@ func (s syncset) Swap(i, j int) {
 }
 
 type synchronizes struct {
-	peers      map[uint16]*peerSyncInfo
+	peers map[uint16]*peerSyncInfo
+
 	libLocal   uint32
 	libRemote  uint32
 	lastLocal  uint32
@@ -88,22 +89,14 @@ type synchronizes struct {
 	once       bool //have synchronized one time or not when start up
 
 	infoc        chan *peerSyncInfo
-	sendc        chan chainNumber
+	updatec      chan chainNumber
 	blockc       chan *blockUpdate
 	headerc      chan *headerUpdate
-	headerCache  *headerUpdate
 	headercTimer *time.Timer
+	headerCache  *headerUpdate
 
-	set             *blockset
-	syncc           chan *blockHeaderRsp
-	syncblockc      chan *blockUpdate
-	syncHeaderTimer *time.Timer
-	syncBlockTimer  *time.Timer
-	endc            chan uint32
-
-	c        *catchup
-	catchupc chan *blockUpdate
-	stopc    chan int
+	set *syncSet
+	c   *catchup
 
 	config  syncConfig
 	chain   *actor.PID
@@ -112,22 +105,17 @@ type synchronizes struct {
 
 func MakeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchronizes {
 	return &synchronizes{
-		peers:      make(map[uint16]*peerSyncInfo),
-		infoc:      make(chan *peerSyncInfo, 10),
-		sendc:      make(chan chainNumber),
-		blockc:     make(chan *blockUpdate),
-		headerc:    make(chan *headerUpdate),
-		syncc:      make(chan *blockHeaderRsp),
-		syncblockc: make(chan *blockUpdate),
-		endc:       make(chan uint32),
-		catchupc:   make(chan *blockUpdate),
-		stopc:      make(chan int),
-		state:      STATE_SYNCING,
-		once:       false,
-		set:        makeBlockSet(),
-		c:          makeCatchup(),
-		config:     syncConfig{nodeType: nodeType},
-		chainIf:    chainIf,
+		peers:   make(map[uint16]*peerSyncInfo),
+		infoc:   make(chan *peerSyncInfo, 10),
+		updatec: make(chan chainNumber),
+		blockc:  make(chan *blockUpdate),
+		headerc: make(chan *headerUpdate),
+		state:   STATE_SYNCING,
+		once:    false,
+		set:     makeSyncSet(),
+		c:       makeCatchup(),
+		config:  syncConfig{nodeType: nodeType},
+		chainIf: chainIf,
 	}
 }
 
@@ -136,13 +124,13 @@ func (s *synchronizes) SetActor(tid *actor.PID) {
 }
 
 func (s *synchronizes) start() {
-	go s.syncBlockNumberTimer()
-	go s.recvRoutine()
-	go s.syncRoutine()
+	go s.numberSyncTimer()
+	go s.checkRoutine()
+	go s.syncSetRoutine()
 	go s.catchupRoutine()
 }
 
-func (s *synchronizes) syncBlockNumberTimer() {
+func (s *synchronizes) numberSyncTimer() {
 	log.Debug("syncBlockNumberTimer start")
 
 	syncTimer := time.NewTimer(TIMER_FAST_SYNC_LAST_BLOCK_NUMBER * time.Second)
@@ -165,49 +153,50 @@ func (s *synchronizes) syncBlockNumberTimer() {
 	}
 }
 
-func (s *synchronizes) recvRoutine() {
+func (s *synchronizes) checkRoutine() {
 	checkTimer := time.NewTimer(TIMER_SYNC_STATE_CHECK * time.Second)
 	s.headercTimer = time.NewTimer(TIMER_HEADER_UPDATE_CHECK * time.Second)
 
 	for {
 		select {
 		case info := <-s.infoc:
-			s.recvPeerBlockNumberInfo(info)
-		case number := <-s.sendc:
-			s.sendUpdateLocalNumber(number)
-		case update := <-s.blockc:
-			s.recvBlock(update)
-		case update := <-s.headerc:
-			s.recvBlockHeader(update)
+			s.recvBlockNumberInfo(info)
+		case number := <-s.updatec:
+			s.updateLocalLib(number.LibNumber)
+			s.updateLocalNumber(number.BlockNumber)
+		case block := <-s.blockc:
+			s.recvBlock(block)
 		case <-checkTimer.C:
 			s.syncStateCheck()
 			checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
+		case header := <-s.headerc:
+			s.recvBlockHeader(header)
 		case <-s.headercTimer.C:
 			s.checkHeader()
 		}
 	}
 }
 
-func (s *synchronizes) syncRoutine() {
-	s.syncHeaderTimer = time.NewTimer(TIMER_HEADER_SYNC * time.Second)
-	s.syncBlockTimer = time.NewTimer(TIMER_BLOCK_SYNC * time.Second)
+func (s *synchronizes) syncSetRoutine() {
+	s.set.syncHeaderTimer = time.NewTimer(TIMER_HEADER_SYNC * time.Second)
+	s.set.syncBlockTimer = time.NewTimer(TIMER_BLOCK_SYNC * time.Second)
 
 	for {
 		select {
-		case rsp := <-s.syncc:
+		case rsp := <-s.set.syncheaderc:
 			if s.set.recvBlockHeader(rsp) {
-				s.syncHeaderTimer.Stop()
+				s.set.syncHeaderTimer.Stop()
 				s.syncBundleBlock()
 			}
-		case update := <-s.syncblockc:
+		case update := <-s.set.syncblockc:
 			s.syncRecvBlock(update)
-		case number := <-s.endc:
+		case number := <-s.set.endc:
 			s.set.updateRemoteNumber(number)
-		case <-s.syncHeaderTimer.C:
+		case <-s.set.syncHeaderTimer.C:
 			if s.set.state == SET_SYNC_HEADER {
 				s.syncBlockHeader()
 			}
-		case <-s.syncBlockTimer.C:
+		case <-s.set.syncBlockTimer.C:
 			s.setSyncStateCheck()
 		}
 	}
@@ -220,27 +209,21 @@ func (s *synchronizes) catchupRoutine() {
 		select {
 		case <-check.C:
 			s.catchupCheck()
-		case update := <-s.catchupc:
+		case update := <-s.c.catchupc:
 			s.catchupRecvBlock(update)
-		case <-s.stopc:
+		case <-s.c.stopc:
 			s.c.catchupReset()
 		}
 	}
 }
 
-func (s *synchronizes) recvPeerBlockNumberInfo(info *peerSyncInfo) {
+func (s *synchronizes) recvBlockNumberInfo(info *peerSyncInfo) {
 	info.counter = 0
 
 	s.peers[info.index] = info
 
 	s.updateRemoteLib(info.lastLib, false)
 	s.updateRemoteNumber(info.lastBlock, false)
-}
-
-//sendNumber produce a block and set out, so update local block number
-func (s *synchronizes) sendUpdateLocalNumber(last chainNumber) {
-	s.updateLocalLib(last.LibNumber)
-	s.updateLocalNumber(last.BlockNumber)
 }
 
 func (s *synchronizes) recvBlock(update *blockUpdate) {
@@ -284,7 +267,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		}
 		return
 	} else if s.state == STATE_SYNCING {
-		s.syncblockc <- update
+		s.set.syncblockc <- update
 	}
 }
 
@@ -371,7 +354,7 @@ func (s *synchronizes) syncStateCheck() {
 		log.Errorf("syncStateCheck remote lib number change smaller")
 		if remoteLib > 0 {
 			s.updateRemoteLib(remoteLib, true)
-			s.endc <- remoteLib
+			s.set.endc <- remoteLib
 		}
 
 		//judge by the next time, if no peer exist, sync is always false
@@ -403,12 +386,19 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		if !s.once {
 			s.syncBlockHeader()
 			s.once = true
-		} else if s.state == STATE_NORMAL ||
+			return
+		}
+
+		if s.lastLocal >= s.lastRemote {
+			return
+		}
+
+		if s.state == STATE_NORMAL ||
 			s.state == STATE_CATCHUP {
 			log.Debugf("syncStateJudge not sync")
 			s.state = STATE_SYNCING
 			s.syncBlockHeader()
-			s.stopc <- 1
+			s.c.stopc <- 1
 		} else {
 			if s.set.state == SET_SYNC_NULL {
 				log.Debugf("continue sync")
@@ -447,7 +437,7 @@ func (s *synchronizes) updateLocalNumber(number uint32) {
 }
 
 func (s *synchronizes) updateRemoteLib(lib uint32, force bool) {
-	if !force && lib < s.libRemote {
+	if !force && lib <= s.libRemote {
 		return
 	}
 
@@ -456,7 +446,7 @@ func (s *synchronizes) updateRemoteLib(lib uint32, force bool) {
 }
 
 func (s *synchronizes) updateRemoteNumber(number uint32, force bool) {
-	if !force && number < s.lastRemote {
+	if !force && number <= s.lastRemote {
 		return
 	}
 
@@ -517,7 +507,7 @@ func (s *synchronizes) syncBlockHeader() {
 	s.set.state = SET_SYNC_HEADER
 	s.sendBlockHeaderReq(s.set.begin, s.set.end)
 
-	s.syncHeaderTimer.Reset(TIMER_HEADER_SYNC * time.Second)
+	s.set.syncHeaderTimer.Reset(TIMER_HEADER_SYNC * time.Second)
 }
 
 func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
@@ -587,7 +577,7 @@ func (s *synchronizes) syncBundleBlock() {
 		}
 	}
 
-	s.syncBlockTimer.Reset(TIMER_BLOCK_SYNC * time.Second)
+	s.set.syncBlockTimer.Reset(TIMER_BLOCK_SYNC * time.Second)
 }
 
 func (s *synchronizes) sendBlockReq(index uint16, number uint32, ptype uint16) {
@@ -803,7 +793,7 @@ func (s *synchronizes) catchupCheck() {
 	}
 
 	s.c.counter++
-	if s.c.counter >= CATCHUP_COUNTER_MAX {
+	if s.c.counter >= CATCHUP_COUNTER {
 		s.c.catchupReset()
 	} else {
 		log.Debugf("catchup resend get block: %d", s.c.current)
@@ -857,6 +847,9 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 			log.Errorf("catchup with peer:%d error", s.c.index)
 			s.c.catchupReset()
 		}
+	} else {
+		log.Errorf("catchup with peer error, reset and wait next time")
+		s.c.catchupReset()
 	}
 
 }
@@ -886,7 +879,13 @@ func (s *synchronizes) catchupWithPeer(index uint16, number uint32) {
 	}
 }
 
-type blockset struct {
+type syncSet struct {
+	syncheaderc     chan *blockHeaderRsp
+	syncblockc      chan *blockUpdate
+	syncHeaderTimer *time.Timer
+	syncBlockTimer  *time.Timer
+	endc            chan uint32
+
 	headers [SYNC_BLOCK_BUNDLE]*types.Header
 	blocks  [SYNC_BLOCK_BUNDLE]*types.Block
 
@@ -896,11 +895,15 @@ type blockset struct {
 	state uint16
 }
 
-func makeBlockSet() *blockset {
-	return &blockset{state: SET_SYNC_NULL}
+func makeSyncSet() *syncSet {
+	return &syncSet{
+		syncheaderc: make(chan *blockHeaderRsp),
+		syncblockc:  make(chan *blockUpdate),
+		endc:        make(chan uint32),
+		state:       SET_SYNC_NULL}
 }
 
-func (set *blockset) recvBlockHeader(rsp *blockHeaderRsp) bool {
+func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	if set.state != SET_SYNC_HEADER {
 		log.Errorf("recvBlockHeader state error")
 		return false
@@ -938,14 +941,14 @@ func (set *blockset) recvBlockHeader(rsp *blockHeaderRsp) bool {
 }
 
 //updateRemoteNumber update peer max block number if some peer is disconnect
-func (set *blockset) updateRemoteNumber(number uint32) {
+func (set *syncSet) updateRemoteNumber(number uint32) {
 	if set.end > number && set.state != SET_SYNC_NULL {
 		log.Debugf("update syn set max block number: %d", number)
 		set.end = number
 	}
 }
 
-func (set *blockset) setSyncStateJudge() bool {
+func (set *syncSet) setSyncStateJudge() bool {
 	if set.end < set.begin {
 		return true
 	}
@@ -960,19 +963,19 @@ func (set *blockset) setSyncStateJudge() bool {
 	return true
 }
 
-func (set *blockset) resetHeader() {
+func (set *syncSet) resetHeader() {
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		set.headers[i] = nil
 	}
 }
 
-func (set *blockset) resetBlock() {
+func (set *syncSet) resetBlock() {
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		set.blocks[i] = nil
 	}
 }
 
-func (set *blockset) reset() {
+func (set *syncSet) reset() {
 	set.state = SET_SYNC_NULL
 	set.end = 0
 	set.begin = 0
@@ -980,7 +983,7 @@ func (set *blockset) reset() {
 	set.resetBlock()
 }
 
-func (set *blockset) isBlockHeadSame(a *types.Header, b *types.Header) bool {
+func (set *syncSet) isBlockHeadSame(a *types.Header, b *types.Header) bool {
 	if a.Number == b.Number &&
 		a.Version == b.Version &&
 		a.Timestamp == b.Timestamp &&
@@ -993,6 +996,9 @@ func (set *blockset) isBlockHeadSame(a *types.Header, b *types.Header) bool {
 }
 
 type catchup struct {
+	catchupc chan *blockUpdate
+	stopc    chan int
+
 	index   uint16
 	begin   uint32
 	current uint32
@@ -1001,7 +1007,10 @@ type catchup struct {
 }
 
 func makeCatchup() *catchup {
-	return &catchup{}
+	return &catchup{
+		catchupc: make(chan *blockUpdate),
+		stopc:    make(chan int),
+	}
 }
 
 func (c *catchup) catchupReset() {
