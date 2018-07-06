@@ -27,10 +27,9 @@ package producer
 
 import (
 	"errors"
+	log "github.com/cihub/seelog"
 	"math/rand"
 	"reflect"
-
-	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
