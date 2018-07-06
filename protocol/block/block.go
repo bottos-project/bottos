@@ -111,7 +111,7 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 
 	last := chainNumber{LibNumber: b.chainIf.LastConsensusBlockNum(),
 		BlockNumber: b.chainIf.HeadBlockNum()}
-	b.s.sendc <- last
+	b.s.updatec <- last
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
@@ -199,7 +199,7 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 		log.Errorf("processBlockInfo Unmarshal error:%s", err)
 	}
 
-	b.s.syncc <- &rsp
+	b.s.set.syncheaderc <- &rsp
 }
 
 func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
@@ -244,7 +244,7 @@ func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 	}
 
 	update := blockUpdate{index: index, block: &block}
-	b.s.catchupc <- &update
+	b.s.c.catchupc <- &update
 }
 
 func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
