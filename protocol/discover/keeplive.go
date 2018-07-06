@@ -12,17 +12,18 @@ type keeplive struct {
 	counter [MAX_PEER_COUNT + 1]int32
 
 	c *candidates
+	p *pne
 }
 
 const (
 	//TIME_KEEP_LIVE ping/pong timer, second
-	TIMER_KEEP_LIVE = 20
+	TIMER_KEEP_LIVE = 10
 	//TIMER_CHECK time out second
-	TIMER_CHECK = 200
+	TIMER_CHECK = 40
 )
 
-func makeKeeplive(c *candidates) *keeplive {
-	return &keeplive{c: c}
+func makeKeeplive(c *candidates, p *pne) *keeplive {
+	return &keeplive{c: c, p: p}
 }
 
 func (k *keeplive) start() {
@@ -81,8 +82,15 @@ func (k *keeplive) checkPeer() {
 		if k.counter[i] != -1 {
 			if k.counter[i] == 0 {
 				atomic.StoreInt32(&k.counter[i], -1)
+
+				info := p2p.Runner.GetPeer(uint16(i))
+				var set []p2p.PeerInfo
+				set = append(set, *info)
+
 				if p2p.Runner.DelPeer(uint16(i)) {
+					log.Infof("peer %s:%s disconnect, add back to connect neighbors", info.Addr, info.Port)
 					k.c.pushPeerIndex(uint16(i))
+					k.p.n.addNeighbor(set)
 				}
 			} else {
 				atomic.StoreInt32(&k.counter[i], 0)

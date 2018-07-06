@@ -25,7 +25,7 @@ type pne struct {
 const (
 	TIME_FAST_PNE_EXCHANGE = 8
 	//TIME_PNE_EXCHANGE time to exchange peer neighbor info, minute
-	TIME_PNE_EXCHANGE = 60
+	TIME_PNE_EXCHANGE = 30
 )
 
 func makePne(config *config.Parameter) *pne {

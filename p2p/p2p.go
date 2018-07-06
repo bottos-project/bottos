@@ -90,6 +90,10 @@ func (s *P2PServer) AddPeer(peer *Peer) error {
 	return s.c.addPeer(peer)
 }
 
+func (s *P2PServer) GetPeer(index uint16) *PeerInfo {
+	return s.c.getPeer(index)
+}
+
 func (s *P2PServer) DelPeer(index uint16) bool {
 	return s.c.delPeer(index)
 }

@@ -126,6 +126,8 @@ func (p *Peer) Send(packet Packet) error {
 }
 
 func (p *Peer) recvRoutine() {
+	defer p.conn.Close()
+
 	bl := make([]byte, 4)
 	var packetLen uint32
 	var len int

@@ -49,6 +49,21 @@ func (c *collection) addPeer(peer *Peer) error {
 	return nil
 }
 
+func (c *collection) getPeer(index uint16) *PeerInfo {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	var info PeerInfo
+	peer, ok := c.peers[index]
+	if ok {
+		info.Addr = peer.Info.Addr
+		info.Port = peer.Info.Port
+		return &info
+	} else {
+		return nil
+	}
+}
+
 func (c *collection) delPeer(index uint16) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
