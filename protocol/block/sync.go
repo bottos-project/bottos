@@ -420,6 +420,8 @@ func (s *synchronizes) updateLocalLib(lib uint32) {
 	if lib < s.libLocal {
 		log.Errorf("update  local lib number error now:%d update:%d", s.libLocal, lib)
 		return
+	} else if lib == s.libLocal {
+		return
 	}
 
 	log.Debugf("update local lib number:%d", lib)
@@ -429,6 +431,8 @@ func (s *synchronizes) updateLocalLib(lib uint32) {
 func (s *synchronizes) updateLocalNumber(number uint32) {
 	if number < s.lastLocal {
 		log.Errorf("update  local block number error now:%d update:%d", s.lastLocal, number)
+		return
+	} else if number == s.lastLocal {
 		return
 	}
 
