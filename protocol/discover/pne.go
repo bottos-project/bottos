@@ -65,6 +65,7 @@ func (p *pne) parseSeeds(config *config.Parameter) {
 		peer.Addr = addr
 		peer.Port = port
 		peers = append(peers, peer)
+		log.Debugf("parseSeeds: %s:%s", addr, port)
 		p.n.addNeighbor(peers)
 	}
 }

@@ -211,8 +211,14 @@ func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 	}
 
 	block := b.chainIf.GetBlockByNumber(blocknumber)
-	if block == nil && ptype == BLOCK_REQ {
-		return
+	if block == nil {
+		log.Debugf("get block return nil")
+
+		if ptype == BLOCK_REQ {
+			return
+		}
+	} else {
+		log.Debugf("get block number:%d", block.Header.Number)
 	}
 
 	if ptype == BLOCK_REQ {
