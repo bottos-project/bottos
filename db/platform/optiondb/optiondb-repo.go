@@ -39,11 +39,12 @@ import (
 //OptionDbRepository is the option db struct
 type OptionDbRepository struct {
 	mgoEndpoint string
+	is_optiondb_offline bool
 }
 
 //NewOptionDbRepository creates a new OptionDbRepository
 func NewOptionDbRepository(endpoint string) *OptionDbRepository {
-	return &OptionDbRepository{mgoEndpoint: endpoint}
+	return &OptionDbRepository{mgoEndpoint: endpoint, is_optiondb_offline: false}
 }
 
 //MongoContext is a plugin db for option db, you can chose different db if you like.

@@ -49,11 +49,17 @@ var getSession *MongoContext
 //InsertOptionDb is to insert record in option db
 func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}) error {
 	var err error
+	
+	if r.is_optiondb_offline == true {
+		return nil
+	}
+
 	if insertSession == nil || insertSession.mgoSession == nil {
 		insertSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
+			r.is_optiondb_offline = true
 			log.Error("collection cccccccccccc", insertSession, collection, err)
-			return errors.New("Get session faild" + r.mgoEndpoint)
+			return errors.New("Get session faild:" + r.mgoEndpoint)
 		}
 	}
 
@@ -69,9 +75,15 @@ func (r *OptionDbRepository) InsertOptionDb(collection string, value interface{}
 //RemoveAllOptionDb is to remove all records in option db
 func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
 	var err error
+	
+	if r.is_optiondb_offline == true {
+		return nil
+	}
+
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
+			r.is_optiondb_offline = true
 			log.Error("collection ", getSession, collection, err)
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
@@ -88,9 +100,15 @@ func (r *OptionDbRepository) RemoveAllOptionDb(collection string) error {
 //OptionDbFind is to find record in option db
 func (r *OptionDbRepository) OptionDbFind(collection string, key string, value interface{}) (interface{}, error) {
 	var err error
+
+	if r.is_optiondb_offline == true {
+		return nil, errors.New("Optiondb is out of connection")
+	}
+	
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
+			r.is_optiondb_offline = true
 			log.Error("collection ", getSession, collection, err)
 			return nil, errors.New("Get session faild" + r.mgoEndpoint)
 		}
@@ -107,12 +125,18 @@ func (r *OptionDbRepository) OptionDbFind(collection string, key string, value i
 //OptionDbUpdate is to update record in option db
 func (r *OptionDbRepository) OptionDbUpdate(collection string, key string, value interface{}, updatekey string, updatevalue interface{}) error {
 	var err error
+	
+	if r.is_optiondb_offline == true {
+		return errors.New("Optiondb is out of connection")
+	}
+	
 	selector := bson.M{key: value}
 	data := bson.M{"$set": bson.M{updatekey: updatevalue}}
 
 	if getSession == nil || getSession.mgoSession == nil {
 		getSession, err = GetSession(r.mgoEndpoint)
 		if err != nil {
+			r.is_optiondb_offline = true
 			log.Error("collection ", getSession, collection, err)
 			return errors.New("Get session faild" + r.mgoEndpoint)
 		}
