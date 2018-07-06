@@ -107,6 +107,7 @@ func (p *ProducerActor) working() {
 		}
 		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
+		var removeTrx = []*types.Transaction{}
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
@@ -116,9 +117,10 @@ func (p *ProducerActor) working() {
 				log.Info("Warning reach max size")
 				continue
 			}
-			pass, _ := VerifyTransactions(trx)
+			pass, _ := verifyTransactions(trx)
 			if pass == false {
 				log.Info("ApplyTransaction failed")
+				removeTrx = append(removeTrx, trx)
 				continue
 			}
 			data, _ := proto.Marshal(trx)
@@ -131,7 +133,8 @@ func (p *ProducerActor) working() {
 			}
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
 		}
-		block = p.ins.Woker(trxs)
+		removeTransaction(removeTrx)
+		block = p.ins.Woker(pendingBlockTrx)
 		trxs = nil
 		if block != nil {
 			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
