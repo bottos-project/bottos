@@ -185,7 +185,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService, writeState bool) []string {
 
 }
 
-//ShuffleEelectCandidateList is to shuffle the candidates in one round
+//ShuffleEelectCandidateListRole is to shuffle the candidates in one round
 func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]string, error) {
 	electSchedule := ElectNextTermDelegatesRole(ldb, true)
 	var newSchedule = make([]string, len(electSchedule))
@@ -204,8 +204,12 @@ func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]st
 
 	h := block.Hash()
 	label := h.Label()
-	rand.New(rand.NewSource(int64(label)))
-	rand.Shuffle(len(newSchedule), func(i, j int) {
+	log.Info("Label: ", label)
+	r := rand.New(rand.NewSource(int64(label)))
+
+	log.Info("New Eelected, beafor shuffle: ", electSchedule)
+
+	r.Shuffle(len(electSchedule), func(i, j int) {
 		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
 	})
 

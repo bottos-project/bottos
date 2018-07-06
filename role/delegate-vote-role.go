@@ -1,9 +1,10 @@
 package role
 
 import (
+	"math/big"
+
 	"encoding/json"
 	"errors"
-	"math/big"
 	"strconv"
 
 	"github.com/bottos-project/bottos/common"
@@ -62,6 +63,7 @@ func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) e
 	if err != nil {
 		return err
 	}
+
 	return ldb.SetObject(DelegateVotesObjectName, key, string(jsonvalue))
 }
 
@@ -169,7 +171,7 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 		dvotes := object.StartNewTerm(big.NewInt(0))
 		dvotes.OwnerAccount = object.OwnerAccount
 		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
-		//fmt.Println("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
+		//log.Info("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
 	}
 }
 
@@ -184,7 +186,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 		}
 		dvotes := delegate.StartNewTerm(termTime)
 		SetDelegateVotesRole(ldb, accountName, dvotes)
-		//fmt.Println("set delegate new term", accountName, dvotes)
+		//log.Info("set delegate new term", accountName, dvotes)
 
 	}
 }

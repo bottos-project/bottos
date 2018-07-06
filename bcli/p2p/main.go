@@ -21,6 +21,7 @@ type p2pConfig struct {
 }
 
 type chainConfig struct {
+	LibNumber   uint32
 	BlockNumber uint32
 	Blocks      []types.Block
 }
@@ -47,6 +48,7 @@ func main() {
 			return
 		}
 		bc.SetBlocks(chain.Blocks[0:chain.BlockNumber])
+		bc.SetLibNumber(chain.LibNumber)
 	}
 
 	log.Info("blocknumber:", chain.BlockNumber)

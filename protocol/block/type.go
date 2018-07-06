@@ -14,7 +14,15 @@ const (
 	BLOCK_HEADER_RSP = 6
 
 	BLOCK_HEADER_UPDATE = 7
+
+	BLOCK_CATCH_REQUEST  = 8
+	BLOCK_CATCH_RESPONSE = 9
 )
+
+type chainNumber struct {
+	LibNumber   uint32
+	BlockNumber uint32
+}
 
 type blockHeaderReq struct {
 	Begin uint32

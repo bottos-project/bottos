@@ -57,20 +57,18 @@ func NewEnvFunc() *EnvFunc {
 		envFuncParamIdx: 0,
 	}
 
-	envFunc.Register("printi", printi)
-	envFunc.Register("prints", prints)
-	// envFunc.Register("getStrValue", getStrValue)
-	// envFunc.Register("setStrValue", setStrValue)
-	// envFunc.Register("removeStrValue", removeStrValue)
-	
-	envFunc.Register("getStrValue", getBinValue)
-	envFunc.Register("setStrValue", setBinValue)
-	envFunc.Register("removeStrValue", removeBinValue)
-	envFunc.Register("getParam", getParam)
-	envFunc.Register("callTrx", callTrx)
-	envFunc.Register("assert", assert)
-	envFunc.Register("getCtxName", getCtxName)
-	envFunc.Register("getSender", getSender)
+	envFunc.Register("printi",           printi)
+	envFunc.Register("prints",           prints)
+	envFunc.Register("getStrValue",      getStrValue)
+	envFunc.Register("setStrValue",      setStrValue)
+	envFunc.Register("removeStrValue",   removeStrValue)
+	envFunc.Register("getParam",         getParam)
+	envFunc.Register("callTrx",          callTrx)
+	envFunc.Register("assert",           assert)
+	envFunc.Register("getCtxName",       getCtxName)
+	envFunc.Register("getSender",        getSender)
+	envFunc.Register("memset",           memset)
+	envFunc.Register("memcpy",           memcpy)
 
 	return &envFunc
 }
@@ -522,4 +520,47 @@ func getSender(vm *VM) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func memset(vm *VM) (bool, error) {
+	params  := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call memset !!!")
+	}
+	pos     := int(vm.envFunc.envFuncParam[0])
+	element := int(vm.envFunc.envFuncParam[1])
+	count   := int(vm.envFunc.envFuncParam[2])
+
+	tempMem := make([]byte, count)
+	for i := 0; i < count; i++ {
+		tempMem[i] = byte(element)
+	}
+	copy(vm.memory[pos:pos+count], tempMem)
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushInt32(int32(pos))
+	}
+
+	return true, nil
+}
+
+func memcpy(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call memcpy")
+	}
+	dst := int(params[0])
+	src := int(params[1])
+	len := int(params[2])
+
+	if dst < src && dst + len > src {
+		return false, errors.New("*ERROR* memcpy overlapped")
+	}
+
+	copy(vm.memory[dst:dst+len], vm.memory[src:src+len])
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(dst))
+	}
+
+	return true, nil //this return will be dropped in wasm
 }
