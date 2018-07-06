@@ -337,6 +337,7 @@ func (s *synchronizes) syncStateCheck() {
 
 		if info.counter >= SYNC_LAST_BLOCK_NUMBER_COUNTER {
 			delete(s.peers, key)
+			continue
 		}
 
 		if info.lastLib > remoteLib {
