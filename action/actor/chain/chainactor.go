@@ -27,6 +27,7 @@ package chainactor
 
 import (
 	"fmt"
+
 	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
@@ -116,7 +117,7 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
 			Hash:  req.Block.Hash(),
-			Error: fmt.Errorf("Block Insert error, code: %v", errcode),
+			Error: fmt.Errorf("Insert block error: %v", errcode),
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}

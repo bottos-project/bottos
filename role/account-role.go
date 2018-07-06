@@ -27,6 +27,7 @@ package role
 
 import (
 	"encoding/json"
+
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
 )
@@ -83,5 +84,3 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 
 	return res, nil
 }
-
-

@@ -33,6 +33,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/transaction"
 )
 
 var trxActorPid *actor.PID
@@ -70,9 +71,11 @@ func GetAllPendingTrx() []*types.Transaction {
 
 // VerifyTransactions is to verify local and received transactons
 func VerifyTransactions(trx *types.Transaction) (bool, error) {
-	return true, nil
-	/* 	log.Info("start apply transaction trx one by one")
+
+	log.Info("start apply transaction trx one by one")
 	   	trxApply := transaction.NewTrxApplyService()
 	   	pass, _, _ := trxApply.ApplyTransaction(trx)
-	   	return pass, nil */
+
+	log.Info("verify result ", pass)
+	return pass, nil
 }
