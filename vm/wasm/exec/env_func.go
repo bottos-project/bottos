@@ -66,6 +66,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
 	envFunc.Register("getSender",        getSender)
+	envFunc.Register("memset",           memset)
 
 	return &envFunc
 }
@@ -375,6 +376,28 @@ func getSender(vm *VM) (bool, error) {
 	vm.memory[pos+len] = 0
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(senderNameLen))
+	}
+
+	return true, nil
+}
+
+func memset(vm *VM) (bool, error) {
+	params  := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call memset !!!")
+	}
+	pos     := int(vm.envFunc.envFuncParam[0])
+	element := int(vm.envFunc.envFuncParam[1])
+	count   := int(vm.envFunc.envFuncParam[2])
+
+	tempMem := make([]byte, count)
+	for i := 0; i < count; i++ {
+		tempMem[i] = byte(element)
+	}
+	copy(vm.memory[pos:pos+count], tempMem)
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushInt32(int32(pos))
 	}
 
 	return true, nil
