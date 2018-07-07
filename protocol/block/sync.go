@@ -276,6 +276,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 		}
 		return
 	} else if s.state == STATE_SYNCING {
+		log.Debugf("protocol recv block in syncing status", number)
 		s.set.syncblockc <- update
 	}
 }
@@ -291,6 +292,8 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 		log.Infof("protocol drop block out of sync range")
 		return
 	}
+
+	log.Infof("protocol sync process block: %d", update.block.Header.Number)
 
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		if s.set.headers[i] != nil &&
