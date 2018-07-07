@@ -117,7 +117,7 @@ func (s *P2PServer) GetPeersData() PeerDataSet {
 func (s *P2PServer) listenRoutine() {
 	l, err := net.Listen("tcp", "0.0.0.0:"+fmt.Sprint(LocalPeerInfo.Port))
 	if err != nil {
-		log.Errorf("start p2p server listen error: %s", err)
+		log.Errorf("p2p start p2p server listen error: %s", err)
 		panic(err)
 	}
 
@@ -126,7 +126,7 @@ func (s *P2PServer) listenRoutine() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			log.Error("NetServer::Listening() Failed to accept")
+			log.Error("p2p NetServer::Listening() Failed to accept")
 			continue
 		}
 

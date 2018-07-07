@@ -98,26 +98,26 @@ func (p *Peer) Send(packet Packet) error {
 	}
 
 	if length > MAX_PACKET_LEN {
-		log.Errorf("Send packet length large than max packet length")
+		log.Errorf("p2p Send packet length large than max packet length")
 		return errors.New("large than max packet length")
 	}
 
 	buf := &bytes.Buffer{}
 	err := binary.Write(buf, binary.BigEndian, length)
 	if err != nil {
-		log.Error("send write packet length error")
+		log.Error("p2p send write packet length error")
 		return err
 	}
 
 	err = binary.Write(buf, binary.BigEndian, packet.H)
 	if err != nil {
-		log.Error("send write packet protocolType error")
+		log.Error("p2p send write packet protocolType error")
 		return err
 	}
 
 	_, err = buf.Write(packet.Data)
 	if err != nil {
-		log.Error("send write packet Data error")
+		log.Error("p2p send write packet Data error")
 		return err
 	}
 
@@ -138,21 +138,21 @@ func (p *Peer) recvRoutine() {
 	for {
 		_, err := io.ReadFull(p.reader, bl)
 		if err != nil {
-			log.Errorf("recvRoutine read head error:%s", err)
+			log.Errorf("p2p recvRoutine read head error:%s", err)
 			p.isconn = false
 			return
 		}
 
 		packetLen = binary.BigEndian.Uint32(bl)
 		if packetLen < headsize || packetLen > MAX_PACKET_LEN {
-			log.Errorf("recvRoutine drop packet wrong packet lenght %d", packetLen)
+			log.Errorf("p2p recvRoutine drop packet wrong packet lenght %d", packetLen)
 			continue
 		}
 
 		buf := make([]byte, packetLen)
 		len, err = io.ReadFull(p.reader, buf)
 		if err != nil {
-			log.Errorf("recvRoutine read data error:%s", err)
+			log.Errorf("p2p recvRoutine read data error:%s", err)
 			p.isconn = false
 			break
 		}
@@ -161,7 +161,7 @@ func (p *Peer) recvRoutine() {
 			for {
 				length, err := io.ReadFull(p.reader, buf[len:])
 				if err != nil {
-					log.Errorf("recvRoutine continue read data error:%s", err)
+					log.Errorf("p2p recvRoutine continue read data error:%s", err)
 					p.isconn = false
 					return
 				}
@@ -173,7 +173,7 @@ func (p *Peer) recvRoutine() {
 				} else if uint32(len) == packetLen {
 					break
 				} else {
-					log.Errorf("recvRoutine continue read data length wrong packet length:%d, read:%d", packetLen, len)
+					log.Errorf("p2p recvRoutine continue read data length wrong packet length:%d, read:%d", packetLen, len)
 					readerr = true
 					break
 				}

@@ -133,12 +133,12 @@ func (s *synchronizes) start() {
 }
 
 func (s *synchronizes) numberSyncTimer() {
-	log.Debug("syncBlockNumberTimer start")
+	log.Debug("protocol syncBlockNumberTimer start")
 
 	syncTimer := time.NewTimer(TIMER_FAST_SYNC_LAST_BLOCK_NUMBER * time.Second)
 
 	defer func() {
-		log.Debug("syncBlockNumberTimer stop")
+		log.Debug("protocol syncBlockNumberTimer stop")
 		syncTimer.Stop()
 	}()
 
@@ -235,13 +235,13 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 	number := update.block.GetNumber()
 
 	if number <= s.libLocal {
-		log.Debugf("drop block: %d is smaller than local number", number)
+		log.Debugf("protocol drop block: %d is smaller than local number", number)
 		return
 	}
 
 	if s.state == STATE_NORMAL {
 		if number > s.lastLocal+1 {
-			log.Debugf("lose block , need catch up with this peer")
+			log.Debugf("protocol lose block , need catch up with this peer")
 			s.state = STATE_CATCHUP
 			s.catchupWithPeer(update.index, number)
 			return
@@ -255,12 +255,12 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
 
-			log.Debugf("sendup block success in normal, lib: %d head: %d", libNumber, blocknumber)
+			log.Debugf("protocol sendup block success in normal, lib: %d head: %d", libNumber, blocknumber)
 		}
 		return
 	} else if s.state == STATE_CATCHUP {
 		if number > s.lastLocal+1 {
-			log.Debugf("drop block: %d when in catch up status", number)
+			log.Debugf("protocol drop block: %d when in catch up status", number)
 			return
 		}
 
@@ -272,7 +272,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
 
-			log.Debugf("sendup block success in catch up, lib: %d head: %d", libNumber, blocknumber)
+			log.Debugf("protocol sendup block success in catch up, lib: %d head: %d", libNumber, blocknumber)
 		}
 		return
 	} else if s.state == STATE_SYNCING {
@@ -282,13 +282,13 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 
 func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 	if s.set.state != SET_SYNC_BLOCK {
-		log.Debugf("drop block: %d when sync header or finish", update.block.GetNumber())
+		log.Debugf("protocol drop block: %d when sync header or finish", update.block.GetNumber())
 		return
 	}
 
 	if update.block.GetNumber() > s.set.end ||
 		update.block.GetNumber() < s.set.begin {
-		log.Infof("drop block out of sync range")
+		log.Infof("protocol drop block out of sync range")
 		return
 	}
 
@@ -309,7 +309,7 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
 	number := update.header.GetNumber()
 	if number <= s.lastLocal {
-		log.Debugf("drop block header: %d is smaller than local", number)
+		log.Debugf("protocol drop block header: %d is smaller than local", number)
 		return
 	}
 
@@ -317,7 +317,7 @@ func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
 		s.cacheHeader(update)
 		return
 	} else {
-		log.Infof("drop block header: %d , wait for catchup", number)
+		log.Infof("protocol drop block header: %d , wait for catchup", number)
 	}
 }
 
@@ -364,7 +364,7 @@ func (s *synchronizes) syncStateCheck() {
 
 	//remote block lib be smaller, wo should reset it
 	if remoteLib < s.libRemote {
-		log.Errorf("syncStateCheck remote lib number change smaller")
+		log.Errorf("protocol syncStateCheck remote lib number change smaller")
 		if remoteLib > 0 {
 			s.updateRemoteLib(remoteLib, true)
 			s.set.endc <- remoteLib
@@ -373,13 +373,13 @@ func (s *synchronizes) syncStateCheck() {
 		//judge by the next time, if no peer exist, sync is always false
 		return
 	} else if remoteLib > s.libRemote {
-		log.Errorf("syncStateCheck remote lib number change bigger")
+		log.Errorf("protocol syncStateCheck remote lib number change bigger")
 		s.updateRemoteLib(remoteLib, false)
 	}
 
 	//remote block lib be smaller, wo should reset it
 	if remoteNumber < s.lastRemote {
-		log.Errorf("syncStateCheck remote number change smaller")
+		log.Errorf("protocol syncStateCheck remote number change smaller")
 		if remoteNumber > 0 {
 			s.updateRemoteNumber(remoteNumber, true)
 		}
@@ -387,7 +387,7 @@ func (s *synchronizes) syncStateCheck() {
 		//judge by the next time, if no peer exist, sync is always false
 		return
 	} else if remoteNumber > s.lastRemote {
-		log.Errorf("syncStateCheck remote number change bigger")
+		log.Errorf("protocol syncStateCheck remote number change bigger")
 		s.updateRemoteNumber(remoteNumber, false)
 	}
 
@@ -396,7 +396,7 @@ func (s *synchronizes) syncStateCheck() {
 
 func (s *synchronizes) syncStateJudge(index uint16) {
 	if s.libLocal < s.libRemote {
-		log.Debugf("syncStateJudge lib small than remote")
+		log.Debugf("protocol syncStateJudge lib small than remote")
 
 		if !s.once {
 			s.syncBlockHeader()
@@ -405,25 +405,27 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		}
 
 		if s.lastLocal >= s.lastRemote {
-			log.Debugf("syncStateJudge head bigger than remote")
+			log.Debugf("protocol syncStateJudge head bigger than remote")
 			return
 		}
 
 		if s.state == STATE_NORMAL ||
 			s.state == STATE_CATCHUP {
-			log.Debugf("syncStateJudge state syncing")
+			log.Debugf("protocol syncStateJudge state syncing")
 			s.state = STATE_SYNCING
 			s.syncBlockHeader()
 			s.c.stopc <- 1
 		} else {
 			if s.set.state == SET_SYNC_NULL {
-				log.Debugf("continue sync")
+				log.Debugf("protocol continue sync")
 				s.syncBlockHeader()
+			} else {
+				log.Debugf("protocol in syncing statue:%d", s.set.state)
 			}
 		}
 	} else {
 		if s.lastLocal < s.lastRemote {
-			log.Debugf("syncStateJudge catch up")
+			log.Debugf("protocol syncStateJudge catch up")
 			s.state = STATE_CATCHUP
 			s.catchupWithPeer(index, s.lastRemote)
 		} else {
@@ -435,25 +437,25 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 
 func (s *synchronizes) updateLocalLib(lib uint32) {
 	if lib < s.libLocal {
-		log.Errorf("update  local lib number error now:%d update:%d", s.libLocal, lib)
+		log.Errorf("protocol update local lib number error now:%d update:%d", s.libLocal, lib)
 		return
 	} else if lib == s.libLocal {
 		return
 	}
 
-	log.Debugf("update local lib number:%d", lib)
+	log.Debugf("protocol update local lib number:%d", lib)
 	s.libLocal = lib
 }
 
 func (s *synchronizes) updateLocalNumber(number uint32) {
 	if number < s.lastLocal {
-		log.Errorf("update  local block number error now:%d update:%d", s.lastLocal, number)
+		log.Errorf("protocol update local block number error now:%d update:%d", s.lastLocal, number)
 		return
 	} else if number == s.lastLocal {
 		return
 	}
 
-	log.Debugf("update local block number:%d", number)
+	log.Debugf("protocol update local block number:%d", number)
 	s.lastLocal = number
 }
 
@@ -462,7 +464,7 @@ func (s *synchronizes) updateRemoteLib(lib uint32, force bool) {
 		return
 	}
 
-	log.Debugf("peer max lib number:%d", lib)
+	log.Debugf("protocol peer max lib number:%d", lib)
 	s.libRemote = lib
 }
 
@@ -471,7 +473,7 @@ func (s *synchronizes) updateRemoteNumber(number uint32, force bool) {
 		return
 	}
 
-	log.Debugf("peer max block number:%d", number)
+	log.Debugf("protocol peer max block number:%d", number)
 	s.lastRemote = number
 }
 
@@ -493,7 +495,7 @@ func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 
 	data, err := json.Marshal(rsp)
 	if err != nil {
-		log.Error("sendGetLastRsp Marshal data error ")
+		log.Error("protocol sendGetLastRsp Marshal data error ")
 		return
 	}
 
@@ -536,7 +538,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 
 	data, err := json.Marshal(header)
 	if err != nil {
-		log.Error("sendBlockHeaderReq Marshal number error ")
+		log.Error("protocol sendBlockHeaderReq Marshal number error ")
 		return
 	}
 
@@ -612,7 +614,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32, ptype uint16) {
 
 	data, err := json.Marshal(number)
 	if err != nil {
-		log.Error("sendGetBlock Marshal number error ")
+		log.Error("protocol sendGetBlock Marshal number error ")
 		return
 	}
 
@@ -625,7 +627,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32, ptype uint16) {
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
-	log.Debugf("sendBlockReq block %d, type: %d", number, ptype)
+	log.Debugf("protocol sendBlockReq block %d, type: %d", number, ptype)
 	p2p.Runner.SendUnicast(msg)
 }
 
@@ -643,7 +645,7 @@ func (s *synchronizes) setSyncStateCheck() {
 }
 
 func (s *synchronizes) sendupBundleBlock() {
-	log.Debugf("sync bundle of block finish")
+	log.Debugf("protocol sync bundle of block finish")
 
 	if s.set.end < s.set.begin {
 		return
@@ -661,7 +663,7 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	s.libLocal = s.set.end
 	s.lastLocal = s.set.end
-	log.Debugf("catchup update local lib and number: %d", s.libLocal)
+	log.Debugf("protocol catchup update local lib and number: %d", s.libLocal)
 
 	s.set.reset()
 
@@ -673,14 +675,14 @@ func (s *synchronizes) sendupBundleBlock() {
 }
 
 func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
-	log.Debugf("send up block :%d", block.Header.Number)
+	log.Debugf("protocol send up block :%d", block.Header.Number)
 
 	for i := 0; i < 5; i++ {
 		msg := &message.ReceiveBlock{Block: block}
 
 		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
-			log.Errorf("send block request error:%s", err)
+			log.Errorf("protocol send block request error:%s", err)
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
@@ -688,13 +690,13 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 		rsp := result.(*message.ReceiveBlockResp)
 
 		if rsp.ErrorNo != chain.InsertBlockSuccess {
-			log.Errorf("block insert error: %d", rsp.ErrorNo)
+			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
 
 		return rsp.ErrorNo
 	}
 
-	log.Warn("block insert timeout with five times")
+	log.Warn("protocol block insert timeout with five times")
 	return 0xff
 }
 
@@ -711,7 +713,7 @@ func (s *synchronizes) broadcastRcvNewBlock(update *blockUpdate) {
 func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 	buf, err := json.Marshal(update.block)
 	if err != nil {
-		log.Errorf("block send marshal error")
+		log.Errorf("protocol block send marshal error")
 	}
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
@@ -741,7 +743,7 @@ func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 func (s *synchronizes) broadcastNewBlockHeader(update *blockUpdate, all bool) {
 	buf, err := json.Marshal(update.block.Header)
 	if err != nil {
-		log.Errorf("block send marshal error")
+		log.Errorf("protocol block send marshal error")
 	}
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
@@ -825,7 +827,7 @@ func (s *synchronizes) catchupCheck() {
 	if s.c.counter >= CATCHUP_COUNTER {
 		s.c.catchupReset()
 	} else {
-		log.Debugf("catchup resend get block: %d", s.c.current)
+		log.Debugf("protocol catchup resend get block: %d", s.c.current)
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	}
 }
@@ -837,13 +839,13 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 
 	if update.block == nil ||
 		update.block.Header == nil {
-		log.Errorf("catchup with peer index:%d , block:%d finish", s.c.index, s.c.current-1)
+		log.Errorf("protocol catchup with peer index:%d , block:%d finish", s.c.index, s.c.current-1)
 		s.c.catchupReset()
 		return
 	}
 
 	if update.block.Header.Number != s.c.current {
-		log.Errorf("catch up recevie wrong block numbe:%d", update.block.Header.Number)
+		log.Errorf("protocol catch up recevie wrong block numbe:%d", update.block.Header.Number)
 		return
 	}
 
@@ -853,36 +855,36 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 		s.c.counter = 0
 
 		s.lastLocal = update.block.Header.Number
-		log.Debugf("catchup update local number: %d", s.lastLocal)
-		log.Debugf("catchup get next block: %d", s.c.current)
+		log.Debugf("protocol catchup update local number: %d", s.lastLocal)
+		log.Debugf("protocol catchup get next block: %d", s.c.current)
 
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	} else if result == chain.InsertBlockErrorNotLinked {
 		if s.c.current > s.c.begin {
-			log.Errorf("catchup no link, start catchup from last: %d", s.lastLocal)
+			log.Errorf("protocol catchup no link, start catchup from last: %d", s.lastLocal)
 			s.c.begin = s.lastLocal + 1
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 		} else if s.c.begin == s.lastLocal+1 {
-			log.Errorf("catchup no link, start catchup from lib: %d", s.libLocal)
+			log.Errorf("protocol catchup no link, start catchup from lib: %d", s.libLocal)
 			s.c.begin = s.libLocal + 1
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 		} else {
-			log.Errorf("catchup with peer:%d error", s.c.index)
+			log.Errorf("protocol catchup with peer:%d error", s.c.index)
 			s.c.catchupReset()
 		}
 	} else {
-		log.Errorf("catchup with peer error, reset and wait next time")
+		log.Errorf("protocol catchup with peer error, reset and wait next time")
 		s.c.catchupReset()
 	}
 
 }
 
 func (s *synchronizes) catchupWithPeer(index uint16, number uint32) {
-	log.Debugf("catch up with peer:%d, number:%d", index, number)
+	log.Debugf("protocol catch up with peer:%d, number:%d", index, number)
 
 	if s.c.state == CATCHUP_COMPLETE {
 		s.c.begin = s.lastLocal + 1
@@ -901,7 +903,7 @@ func (s *synchronizes) catchupWithPeer(index uint16, number uint32) {
 			return
 		}
 	} else {
-		panic("wrong state")
+		panic("protocol wrong state")
 		return
 	}
 }
@@ -932,7 +934,7 @@ func makeSyncSet() *syncSet {
 
 func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	if set.state != SET_SYNC_HEADER {
-		log.Errorf("recvBlockHeader state error")
+		log.Errorf("protocol recvBlockHeader state error")
 		return false
 	}
 
@@ -941,7 +943,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	}
 
 	if uint32(len(rsp.set)) != (set.end + 1 - set.begin) {
-		log.Errorf("recvBlockHeader rsp length error")
+		log.Errorf("protocol recvBlockHeader rsp length error")
 		return false
 	}
 
@@ -949,7 +951,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	j := 0
 	for i := set.begin; i <= set.end; i++ {
 		if rsp.set[j].GetNumber() != i {
-			log.Errorf("recvBlockHeader rsp info error number:%d", rsp.set[j].GetNumber())
+			log.Errorf("protocol recvBlockHeader rsp info error number:%d", rsp.set[j].GetNumber())
 			check = true
 			break
 		}
@@ -970,7 +972,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 //updateRemoteNumber update peer max block number if some peer is disconnect
 func (set *syncSet) updateRemoteNumber(number uint32) {
 	if set.end > number && set.state != SET_SYNC_NULL {
-		log.Debugf("update syn set max block number: %d", number)
+		log.Debugf("protocol update syn set max block number: %d", number)
 		set.end = number
 	}
 }

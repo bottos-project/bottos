@@ -28,18 +28,18 @@ func (c *collection) addPeer(peer *Peer) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("collection add peer index: %d, id: %s , add: %s, port: %s",
+	log.Debugf("p2p collection add peer index: %d, id: %s , add: %s, port: %s",
 		peer.Index, peer.Info.Id, peer.Info.Addr, peer.Info.Port)
 
 	if peer.Info.IsIncomplete() {
-		log.Info("peer info error")
+		log.Info("p2p peer info error")
 		return errors.New("peer info error")
 	}
 
 	for _, p := range c.peers {
 		if p.Info.Equal(peer.Info) {
 			if p.isconn {
-				log.Info("peer is already exist")
+				log.Info("p2p peer is already exist")
 				return errors.New("peer is already exist")
 			}
 		}
@@ -68,12 +68,12 @@ func (c *collection) delPeer(index uint16) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("collection delete peer index: %d", index)
+	log.Debugf("p2p collection delete peer index: %d", index)
 	peer, ok := c.peers[index]
 	if ok {
-		log.Debug("delete peer")
+		log.Debug("p2p delete peer")
 		if peer.isconn {
-			log.Error("peer is connected , don't delete")
+			log.Error("p2p peer is connected , don't delete")
 			return false
 		}
 
@@ -81,7 +81,7 @@ func (c *collection) delPeer(index uint16) bool {
 		delete(c.peers, index)
 		return true
 	} else {
-		log.Error("pee not exist")
+		log.Error("p2p pee not exist")
 		return false
 	}
 }
@@ -137,7 +137,7 @@ func (c *collection) send(msg *UniMsgPacket) {
 
 	peer, ok := c.peers[msg.Index]
 	if !ok {
-		log.Errorf("peer not exist %s", msg.Index)
+		log.Errorf("p2p peer not exist %s", msg.Index)
 		return
 	}
 

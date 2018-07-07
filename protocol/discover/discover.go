@@ -89,7 +89,7 @@ func (d *Discover) newConn(peer p2p.PeerInfo) error {
 	addrPort := peer.Addr + ":" + peer.Port
 	conn, err := net.DialTimeout("tcp", addrPort, 2*time.Second)
 	if err != nil {
-		log.Debugf("failed to connect to peer：%s:%s", peer.Addr, peer.Port)
+		log.Debugf("failed to connect to peer：%s：%s", peer.Addr, peer.Port)
 		return err
 	}
 
