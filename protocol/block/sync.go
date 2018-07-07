@@ -12,6 +12,7 @@ import (
 	log "github.com/cihub/seelog"
 	"math"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -80,6 +81,7 @@ func (s syncset) Swap(i, j int) {
 
 type synchronizes struct {
 	peers map[uint16]*peerSyncInfo
+	lock  sync.RWMutex
 
 	libLocal   uint32
 	libRemote  uint32
@@ -220,6 +222,9 @@ func (s *synchronizes) catchupRoutine() {
 func (s *synchronizes) recvBlockNumberInfo(info *peerSyncInfo) {
 	info.counter = 0
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.peers[info.index] = info
 
 	s.updateRemoteLib(info.lastLib, false)
@@ -335,6 +340,9 @@ func (s *synchronizes) syncStateCheck() {
 	var remoteLib uint32
 	var remoteNumber uint32
 	var index uint16
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	for key, info := range s.peers {
 		info.counter++
@@ -538,6 +546,9 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 
 	packet := p2p.Packet{H: head, Data: data}
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	for _, info := range s.peers {
 		if info.lastLib >= end {
 			msg := p2p.UniMsgPacket{Index: info.index,
@@ -566,10 +577,14 @@ func (s *synchronizes) syncBundleBlock() {
 		return
 	}
 
+	s.lock.Lock()
+
 	var peerset syncset
 	for _, info := range s.peers {
 		peerset = append(peerset, *info)
 	}
+
+	s.lock.Unlock()
 
 	sort.Sort(peerset)
 
