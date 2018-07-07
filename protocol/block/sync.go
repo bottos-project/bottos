@@ -249,6 +249,8 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			s.updateLocalLib(libNumber)
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
+
+			log.Debugf("sendup block success in normal, lib: %d head: %d", libNumber, blocknumber)
 		}
 		return
 	} else if s.state == STATE_CATCHUP {
@@ -264,6 +266,8 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			s.updateLocalLib(libNumber)
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
+
+			log.Debugf("sendup block success in catch up, lib: %d head: %d", libNumber, blocknumber)
 		}
 		return
 	} else if s.state == STATE_SYNCING {
@@ -384,6 +388,8 @@ func (s *synchronizes) syncStateCheck() {
 
 func (s *synchronizes) syncStateJudge(index uint16) {
 	if s.libLocal < s.libRemote {
+		log.Debugf("syncStateJudge lib small than remote")
+
 		if !s.once {
 			s.syncBlockHeader()
 			s.once = true
@@ -391,12 +397,13 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		}
 
 		if s.lastLocal >= s.lastRemote {
+			log.Debugf("syncStateJudge head bigger than remote")
 			return
 		}
 
 		if s.state == STATE_NORMAL ||
 			s.state == STATE_CATCHUP {
-			log.Debugf("syncStateJudge not sync")
+			log.Debugf("syncStateJudge state syncing")
 			s.state = STATE_SYNCING
 			s.syncBlockHeader()
 			s.c.stopc <- 1
@@ -408,6 +415,7 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		}
 	} else {
 		if s.lastLocal < s.lastRemote {
+			log.Debugf("syncStateJudge catch up")
 			s.state = STATE_CATCHUP
 			s.catchupWithPeer(index, s.lastRemote)
 		} else {
@@ -637,6 +645,9 @@ func (s *synchronizes) sendupBundleBlock() {
 	}
 
 	s.libLocal = s.set.end
+	s.lastLocal = s.set.end
+	log.Debugf("catchup update local lib and number: %d", s.libLocal)
+
 	s.set.reset()
 
 	if s.libLocal < s.libRemote {
@@ -826,12 +837,10 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 		s.c.current++
 		s.c.counter = 0
 
-		libNumber := s.chainIf.LastConsensusBlockNum()
-		s.updateLocalLib(libNumber)
-		blocknumber := s.chainIf.HeadBlockNum()
-		s.updateLocalNumber(blocknumber)
-
+		s.lastLocal = update.block.Header.Number
+		log.Debugf("catchup update local number: %d", s.lastLocal)
 		log.Debugf("catchup get next block: %d", s.c.current)
+
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	} else if result == chain.InsertBlockErrorNotLinked {
 		if s.c.current > s.c.begin {
