@@ -528,6 +528,9 @@ func (s *synchronizes) syncBlockHeader() {
 	}
 
 	s.set.state = SET_SYNC_HEADER
+
+	log.Debugf("protocol syncBlockHeader begin: %d, end:%d", s.set.begin, s.set.end)
+
 	s.sendBlockHeaderReq(s.set.begin, s.set.end)
 
 	s.set.syncHeaderTimer.Reset(TIMER_HEADER_SYNC * time.Second)
