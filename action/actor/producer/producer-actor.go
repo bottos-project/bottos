@@ -138,10 +138,7 @@ func (p *ProducerActor) working() {
 		trxs = nil
 		if block != nil {
 			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
-
 			ApplyBlock(block)
-			log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", block.GetNumber(), len(block.Transactions), block.Header.Delegate, block.Hash())
-			BroadCastBlock(block)
 		}
 	}
 }

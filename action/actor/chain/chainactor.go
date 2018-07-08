@@ -34,6 +34,7 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 //ChainActorPid is chain actor pid
@@ -122,8 +123,11 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 	if errcode == chain.InsertBlockSuccess {
-		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
-		trxactorPid.Tell(req)
+		r := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+		trxactorPid.Tell(r)
+
+		log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", req.Block.GetNumber(), len(req.Block.Transactions), req.Block.Header.Delegate, req.Block.Hash())
+		BroadCastBlock(req.Block)
 	}
 }
 
@@ -187,4 +191,9 @@ func (c *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.Que
 		resp.LastConsensusBlockNum = actorEnv.Chain.LastConsensusBlockNum()
 		ctx.Sender().Request(resp, ctx.Self())
 	}
+}
+
+func BroadCastBlock(block *types.Block) {
+	broadCastBlock := &message.NotifyBlock{block}
+	NetActorPid.Tell(broadCastBlock)
 }
