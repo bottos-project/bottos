@@ -21,7 +21,7 @@ type Block struct {
 }
 
 const (
-	WAIT_TIME              = 30
+	WAIT_TIME              = 20
 	WAIT_LOCAL_BLOCK_TIMER = 3
 )
 
@@ -76,6 +76,8 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	if !b.init {
 		return
 	}
+
+	//log.Debugf("block recv packet %d, from peer: %d", p.H.PacketType, index)
 
 	switch p.H.PacketType {
 	case BLOCK_REQ:

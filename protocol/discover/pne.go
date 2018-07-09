@@ -65,19 +65,19 @@ func (p *pne) parseSeeds(config *config.Parameter) {
 		peer.Addr = addr
 		peer.Port = port
 		peers = append(peers, peer)
-		log.Debugf("parseSeeds: %s:%s", addr, port)
+		log.Debugf("protocol parseSeeds: %s:%s", addr, port)
 		p.n.addNeighbor(peers)
 	}
 }
 
 func (p *pne) pneTimer() {
-	log.Debug("pneTimer")
+	log.Debug("protocol pneTimer")
 
 	tripple := 0
 	exchange := time.NewTimer(TIME_FAST_PNE_EXCHANGE * time.Second)
 
 	defer func() {
-		log.Debug("pneTimer stop")
+		log.Debug("protocol pneTimer stop")
 		exchange.Stop()
 	}()
 
@@ -85,14 +85,14 @@ func (p *pne) pneTimer() {
 		select {
 		case <-exchange.C:
 			if tripple < 3 {
-				log.Debugf("pneTimer send pne request")
+				log.Debugf("protocol pneTimer send pne request")
 				p.sendPneRequest(0)
 				tripple++
 				exchange.Reset(TIME_FAST_PNE_EXCHANGE * time.Second)
 			} else {
 				index := p.nextPeer()
 				if index != 0 {
-					log.Debugf("pneTimer peer index: %d", index)
+					log.Debugf("protocol pneTimer peer index: %d", index)
 					p.sendPneRequest(index)
 				}
 				exchange.Reset(TIME_PNE_EXCHANGE * time.Second)
@@ -162,7 +162,7 @@ func (p *pne) sendPneResponse(index uint16) {
 
 	data, err := json.Marshal(resp)
 	if err != nil {
-		log.Errorf("addrs Marshal error:%s", err)
+		log.Errorf("protocol pne response addrs Marshal error:%s", err)
 		return
 	}
 
@@ -202,7 +202,7 @@ func (p *pne) processPneNeighborRsp(index uint16, date []byte) {
 	var rsp PeerNeighborRsp
 	err := json.Unmarshal(date, &rsp)
 	if err != nil {
-		log.Errorf("ProcessPneNeighborRsp Unmarshal error")
+		log.Errorf("protocol ProcessPneNeighborRsp Unmarshal error")
 		return
 	}
 

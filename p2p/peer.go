@@ -121,6 +121,12 @@ func (p *Peer) Send(packet Packet) error {
 		return err
 	}
 
+	if !p.isconn {
+		return errors.New("peer disconnected")
+	}
+
+	//log.Debugf("p2p peer index: %d send packet %d %d", p.Index, packet.H.ProtocolType, packet.H.PacketType)
+
 	_, err = p.conn.Write(buf.Bytes())
 	return err
 }
@@ -138,7 +144,7 @@ func (p *Peer) recvRoutine() {
 	for {
 		_, err := io.ReadFull(p.reader, bl)
 		if err != nil {
-			log.Errorf("p2p recvRoutine read head error:%s", err)
+			log.Errorf("p2p recvRoutine read head error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 			p.isconn = false
 			return
 		}
@@ -152,16 +158,16 @@ func (p *Peer) recvRoutine() {
 		buf := make([]byte, packetLen)
 		len, err = io.ReadFull(p.reader, buf)
 		if err != nil {
-			log.Errorf("p2p recvRoutine read data error:%s", err)
+			log.Errorf("p2p recvRoutine read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 			p.isconn = false
-			break
+			return
 		}
 
 		if uint32(len) < packetLen {
 			for {
 				length, err := io.ReadFull(p.reader, buf[len:])
 				if err != nil {
-					log.Errorf("p2p recvRoutine continue read data error:%s", err)
+					log.Errorf("p2p recvRoutine continue read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 					p.isconn = false
 					return
 				}
@@ -196,4 +202,6 @@ func (p *Peer) recvRoutine() {
 
 		p.sendup(p.Index, &packet)
 	}
+
+	p.isconn = false
 }

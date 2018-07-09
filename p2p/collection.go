@@ -71,10 +71,12 @@ func (c *collection) delPeer(index uint16) bool {
 	log.Debugf("p2p collection delete peer index: %d", index)
 	peer, ok := c.peers[index]
 	if ok {
-		log.Debug("p2p delete peer")
+		log.Debugf("p2p delete peer index: %d, %s:%s", peer.Index, peer.Info.Addr, peer.Info.Port)
 		if peer.isconn {
 			log.Error("p2p peer is connected , don't delete")
 			return false
+		} else {
+			log.Error("p2p peer is disconnected , delete")
 		}
 
 		peer.Stop()
@@ -141,6 +143,10 @@ func (c *collection) send(msg *UniMsgPacket) {
 		return
 	}
 
+	if !peer.isconn {
+		return
+	}
+
 	go peer.Send(msg.P)
 
 }
@@ -150,6 +156,10 @@ func (c *collection) sendBroadcast(msg *BcastMsgPacket) {
 	defer c.lock.Unlock()
 
 	for id, peer := range c.peers {
+		if !peer.isconn {
+			continue
+		}
+
 		if len(msg.Indexs) == 0 {
 			go peer.Send(msg.P)
 			continue

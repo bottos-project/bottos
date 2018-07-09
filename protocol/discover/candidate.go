@@ -257,12 +257,12 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 		}
 	}
 
-	//send response ack
-	c.sendHandshakeRspAck(candi)
-
 	//add peer
 	err := p2p.Runner.AddPeer(candi.peer)
 	if err == nil {
+		//send response ack
+		c.sendHandshakeRspAck(candi)
+
 		c.p.pushPeerIndex(candi.peer.Index)
 		c.k.initCounter(candi.peer.Index)
 	} else {
@@ -362,7 +362,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 }
 
 func (c *candidates) sendHandshakeReq(candi *candidate) {
-	//hold bigger peer send hand shake
+	//bigger peer send hand shake
 	if p2p.LocalPeerInfo.Bigger(candi.peer.Info) < 1 {
 		log.Debugf("sendHandshakeReq local is small")
 		return
