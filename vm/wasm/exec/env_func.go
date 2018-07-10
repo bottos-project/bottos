@@ -626,7 +626,7 @@ func getMethod(vm *VM) (bool, error) {
 	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(0))
+		vm.pushUint64(uint64(methodLen))
 	}
 
 	return true, nil
