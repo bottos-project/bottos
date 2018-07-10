@@ -378,6 +378,8 @@ func (s *synchronizes) syncStateCheck() {
 	var index uint16
 
 	peerset := s.getPeers()
+	catchindex := s.c.index
+	var catchremote uint32
 
 	for _, info := range peerset {
 		if info.lastLib > remoteLib {
@@ -388,6 +390,14 @@ func (s *synchronizes) syncStateCheck() {
 			remoteNumber = info.lastBlock
 			index = info.index
 		}
+
+		if catchindex != 0 && info.index == catchindex {
+			catchremote = info.lastBlock
+		}
+	}
+
+	if remoteNumber == catchremote {
+		index = catchindex
 	}
 
 	//remote block lib be smaller, wo should reset it
