@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package block
 
 import (
@@ -12,6 +37,7 @@ import (
 	"time"
 )
 
+//Block sync block with peer and send up to block actor
 type Block struct {
 	actor   *actor.PID
 	chainIf chain.BlockChainInterface
@@ -21,57 +47,49 @@ type Block struct {
 }
 
 const (
-	WAIT_TIME              = 20
-	WAIT_LOCAL_BLOCK_TIMER = 3
+	//WAIT_TIME wait for actors ready
+	WAIT_TIME = 20
 )
 
+//MakeBlock new instance
 func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
-	return &Block{s: MakeSynchronizes(nodeType, chain),
+	return &Block{s: makeSynchronizes(nodeType, chain),
 		chainIf: chain,
 		init:    false}
 }
 
+//SetActor set chain actor id
 func (b *Block) SetActor(tid *actor.PID) {
 	b.actor = tid
-	b.s.SetActor(tid)
+	b.s.setActor(tid)
 }
 
+//Start start
 func (b *Block) Start() {
-	go b.waitLastBlockTimer()
+	go b.waitActorReady()
 }
 
-func (b *Block) waitLastBlockTimer() {
+func (b *Block) waitActorReady() {
 	time.Sleep(WAIT_TIME * time.Second)
 
-	waitTimer := time.NewTimer(WAIT_LOCAL_BLOCK_TIMER * time.Second)
+	log.Debug("protocol wait actor ready")
 
-	log.Debug("protocol waitLastBlockTimer start")
+	blocknumber := b.chainIf.HeadBlockNum()
+	libNumber := b.chainIf.LastConsensusBlockNum()
 
-	defer func() {
-		log.Debug("protocol waitLastBlockTimer stop")
-		waitTimer.Stop()
-	}()
-
-	for {
-		select {
-		case <-waitTimer.C:
-			blocknumber := b.chainIf.HeadBlockNum()
-			libNumber := b.chainIf.LastConsensusBlockNum()
-			log.Debugf("protocol timer local block number:%d, %d", libNumber, blocknumber)
-			if blocknumber < libNumber {
-				panic("protocol wrong lib number")
-				return
-			}
-			b.s.updateLocalLib(libNumber)
-			b.s.updateLocalNumber(blocknumber)
-			b.s.start()
-			b.init = true
-			break
-		}
+	log.Debugf("protocol timer local block number:%d, %d", libNumber, blocknumber)
+	if blocknumber < libNumber {
+		panic("protocol wrong lib number")
+		return
 	}
 
+	b.s.updateLocalLib(libNumber)
+	b.s.updateLocalNumber(blocknumber)
+	b.s.start()
+	b.init = true
 }
 
+//Dispatch peer message process
 func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	if !b.init {
 		return
@@ -101,6 +119,15 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	}
 }
 
+//GetSyncState get current synchronize status
+func (b *Block) GetSyncState() bool {
+	if b.s.state == STATE_NORMAL {
+		return true
+	}
+	return false
+}
+
+//SendNewBlock send out a new block
 func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 	b.sendPacket(true, notify.Block, nil)
 }
@@ -134,14 +161,6 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	}
 }
 
-func (b *Block) GetSyncState() bool {
-	if b.s.state == STATE_NORMAL {
-		return true
-	} else {
-		return false
-	}
-}
-
 func (b *Block) processLastBlockNumberReq(index uint16, data []byte) {
 	b.s.sendLastBlockNumberRsp(index)
 }
@@ -154,13 +173,13 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 		return
 	}
 
-	info := peerSyncInfo{
+	info := &peerBlockInfo{
 		index:     index,
 		lastLib:   last.LibNumber,
 		lastBlock: last.BlockNumber,
 	}
 
-	b.s.infoc <- &info
+	b.s.infoc <- info
 }
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
@@ -184,10 +203,9 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 		if head == nil {
 			log.Errorf("protocol processBlockHeaderReq header:%d not exist", i)
 			return
-		} else {
-			rsp.set = append(rsp.set, *head)
 		}
 
+		rsp.set = append(rsp.set, *head)
 		j++
 	}
 
