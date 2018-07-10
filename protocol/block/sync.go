@@ -424,7 +424,7 @@ func (s *synchronizes) syncStateCheck() {
 
 func (s *synchronizes) syncStateJudge(index uint16) {
 	if s.libLocal < s.libRemote {
-		log.Debugf("protocol syncStateJudge lib small than remote")
+		log.Debugf("protocol syncStateJudge lib small than remote, need sync")
 
 		if !s.once {
 			s.syncBlockHeader()
@@ -433,19 +433,19 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		}
 
 		if s.lastLocal >= s.lastRemote {
-			log.Debugf("protocol syncStateJudge head bigger than remote")
+			log.Debugf("protocol syncStateJudge head bigger than remote, sync wait")
 			return
 		}
 
 		if s.state == STATE_NORMAL ||
 			s.state == STATE_CATCHUP {
-			log.Debugf("protocol syncStateJudge state syncing")
+			log.Debugf("protocol syncStateJudge start syncing")
 			s.state = STATE_SYNCING
 			s.syncBlockHeader()
 			s.c.stopc <- 1
 		} else {
 			if s.set.state == SET_SYNC_NULL {
-				log.Debugf("protocol continue sync")
+				log.Debugf("protocol continue syncing")
 				s.syncBlockHeader()
 			} else {
 				log.Debugf("protocol in syncing statue:%d", s.set.state)
@@ -673,6 +673,12 @@ func (s *synchronizes) sendupBundleBlock() {
 		return
 	}
 
+	if s.set.begin <= s.libLocal {
+		log.Errorf("lib local is change bigger, wait next time")
+		s.set.reset()
+		return
+	}
+
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
 		if s.sendupBlock(s.set.blocks[j]) != chain.InsertBlockSuccess {
@@ -691,8 +697,6 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	if s.libLocal < s.libRemote {
 		s.syncBlockHeader()
-	} else {
-		s.set.reset()
 	}
 }
 
