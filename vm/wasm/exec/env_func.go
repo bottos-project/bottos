@@ -63,12 +63,14 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("setStrValue",      setStrValue)
 	envFunc.Register("removeStrValue",   removeStrValue)
 	envFunc.Register("getParam",         getParam)
+	envFunc.Register("getMethod",        getMethod)
 	envFunc.Register("callTrx",          callTrx)
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
 	envFunc.Register("getSender",        getSender)
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
+	envFunc.Register("strcat",           strcat)
 
 	return &envFunc
 }
@@ -195,8 +197,8 @@ func removeStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
 
 	// length check
 
@@ -234,10 +236,10 @@ func getBinValue(vm *VM) (bool, error) {
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos := int(params[2])
-	objectLen := int(params[3])
-	keyPos := int(params[4])
-	keyLen := int(params[5])
+	objectPos   := int(params[2])
+	objectLen   := int(params[3])
+	keyPos      := int(params[4])
+	keyLen      := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 
@@ -392,7 +394,7 @@ func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("parameter count error while call memcpy")
 	}
@@ -562,5 +564,70 @@ func memcpy(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(dst))
 	}
 
-	return true, nil //this return will be dropped in wasm
+	return true, nil
+}
+
+
+func strcat(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("*ERROR* Invalid parameter count when call strcat")
+	}
+
+	dst      := int(params[0])
+	src      := int(params[1])
+	dstPoint := dst
+	srcPoint := src
+
+	//
+	fmt.Println("VM::strcat vm.memType[uint64(dst)]: ",vm.memType[uint64(dst)])
+	//
+
+	for {
+		if vm.memory[dstPoint] == 0 {
+			break
+		}
+		dstPoint++
+	}
+
+	for {
+		if vm.memory[srcPoint] == 0 {
+			break
+		}
+
+		vm.memory[dstPoint] = vm.memory[srcPoint]
+		dstPoint++
+		srcPoint++
+	}
+	vm.memory[dstPoint] = 0
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(dst))
+	}
+
+	return true, nil
+}
+
+func getMethod(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("*ERROR* Invalid parameter count when call getMathod")
+	}
+
+	pos    := int(params[0])
+	length := int(params[1])
+
+	contractCtx := vm.GetContract()
+	methodLen   := len(contractCtx.Trx.Method)
+	if methodLen > length {
+		return false, errors.New("*ERROR* Invalid length when call getMathod")
+	}
+
+	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(0))
+	}
+
+	return true, nil
 }
