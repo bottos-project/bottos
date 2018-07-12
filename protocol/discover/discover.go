@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package discover
 
 import (
@@ -8,6 +33,7 @@ import (
 	"time"
 )
 
+//Discover p2p protocol
 type Discover struct {
 	c      *candidates
 	p      *pne
@@ -15,6 +41,7 @@ type Discover struct {
 	sendup p2p.SendupCb
 }
 
+//DO NOT EDIT
 const (
 	//TIME_DISCOVER connect to unknow peer, second
 	TIME_DISCOVER = 5
@@ -22,6 +49,7 @@ const (
 	NEIGHBOR_DISCOVER_COUNT = 10
 )
 
+//MakeDiscover create instance
 func MakeDiscover(config *config.Parameter) *Discover {
 	d := &Discover{}
 	d.p = makePne(config)
@@ -33,6 +61,7 @@ func MakeDiscover(config *config.Parameter) *Discover {
 	return d
 }
 
+//Start start...
 func (d *Discover) Start() {
 	d.c.start()
 	d.p.start()
@@ -41,10 +70,12 @@ func (d *Discover) Start() {
 	go d.discoverTimer()
 }
 
+//SetSendupCallback  set sendup callback
 func (d *Discover) SetSendupCallback(cb p2p.SendupCb) {
 	d.sendup = cb
 }
 
+//Dispatch process peer message
 func (d *Discover) Dispatch(index uint16, p *p2p.Packet) {
 	//log.Debugf("discovery recv packet %d, from peer: %d", p.H.PacketType, index)
 
@@ -73,6 +104,7 @@ func (d *Discover) Dispatch(index uint16, p *p2p.Packet) {
 
 }
 
+//NewConnCb keey a connection with a peer
 func (d *Discover) NewConnCb(conn net.Conn, sendup p2p.SendupCb) {
 	//new candidate peer
 	info := p2p.PeerInfo{}

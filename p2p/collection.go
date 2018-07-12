@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package p2p
 
 import (
@@ -11,10 +36,6 @@ type collection struct {
 
 	lock sync.RWMutex
 }
-
-const (
-	MAX_PEER_NUM = 100
-)
 
 func createCollection() *collection {
 	c := &collection{
@@ -59,9 +80,9 @@ func (c *collection) getPeer(index uint16) *PeerInfo {
 		info.Addr = peer.Info.Addr
 		info.Port = peer.Info.Port
 		return &info
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 func (c *collection) delPeer(index uint16) bool {
@@ -75,17 +96,16 @@ func (c *collection) delPeer(index uint16) bool {
 		if peer.isconn {
 			log.Error("p2p peer is connected , don't delete")
 			return false
-		} else {
-			log.Error("p2p peer is disconnected , delete")
 		}
 
+		log.Error("p2p peer is disconnected , delete")
 		peer.Stop()
 		delete(c.peers, index)
 		return true
-	} else {
-		log.Error("p2p pee not exist")
-		return false
 	}
+
+	log.Error("p2p peer not exist")
+	return false
 }
 
 func (c *collection) isPeerExist(index uint16) bool {

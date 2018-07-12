@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package discover
 
 import (
@@ -8,19 +33,20 @@ import (
 	"time"
 )
 
-type keeplive struct {
-	counter [MAX_PEER_COUNT + 1]int32
-
-	c *candidates
-	p *pne
-}
-
+//DO NOT EDIT
 const (
 	//TIME_KEEP_LIVE ping/pong timer, second
 	TIMER_KEEP_LIVE = 10
 	//TIMER_CHECK time out second
 	TIMER_CHECK = 40
 )
+
+type keeplive struct {
+	counter [MAX_PEER_COUNT + 1]int32
+
+	c *candidates
+	p *pne
+}
 
 func makeKeeplive(c *candidates, p *pne) *keeplive {
 	return &keeplive{c: c, p: p}

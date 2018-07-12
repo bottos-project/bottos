@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package p2p
 
 import (
@@ -11,17 +36,24 @@ import (
 	"strings"
 )
 
+//PeerInfo peer's info
 type PeerInfo struct {
-	Id      string
-	Addr    string
-	Port    string
+	//Id peer id
+	Id string
+	//Addr peer address
+	Addr string
+	//Port peer port
+	Port string
+	//ChainId peer work chain id
 	ChainId string
 }
 
+//Equal peer's info compare
 func (a *PeerInfo) Equal(b PeerInfo) bool {
 	return (a.Id == b.Id && a.Id != "" && b.Id != "") || (a.Addr == b.Addr && a.Port == b.Port)
 }
 
+//IsIncomplete judege peer's info is complete or not
 func (a *PeerInfo) IsIncomplete() bool {
 	return a.Id == "" || a.Addr == "" || a.Port == "" || a.ChainId == ""
 }
@@ -31,25 +63,31 @@ func (a *PeerInfo) Bigger(b PeerInfo) int {
 	return strings.Compare(a.Id, b.Id)
 }
 
+//PeerData peer's key info
 type PeerData struct {
 	Id    string
 	Index uint16
 }
 
+//PeerDataSet peer's key info slice
 type PeerDataSet []PeerData
 
+//Len length
 func (s PeerDataSet) Len() int {
 	return len(s)
 }
 
+//Less small or not
 func (s PeerDataSet) Less(i, j int) bool {
 	return s[i].Id > s[j].Id
 }
 
+//Swap swap
 func (s PeerDataSet) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
+//Peer peer...
 type Peer struct {
 	Info  PeerInfo
 	Index uint16
@@ -66,6 +104,7 @@ type Peer struct {
 	sendup SendupCb
 }
 
+//CreatePeer create a instance
 func CreatePeer(info PeerInfo, conn net.Conn, in bool, sendup SendupCb) *Peer {
 	return &Peer{
 		Info:   info,
@@ -78,14 +117,17 @@ func CreatePeer(info PeerInfo, conn net.Conn, in bool, sendup SendupCb) *Peer {
 	}
 }
 
+//Start start peer routine
 func (p *Peer) Start() {
 	go p.recvRoutine()
 }
 
+//Stop stop peer net conn
 func (p *Peer) Stop() {
 	p.conn.Close()
 }
 
+//Send send a packet
 func (p *Peer) Send(packet Packet) error {
 	var length uint32
 	var head Head

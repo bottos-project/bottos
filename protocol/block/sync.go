@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package block
 
 import (
@@ -16,6 +41,7 @@ import (
 	"time"
 )
 
+//DO NOT EDIT
 const (
 	TIMER_FAST_SYNC_LAST_BLOCK_NUMBER   = 1
 	TIMER_NORMAL_SYNC_LAST_BLOCK_NUMBER = 4
@@ -34,24 +60,27 @@ const (
 	SYNC_BLOCK_BUNDLE = 10
 )
 
+//DO NOT EDIT
 const (
 	STATE_SYNCING = 0
 	STATE_CATCHUP = 1
 	STATE_NORMAL  = 2
 )
 
+//DO NOT EDIT
 const (
 	SET_SYNC_NULL   = 0
 	SET_SYNC_HEADER = 1
 	SET_SYNC_BLOCK  = 2
 )
 
+//DO NOT EDIT
 const (
 	CATCHUP_COMPLETE = 0
 	CATCHUP_DOING    = 1
 )
 
-type peerSyncInfo struct {
+type peerBlockInfo struct {
 	index     uint16
 	lastLib   uint32
 	lastBlock uint32
@@ -63,7 +92,7 @@ type syncConfig struct {
 	nodeType bool
 }
 
-type syncset []peerSyncInfo
+type syncset []peerBlockInfo
 
 func (s syncset) Len() int {
 	return len(s)
@@ -78,7 +107,7 @@ func (s syncset) Swap(i, j int) {
 }
 
 type synchronizes struct {
-	peers map[uint16]*peerSyncInfo
+	peers map[uint16]*peerBlockInfo
 	lock  sync.Mutex
 
 	libLocal   uint32
@@ -88,7 +117,7 @@ type synchronizes struct {
 	state      uint16
 	once       bool //have synchronized one time or not when start up
 
-	infoc        chan *peerSyncInfo
+	infoc        chan *peerBlockInfo
 	updatec      chan chainNumber
 	blockc       chan *blockUpdate
 	headerc      chan *headerUpdate
@@ -103,10 +132,10 @@ type synchronizes struct {
 	chainIf chain.BlockChainInterface
 }
 
-func MakeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchronizes {
+func makeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchronizes {
 	return &synchronizes{
-		peers:   make(map[uint16]*peerSyncInfo),
-		infoc:   make(chan *peerSyncInfo),
+		peers:   make(map[uint16]*peerBlockInfo),
+		infoc:   make(chan *peerBlockInfo),
 		updatec: make(chan chainNumber),
 		blockc:  make(chan *blockUpdate),
 		headerc: make(chan *headerUpdate),
@@ -119,7 +148,7 @@ func MakeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchro
 	}
 }
 
-func (s *synchronizes) SetActor(tid *actor.PID) {
+func (s *synchronizes) setActor(tid *actor.PID) {
 	s.chain = tid
 }
 
@@ -309,9 +338,9 @@ func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
 	if s.state == STATE_NORMAL && number == s.lastLocal+1 {
 		s.cacheHeader(update)
 		return
-	} else {
-		log.Infof("protocol drop block header: %d , wait for catchup", number)
 	}
+
+	log.Infof("protocol drop block header: %d , wait for catchup", number)
 }
 
 func (s *synchronizes) cacheHeader(update *headerUpdate) {
@@ -329,7 +358,7 @@ func (s *synchronizes) checkHeader() {
 	}
 }
 
-func (s *synchronizes) recvBlockNumberInfo(info *peerSyncInfo) {
+func (s *synchronizes) recvBlockNumberInfo(info *peerBlockInfo) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -1055,9 +1084,9 @@ func (set *syncSet) isBlockHeadSame(a *types.Header, b *types.Header) bool {
 		bytes.Equal(a.MerkleRoot, b.MerkleRoot) &&
 		bytes.Equal(a.PrevBlockHash, b.PrevBlockHash) {
 		return true
-	} else {
-		return false
 	}
+
+	return false
 }
 
 type catchup struct {
