@@ -524,7 +524,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 		decodedParam, err := ParseParam(r, trx.Param, newtrx.Contract, newtrx.Method)
 
 		if err != nil {
-			return err
+			continue
 		}
 
 		newtrx.Param = decodedParam
