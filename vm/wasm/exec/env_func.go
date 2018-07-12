@@ -32,7 +32,7 @@ package exec
 import (
 	"errors"
 	"fmt"
-
+	"strings"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
 	log "github.com/cihub/seelog"
@@ -71,6 +71,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
 	envFunc.Register("strcat",           strcat)
+	envFunc.Register("isAccountExist",   isAccountExist)
 
 	return &envFunc
 }
@@ -246,13 +247,12 @@ func getBinValue(vm *VM) (bool, error) {
 	// length check
 
 	contract := make([]byte, contractLen)
+	object   := make([]byte, objectLen)
+	key      := make([]byte, keyLen)
+
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-
-	object := make([]byte, objectLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(object,   vm.memory[objectPos:objectPos+objectLen])
+	copy(key,      vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetBinValue(string(contract), string(object), string(key))
@@ -374,6 +374,15 @@ func printi(vm *VM) (bool, error) {
 	return true, nil
 }
 
+func printi64(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract()
+	value := vm.envFunc.envFuncParam[0]
+	fmt.Printf("VM: from contract: %v, method: %v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
+	log.Infof("VM: from contract:%v, method:%v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
+
+	return true, nil
+}
+
 func prints(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
@@ -384,7 +393,7 @@ func prints(vm *VM) (bool, error) {
 
 	BytesToString(value)
 	param := string(value)
-	fmt.Println("VM: func prints: ", param)
+	fmt.Println("VM: func prints: ", param," , pos: ",pos)
 	log.Infof("VM: func prints: %v\n", param)
 	return true, nil
 
@@ -480,7 +489,7 @@ func assert(vm *VM) (bool, error) {
 
 func getCtxName(vm *VM) (bool, error) {
 
-	ctxName := vm.contract.Trx.Contract
+	ctxName    := vm.contract.Trx.Contract
 	ctxNameLen := uint64(len(ctxName))
 
 	pos := vm.envFunc.envFuncParam[0]
@@ -576,19 +585,21 @@ func strcat(vm *VM) (bool, error) {
 
 	dst      := int(params[0])
 	src      := int(params[1])
-	dstPoint := dst
 	srcPoint := src
-
-	//
-	fmt.Println("VM::strcat vm.memType[uint64(dst)]: ",vm.memType[uint64(dst)])
-	//
-
-	for {
-		if vm.memory[dstPoint] == 0 {
-			break
+	dstPoint := vm.StrLen(dst) + dst
+	/*
+	len , err := vm.getDataLen(dst);
+	if err == nil {
+		fmt.Println("VM::strcat len: ",len,",srcPoint-src: ",srcPoint-src)
+		if len < ( srcPoint - src ) {
+			if vm.envFunc.envFuncRtn {
+				vm.pushUint64(uint64(0))
+			}
+			fmt.Println("*ERROR* Invalid length count when call strcat")
+			return false, errors.New("*ERROR* Invalid length count when call strcat")
 		}
-		dstPoint++
 	}
+	*/
 
 	for {
 		if vm.memory[srcPoint] == 0 {
@@ -627,6 +638,45 @@ func getMethod(vm *VM) (bool, error) {
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(methodLen))
+	}
+
+	return true, nil
+}
+
+func isAccountExist(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 1 {
+		return false, errors.New("*ERROR* Invalid parameter count when call isAccountExist")
+	}
+
+	contractCtx := vm.GetContract()
+	pos         := int(params[0])
+	length      := vm.StrLen(pos)
+	accountName := BytesToString(vm.memory[pos:pos+length])
+
+	if contractCtx == nil || contractCtx.RoleIntf == nil {
+		log.Infof("*ERROR* param is empty when call isAccountExist !!! ")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+	}
+
+	accountObj, err := contractCtx.RoleIntf.GetAccount(accountName)
+	if err != nil {
+		log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+	}
+
+	if strings.Compare(accountObj.AccountName,accountName) != 0 {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+	}
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(1))
 	}
 
 	return true, nil
