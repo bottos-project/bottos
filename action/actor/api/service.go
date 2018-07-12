@@ -46,7 +46,7 @@ type ApiService struct {
 }
 
 //NewApiService new api service
-func NewApiService(env *env.ActorEnv) api.CoreApiHandler {
+func NewApiService(env *env.ActorEnv) api.ChainHandler {
 	apiService := &ApiService{env: env}
 	return apiService
 }
@@ -110,7 +110,7 @@ func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 }
 
 //PushTrx push trx
-func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *api.PushTrxResponse) error {
+func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, resp *api.SendTransactionResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
@@ -137,13 +137,13 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	}
 
 	if bottosErr.ErrNoError == handlerErr {
-		resp.Result = &api.PushTrxResponse_Result{}
+		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
 		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
-		resp.Result = &api.PushTrxResponse_Result{}
+		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
 		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
 		//resp.Msg = handlerErr.(string)GetCodeString
@@ -160,8 +160,8 @@ func (a *ApiService) PushTrx(ctx context.Context, trx *api.Transaction, resp *ap
 	return nil
 }
 
-//QueryTrx query trx
-func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, resp *api.QueryTrxResponse) error {
+//GetTransaction query trx
+func (a *ApiService) GetTransaction(ctx context.Context, req *api.GetTransactionRequest, resp *api.GetTransactionResponse) error {
 	msgReq := &message.QueryTrxReq{
 		TrxHash: common.HexToHash(req.TrxHash),
 	}
@@ -183,8 +183,8 @@ func (a *ApiService) QueryTrx(ctx context.Context, req *api.QueryTrxRequest, res
 	return nil
 }
 
-//QueryBlock query block
-func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest, resp *api.QueryBlockResponse) error {
+//GetBlock query block
+func (a *ApiService) GetBlock(ctx context.Context, req *api.GetBlockRequest, resp *api.GetBlockResponse) error {
 	msgReq := &message.QueryBlockReq{
 		BlockHash:   common.HexToHash(req.BlockHash),
 		BlockNumber: req.BlockNum,
@@ -203,7 +203,7 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 		return nil
 	}
 
-	resp.Result = &api.QueryBlockResponse_Result{}
+	resp.Result = &api.GetBlockResponse_Result{}
 	hash := response.Block.Hash()
 	resp.Result.PrevBlockHash = response.Block.GetPrevBlockHash().ToHexString()
 	resp.Result.BlockNum = response.Block.GetNumber()
@@ -218,8 +218,8 @@ func (a *ApiService) QueryBlock(ctx context.Context, req *api.QueryBlockRequest,
 	return nil
 }
 
-//QueryChainInfo query chain info
-func (a *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfoRequest, resp *api.QueryChainInfoResponse) error {
+//GetInfo query chain info
+func (a *ApiService) GetInfo(ctx context.Context, req *api.GetInfoRequest, resp *api.GetInfoResponse) error {
 	msgReq := &message.QueryChainInfoReq{}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
@@ -235,7 +235,7 @@ func (a *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 		return nil
 	}
 
-	resp.Result = &api.QueryChainInfoResponse_Result{}
+	resp.Result = &api.GetInfoResponse_Result{}
 	resp.Result.HeadBlockNum = response.HeadBlockNum
 	resp.Result.LastConsensusBlockNum = response.LastConsensusBlockNum
 	resp.Result.HeadBlockHash = response.HeadBlockHash.ToHexString()
@@ -246,8 +246,8 @@ func (a *ApiService) QueryChainInfo(ctx context.Context, req *api.QueryChainInfo
 	return nil
 }
 
-//QueryAccount query account info
-func (a *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequest, resp *api.QueryAccountResponse) error {
+//GetAccount query account info
+func (a *ApiService) GetAccount(ctx context.Context, req *api.GetAccountRequest, resp *api.GetAccountResponse) error {
 	name := req.AccountName
 	account, err := a.env.RoleIntf.GetAccount(name)
 	if err != nil {
@@ -270,7 +270,7 @@ func (a *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 		return nil
 	}
 
-	resp.Result = &api.QueryAccountResponse_Result{}
+	resp.Result = &api.GetAccountResponse_Result{}
 	resp.Result.AccountName = name
 	resp.Result.Pubkey = common.BytesToHex(account.PublicKey)
 	resp.Result.Balance = balance.Balance
@@ -280,8 +280,8 @@ func (a *ApiService) QueryAccount(ctx context.Context, req *api.QueryAccountRequ
 	return nil
 }
 
-//QueryObject query contract object
-func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, resp *api.QueryObjectResponse) error {
+//GetKeyValue query contract object
+func (a *ApiService) GetKeyValue(ctx context.Context, req *api.GetKeyValueRequest, resp *api.GetKeyValueResponse) error {
 	contract := req.Contract
 	object := req.Object
 	key := req.Key
@@ -292,7 +292,7 @@ func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 		return nil
 	}
 
-	resp.Result = &api.QueryObjectResponse_Result{}
+	resp.Result = &api.GetKeyValueResponse_Result{}
 	resp.Result.Contract = contract
 	resp.Result.Object = object
 	resp.Result.Key = key
@@ -302,8 +302,8 @@ func (a *ApiService) QueryObject(ctx context.Context, req *api.QueryObjectReq, r
 	return nil
 }
 
-//QueryAbi query contract abi info
-func (a *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *api.QueryAbiResponse) error {
+//GetAbi query contract abi info
+func (a *ApiService) GetAbi(ctx context.Context, req *api.GetAbiRequest, resp *api.GetAbiResponse) error {
 	contract := req.Contract
 	account, err := a.env.RoleIntf.GetAccount(contract)
 	if err != nil {
@@ -315,15 +315,14 @@ func (a *ApiService) QueryAbi(ctx context.Context, req *api.QueryAbiReq, resp *a
 	if len(account.ContractAbi) > 0 {
 		resp.Result = string(account.ContractAbi)
 	} else {
-		// TODO
 		return nil
 	}
 
 	return nil
 }
 
-//QueryTransferCredit query trx credit info
-func (a *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTransferCreditRequest, resp *api.QueryTransferCreditResponse) error {
+//GetTransferCredit query trx credit info
+func (a *ApiService) GetTransferCredit(ctx context.Context, req *api.GetTransferCreditRequest, resp *api.GetTransferCreditResponse) error {
 	name := req.Name
 	spender := req.Spender
 	credit, err := a.env.RoleIntf.GetTransferCredit(name, spender)
@@ -333,7 +332,7 @@ func (a *ApiService) QueryTransferCredit(ctx context.Context, req *api.QueryTran
 		return nil
 	}
 
-	resp.Result = &api.QueryTransferCreditResponse_Result{}
+	resp.Result = &api.GetTransferCreditResponse_Result{}
 	resp.Result.Name = credit.Name
 	resp.Result.Spender = credit.Spender
 	resp.Result.Limit = credit.Limit

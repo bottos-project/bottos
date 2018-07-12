@@ -76,7 +76,7 @@ func main() {
 		)
 
 		service.Init()
-		api.RegisterCoreApiHandler(service.Server(), repo)
+		api.RegisterChainHandler(service.Server(), repo)
 		if err := service.Run(); err != nil {
 			panic(err)
 		}
