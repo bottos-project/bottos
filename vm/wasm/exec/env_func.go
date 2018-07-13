@@ -659,6 +659,7 @@ func isAccountExist(vm *VM) (bool, error) {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(0))
 		}
+		return true, nil
 	}
 
 	accountObj, err := contractCtx.RoleIntf.GetAccount(accountName)
@@ -667,12 +668,14 @@ func isAccountExist(vm *VM) (bool, error) {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(0))
 		}
+		return true, nil
 	}
 
 	if strings.Compare(accountObj.AccountName,accountName) != 0 {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(0))
 		}
+		return true, nil
 	}
 
 	if vm.envFunc.envFuncRtn {
