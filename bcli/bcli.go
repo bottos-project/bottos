@@ -226,7 +226,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	var abistring string
 	NodeIp := "127.0.0.1"
 	addr := "http://" + NodeIp + ":8080/rpc"
-	params := `service=bottos&method=CoreApi.QueryAbi&request={
+	params := `service=bottos&method=Chain.GetAbi&request={
 			"contract":"%s"}`
 	s := fmt.Sprintf(params, contractname)
 	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
