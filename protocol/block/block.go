@@ -232,13 +232,13 @@ func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 
 	block := b.chainIf.GetBlockByNumber(blocknumber)
 	if block == nil {
-		log.Debugf("protocol get block:%d return nil", blocknumber)
+		log.Debugf("protocol get block:%d return nil ptype:%d", blocknumber, ptype)
 
 		if ptype == BLOCK_REQ {
 			return
 		}
 	} else {
-		log.Debugf("protocol get block number:%d", block.Header.Number)
+		log.Debugf("protocol get block number:%d ptype:%d", block.Header.Number, ptype)
 	}
 
 	if ptype == BLOCK_REQ {
