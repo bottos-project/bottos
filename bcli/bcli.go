@@ -140,7 +140,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 	type TransferParam struct {
 		From   string `json:"from"`
 		To     string `json:"to"`
-		Amount uint64 `json:"amount"`
+		Amount uint64 `json:"value"`
 	}
 	var value uint64
 	value = uint64(amount) * uint64(100000000)
