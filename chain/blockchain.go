@@ -457,10 +457,28 @@ func (bc *BlockChain) ValidateBlock(block *types.Block) uint32 {
 	return InsertBlockSuccess
 }
 
+func (bc *BlockChain) checkConsensusedBlock(block *types.Block) uint32 {
+	num := block.GetNumber()
+	localBlock := bc.GetBlockByNumber(num)
+	if localBlock.Hash() == block.Hash() {
+		return InsertBlockSuccess
+	} else {
+		if localBlock.GetPrevBlockHash() == block.GetPrevBlockHash() {
+			return InsertBlockErrorDiffLibLinked
+		} else {
+			return InsertBlockErrorDiffLibNotLinked
+		}
+	}
+}
+
 //InsertBlock write a new block
 func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
+
+	if block.GetNumber() <= bc.LastConsensusBlockNum() {
+		return bc.checkConsensusedBlock(block)
+	}
 
 	errcode := bc.ValidateBlock(block)
 	if errcode != InsertBlockSuccess {
