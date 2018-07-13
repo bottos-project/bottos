@@ -133,7 +133,7 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 func (cli *CLI) transfer(from, to string, amount int) {
 	chainInfo, err := cli.getChainInfo()
 	if err != nil {
-		fmt.Println("QueryChainInfo error: ", err)
+		fmt.Println("GetInfo error: ", err)
 		return
 	}
 
@@ -267,7 +267,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 func (cli *CLI) newaccount(name string, pubkey string) {
 	chainInfo, err := cli.getChainInfo()
 	if err != nil {
-		fmt.Println("QueryChainInfo error: ", err)
+		fmt.Println("GetInfo error: ", err)
 		return
 	}
 
@@ -365,7 +365,7 @@ func (cli *CLI) getaccount(name string) {
 func (cli *CLI) deploycode(name string, path string) {
 	chainInfo, err := cli.getChainInfo()
 	if err != nil {
-		fmt.Println("QueryChainInfo error: ", err)
+		fmt.Println("GetInfo error: ", err)
 		return
 	}
 
@@ -486,7 +486,7 @@ func checkAbi(abiRaw []byte) error {
 func (cli *CLI) deployabi(name string, path string) {
 	chainInfo, err := cli.getChainInfo()
 	if err != nil {
-		fmt.Println("QueryChainInfo error: ", err)
+		fmt.Println("GetInfo error: ", err)
 		return
 	}
 
