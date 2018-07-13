@@ -92,29 +92,27 @@ func getStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 8 {
 		return false, errors.New("parameter count error while call getStrValue")
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos := int(params[2])
-	objectLen := int(params[3])
-	keyPos := int(params[4])
-	keyLen := int(params[5])
+	objectPos   := int(params[2])
+	objectLen   := int(params[3])
+	keyPos      := int(params[4])
+	keyLen      := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 
 	// length check
-
 	contract := make([]byte, contractLen)
+	object   := make([]byte, objectLen)
+	key      := make([]byte, keyLen)
+
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-
-	object := make([]byte, objectLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(object,   vm.memory[objectPos:objectPos+objectLen])
+	copy(key,      vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
@@ -128,6 +126,7 @@ func getStrValue(vm *VM) (bool, error) {
 		} else {
 			valueLen = 0
 		}
+		vm.memory[valueBufPos+valueLen] = 0
 	}
 
 	//1. recover the vm context
@@ -152,10 +151,10 @@ func setStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valuePos := int(params[4])
-	valueLen := int(params[5])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
+	valuePos  := int(params[4])
+	valueLen  := int(params[5])
 
 	// length check
 
@@ -517,15 +516,15 @@ func getSender(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < senderNameLen+1 {
+	if len < senderNameLen + 1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
 	}
 
-	copy(vm.memory[pos:pos+len], []byte(senderName))
-	vm.memory[pos+len] = 0
+	copy(vm.memory[pos:pos+senderNameLen], []byte(senderName))
+	vm.memory[pos+senderNameLen] = 0
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(senderNameLen))
 	}
