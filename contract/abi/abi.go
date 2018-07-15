@@ -29,8 +29,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/contract/msgpack"
-	log "github.com/cihub/seelog"
+	//log "github.com/cihub/seelog"
 	"io"
 	"reflect"
 )
@@ -102,27 +103,6 @@ func jsonFormat(data []byte) string {
 	return string(out.Bytes())
 }
 
-//MarshalAbi is to serialize the message
-func MarshalAbi(v interface{}, Abi *ABI, contractName string, method string) ([]byte, error) {
-	var err error
-	var abi ABI
-
-	if Abi == nil {
-		return []byte{}, err
-	}
-	
-	abi = *Abi
-	
-
-	writer := &bytes.Buffer{}
-	err = EncodeAbi(contractName, method, writer, v, abi, "")
-	if err != nil {
-		return []byte{}, err
-	}
-	return writer.Bytes(), nil
-}
-
-
 func getAbiFieldsByAbi(contractname string, method string, abi ABI, subStructName string) map[string]interface{} {
 	for _, subaction := range abi.Actions {
 		if subaction.ActionName != method {
@@ -147,195 +127,227 @@ func getAbiFieldsByAbi(contractname string, method string, abi ABI, subStructNam
 	return nil
 }
 
-//DecodeAbi is to encode message
-func DecodeAbi(contractName string, method string, r io.Reader, dst interface{}, abi ABI, subStructName string) error {
-	abiFields := getAbiFieldsByAbi(contractName, method, abi, subStructName)
-	if abiFields == nil {
-		return fmt.Errorf("DecodeAbi: getAbiFieldsByAbi failed: %s", abi)
-	}
-	v := reflect.ValueOf(dst)
-
-	if !v.IsValid() {
-		log.Errorf("Not Valid %T\n", dst)
-		return fmt.Errorf("Not Valid %T\n", dst)
-	}
-
-	if v.Kind() != reflect.Ptr {
-		log.Errorf("dst Not Settable %T\n", dst)
-		return fmt.Errorf("dst Not Settable %T)", dst)
-	}
-
-	if !v.Elem().IsValid() {
-		log.Errorf("Nil Ptr: %T\n", dst)
-		return fmt.Errorf("Nil Ptr: %T\n", dst)
-	}
-
-	if v.Elem().NumField() > 0 {
-		msgpack.UnpackArraySize(r)
-	}
-
-	v = v.Elem()
-
-	vt := reflect.TypeOf(dst)
-	vt = vt.Elem()
-
-	count := v.NumField()
-	
-	for i := 0; i < count; i++ {
-		
-		field := v.Field(i)
-		feildAddr := field.Addr().Interface()
-
-		fieldname := vt.Field(i).Tag.Get("json")
-		if _, ok := abiFields[fieldname]; !ok {
-			return fmt.Errorf("DecodeAbi: getAbiFieldsByAbi failed: %s, %s", abi, !ok)
+//getAbiFieldsByAbiEx function
+func getAbiFieldsByAbiEx(contractname string, method string, abi ABI, subStructName string) *FeildMap {
+	for _, subaction := range abi.Actions {
+		if subaction.ActionName != method {
+			continue
 		}
+		structname := subaction.Type
 
-		switch abiFields[fieldname] {
-		case "string":
-			val, err := msgpack.UnpackStr16(r)
-			if err != nil {
-				return err
-			}
-			ptr := feildAddr.(*string)
-			*ptr = val
-		case "uint8":
-			val, err := msgpack.UnpackUint8(r)
-			if err != nil {
-				return err
-			}
-			ptr := feildAddr.(*uint8)
-			*ptr = val
-		case "uint16":
-			val, err := msgpack.UnpackUint16(r)
-			if err != nil {
-				return err
-			}
-			ptr := feildAddr.(*uint16)
-			*ptr = val
-
-		case "uint32":
-			val, err := msgpack.UnpackUint32(r)
-			if err != nil {
-				return err
-			}
-			ptr := feildAddr.(*uint32)
-			*ptr = val
-		case "uint64":
-			val, err := msgpack.UnpackUint64(r)
-			if err != nil {
-				return err
-			}
-			ptr := feildAddr.(*uint64)
-			*ptr = val
-		case "bytes":
-			t := reflect.TypeOf(v.Field(i).Interface())
-			if t.Elem().Kind() == reflect.Uint8 {
-				val, err := msgpack.UnpackBin16(r)
-				if err != nil {
-					return err
+		for _, substruct := range abi.Structs {
+			if subStructName != "" {
+				if substruct.Name != subStructName {
+					continue
 				}
-				ptr := feildAddr.(*[]byte)
-				*ptr = val
-			} else {
-				return fmt.Errorf("Unsupported Slice Type")
+			} else if structname != substruct.Name {
+				continue
 			}
-		default:
-			vt = reflect.TypeOf(v.Field(i).Interface())
-			if vt.Kind() == reflect.Struct {
-				DecodeAbi(contractName, method, r, v.Field(i).Interface(), abi, fieldname)
-			} else if vt.Kind() == reflect.Ptr {
-				DecodeAbi(contractName, method, r, v.Elem().Field(i).Interface(), abi, fieldname)
-			} else {
-				return fmt.Errorf("Unsupported Type: %v", vt.Kind())
-			}
-		}
 
+			return substruct.Fields
+		}
 	}
 
 	return nil
 }
 
-//EncodeAbi is to encode message
-func EncodeAbi(contractName string, method string, w io.Writer, value interface{}, abi ABI, subStructName string) error {
-	abiFields := getAbiFieldsByAbi(contractName, method, abi, subStructName)
-	if abiFields == nil {
-		return fmt.Errorf("EncodeAbi: getAbiFieldsByAbi failed: %s", abi)
+//EncodeAbiEx is to encode message
+func EncodeAbiEx(contractName string, method string, w io.Writer, value map[string]interface{}, abi ABI, subStructName string) error {
+        abiFieldsAttr := getAbiFieldsByAbiEx(contractName, method, abi, subStructName)
+	if abiFieldsAttr == nil {
+		return fmt.Errorf("EncodeAbiEx: getAbiFieldsByAbi failed: %s", abi)
+
 	}
 
-	v := reflect.ValueOf(value)
-	vt := reflect.TypeOf(value)
-
-	if !v.IsValid() {
-		log.Errorf("Not Valid %T\n", value)
-		return fmt.Errorf("Not Valid %T\n", value)
+	abiFields := abiFieldsAttr.GetStringPair()
+	
+	count  := len(abiFields)
+	count2 := len(value)
+	
+	if count != count2 {
+		return fmt.Errorf("EncodeAbiEx: fields number mismatch! count: %d, count2: %d", count, count2)
+	}
+	
+	if (count <= 0) {
+		return fmt.Errorf("EncodeAbiEx: count is 0!", count)
 	}
 
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		vt = vt.Elem()
-		if !v.IsValid() {
-			log.Errorf("Nil Ptr: %T\n", value)
-			return fmt.Errorf("Nil Ptr: %T\n", value)
-		}
-	}
-
-	count := v.NumField()
 	msgpack.PackArraySize(w, uint16(count))
 
-	for i := 0; i < count; i++ {
-		fieldname := vt.Field(i).Tag.Get("json")
-		vals := v.Field(i).Interface()
+		for _, abiValTypeAttr := range abiFields {
+			
+			abiValKey   := abiValTypeAttr.Key
+			abiValType := abiValTypeAttr.Value
 
-		types := reflect.TypeOf(vals)
-		val := reflect.ValueOf(vals)
-
-		if _, ok := abiFields[fieldname]; !ok {
-			return fmt.Errorf("%s is not in abiFields [%s]!", fieldname, abiFields)
-		}
-
-		switch abiFields[fieldname] {
-		case "string":
-			msgpack.PackStr16(w, val.String())
-		case "uint8":
-			msgpack.PackUint8(w, uint8(val.Uint()))
-		case "uint16":
-			msgpack.PackUint16(w, uint16(val.Uint()))
-		case "uint32":
-			msgpack.PackUint32(w, uint32(val.Uint()))
-		case "uint64":
-			msgpack.PackUint64(w, uint64(val.Uint()))
-		case "bytes":
-			t := reflect.TypeOf(v.Field(i).Interface())
-			if t.Elem().Kind() == reflect.Uint8 {
-				msgpack.PackBin16(w, val.Bytes())
-			} else {
-				return fmt.Errorf("Unsupported Slice Type")
+			val, ok := value[abiValKey]
+			
+			if !ok {
+				return fmt.Errorf("EncodeAbiEx: value abiValKey %s not found in map", abiValKey)
 			}
-		default:
-			t := reflect.TypeOf(v.Field(i).Interface())
-			if t.Kind() == reflect.Struct || t.Kind() == reflect.Ptr {
-				EncodeAbi(contractName, method, w, v.Field(i).Interface(), abi, fieldname)
-			} else {
-				return fmt.Errorf("Unsupported Type: %v", types)
+			
+			valType := reflect.TypeOf(val).Name()
+			
+			if reflect.ValueOf(val).Kind() == reflect.Slice {
+				valType = reflect.TypeOf(val).Elem().Name()
+				if valType == "uint8"	{
+					valType = "bytes"
+				}
 			}
-		}
-	}
+			
+			if valType != abiValType {
+				return fmt.Errorf("EncodeAbiEx: abiValType %s mismatch to valType %s", abiValType, valType)
+			}
 
+			switch abiValType {
+				case "string":
+					msgpack.PackStr16(w, val.(string))
+				case "uint8":
+					msgpack.PackUint8(w, val.(uint8))
+				case "uint16":
+					msgpack.PackUint16(w, val.(uint16))
+				case "uint32":
+					msgpack.PackUint32(w, val.(uint32))
+				case "uint64":
+					msgpack.PackUint64(w, val.(uint64))
+				case "bytes":
+					msgpack.PackBin16(w, val.([]byte))
+				default:
+					if reflect.ValueOf(value[abiValKey]).Kind() == reflect.Struct {
+						EncodeAbiEx(contractName, method, w, value, abi, abiValKey)
+					} else {
+						return fmt.Errorf("Unsupported Type: %v | %v", valType, abiValType)
+					}
+				}
+		}
+		
 	return nil
 }
 
-//UnmarshalAbi is to unserialize the message
-func UnmarshalAbi(contractName string, Abi *ABI, method string, data []byte, dst interface{}) error {
+func Setmapval(structmap map[string]interface{}, key string, val interface{}) {
+        structmap[key] = val
+}
+
+//MarshalAbiEx is to serialize the message
+func MarshalAbiEx(v map[string]interface{}, Abi *ABI, contractName string, method string) ([]byte, error) {
 	var err error
 	var abi ABI
+	
+	
 	if Abi == nil {
-	    return err
+		return []byte{}, err
+	}
+	
+	abi = *Abi
+
+	writer := &bytes.Buffer{}
+	err = EncodeAbiEx(contractName, method, writer, v, abi, "")
+	if err != nil {
+		return []byte{}, err
+	}
+	return writer.Bytes(), nil
+}
+
+//DecodeAbiEx is to encode message
+func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subStructName string, mapResultIn *map[string]interface{}) (map[string]interface{}) {
+	var errs error
+	mapResult := make(map[string]interface{})
+	
+	if(mapResultIn != nil) {
+		mapResult = *mapResultIn 
+	}
+	
+	abiFieldsAttr := getAbiFieldsByAbiEx(contractName, method, abi, subStructName)
+	if abiFieldsAttr == nil {
+		return nil
+	}
+	
+	abiFields := abiFieldsAttr.GetStringPair()
+	
+	count  := len(abiFields)
+	if (count <= 0) {
+		return nil
+	}
+	
+	if len(abiFields) > 0 {
+		_, errs = msgpack.UnpackArraySize(r)
+		if errs != nil {
+			return nil
+		}
+	} else {
+		return nil
+	}
+	var i uint64 = 0
+	for _, abiValTypeAttr := range abiFields {
+			abiValKey   := abiValTypeAttr.Key
+			abiValType := abiValTypeAttr.Value
+
+			switch abiValType {
+				case "string":
+					val, err := msgpack.UnpackStr16(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, val)
+					i++
+				case "uint8":
+					val, err := msgpack.UnpackUint8(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, val)
+					i++
+				case "uint16":
+					val, err := msgpack.UnpackUint16(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, val)
+					i++
+				case "uint32":
+					val, err := msgpack.UnpackUint32(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, val)
+					i++
+				case "uint64":
+					val, err := msgpack.UnpackUint64(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, val)
+					i++
+				case "bytes":
+					val, err := msgpack.UnpackBin16(r)
+					if err != nil {
+						return nil
+					}
+					Setmapval(mapResult, abiValKey, common.BytesToHex(val))
+					i++
+				default:
+					DecodeAbiEx(contractName, method, r, abi, abiValKey, &mapResult)
+				}
+			i += 1
+		}
+	
+	return mapResult
+}
+
+//UnmarshalAbiEx is to unserialize the message
+func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (map[string]interface{}) {
+	var abi ABI
+	
+	if Abi == nil {
+	    return nil
 	}
 	
 	abi = *Abi
 
 	r := bytes.NewReader(data)
-	err = DecodeAbi(contractName, method, r, dst, abi, "")
-	return err
+	mapResult := DecodeAbiEx(contractName, method, r, abi, "", nil)
+	if mapResult == nil {
+		return nil
+	}
+
+	return mapResult
 }

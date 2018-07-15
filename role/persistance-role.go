@@ -37,7 +37,6 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	abi "github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -90,7 +89,7 @@ type TxInfo struct {
 }
 
 /**======Internal Contract struct definition====*/
-
+/*
 // transferparam is interface definition of transfer method
 type transferparam struct {
 	From  string `json:"from"`
@@ -130,7 +129,7 @@ type TransferFromParam struct {
 	TokenType string `json:"tokenType"`
 	Value     uint64 `json:"value"`
 }
-
+*/
 // TParam is interface definition
 type TParam interface {
 	//Accountparam
@@ -138,7 +137,7 @@ type TParam interface {
 	//Reguser       reguser{}
 	//DeployCodeParam
 }
-
+/*
 // DeployCodeParam is interface definition of deploy code method
 type DeployCodeParam struct {
 	Name         string `json:"contract"`
@@ -165,9 +164,10 @@ type mgoDeployAbiParam struct {
 	Name        string `json:"contract"`
 	ContractAbi string `json:"contract_abi"`
 }
+*/
 
 /**======External Contract struct definition====*/
-
+/*
 // AssetInfo is definition of asset info
 type AssetInfo struct {
 	UserName    string `json:"username"`
@@ -321,7 +321,7 @@ type TransferDTOStruct struct {
    TokenType string
    Value     uint64
 }
-
+*/
 func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
 	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
@@ -343,153 +343,26 @@ func getMyPublicIPaddr() (string, error) {
 
 // ParseParam is to parase param by method
 func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
-	var decodedParam interface{}
 	var Abi *abi.ABI = nil
-	if Contract == "bottos" {
-		if Method == "newaccount" {
-			decodedParam = &newaccountparam{}
-		} else if Method == "setdelegate" {
-			decodedParam = &SetDelegateParam{}
-		} else if Method == "transfer" {
-			decodedParam = &transferparam{}
-		} else if Method == "deploycode" {
-			decodedParam = &DeployCodeParam{}
-		} else if Method == "grantcredit" {
-			decodedParam = &GrantCreditParam{}
-		} else if Method == "cancelcredit" {
-			decodedParam = &CancelCreditParam{}
-		} else if Method == "transferfrom" {
-			decodedParam = &TransferFromParam{}
-		} else if Method == "deployabi" {
-			decodedParam = &DeployAbiParam{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "usermng" {
-		if Method == "reguser" {
-			decodedParam = &reguser{}
-		} else if Method == "userlogin" {
-			decodedParam = &UserLogin{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "assetmng" {
-		if Method == "assetreg" {
-			decodedParam = &RegAssetReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datadealmng" {
-		if Method == "buydata" {
-			decodedParam = &DataDealReq{}
-		} else if Method == "presale" {
-			decodedParam = &PresaleReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datafilemng" {
-		if Method == "datafilereg" {
-			decodedParam = &DataFileRegReq{}
-		} else if Method == "fileauthreg" {
-			decodedParam = &DataFileAuthReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datareqmng" {
-		if Method == "datareqreg" {
-			decodedParam = &RegDataReqReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "favoritemng" {
-		if Method == "favoritepro" {
-			decodedParam = &GoodsProReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "nodeclustermng" {
-		if Method == "reg" {
-			decodedParam = &NodeClusterReg{}
-			var err error
-			Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
-			if err != nil {
-				return nil, errors.New("Get Abi failed!")
-			}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "nodemng" {
-		if Method == "nodeinforeg" {
-			decodedParam = &NodeInfoReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "bottoscontract"  {
-        	if Method == "transfer" {
-			decodedParam = &TransferDTOStruct{}
+
+	if Contract != "bottos" {
+		var err error
+		Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
+		if  err != nil {
+			return nil, errors.New("External Abi is empty!")
 		}
 	} else {
-		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-		return nil, errors.New("Not supported")
-	}
-	
-	if Abi == nil {
 		Abi = GetAbi()
 	}
-	if Contract == "bottos" && Method == "deploycode" {
-		//p, ok := decodedParam.(DeployCodeParam)
 
-		var tmpval = &DeployCodeParam{}
-		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
-		if err != nil {
-			return nil, errors.New("ParseParam: UnmarshalAbi failed")
-		}
-		//if ok {
-		var mgoParam = mgoDeployCodeParam{}
-		mgoParam.Name = tmpval.Name
-		mgoParam.VMType = tmpval.VMType
-		mgoParam.VMVersion = tmpval.VMVersion
-		mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
-		return mgoParam, nil
-
-	} else if Contract == "bottos" && Method == "deployabi" {
-		var tmpval = &DeployAbiParam{}
-		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
-		if err != nil {
-			return nil, errors.New("ParseParam: UnmarshalAbi failed")
-		}
-		
-		var mgoParam = mgoDeployAbiParam{}
-		mgoParam.Name = tmpval.Name
-		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
-		return mgoParam, nil
+	if Abi == nil {
+		return nil, errors.New("Abi is empty!")
 	}
-	
-	if(Contract != "bottos" && Contract != "nodeclustermng") {
-		
-		err := msgpack.Unmarshal(Param, decodedParam)
 
-		if err != nil {
-			log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
-			return nil, err
-		}
-		return decodedParam, nil
-	}
-	
-	err := abi.UnmarshalAbi(Contract, Abi, Method, Param, decodedParam)
-
-	if err != nil {
-		log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
-		return nil, err
+	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
+	if decodedParam == nil || len(decodedParam) <= 0 {
+		log.Error("insertTxInfoRole: FAILED (decodedParam is nil!): Contract: ", Contract, ", Method: ", Method)
+		return nil, errors.New("insertTxInfoRole: FAILED")
 	}
 	return decodedParam, nil
 }
@@ -524,7 +397,7 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 		decodedParam, err := ParseParam(r, trx.Param, newtrx.Contract, newtrx.Method)
 
 		if err != nil {
-			return err
+			continue
 		}
 
 		newtrx.Param = decodedParam
@@ -623,14 +496,15 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 	if trx.Method == "transfer" {
 
-		data := &transferparam{}
-		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
-		if err != nil{
+		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 		}
 
-		FromAccountName := data.From
-		ToAccountName := data.To
+		FromAccountName := data["from"].(string)
+		ToAccountName := data["to"].(string)
+		DataVal := data["value"].(uint64)
+		
 		SrcBalanceInfo, err := GetBalanceOp(ldb, FromAccountName) //data.Value
 
 		if err != nil {
@@ -642,13 +516,13 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		if err != nil {
 			return err
 		}
-
-		if SrcBalanceInfo.Balance < data.Value {
+		
+		if SrcBalanceInfo.Balance < DataVal {
 			return err
 		}
 
-		SrcBalanceInfo.Balance -= data.Value
-		DstBalanceInfo.Balance += data.Value
+		SrcBalanceInfo.Balance -= DataVal
+		DstBalanceInfo.Balance += DataVal
 
 		err = SetBalanceOp(ldb, FromAccountName, SrcBalanceInfo.Balance)
 		if err != nil {
@@ -660,14 +534,15 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		}
 	} else if trx.Method == "newaccount" {
 
-		data := &newaccountparam{}
-		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
-		if err != nil{
+		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
 		}
+		DataName   := data["name"].(string)
+		DataPubKey := data["pubkey"].(string)
 
-		mesgs, err := findAcountInfo(ldb, data.Name)
+		mesgs, err := findAcountInfo(ldb, DataName)
 		if mesgs != nil {
 			return nil /* Do not allow insert same account */
 		}
@@ -675,11 +550,11 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 		NewAccount := &AccountInfo{
 			ID:               oid,
-			AccountName:      data.Name,
+			AccountName:      DataName,
 			Balance:          0,  //uint32        `bson:"bto_balance"`
 			StakedBalance:    0,  //uint64        `bson:"staked_balance"`
 			UnstakingBalance: "", //             `bson:"unstaking_balance"`
-			PublicKey:        data.Pubkey,
+			PublicKey:        DataPubKey,
 			CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
 		}

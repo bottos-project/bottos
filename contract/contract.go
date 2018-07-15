@@ -77,15 +77,15 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		name := config.Genesis.InitDelegates[i].Name
 
 		// 1, new account trx
-		nps := &NewAccountParam{
-			Name:   name,
-			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
-		}
 
 		Abi := GetAbi()
-		nparam, err2 := abi.MarshalAbi(nps, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
+
+		mapstruct := make(map[string]interface{})
+		abi.Setmapval(mapstruct, "name", name)
+		abi.Setmapval(mapstruct, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
+		nparam, err2   := abi.MarshalAbiEx(mapstruct, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
 		if err2 != nil {
-			log.Info("abi.MarshalAbi failed for new account:", name)
+			log.Info("abi.MarshalAbiEx failed for new account:", name)
 			continue
 		}
 
@@ -93,15 +93,14 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		trxs = append(trxs, trx)
 
 		// 2, transfer trx
-		tps := &TransferParam{
-			From:  config.BOTTOS_CONTRACT_NAME,
-			To:    name,
-			Value: uint64(config.Genesis.InitDelegates[i].Balance),
-		}
 
-		tparam, err3 := abi.MarshalAbi(tps, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
+		mapstruct2 := make(map[string]interface{})
+		abi.Setmapval(mapstruct2, "from", config.BOTTOS_CONTRACT_NAME)
+		abi.Setmapval(mapstruct2, "to", name)
+		abi.Setmapval(mapstruct2, "value", uint64(config.Genesis.InitDelegates[i].Balance))
+		tparam, err3   := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
 		if err3 != nil {
-			log.Info("abi.MarshalAbi failed for transfer with account:", name)
+			log.Info("abi.MarshalAbiEx failed for transfer with account:", name)
 			continue
 		}
 
@@ -109,14 +108,13 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		trxs = append(trxs, trx)
 
 		// 3, set delegate
-		sps := &SetDelegateParam{
-			Name:   name,
-			Pubkey: config.Genesis.InitDelegates[i].PublicKey,
-		}
 
-		sparam, err4 := abi.MarshalAbi(sps, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
+		mapstruct3 := make(map[string]interface{})
+		abi.Setmapval(mapstruct3, "name", name)
+		abi.Setmapval(mapstruct3, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
+		sparam, err4   := abi.MarshalAbiEx(mapstruct3, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
 		if err4 != nil {
-			log.Info("abi.MarshalAbi failed for setdegelage with account:", name)
+			log.Info("abi.MarshalAbiEx failed for setdegelage with account:", name)
 			continue
 		}
 		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
