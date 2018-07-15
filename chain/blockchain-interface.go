@@ -39,6 +39,10 @@ const (
 	InsertBlockErrorNotLinked uint32 = 2
 	//InsertBlockErrorValidateFail block validate fail
 	InsertBlockErrorValidateFail uint32 = 3
+	//InsertBlockErrorDiffLibLinked different lib block but linked
+	InsertBlockErrorDiffLibLinked uint32 = 4
+	//InsertBlockErrorDiffLibNotLinked different lib block and not linked in this chain
+	InsertBlockErrorDiffLibNotLinked uint32 = 5
 )
 
 //HandledBlockCallback call back

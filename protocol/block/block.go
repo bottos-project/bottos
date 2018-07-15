@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package block
 
 import (
@@ -12,6 +37,7 @@ import (
 	"time"
 )
 
+//Block sync block with peer and send up to block actor
 type Block struct {
 	actor   *actor.PID
 	chainIf chain.BlockChainInterface
@@ -21,61 +47,55 @@ type Block struct {
 }
 
 const (
-	WAIT_TIME              = 30
-	WAIT_LOCAL_BLOCK_TIMER = 3
+	//WAIT_TIME wait for actors ready
+	WAIT_TIME = 20
 )
 
+//MakeBlock new instance
 func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
-	return &Block{s: MakeSynchronizes(nodeType, chain),
+	return &Block{s: makeSynchronizes(nodeType, chain),
 		chainIf: chain,
 		init:    false}
 }
 
+//SetActor set chain actor id
 func (b *Block) SetActor(tid *actor.PID) {
 	b.actor = tid
-	b.s.SetActor(tid)
+	b.s.setActor(tid)
 }
 
+//Start start
 func (b *Block) Start() {
-	go b.waitLastBlockTimer()
+	go b.waitActorReady()
 }
 
-func (b *Block) waitLastBlockTimer() {
+func (b *Block) waitActorReady() {
 	time.Sleep(WAIT_TIME * time.Second)
 
-	waitTimer := time.NewTimer(WAIT_LOCAL_BLOCK_TIMER * time.Second)
+	log.Debug("protocol wait actor ready")
 
-	log.Debug("waitLastBlockTimer start")
+	blocknumber := b.chainIf.HeadBlockNum()
+	libNumber := b.chainIf.LastConsensusBlockNum()
 
-	defer func() {
-		log.Debug("waitLastBlockTimer stop")
-		waitTimer.Stop()
-	}()
-
-	for {
-		select {
-		case <-waitTimer.C:
-			blocknumber := b.chainIf.HeadBlockNum()
-			libNumber := b.chainIf.LastConsensusBlockNum()
-			log.Debugf("timer local block number:%d, %d", libNumber, blocknumber)
-			if blocknumber < libNumber {
-				panic("wrong lib number")
-				return
-			}
-			b.s.updateLocalLib(libNumber)
-			b.s.updateLocalNumber(blocknumber)
-			b.s.start()
-			b.init = true
-			break
-		}
+	log.Debugf("protocol timer local block number:%d, %d", libNumber, blocknumber)
+	if blocknumber < libNumber {
+		panic("protocol wrong lib number")
+		return
 	}
 
+	b.s.updateLocalLib(libNumber)
+	b.s.updateLocalNumber(blocknumber)
+	b.s.start()
+	b.init = true
 }
 
+//Dispatch peer message process
 func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	if !b.init {
 		return
 	}
+
+	//log.Debugf("block recv packet %d, from peer: %d", p.H.PacketType, index)
 
 	switch p.H.PacketType {
 	case BLOCK_REQ:
@@ -99,6 +119,15 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 	}
 }
 
+//GetSyncState get current synchronize status
+func (b *Block) GetSyncState() bool {
+	if b.s.state == STATE_NORMAL {
+		return true
+	}
+	return false
+}
+
+//SendNewBlock send out a new block
 func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 	b.sendPacket(true, notify.Block, nil)
 }
@@ -106,12 +135,12 @@ func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	buf, err := json.Marshal(data)
 	if err != nil {
-		log.Errorf("block send marshal error")
+		log.Errorf("protocol block send marshal error")
 	}
 
 	last := chainNumber{LibNumber: b.chainIf.LastConsensusBlockNum(),
 		BlockNumber: b.chainIf.HeadBlockNum()}
-	b.s.sendc <- last
+	b.s.updatec <- last
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
@@ -132,14 +161,6 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	}
 }
 
-func (b *Block) GetSyncState() bool {
-	if b.s.state == STATE_NORMAL {
-		return true
-	} else {
-		return false
-	}
-}
-
 func (b *Block) processLastBlockNumberReq(index uint16, data []byte) {
 	b.s.sendLastBlockNumberRsp(index)
 }
@@ -148,30 +169,30 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 	var last chainNumber
 	err := json.Unmarshal(data, &last)
 	if err != nil {
-		log.Errorf("processLastBlockNumberRsp Unmarshal error:%s", err)
+		log.Errorf("protocol processLastBlockNumberRsp Unmarshal error:%s", err)
 		return
 	}
 
-	info := peerSyncInfo{
+	info := &peerBlockInfo{
 		index:     index,
 		lastLib:   last.LibNumber,
 		lastBlock: last.BlockNumber,
 	}
 
-	b.s.infoc <- &info
+	b.s.infoc <- info
 }
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	var req blockHeaderReq
 	err := json.Unmarshal(data, &req)
 	if err != nil {
-		log.Errorf("processBlockHeaderReq Unmarshal err:%s", err)
+		log.Errorf("protocol processBlockHeaderReq Unmarshal err:%s", err)
 		return
 	}
 
 	if req.Begin > req.End ||
 		req.End-req.Begin >= SYNC_BLOCK_BUNDLE {
-		log.Errorf("processBlockHeaderReq wrong lenght")
+		log.Errorf("protocol processBlockHeaderReq wrong lenght")
 		return
 	}
 
@@ -180,12 +201,11 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	for i := req.Begin; i <= req.End; i++ {
 		head := b.chainIf.GetHeaderByNumber(i)
 		if head == nil {
-			log.Errorf("processBlockHeaderReq header:%d not exist", i)
+			log.Errorf("protocol processBlockHeaderReq header:%d not exist", i)
 			return
-		} else {
-			rsp.set = append(rsp.set, *head)
 		}
 
+		rsp.set = append(rsp.set, *head)
 		j++
 	}
 
@@ -196,23 +216,29 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 	var rsp blockHeaderRsp
 	err := json.Unmarshal(data, &rsp.set)
 	if err != nil {
-		log.Errorf("processBlockInfo Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
 	}
 
-	b.s.syncc <- &rsp
+	b.s.set.syncheaderc <- &rsp
 }
 
 func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 	var blocknumber uint32
 	err := json.Unmarshal(data, &blocknumber)
 	if err != nil {
-		log.Errorf("processBlockReq Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockReq Unmarshal error:%s", err)
 		return
 	}
 
 	block := b.chainIf.GetBlockByNumber(blocknumber)
-	if block == nil && ptype == BLOCK_REQ {
-		return
+	if block == nil {
+		log.Debugf("protocol get block:%d return nil ptype:%d", blocknumber, ptype)
+
+		if ptype == BLOCK_REQ {
+			return
+		}
+	} else {
+		log.Debugf("protocol get block number:%d ptype:%d", block.Header.Number, ptype)
 	}
 
 	if ptype == BLOCK_REQ {
@@ -220,7 +246,7 @@ func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 	} else if ptype == BLOCK_CATCH_REQUEST {
 		b.sendBlockRsp(index, block, BLOCK_CATCH_RESPONSE)
 	} else {
-		log.Errorf("processBlockReq error ptype")
+		log.Errorf("protocol processBlockReq error ptype")
 	}
 }
 
@@ -228,7 +254,7 @@ func (b *Block) processBlockInfo(index uint16, data []byte) {
 	var block types.Block
 	err := json.Unmarshal(data, &block)
 	if err != nil {
-		log.Errorf("processBlockInfo Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
 	}
 
 	update := &blockUpdate{index: index, block: &block}
@@ -240,17 +266,17 @@ func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 	var block types.Block
 	err := json.Unmarshal(data, &block)
 	if err != nil {
-		log.Errorf("processBlockInfo Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
 	}
 
 	update := blockUpdate{index: index, block: &block}
-	b.s.catchupc <- &update
+	b.s.c.catchupc <- &update
 }
 
 func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
 	data, err := json.Marshal(rsp.set)
 	if err != nil {
-		log.Error("sendGetBlock Marshal number error ")
+		log.Error("protocol sendGetBlock Marshal number error ")
 		return
 	}
 
@@ -269,7 +295,7 @@ func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
 func (b *Block) sendBlockRsp(index uint16, block *types.Block, ptype uint16) {
 	data, err := json.Marshal(block)
 	if err != nil {
-		log.Error("sendGetBlock Marshal number error ")
+		log.Error("protocol sendGetBlock Marshal number error ")
 		return
 	}
 
@@ -289,7 +315,7 @@ func (b *Block) processBlockHeaderUpdate(index uint16, data []byte) {
 	var header types.Header
 	err := json.Unmarshal(data, &header)
 	if err != nil {
-		log.Errorf("processBlockHeaderUpdate Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockHeaderUpdate Unmarshal error:%s", err)
 	}
 
 	update := headerUpdate{index: index, header: &header}

@@ -178,3 +178,19 @@ func ByteToFloat64(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
 	return math.Float64frombits(bits)
 }
+
+func (vm *VM) StrLen(pos int) int {
+	if pos <= 0 {
+		return 0
+	}
+
+	i := pos
+	for {
+		if vm.memory[i] == 0 {
+			break
+		}
+		i++
+	}
+
+	return (i - pos)
+}

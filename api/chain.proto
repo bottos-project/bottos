@@ -6,19 +6,19 @@ package api;
 
 option go_package = "github.com/bottos-project/bottos/api";
 
-service CoreApi{
-	rpc PushTrx(Transaction)returns (PushTrxResponse){}
-	rpc QueryTrx(QueryTrxRequest)returns (QueryTrxResponse){}
-	rpc QueryBlock(QueryBlockRequest)returns (QueryBlockResponse){}
-	rpc QueryChainInfo(QueryChainInfoRequest)returns (QueryChainInfoResponse){}
-	rpc QueryAccount(QueryAccountRequest)returns (QueryAccountResponse){}
-	rpc QueryObject(QueryObjectReq)returns (QueryObjectResponse){}
-	rpc QueryAbi(QueryAbiReq)returns (QueryAbiResponse){}
-	rpc QueryTransferCredit(QueryTransferCreditRequest)returns (QueryTransferCreditResponse){}
+service Chain{
+	rpc SendTransaction(Transaction)returns (SendTransactionResponse){}
+	rpc GetTransaction(GetTransactionRequest)returns (GetTransactionResponse){}
+	rpc GetBlock(GetBlockRequest)returns (GetBlockResponse){}
+	rpc GetInfo(GetInfoRequest)returns (GetInfoResponse){}
+	rpc GetAccount(GetAccountRequest)returns (GetAccountResponse){}
+	rpc	GetKeyValue(GetKeyValueRequest)returns (GetKeyValueResponse){}
+	rpc GetAbi(GetAbiRequest)returns (GetAbiResponse){}
+	rpc GetTransferCredit(GetTransferCreditRequest)returns (GetTransferCreditResponse){}
 } 
 
 
-message PushTrxResponse{
+message SendTransactionResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result				result 				= 3;
@@ -28,23 +28,23 @@ message PushTrxResponse{
 	}
 }
 
-message QueryTrxRequest{
+message GetTransactionRequest{
 	string 				trx_hash			= 1; 
 }
 
-message QueryTrxResponse{
+message GetTransactionResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Transaction			result 				= 3;
 }
 
 
-message QueryBlockRequest{
+message GetBlockRequest{
 	uint32				block_num			= 1;
 	string 				block_hash			= 2;
 }
 
-message QueryBlockResponse{
+message GetBlockResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result				result 				= 3;
@@ -61,10 +61,10 @@ message QueryBlockResponse{
 	}
 }
 
-message QueryChainInfoRequest{
+message GetInfoRequest{
 }
 
-message QueryChainInfoResponse{
+message GetInfoResponse{
 	uint32 				errcode							= 1;
 	string 				msg								= 2;
 	Result 				result							= 3;
@@ -79,11 +79,11 @@ message QueryChainInfoResponse{
 }
 
 
-message QueryAccountRequest{
+message GetAccountRequest{
 	string 				account_name		= 1;
 }
 
-message QueryAccountResponse{
+message GetAccountResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result 				result				= 3;
@@ -95,13 +95,13 @@ message QueryAccountResponse{
 	}
 }
 
-message QueryObjectReq{
+message GetKeyValueRequest{
 	string 				contract			= 1;
 	string 				object				= 2;
 	string 				key					= 3;
 }
 
-message QueryObjectResponse{
+message GetKeyValueResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result 				result				= 3;
@@ -113,22 +113,22 @@ message QueryObjectResponse{
 	}
 }
 
-message QueryAbiReq{
+message GetAbiRequest{
 	string 				contract			= 1;
 }
 
-message QueryAbiResponse{
+message GetAbiResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	string 				result				= 3;
 }
 
-message QueryTransferCreditRequest{
+message GetTransferCreditRequest{
 	string 				name				= 1;
 	string 				spender				= 2;
 }
 
-message QueryTransferCreditResponse{
+message GetTransferCreditResponse{
 	uint32 				errcode				= 1;
 	string 				msg					= 2;
 	Result 				result				= 3;

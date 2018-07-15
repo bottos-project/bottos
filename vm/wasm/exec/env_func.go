@@ -32,7 +32,7 @@ package exec
 import (
 	"errors"
 	"fmt"
-
+	"strings"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
 	log "github.com/cihub/seelog"
@@ -63,12 +63,15 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("setStrValue",      setStrValue)
 	envFunc.Register("removeStrValue",   removeStrValue)
 	envFunc.Register("getParam",         getParam)
+	envFunc.Register("getMethod",        getMethod)
 	envFunc.Register("callTrx",          callTrx)
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
 	envFunc.Register("getSender",        getSender)
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
+	envFunc.Register("strcat",           strcat)
+	envFunc.Register("isAccountExist",   isAccountExist)
 
 	return &envFunc
 }
@@ -89,29 +92,27 @@ func getStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 8 {
 		return false, errors.New("parameter count error while call getStrValue")
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos := int(params[2])
-	objectLen := int(params[3])
-	keyPos := int(params[4])
-	keyLen := int(params[5])
+	objectPos   := int(params[2])
+	objectLen   := int(params[3])
+	keyPos      := int(params[4])
+	keyLen      := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 
 	// length check
-
 	contract := make([]byte, contractLen)
+	object   := make([]byte, objectLen)
+	key      := make([]byte, keyLen)
+
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-
-	object := make([]byte, objectLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(object,   vm.memory[objectPos:objectPos+objectLen])
+	copy(key,      vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
@@ -125,6 +126,7 @@ func getStrValue(vm *VM) (bool, error) {
 		} else {
 			valueLen = 0
 		}
+		vm.memory[valueBufPos+valueLen] = 0
 	}
 
 	//1. recover the vm context
@@ -149,10 +151,10 @@ func setStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valuePos := int(params[4])
-	valueLen := int(params[5])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
+	valuePos  := int(params[4])
+	valueLen  := int(params[5])
 
 	// length check
 
@@ -195,8 +197,8 @@ func removeStrValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
 
 	// length check
 
@@ -234,23 +236,22 @@ func getBinValue(vm *VM) (bool, error) {
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
-	objectPos := int(params[2])
-	objectLen := int(params[3])
-	keyPos := int(params[4])
-	keyLen := int(params[5])
+	objectPos   := int(params[2])
+	objectLen   := int(params[3])
+	keyPos      := int(params[4])
+	keyLen      := int(params[5])
 	valueBufPos := int(params[6])
 	valueBufLen := int(params[7])
 
 	// length check
 
 	contract := make([]byte, contractLen)
+	object   := make([]byte, objectLen)
+	key      := make([]byte, keyLen)
+
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-
-	object := make([]byte, objectLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(object,   vm.memory[objectPos:objectPos+objectLen])
+	copy(key,      vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetBinValue(string(contract), string(object), string(key))
@@ -372,6 +373,15 @@ func printi(vm *VM) (bool, error) {
 	return true, nil
 }
 
+func printi64(vm *VM) (bool, error) {
+	contractCtx := vm.GetContract()
+	value := vm.envFunc.envFuncParam[0]
+	fmt.Printf("VM: from contract: %v, method: %v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
+	log.Infof("VM: from contract:%v, method:%v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
+
+	return true, nil
+}
+
 func prints(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
@@ -382,7 +392,7 @@ func prints(vm *VM) (bool, error) {
 
 	BytesToString(value)
 	param := string(value)
-	fmt.Println("VM: func prints: ", param)
+	fmt.Println("VM: func prints: ", param," , pos: ",pos)
 	log.Infof("VM: func prints: %v\n", param)
 	return true, nil
 
@@ -392,7 +402,7 @@ func getParam(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 2 {
 		return false, errors.New("parameter count error while call memcpy")
 	}
@@ -478,7 +488,7 @@ func assert(vm *VM) (bool, error) {
 
 func getCtxName(vm *VM) (bool, error) {
 
-	ctxName := vm.contract.Trx.Contract
+	ctxName    := vm.contract.Trx.Contract
 	ctxNameLen := uint64(len(ctxName))
 
 	pos := vm.envFunc.envFuncParam[0]
@@ -506,15 +516,15 @@ func getSender(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < senderNameLen+1 {
+	if len < senderNameLen + 1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
 	}
 
-	copy(vm.memory[pos:pos+len], []byte(senderName))
-	vm.memory[pos+len] = 0
+	copy(vm.memory[pos:pos+senderNameLen], []byte(senderName))
+	vm.memory[pos+senderNameLen] = 0
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(senderNameLen))
 	}
@@ -562,5 +572,114 @@ func memcpy(vm *VM) (bool, error) {
 		vm.pushUint64(uint64(dst))
 	}
 
-	return true, nil //this return will be dropped in wasm
+	return true, nil
+}
+
+
+func strcat(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("*ERROR* Invalid parameter count when call strcat")
+	}
+
+	dst      := int(params[0])
+	src      := int(params[1])
+	srcPoint := src
+	dstPoint := vm.StrLen(dst) + dst
+	/*
+	len , err := vm.getDataLen(dst);
+	if err == nil {
+		fmt.Println("VM::strcat len: ",len,",srcPoint-src: ",srcPoint-src)
+		if len < ( srcPoint - src ) {
+			if vm.envFunc.envFuncRtn {
+				vm.pushUint64(uint64(0))
+			}
+			fmt.Println("*ERROR* Invalid length count when call strcat")
+			return false, errors.New("*ERROR* Invalid length count when call strcat")
+		}
+	}
+	*/
+
+	for {
+		if vm.memory[srcPoint] == 0 {
+			break
+		}
+
+		vm.memory[dstPoint] = vm.memory[srcPoint]
+		dstPoint++
+		srcPoint++
+	}
+	vm.memory[dstPoint] = 0
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(dst))
+	}
+
+	return true, nil
+}
+
+func getMethod(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, errors.New("*ERROR* Invalid parameter count when call getMathod")
+	}
+
+	pos    := int(params[0])
+	length := int(params[1])
+
+	contractCtx := vm.GetContract()
+	methodLen   := len(contractCtx.Trx.Method)
+	if methodLen > length {
+		return false, errors.New("*ERROR* Invalid length when call getMathod")
+	}
+
+	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(methodLen))
+	}
+
+	return true, nil
+}
+
+func isAccountExist(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 1 {
+		return false, errors.New("*ERROR* Invalid parameter count when call isAccountExist")
+	}
+
+	contractCtx := vm.GetContract()
+	pos         := int(params[0])
+	length      := vm.StrLen(pos)
+	accountName := BytesToString(vm.memory[pos:pos+length])
+
+	if contractCtx == nil || contractCtx.RoleIntf == nil {
+		log.Infof("*ERROR* param is empty when call isAccountExist !!! ")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+		return true, nil
+	}
+
+	accountObj, err := contractCtx.RoleIntf.GetAccount(accountName)
+	if err != nil {
+		log.Infof("*ERROR* Failed to get account by name !!! ", err.Error())
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+		return true, nil
+	}
+
+	if strings.Compare(accountObj.AccountName,accountName) != 0 {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+		return true, nil
+	}
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(1))
+	}
+
+	return true, nil
 }

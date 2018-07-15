@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package p2p
 
 import (
@@ -12,10 +37,6 @@ type collection struct {
 	lock sync.RWMutex
 }
 
-const (
-	MAX_PEER_NUM = 100
-)
-
 func createCollection() *collection {
 	c := &collection{
 		peers: make(map[uint16]*Peer),
@@ -28,18 +49,18 @@ func (c *collection) addPeer(peer *Peer) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("collection add peer index: %d, id: %s , add: %s, port: %s",
+	log.Debugf("p2p collection add peer index: %d, id: %s , add: %s, port: %s",
 		peer.Index, peer.Info.Id, peer.Info.Addr, peer.Info.Port)
 
 	if peer.Info.IsIncomplete() {
-		log.Info("peer info error")
+		log.Info("p2p peer info error")
 		return errors.New("peer info error")
 	}
 
 	for _, p := range c.peers {
 		if p.Info.Equal(peer.Info) {
 			if p.isconn {
-				log.Info("peer is already exist")
+				log.Info("p2p peer is already exist")
 				return errors.New("peer is already exist")
 			}
 		}
@@ -49,26 +70,42 @@ func (c *collection) addPeer(peer *Peer) error {
 	return nil
 }
 
+func (c *collection) getPeer(index uint16) *PeerInfo {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	var info PeerInfo
+	peer, ok := c.peers[index]
+	if ok {
+		info.Addr = peer.Info.Addr
+		info.Port = peer.Info.Port
+		return &info
+	}
+
+	return nil
+}
+
 func (c *collection) delPeer(index uint16) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("collection delete peer index: %d", index)
+	log.Debugf("p2p collection delete peer index: %d", index)
 	peer, ok := c.peers[index]
 	if ok {
-		log.Debug("delete peer")
+		log.Debugf("p2p delete peer index: %d, %s:%s", peer.Index, peer.Info.Addr, peer.Info.Port)
 		if peer.isconn {
-			log.Error("peer is connected , don't delete")
+			log.Error("p2p peer is connected , don't delete")
 			return false
 		}
 
+		log.Error("p2p peer is disconnected , delete")
 		peer.Stop()
 		delete(c.peers, index)
 		return true
-	} else {
-		log.Error("pee not exist")
-		return false
 	}
+
+	log.Error("p2p peer not exist")
+	return false
 }
 
 func (c *collection) isPeerExist(index uint16) bool {
@@ -122,7 +159,11 @@ func (c *collection) send(msg *UniMsgPacket) {
 
 	peer, ok := c.peers[msg.Index]
 	if !ok {
-		log.Errorf("peer not exist %s", msg.Index)
+		log.Errorf("p2p peer not exist %s", msg.Index)
+		return
+	}
+
+	if !peer.isconn {
 		return
 	}
 
@@ -135,6 +176,10 @@ func (c *collection) sendBroadcast(msg *BcastMsgPacket) {
 	defer c.lock.Unlock()
 
 	for id, peer := range c.peers {
+		if !peer.isconn {
+			continue
+		}
+
 		if len(msg.Indexs) == 0 {
 			go peer.Send(msg.P)
 			continue

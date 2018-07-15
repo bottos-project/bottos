@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/chain"
@@ -20,8 +21,8 @@ import (
 	"github.com/bottos-project/bottos/action/actor/transaction"
 	actionenv "github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/transaction"
-	"github.com/micro/go-micro"
 	log "github.com/cihub/seelog"
+	"github.com/micro/go-micro"
 )
 
 func main() {
@@ -75,7 +76,7 @@ func main() {
 		)
 
 		service.Init()
-		api.RegisterCoreApiHandler(service.Server(), repo)
+		api.RegisterChainHandler(service.Server(), repo)
 		if err := service.Run(); err != nil {
 			panic(err)
 		}
@@ -89,15 +90,16 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 	exit := make(chan bool, 0)
 
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt)
-	defer signal.Stop(sigc)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go func() {
-		<-sigc
-		actors.ActorsStop()
-		chain.Close()
-		log.Info("System shutdown")
-		close(exit)
+		for sig := range sigc {
+			actors.ActorsStop()
+			chain.Close()
+			log.Infof("System shutdown, signal: %v", sig.String())
+			log.Flush()
+			close(exit)
+		}
 	}()
 
 	<-exit

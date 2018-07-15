@@ -77,14 +77,16 @@ func newBlockTimer(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
 		select {
 		case <-blockTimer.C:
 			newBlock(bc, p)
-			blockTimer.Reset(3 * time.Second)
+			blockTimer.Reset(2 * time.Second)
 		}
 	}
 }
 
 func newBlock(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
-	msg := bc.NewBlockMsg()
-	p.ProcessNewBlock(msg)
+	if p.GetBlockSyncState() {
+		msg := bc.NewBlockMsg()
+		p.ProcessNewBlock(msg)
+	}
 }
 
 //ReadFile parse json configuration

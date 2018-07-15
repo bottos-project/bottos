@@ -30,22 +30,22 @@ import (
 
 	"golang.org/x/net/context"
 
-	coreapi "github.com/bottos-project/bottos/api"
+	chain "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/crypto-go/crypto"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro"
-	
-	"strings"
-	"github.com/bitly/go-simplejson"
-        "net/http"
 
+	"net/http"
+	"strings"
+
+	"github.com/bitly/go-simplejson"
 )
 
 // CLI responsible for processing command line arguments
 type CLI struct {
-	client coreapi.CoreApiClient
+	client chain.ChainService
 }
 
 //Transaction trx info
@@ -78,7 +78,7 @@ func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
 	service.Init()
-	cli.client = coreapi.NewCoreApiClient("bottos", service.Client())
+	cli.client = chain.NewChainService("bottos", service.Client())
 
 	return cli
 }
@@ -90,8 +90,8 @@ func (cli *CLI) validateArgs() {
 	}
 }
 
-func (cli *CLI) queryChainInfo() (*coreapi.QueryChainInfoResponse_Result, error) {
-	chainInfoRsp, err := cli.client.QueryChainInfo(context.TODO(), &coreapi.QueryChainInfoRequest{})
+func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
+	chainInfoRsp, err := cli.client.GetInfo(context.TODO(), &chain.GetInfoRequest{})
 	if err != nil || chainInfoRsp == nil {
 		fmt.Println(err)
 		return nil, err
@@ -101,7 +101,7 @@ func (cli *CLI) queryChainInfo() (*coreapi.QueryChainInfoResponse_Result, error)
 	return chainInfo, nil
 }
 
-func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) {
+func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	ctrx := &types.BasicTransaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -131,7 +131,7 @@ func (cli *CLI) signTrx(trx *coreapi.Transaction, param []byte) (string, error) 
 }
 
 func (cli *CLI) transfer(from, to string, amount int) {
-	chainInfo, err := cli.queryChainInfo()
+	chainInfo, err := cli.getChainInfo()
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -149,7 +149,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 		To:     to,
 		Amount: value,
 	}
-        
+
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
            return
@@ -161,7 +161,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 	abi.Setmapval(mapstruct, "value", value)
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "transfer")
 
-	trx := &coreapi.Transaction{
+	trx := &chain.Transaction{
 		Version:     1,
 		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
@@ -180,7 +180,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 
 	trx.Signature = sign
 
-	newAccountRsp, err := cli.client.PushTrx(context.TODO(), trx)
+	newAccountRsp, err := cli.client.SendTransaction(context.TODO(), trx)
 	if err != nil || newAccountRsp == nil {
 		fmt.Println(err)
 		return
@@ -230,7 +230,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	var abistring string
 	NodeIp := "127.0.0.1"
 	addr := "http://" + NodeIp + ":8080/rpc"
-	params := `service=bottos&method=CoreApi.QueryAbi&request={
+	params := `service=bottos&method=Chain.GetAbi&request={
 			"contract":"%s"}`
 	s := fmt.Sprintf(params, contractname)
 	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
@@ -265,7 +265,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 }
 
 func (cli *CLI) newaccount(name string, pubkey string) {
-	chainInfo, err := cli.queryChainInfo()
+	chainInfo, err := cli.getChainInfo()
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -293,7 +293,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
         
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "newaccount")
 
-	trx := &coreapi.Transaction{
+	trx := &chain.Transaction{
 		Version:     1,
 		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
@@ -312,7 +312,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	trx.Signature = sign
 
-	rsp, err := cli.client.PushTrx(context.TODO(), trx)
+	rsp, err := cli.client.SendTransaction(context.TODO(), trx)
 	if err != nil || rsp == nil {
 		fmt.Println(err)
 		return
@@ -347,7 +347,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 }
 
 func (cli *CLI) getaccount(name string) {
-	accountRsp, err := cli.client.QueryAccount(context.TODO(), &coreapi.QueryAccountRequest{AccountName: name})
+	accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
 	if err != nil || accountRsp == nil {
 		return
 	}
@@ -363,7 +363,7 @@ func (cli *CLI) getaccount(name string) {
 }
 
 func (cli *CLI) deploycode(name string, path string) {
-	chainInfo, err := cli.queryChainInfo()
+	chainInfo, err := cli.getChainInfo()
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -407,7 +407,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	//fmt.Printf("contract_code: %x", ContractCodeVal)
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "deploycode")
 
-	trx := &coreapi.Transaction{
+	trx := &chain.Transaction{
 		Version:     1,
 		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
@@ -426,7 +426,7 @@ func (cli *CLI) deploycode(name string, path string) {
 
 	trx.Signature = sign
 
-	deployCodeRsp, err := cli.client.PushTrx(context.TODO(), trx)
+	deployCodeRsp, err := cli.client.SendTransaction(context.TODO(), trx)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -484,7 +484,7 @@ func checkAbi(abiRaw []byte) error {
 }
 
 func (cli *CLI) deployabi(name string, path string) {
-	chainInfo, err := cli.queryChainInfo()
+	chainInfo, err := cli.getChainInfo()
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -536,7 +536,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	abi.Setmapval(mapstruct, "contract_abi", ContractAbi)
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi2, "bottos", "deployabi")
 
-	trx1 := &coreapi.Transaction{
+	trx1 := &chain.Transaction{
 		Version:     1,
 		CursorNum:   chainInfo.HeadBlockNum,
 		CursorLabel: chainInfo.CursorLabel,
@@ -555,7 +555,7 @@ func (cli *CLI) deployabi(name string, path string) {
 
 	trx1.Signature = sign
 
-	deployAbiRsp, err := cli.client.PushTrx(context.TODO(), trx1)
+	deployAbiRsp, err := cli.client.SendTransaction(context.TODO(), trx1)
 	if err != nil {
 		fmt.Println(err)
 		return

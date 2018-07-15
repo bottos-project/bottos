@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package discover
 
 import (
@@ -13,6 +38,13 @@ import (
 	"time"
 )
 
+//DO NOT EDIT
+const (
+	TIME_FAST_PNE_EXCHANGE = 8
+	//TIME_PNE_EXCHANGE time to exchange peer neighbor info, minute
+	TIME_PNE_EXCHANGE = 30
+)
+
 type pne struct {
 	qPeers *common.Queue
 	lock   sync.RWMutex
@@ -21,12 +53,6 @@ type pne struct {
 
 	seeds []p2p.PeerInfo
 }
-
-const (
-	TIME_FAST_PNE_EXCHANGE = 8
-	//TIME_PNE_EXCHANGE time to exchange peer neighbor info, minute
-	TIME_PNE_EXCHANGE = 60
-)
 
 func makePne(config *config.Parameter) *pne {
 
@@ -65,18 +91,19 @@ func (p *pne) parseSeeds(config *config.Parameter) {
 		peer.Addr = addr
 		peer.Port = port
 		peers = append(peers, peer)
+		log.Debugf("protocol parseSeeds: %s:%s", addr, port)
 		p.n.addNeighbor(peers)
 	}
 }
 
 func (p *pne) pneTimer() {
-	log.Debug("pneTimer")
+	log.Debug("protocol pneTimer")
 
 	tripple := 0
 	exchange := time.NewTimer(TIME_FAST_PNE_EXCHANGE * time.Second)
 
 	defer func() {
-		log.Debug("pneTimer stop")
+		log.Debug("protocol pneTimer stop")
 		exchange.Stop()
 	}()
 
@@ -84,14 +111,14 @@ func (p *pne) pneTimer() {
 		select {
 		case <-exchange.C:
 			if tripple < 3 {
-				log.Debugf("pneTimer send pne request")
+				log.Debugf("protocol pneTimer send pne request")
 				p.sendPneRequest(0)
 				tripple++
 				exchange.Reset(TIME_FAST_PNE_EXCHANGE * time.Second)
 			} else {
 				index := p.nextPeer()
 				if index != 0 {
-					log.Debugf("pneTimer peer index: %d", index)
+					log.Debugf("protocol pneTimer peer index: %d", index)
 					p.sendPneRequest(index)
 				}
 				exchange.Reset(TIME_PNE_EXCHANGE * time.Second)
@@ -161,7 +188,7 @@ func (p *pne) sendPneResponse(index uint16) {
 
 	data, err := json.Marshal(resp)
 	if err != nil {
-		log.Errorf("addrs Marshal error:%s", err)
+		log.Errorf("protocol pne response addrs Marshal error:%s", err)
 		return
 	}
 
@@ -201,7 +228,7 @@ func (p *pne) processPneNeighborRsp(index uint16, date []byte) {
 	var rsp PeerNeighborRsp
 	err := json.Unmarshal(date, &rsp)
 	if err != nil {
-		log.Errorf("ProcessPneNeighborRsp Unmarshal error")
+		log.Errorf("protocol ProcessPneNeighborRsp Unmarshal error")
 		return
 	}
 

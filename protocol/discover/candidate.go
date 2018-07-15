@@ -1,3 +1,28 @@
+// Copyright 2017~2022 The Bottos Authors
+// This file is part of the Bottos Chain library.
+// Created by Rocket Core Team of Bottos.
+
+//This program is free software: you can distribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+// along with bottos.  If not, see <http://www.gnu.org/licenses/>.
+
+/*
+ * file description:  producer actor
+ * @Author: eripi
+ * @Date:   2017-12-06
+ * @Last Modified by:
+ * @Last Modified time:
+ */
+
 package discover
 
 import (
@@ -12,6 +37,7 @@ import (
 	"time"
 )
 
+//DO NOT EDIT
 const (
 	//TIME_PEER_INFO_EXCHANGE get peer info timer,  second
 	TIMER_PEER_EXCHANGE = 5
@@ -199,9 +225,9 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 		candi.peer.Info.Port != rsp.Info.Port {
 		log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
 		return
-	} else {
-		candi.peer.Info = rsp.Info
 	}
+
+	candi.peer.Info = rsp.Info
 	candi.peer.State = p2p.PEER_STATE_HANDSHAKE
 
 	c.sendHandshakeReq(candi)
@@ -257,12 +283,12 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 		}
 	}
 
-	//send response ack
-	c.sendHandshakeRspAck(candi)
-
 	//add peer
 	err := p2p.Runner.AddPeer(candi.peer)
 	if err == nil {
+		//send response ack
+		c.sendHandshakeRspAck(candi)
+
 		c.p.pushPeerIndex(candi.peer.Index)
 		c.k.initCounter(candi.peer.Index)
 	} else {
@@ -362,7 +388,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 }
 
 func (c *candidates) sendHandshakeReq(candi *candidate) {
-	//hold bigger peer send hand shake
+	//bigger peer send hand shake
 	if p2p.LocalPeerInfo.Bigger(candi.peer.Info) < 1 {
 		log.Debugf("sendHandshakeReq local is small")
 		return
