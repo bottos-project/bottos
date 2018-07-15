@@ -351,3 +351,68 @@ func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (
 
 	return mapResult
 }
+
+var a  *ABI
+
+func GetAbi() *ABI {
+	if a != nil {
+		return a
+	}
+	
+	a = CreateNativeContractABI()
+	
+	return a
+}
+
+func CreateNativeContractABI() *ABI {
+
+	a = &ABI{}
+	a.Actions = append(a.Actions, ABIAction{ActionName: "newaccount", Type: "NewAccount"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "transfer", Type: "Transfer"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "setdelegate", Type: "SetDelegate"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "grantcredit", Type: "GrantCredit"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "cancelcredit", Type: "CancelCredit"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "transferfrom", Type: "TransferFrom"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "deploycode", Type: "DeployCode"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "deployabi", Type: "DeployABI"})
+
+	s := ABIStruct{Name: "NewAccount", Fields: New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("pubkey", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "Transfer", Fields: New()}
+	s.Fields.Set("from", "string")
+	s.Fields.Set("to", "string")
+	s.Fields.Set("value", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "SetDelegate", Fields: New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("pubkey", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "GrantCredit", Fields: New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("spender", "string")
+	s.Fields.Set("limit", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "CancelCredit", Fields: New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("spender", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "TransferFrom", Fields: New()}
+	s.Fields.Set("from", "string")
+	s.Fields.Set("to", "string")
+	s.Fields.Set("value", "uint64")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "DeployCode", Fields: New()}
+	s.Fields.Set("contract", "string")
+	s.Fields.Set("vm_type", "uint8")
+	s.Fields.Set("vm_version", "uint8")
+	s.Fields.Set("contract_code", "bytes")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "DeployABI", Fields: New()}
+	s.Fields.Set("contract", "string")
+	s.Fields.Set("contract_abi", "bytes")
+	a.Structs = append(a.Structs, s)
+
+	return a
+}

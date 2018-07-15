@@ -73,13 +73,12 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 
 	// construct trxs
 	var i int
+	Abi := abi.GetAbi()
+	
 	for i = 0; i < len(config.Genesis.InitDelegates); i++ {
 		name := config.Genesis.InitDelegates[i].Name
-
+		
 		// 1, new account trx
-
-		Abi := GetAbi()
-
 		mapstruct := make(map[string]interface{})
 		abi.Setmapval(mapstruct, "name", name)
 		abi.Setmapval(mapstruct, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
@@ -133,66 +132,6 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 	return trxs, nil
 }
 
-var a  *abi.ABI
-
-func GetAbi() *abi.ABI {
-	return a
-}
-
-func createNativeContractABI() *abi.ABI {
-
-	a = &abi.ABI{}
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "newaccount", Type: "NewAccount"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "transfer", Type: "Transfer"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "setdelegate", Type: "SetDelegate"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "grantcredit", Type: "GrantCredit"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "cancelcredit", Type: "CancelCredit"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "transferfrom", Type: "TransferFrom"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "deploycode", Type: "DeployCode"})
-	a.Actions = append(a.Actions, abi.ABIAction{ActionName: "deployabi", Type: "DeployABI"})
-
-	s := abi.ABIStruct{Name: "NewAccount", Fields: abi.New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("pubkey", "string")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "Transfer", Fields: abi.New()}
-	s.Fields.Set("from", "string")
-	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "SetDelegate", Fields: abi.New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("pubkey", "string")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "GrantCredit", Fields: abi.New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("spender", "string")
-	s.Fields.Set("limit", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "CancelCredit", Fields: abi.New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("spender", "string")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "TransferFrom", Fields: abi.New()}
-	s.Fields.Set("from", "string")
-	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "DeployCode", Fields: abi.New()}
-	s.Fields.Set("contract", "string")
-	s.Fields.Set("vm_type", "uint8")
-	s.Fields.Set("vm_version", "uint8")
-	s.Fields.Set("contract_code", "bytes")
-	a.Structs = append(a.Structs, s)
-	s = abi.ABIStruct{Name: "DeployABI", Fields: abi.New()}
-	s.Fields.Set("contract", "string")
-	s.Fields.Set("contract_abi", "bytes")
-	a.Structs = append(a.Structs, s)
-
-	role.AbiAttr = a
-	return a
-}
-
 //CreateNativeContractAccount is to create native contract account
 func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// account
@@ -202,7 +141,7 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	}
 
 	pubkey, _ := common.HexToBytes(config.Param.KeyPairs[0].PublicKey)
-	a := createNativeContractABI()
+	a := abi.CreateNativeContractABI()
 	abijson, _ := abi.AbiToJson(a)
 	bto := &role.Account{
 		AccountName: config.BOTTOS_CONTRACT_NAME,

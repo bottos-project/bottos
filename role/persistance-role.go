@@ -41,8 +41,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var AbiAttr *abi.ABI
-
 // AccountInfo is definition of account
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
@@ -126,7 +124,7 @@ func ParseParam(r *Role, Param []byte, Contract string, Method string) (interfac
 			return nil, errors.New("External Abi is empty!")
 		}
 	} else {
-		Abi = GetAbi()
+		Abi = abi.GetAbi()
 	}
 
 	if Abi == nil {
@@ -250,7 +248,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		return err
 	}
 	
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 
 	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
@@ -358,10 +356,6 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 // StartRetroBlock is to do: start retro block when core start
 func StartRetroBlock(ldb *db.DBService) {
 
-}
-
-func GetAbi() *abi.ABI {
-	return AbiAttr
 }
 
 //GetAbi function

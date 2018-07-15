@@ -36,7 +36,7 @@ import (
 )
 
 func newAccount(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	newaccount := abi.UnmarshalAbiEx("bottos", Abi, "newaccount", ctx.Trx.Param)
 	if newaccount == nil || len(newaccount) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -83,7 +83,7 @@ func newAccount(ctx *Context) ContractError {
 }
 
 func transfer(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -133,7 +133,7 @@ func transfer(ctx *Context) ContractError {
 }
 
 func setDelegate(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "setdelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -179,7 +179,7 @@ func setDelegate(ctx *Context) ContractError {
 }
 
 func grantCredit(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "grantcredit", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -230,7 +230,7 @@ func grantCredit(ctx *Context) ContractError {
 }
 
 func cancelCredit(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "cancelcredit", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -264,7 +264,7 @@ func cancelCredit(ctx *Context) ContractError {
 }
 
 func transferFrom(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -349,7 +349,7 @@ func checkCode(code []byte) error {
 }
 
 func deployCode(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
@@ -393,7 +393,7 @@ func checkAbi(abiRaw []byte) error {
 }
 
 func deployAbi(ctx *Context) ContractError {
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deployabi", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return ERROR_CONT_PARAM_PARSE_ERROR
