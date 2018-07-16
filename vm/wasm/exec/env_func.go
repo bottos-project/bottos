@@ -580,7 +580,7 @@ func memcpy(vm *VM) (bool, error) {
 func strcat_s(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
 	if len(params) != 3 {
-		return false, errors.New("*ERROR* Invalid parameter count when call strcat !!!")
+		return false, errors.New("*ERROR* Invalid parameter count when call strcat_s !!!")
 	}
 
 	dst      := int(params[0])
@@ -592,9 +592,8 @@ func strcat_s(vm *VM) (bool, error) {
 	dstPoint  := dst      + dstLen
 	remindLen := totalLen - dstLen
 
-	if remindLen < srcLen {
+	if remindLen < srcLen + 1 {
 		if vm.envFunc.envFuncRtn {
-			fmt.Println("VM::strcat_s unnormal !!!")
 			vm.pushUint32(uint32(1))
 		}
 
@@ -602,8 +601,8 @@ func strcat_s(vm *VM) (bool, error) {
 	}
 
 	copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
+	vm.memory[dstPoint + srcLen] = 0
 	if vm.envFunc.envFuncRtn {
-		fmt.Println("VM::strcat_s normal !!!")
 		vm.pushUint32(uint32(0))
 	}
 
@@ -611,6 +610,34 @@ func strcat_s(vm *VM) (bool, error) {
 }
 
 func strcpy_s(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call strcpy_s !!!")
+	}
+
+	dst      := int(params[0])
+	totalLen := int(params[1])
+	src      := int(params[2])
+
+	//dstLen    := vm.StrLen(dst)
+	srcLen    := vm.StrLen(src)
+
+	if totalLen < srcLen + 1 {
+		fmt.Println("VM::strcpy_s")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint32(uint32(1))
+		}
+
+		return true, nil
+	}
+
+	copy(vm.memory[dst:dst + srcLen],vm.memory[src:src + srcLen])
+	vm.memory[dst + srcLen] = 0
+
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint32(uint32(0))
+	}
+
 	return true, nil
 }
 
