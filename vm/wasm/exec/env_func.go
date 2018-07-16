@@ -587,24 +587,24 @@ func strcat_s(vm *VM) (bool, error) {
 	totalLen := int(params[1])
 	src      := int(params[2])
 
-	srcPoint  := src
 	dstLen    := vm.StrLen(dst)
 	srcLen    := vm.StrLen(src)
-	dstPoint  := dst + dstLen
+	dstPoint  := dst      + dstLen
 	remindLen := totalLen - dstLen
 
 	if remindLen < srcLen {
 		if vm.envFunc.envFuncRtn {
 			fmt.Println("VM::strcat_s unnormal !!!")
-			vm.pushInt32(int32(11))
+			vm.pushUint32(uint32(1))
 		}
-		return false, errors.New("*ERROR* Invalid parameter when call strcat !!!")
+
+		return true, nil
 	}
 
-	copy(vm.memory[dstPoint:dstPoint+srcLen],vm.memory[srcPoint:srcPoint+srcLen])
+	copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
 	if vm.envFunc.envFuncRtn {
 		fmt.Println("VM::strcat_s normal !!!")
-		vm.pushInt32(int32(0))
+		vm.pushUint32(uint32(0))
 	}
 
 	return true, nil
