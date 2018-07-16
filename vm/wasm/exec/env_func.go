@@ -70,7 +70,8 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("getSender",        getSender)
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
-	envFunc.Register("strcat",           strcat)
+	envFunc.Register("strcat_s",         strcat_s)
+	envFunc.Register("strcpy_s",         strcpy_s)
 	envFunc.Register("isAccountExist",   isAccountExist)
 
 	return &envFunc
@@ -289,10 +290,10 @@ func setBinValue(vm *VM) (bool, error) {
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valuePos := int(params[4])
-	valueLen := int(params[5])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
+	valuePos  := int(params[4])
+	valueLen  := int(params[5])
 
 	// length check
 
@@ -493,15 +494,15 @@ func getCtxName(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < ctxNameLen+1 {
+	if len < ctxNameLen + 1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
 	}
 
-	copy(vm.memory[pos:pos+len], []byte(ctxName))
-	vm.memory[pos+len] = 0
+	copy(vm.memory[pos:pos+ctxNameLen], []byte(ctxName))
+	vm.memory[pos+ctxNameLen] = 0
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(ctxNameLen))
 	}
@@ -576,45 +577,40 @@ func memcpy(vm *VM) (bool, error) {
 }
 
 
-func strcat(vm *VM) (bool, error) {
+func strcat_s(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
-	if len(params) != 2 {
-		return false, errors.New("*ERROR* Invalid parameter count when call strcat")
+	if len(params) != 3 {
+		return false, errors.New("*ERROR* Invalid parameter count when call strcat !!!")
 	}
 
 	dst      := int(params[0])
-	src      := int(params[1])
-	srcPoint := src
-	dstPoint := vm.StrLen(dst) + dst
-	/*
-	len , err := vm.getDataLen(dst);
-	if err == nil {
-		fmt.Println("VM::strcat len: ",len,",srcPoint-src: ",srcPoint-src)
-		if len < ( srcPoint - src ) {
-			if vm.envFunc.envFuncRtn {
-				vm.pushUint64(uint64(0))
-			}
-			fmt.Println("*ERROR* Invalid length count when call strcat")
-			return false, errors.New("*ERROR* Invalid length count when call strcat")
+	totalLen := int(params[1])
+	src      := int(params[2])
+
+	srcPoint  := src
+	dstLen    := vm.StrLen(dst)
+	srcLen    := vm.StrLen(src)
+	dstPoint  := dst + dstLen
+	remindLen := totalLen - dstLen
+
+	if remindLen < srcLen {
+		if vm.envFunc.envFuncRtn {
+			fmt.Println("VM::strcat_s unnormal !!!")
+			vm.pushInt32(int32(11))
 		}
+		return false, errors.New("*ERROR* Invalid parameter when call strcat !!!")
 	}
-	*/
 
-	for {
-		if vm.memory[srcPoint] == 0 {
-			break
-		}
-
-		vm.memory[dstPoint] = vm.memory[srcPoint]
-		dstPoint++
-		srcPoint++
-	}
-	vm.memory[dstPoint] = 0
-
+	copy(vm.memory[dstPoint:dstPoint+srcLen],vm.memory[srcPoint:srcPoint+srcLen])
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(dst))
+		fmt.Println("VM::strcat_s normal !!!")
+		vm.pushInt32(int32(0))
 	}
 
+	return true, nil
+}
+
+func strcpy_s(vm *VM) (bool, error) {
 	return true, nil
 }
 
