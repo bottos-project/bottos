@@ -322,7 +322,7 @@ func (vm *VM) StorageData(data interface{}) (int, error) {
 func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 
 	if size <= 0 || vm.memory == nil {
-		return 0, errors.New("*ERROR* Memory had't been initial or data is empty !!!")
+		return 0, errors.New("*ERROR* Memory had't been initial or data is empty during executing getStoragePos !!!")
 	}
 
 	if vm.memPos+size > len(vm.memory) {
@@ -346,4 +346,22 @@ func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
 	copy(vm.memory[index:index+len(b)], b)
 
 	return index, nil
+}
+
+func (vm *VM) registerMemory(pos int , size int, t Type) (int, error) {
+	if pos <= 0 || size < 0 {
+		return 0, errors.New("*ERROR* Memory had't been initial or data is empty during executing registerMemory !!!")
+	}
+
+	vm.memType[uint64(pos)] = &typeInfo{Type: t, Len: size}
+	return pos, nil
+}
+
+func (vm *VM) getDataLen(pos int) (int, error) {
+	ti , ok := vm.memType[uint64(pos)]
+	if !ok {
+		return 0 , errors.New("*ERROR* Hadn't found the data from the memory !!!")
+	}
+
+	return ti.Len , nil
 }

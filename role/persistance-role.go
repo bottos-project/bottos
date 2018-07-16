@@ -37,12 +37,9 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	abi "github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/contract/msgpack"
 	"github.com/bottos-project/bottos/db"
 	"gopkg.in/mgo.v2/bson"
 )
-
-var AbiAttr *abi.ABI
 
 // AccountInfo is definition of account
 type AccountInfo struct {
@@ -89,237 +86,12 @@ type TxInfo struct {
 	CreateTime    time.Time              `bson:"create_time"`
 }
 
-/**======Internal Contract struct definition====*/
-
-// transferparam is interface definition of transfer method
-type transferparam struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Value uint64 `json:"value"`
-}
-
-// newaccountparam is interface definition of new account method
-type newaccountparam struct {
-	Name   string `json:"name"`
-	Pubkey string `json:"pubkey"`
-}
-
-// SetDelegateParam is interface definition of new set delegate method
-type SetDelegateParam struct {
-	Name   string `json:"name"`
-	Pubkey string `json:"pubkey"`
-}
-
-// GrantCreditParam is interface definition of grant credit method
-type GrantCreditParam struct {
-	Name    string `json:"name"`
-	Spender string `json:"spender"`
-	Limit   uint64 `json:"limit"`
-}
-
-// CancelCreditParam is interface definition of cancel credit method
-type CancelCreditParam struct {
-	Name    string `json:"name"`
-	Spender string `json:"spender"`
-}
-
-// TransferFromParam is interface definition of transfer from method
-type TransferFromParam struct {
-	From      string `json:"from"`
-	To        string `json:"to"`
-	TokenType string `json:"tokenType"`
-	Value     uint64 `json:"value"`
-}
-
 // TParam is interface definition
 type TParam interface {
 	//Accountparam
 	//Transferparam transferpa
 	//Reguser       reguser{}
 	//DeployCodeParam
-}
-
-// DeployCodeParam is interface definition of deploy code method
-type DeployCodeParam struct {
-	Name         string `json:"contract"`
-	VMType       byte   `json:"vm_type"`
-	VMVersion    byte   `json:"vm_version"`
-	ContractCode []byte `json:"contract_code"`
-}
-
-// DeployAbiParam is interface definition of deploy code method
-type DeployAbiParam struct {
-	Name        string `json:"contract"`
-	ContractAbi []byte `json:"contract_abi"`
-}
-
-// mgo_DeployCodeParam is interface definition of mgo deploy code
-type mgoDeployCodeParam struct {
-	Name         string `json:"contract"`
-	VMType       byte   `json:"vm_type"`
-	VMVersion    byte   `json:"vm_version"`
-	ContractCode string `json:"contract_code"`
-}
-
-type mgoDeployAbiParam struct {
-	Name        string `json:"contract"`
-	ContractAbi string `json:"contract_abi"`
-}
-
-/**======External Contract struct definition====*/
-
-// AssetInfo is definition of asset info
-type AssetInfo struct {
-	UserName    string `json:"username"`
-	AssetName   string `json:"assetname"`
-	AssetType   uint64 `json:"assettype"`
-	FeatureTag  string `json:"featuretag"`
-	SampleHash  string `json:"samplehash"`
-	StorageHash string `json:"storagehash"`
-	ExpireTime  uint32 `json:"expiretime"`
-	OpType      uint32 `json:"optype"`
-	TokenType   string `json:"tokenType"`
-	Price       uint64 `json:"price"`
-	Description string `json:"description"`
-}
-
-// RegAssetReq is definition of
-type RegAssetReq struct {
-	AssetId string `json:"assedid"`
-	Info    AssetInfo
-}
-
-// reguser is definition of reg user
-type reguser struct {
-	Didid   string `json:"didid"`
-	Didinfo string `json:"didinfo"`
-}
-
-// UserLogin is definition of user login
-type UserLogin struct {
-	UserName  string `json:"username"`
-	RandomNum uint32 `json:"randomnum"`
-}
-
-// DataDealnfo is definition of data deal info
-type DataDealnfo struct {
-	UserName string `json:"username"`
-	AssetId  string `json:"assetid"`
-}
-
-// DataDealReq is definition of
-type DataDealReq struct {
-	DataExchangeId string `json:"dataexchangeid"`
-	Info           DataDealnfo
-}
-
-// PresaleInfo is definition of pre sale info
-type PresaleInfo struct {
-	UserName  string `json:"username"`
-	AssetId   string `json:"assetid"`
-	DataReqId string `json:"datareqid"`
-	Consumer  string `json:"consumer"`
-	OpType    uint32 `json:"optype"`
-}
-
-// PresaleReq is definition of pre sale req
-type PresaleReq struct {
-	DataPresaleId string `json:"datapresaleid"`
-	Info          PresaleInfo
-}
-
-// DataFileInfo is definition of data file info
-type DataFileInfo struct {
-	UserName   string `json:"username"`
-	FileSize   uint64 `json:"filesize"`
-	FileName   string `json:"filename"`
-	FilePolicy string `json:"filepolicy"`
-	FileNumber uint64 `json:"filenumber"`
-	Simorass   uint32 `json:"simorass"`
-	OpType     uint32 `json:"optype"`
-	StoreAddr  string `json:"storeaddr"`
-}
-
-// DataFileRegReq is definition of data file req reg
-type DataFileRegReq struct {
-	FileHash string `json:"filehash"`
-	Info     DataFileInfo
-}
-
-// AuthBasicInfo is definition of auth basic info
-type AuthBasicInfo struct {
-	AuthType string `json:"authType"`
-	AuthPath string `json:"authpath"`
-}
-
-// DataFileAuthInfo is definition of data file auth info
-type DataFileAuthInfo struct {
-	HashUserName string `json:"hashusername"`
-	Info         AuthBasicInfo
-}
-
-// DataFileAuthReq is definition of data file auth req
-type DataFileAuthReq struct {
-	StorgeHash string `json:"storagehash"`
-	UserName   string `json:"username"`
-}
-
-// DataReqInfo is definition of data req info
-type DataReqInfo struct {
-	UserName    string `json:"username"`
-	ReqName     string `json:"reqname"`
-	ReqType     uint64 `json:"reqtype"`
-	FeatureTag  uint64 `json:"featuretag"`
-	SampleHash  string `json:"samplehash"`
-	ExpireTime  uint64 `json:"expiretime"`
-	OpType      uint32 `json:"optype"`
-	TokenType   string `json:"tokenType"`
-	Price       uint64 `json:"price"`
-	FavoriFlag  uint32 `json:"favoriflag"`
-	Description string `json:"description"`
-}
-
-// RegDataReqReq is definition of reg data req reg
-type RegDataReqReq struct {
-	DataReqId string `json:"datareqid"`
-	Info      DataReqInfo
-}
-
-// GoodsProReq is definition of goods req
-type GoodsProReq struct {
-	UserName  string `json:"username"`
-	OpType    uint32 `json:"optype"`
-	GoodsType string `json:"goodstype"`
-	GoodsId   string `json:"goodsid"`
-}
-
-// NodeClusterReg is definition for node cluster reg
-type NodeClusterReg struct {
-	NodeIP    string `bson:"seedip" json:"nodeIP"`
-	ClusterIP string `bson:"slaveiplist" json:"clusterIP"`
-	NodeUUID  string `bson:"nodeuuid" json:"uuid"`
-	StorageCapacity string `bson:"capacity" json:"capacity"`
-}
-
-// NodeBaseInfo is definition for node base info
-type NodeBaseInfo struct {
-	NodeIp      string `json:"nodeip"`
-	NodePort    string `json:"nodeport"`
-	NodeAddress string `json:"nodeaddress"`
-}
-
-// NodeInfoReq is definition for node info req
-type NodeInfoReq struct {
-	NodeId string `json:"nodeid"`
-	Info   NodeBaseInfo
-}
-
-//TransferDTOStruct defination
-type TransferDTOStruct struct {
-   From      string
-   To        string
-   TokenType string
-   Value     uint64
 }
 
 func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
@@ -343,153 +115,26 @@ func getMyPublicIPaddr() (string, error) {
 
 // ParseParam is to parase param by method
 func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
-	var decodedParam interface{}
 	var Abi *abi.ABI = nil
-	if Contract == "bottos" {
-		if Method == "newaccount" {
-			decodedParam = &newaccountparam{}
-		} else if Method == "setdelegate" {
-			decodedParam = &SetDelegateParam{}
-		} else if Method == "transfer" {
-			decodedParam = &transferparam{}
-		} else if Method == "deploycode" {
-			decodedParam = &DeployCodeParam{}
-		} else if Method == "grantcredit" {
-			decodedParam = &GrantCreditParam{}
-		} else if Method == "cancelcredit" {
-			decodedParam = &CancelCreditParam{}
-		} else if Method == "transferfrom" {
-			decodedParam = &TransferFromParam{}
-		} else if Method == "deployabi" {
-			decodedParam = &DeployAbiParam{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract, ", Method: ", Method)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "usermng" {
-		if Method == "reguser" {
-			decodedParam = &reguser{}
-		} else if Method == "userlogin" {
-			decodedParam = &UserLogin{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "assetmng" {
-		if Method == "assetreg" {
-			decodedParam = &RegAssetReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datadealmng" {
-		if Method == "buydata" {
-			decodedParam = &DataDealReq{}
-		} else if Method == "presale" {
-			decodedParam = &PresaleReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datafilemng" {
-		if Method == "datafilereg" {
-			decodedParam = &DataFileRegReq{}
-		} else if Method == "fileauthreg" {
-			decodedParam = &DataFileAuthReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "datareqmng" {
-		if Method == "datareqreg" {
-			decodedParam = &RegDataReqReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "favoritemng" {
-		if Method == "favoritepro" {
-			decodedParam = &GoodsProReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "nodeclustermng" {
-		if Method == "reg" {
-			decodedParam = &NodeClusterReg{}
-			var err error
-			Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
-			if err != nil {
-				return nil, errors.New("Get Abi failed!")
-			}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "nodemng" {
-		if Method == "nodeinforeg" {
-			decodedParam = &NodeInfoReq{}
-		} else {
-			//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-			return nil, errors.New("Not supported")
-		}
-	} else if Contract == "bottoscontract"  {
-        	if Method == "transfer" {
-			decodedParam = &TransferDTOStruct{}
+
+	if Contract != "bottos" {
+		var err error
+		Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
+		if  err != nil {
+			return nil, errors.New("External Abi is empty!")
 		}
 	} else {
-		//log.Info("insertTxInfoRole:Not supported: Contract: ", Contract)
-		return nil, errors.New("Not supported")
+		Abi = abi.GetAbi()
 	}
-	
+
 	if Abi == nil {
-		Abi = GetAbi()
+		return nil, errors.New("Abi is empty!")
 	}
-	if Contract == "bottos" && Method == "deploycode" {
-		//p, ok := decodedParam.(DeployCodeParam)
 
-		var tmpval = &DeployCodeParam{}
-		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
-		if err != nil {
-			return nil, errors.New("ParseParam: UnmarshalAbi failed")
-		}
-		//if ok {
-		var mgoParam = mgoDeployCodeParam{}
-		mgoParam.Name = tmpval.Name
-		mgoParam.VMType = tmpval.VMType
-		mgoParam.VMVersion = tmpval.VMVersion
-		mgoParam.ContractCode = common.BytesToHex(tmpval.ContractCode)
-		return mgoParam, nil
-
-	} else if Contract == "bottos" && Method == "deployabi" {
-		var tmpval = &DeployAbiParam{}
-		err := abi.UnmarshalAbi(Contract, Abi, Method, Param, tmpval)
-		if err != nil {
-			return nil, errors.New("ParseParam: UnmarshalAbi failed")
-		}
-		
-		var mgoParam = mgoDeployAbiParam{}
-		mgoParam.Name = tmpval.Name
-		mgoParam.ContractAbi = common.BytesToHex(tmpval.ContractAbi)
-		return mgoParam, nil
-	}
-	
-	if(Contract != "bottos" && Contract != "nodeclustermng") {
-		
-		err := msgpack.Unmarshal(Param, decodedParam)
-
-		if err != nil {
-			log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
-			return nil, err
-		}
-		return decodedParam, nil
-	}
-	
-	err := abi.UnmarshalAbi(Contract, Abi, Method, Param, decodedParam)
-
-	if err != nil {
-		log.Error("insertTxInfoRole: FAILED: Contract: ", Contract, ", Method: ", Method)
-		return nil, err
+	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
+	if decodedParam == nil || len(decodedParam) <= 0 {
+		log.Error("insertTxInfoRole: FAILED (decodedParam is nil!): Contract: ", Contract, ", Method: ", Method)
+		return nil, errors.New("insertTxInfoRole: FAILED")
 	}
 	return decodedParam, nil
 }
@@ -603,7 +248,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		return err
 	}
 	
-	Abi := GetAbi()
+	Abi := abi.GetAbi()
 
 	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
@@ -623,14 +268,15 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 	if trx.Method == "transfer" {
 
-		data := &transferparam{}
-		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
-		if err != nil{
+		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 		}
 
-		FromAccountName := data.From
-		ToAccountName := data.To
+		FromAccountName := data["from"].(string)
+		ToAccountName := data["to"].(string)
+		DataVal := data["value"].(uint64)
+		
 		SrcBalanceInfo, err := GetBalanceOp(ldb, FromAccountName) //data.Value
 
 		if err != nil {
@@ -642,13 +288,13 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		if err != nil {
 			return err
 		}
-
-		if SrcBalanceInfo.Balance < data.Value {
+		
+		if SrcBalanceInfo.Balance < DataVal {
 			return err
 		}
 
-		SrcBalanceInfo.Balance -= data.Value
-		DstBalanceInfo.Balance += data.Value
+		SrcBalanceInfo.Balance -= DataVal
+		DstBalanceInfo.Balance += DataVal
 
 		err = SetBalanceOp(ldb, FromAccountName, SrcBalanceInfo.Balance)
 		if err != nil {
@@ -660,14 +306,15 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		}
 	} else if trx.Method == "newaccount" {
 
-		data := &newaccountparam{}
-		err := abi.UnmarshalAbi(trx.Contract, Abi, trx.Method, trx.Param, data)
-		if err != nil{
+		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
 		}
+		DataName   := data["name"].(string)
+		DataPubKey := data["pubkey"].(string)
 
-		mesgs, err := findAcountInfo(ldb, data.Name)
+		mesgs, err := findAcountInfo(ldb, DataName)
 		if mesgs != nil {
 			return nil /* Do not allow insert same account */
 		}
@@ -675,11 +322,11 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 		NewAccount := &AccountInfo{
 			ID:               oid,
-			AccountName:      data.Name,
+			AccountName:      DataName,
 			Balance:          0,  //uint32        `bson:"bto_balance"`
 			StakedBalance:    0,  //uint64        `bson:"staked_balance"`
 			UnstakingBalance: "", //             `bson:"unstaking_balance"`
-			PublicKey:        data.Pubkey,
+			PublicKey:        DataPubKey,
 			CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
 		}
@@ -709,10 +356,6 @@ func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error 
 // StartRetroBlock is to do: start retro block when core start
 func StartRetroBlock(ldb *db.DBService) {
 
-}
-
-func GetAbi() *abi.ABI {
-	return AbiAttr
 }
 
 //GetAbi function

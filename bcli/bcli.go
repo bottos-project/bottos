@@ -140,7 +140,7 @@ func (cli *CLI) transfer(from, to string, amount int) {
 	type TransferParam struct {
 		From   string `json:"from"`
 		To     string `json:"to"`
-		Amount uint64 `json:"amount"`
+		Amount uint64 `json:"value"`
 	}
 	var value uint64
 	value = uint64(amount) * uint64(100000000)
@@ -151,11 +151,15 @@ func (cli *CLI) transfer(from, to string, amount int) {
 	}
 
 	Abi, abierr := getAbibyContractName("bottos")
-	if abierr != nil {
-		return
-	}
+        if abierr != nil {
+           return
+        }
 
-	param, _ := abi.MarshalAbi(tp, &Abi, "bottos", "transfer")
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "from", from)
+	abi.Setmapval(mapstruct, "to", to)
+	abi.Setmapval(mapstruct, "value", value)
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "transfer")
 
 	trx := &chain.Transaction{
 		Version:     1,
@@ -276,13 +280,18 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		Name:   name,
 		Pubkey: pubkey,
 	}
-
-	Abi, abierr := getAbibyContractName("bottos")
-	if abierr != nil {
-		return
-	}
-
-	param, _ := abi.MarshalAbi(nps, &Abi, "bottos", "newaccount")
+	
+        Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+           return
+        }
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "name", name)
+        abi.Setmapval(mapstruct, "pubkey", pubkey)
+        
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "newaccount")
 
 	trx := &chain.Transaction{
 		Version:     1,
@@ -380,28 +389,23 @@ func (cli *CLI) deploycode(name string, path string) {
 		return
 	}
 
-	type DeployCodeParam struct {
-		Name         string `json:"contract"`
-		VMType       byte   `json:"vm_type"`
-		VMVersion    byte   `json:"vm_version"`
-		ContractCode []byte `json:"contract_code"`
-	}
-
-	dcp := &DeployCodeParam{
-		Name:      name,
-		VMType:    1,
-		VMVersion: 1,
-	}
-	dcp.ContractCode = make([]byte, fi.Size())
-	f.Read(dcp.ContractCode)
-	//fmt.Printf("Code %x", dcp.ContractCode)
-
 	Abi, abierr := getAbibyContractName("bottos")
-	if abierr != nil {
-		return
-	}
+        if abierr != nil {
+           return
+        }
 
-	param, _ := abi.MarshalAbi(dcp, &Abi, "bottos", "deploycode")
+	var ContractCodeVal []byte
+	ContractCodeVal = make([]byte, fi.Size())
+        f.Read(ContractCodeVal)
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "contract", name)
+        abi.Setmapval(mapstruct, "vm_type", uint8(1))
+        abi.Setmapval(mapstruct, "vm_version", uint8(1))
+	
+	abi.Setmapval(mapstruct, "contract_code", ContractCodeVal)
+	//fmt.Printf("contract_code: %x", ContractCodeVal)
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "deploycode")
 
 	trx := &chain.Transaction{
 		Version:     1,
@@ -445,12 +449,11 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	pdcp := &PrintDeployCodeParam{}
-	pdcp.Name = dcp.Name
-	pdcp.VMType = dcp.VMType
-	pdcp.VMVersion = dcp.VMVersion
-	codeHex := BytesToHex(dcp.ContractCode[0:100])
+	pdcp.Name = name 
+	pdcp.VMType = 1 
+	pdcp.VMVersion = 1
+	codeHex := BytesToHex(ContractCodeVal[0:100])
 	pdcp.ContractCode = codeHex + "..."
-	//pdcp.ContractCode = BytesToHex(dcp.ContractCode)
 
 	printTrx := Transaction{
 		Version:     trx.Version,
@@ -507,14 +510,6 @@ func (cli *CLI) deployabi(name string, path string) {
 		return
 	}
 
-	type DeployAbiParam struct {
-		Name        string `json:"contract"`
-		ContractAbi []byte `json:"contract_abi"`
-	}
-
-	dcp := &DeployAbiParam{
-		Name: name,
-	}
 	tempAbi := make([]byte, fi.Size())
 	f.Read(tempAbi)
 	Abi, err := abi.ParseAbi(tempAbi)
@@ -523,20 +518,23 @@ func (cli *CLI) deployabi(name string, path string) {
 		return
 	}
 
-	dcp.ContractAbi, err = json.Marshal(Abi)
-	if err != nil {
-		fmt.Printf("Abi Reformat Error: %v", Abi)
-		return
-	}
-
-	fmt.Printf("Abi Hex: %x, Str: %v", dcp.ContractAbi, string(dcp.ContractAbi))
-
 	Abi2, abierr2 := getAbibyContractName("bottos")
-	if abierr2 != nil {
-		return
-	}
-
-	param, _ := abi.MarshalAbi(dcp, &Abi2, "bottos", "deployabi")
+        if abierr2 != nil {
+           return
+        }
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "contract", name)
+	ContractAbi := make([]byte, fi.Size())
+	ContractAbi, err = json.Marshal(Abi)
+	if err != nil {
+                fmt.Printf("Abi Reformat Error: %v", Abi)
+                return
+        }
+        
+	abi.Setmapval(mapstruct, "contract_abi", ContractAbi)
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi2, "bottos", "deployabi")
 
 	trx1 := &chain.Transaction{
 		Version:     1,
