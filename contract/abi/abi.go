@@ -83,8 +83,18 @@ func ParseAbi(abiRaw []byte) (*ABI, error) {
 	if err != nil {
 		return &ABI{}, err
 	}
-
+	
+	for i := range abi.Structs {
+		var s ABIStruct
+		for k, v := range abis.Structs[i].Fields {
+			
+			s = ABIStruct{Name: abis.Structs[i].Name, Fields: New()}
+			s.Fields.Set(k, v)
+		}
+		abi.Structs = append(abi.Structs, s)
+	}
 	return abi, nil
+
 }
 
 //AbiToJson parse abi to json for contracts
@@ -175,7 +185,6 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 	msgpack.PackArraySize(w, uint16(count))
 
 		for _, abiValTypeAttr := range abiFields {
-			
 			abiValKey   := abiValTypeAttr.Key
 			abiValType := abiValTypeAttr.Value
 
@@ -325,7 +334,7 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 					Setmapval(mapResult, abiValKey, common.BytesToHex(val))
 					i++
 				default:
-					DecodeAbiEx(contractName, method, r, abi, abiValKey, &mapResult)
+					DecodeAbiEx(contractName, method, r, abi, abiValType, &mapResult)
 				}
 			i += 1
 		}
@@ -346,8 +355,8 @@ func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (
 	r := bytes.NewReader(data)
 	mapResult := DecodeAbiEx(contractName, method, r, abi, "", nil)
 	if mapResult == nil {
-		return nil
-	}
+               return nil
+        }
 
 	return mapResult
 }

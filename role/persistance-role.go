@@ -116,10 +116,9 @@ func getMyPublicIPaddr() (string, error) {
 // ParseParam is to parase param by method
 func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
 	var Abi *abi.ABI = nil
-
 	if Contract != "bottos" {
 		var err error
-		Abi, err = GetAbiForExternalContract(r, "nodeclustermng")
+		Abi, err = GetAbiForExternalContract(r, Contract)
 		if  err != nil {
 			return nil, errors.New("External Abi is empty!")
 		}
@@ -187,7 +186,6 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 	if ldb == nil || block == nil {
 		return errors.New("Error Invalid param")
 	}
-	//log.Info("insertBlockInfoRole: len(oids):", len(oids), ", len(block.Transactions):", len(block.Transactions), ", block.Header.MerkleRoot: ", block.Header.MerkleRoot, " | ", common.BytesToHex(block.Header.MerkleRoot) )
 
 	newBlockInfo := &BlockInfo{
 		bson.NewObjectId(),
@@ -216,8 +214,6 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 	// convert bson.M to struct
 	bsonBytes, _ := bson.Marshal(value)
 	bson.Unmarshal(bsonBytes, &value2)
-
-	//log.Info("GetBalanceOp: value2 is: ", value2, ", value2.Balance is: ", value2.Balance)
 
 	res := &Balance{
 		AccountName: accountName,
@@ -359,18 +355,32 @@ func StartRetroBlock(ldb *db.DBService) {
 }
 
 //GetAbi function
+var ExternalAbiMap map[string]interface{}
+
 func GetAbiForExternalContract(r *Role, contract string) (*abi.ABI, error) {
+	
+	if len(ExternalAbiMap) <= 0 {
+		ExternalAbiMap = make(map[string]interface{})
+	}
+	
+	if _, ok := ExternalAbiMap[contract]; ok {
+		return ExternalAbiMap[contract].(*abi.ABI), nil	
+	}
+	
 	account, err := r.GetAccount(contract)
 	if err != nil {
 		return nil, errors.New("Get account fail")
 	}
 
 	if len(account.ContractAbi) > 0 {
-
+		
 		Abi, err := abi.ParseAbi(account.ContractAbi)
 		if err != nil {
 			return nil, err
 		}
+		
+		ExternalAbiMap[contract] = Abi
+
 		return Abi, nil
 	}
 	

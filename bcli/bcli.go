@@ -512,29 +512,18 @@ func (cli *CLI) deployabi(name string, path string) {
 
 	tempAbi := make([]byte, fi.Size())
 	f.Read(tempAbi)
-	Abi, err := abi.ParseAbi(tempAbi)
-	if err != nil {
-		fmt.Printf("Abi Parse Error Hex: %x, Str: %v", tempAbi, string(tempAbi))
-		return
-	}
 
-	Abi2, abierr2 := getAbibyContractName("bottos")
-        if abierr2 != nil {
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
            return
         }
 	
 	mapstruct := make(map[string]interface{})
 	
         abi.Setmapval(mapstruct, "contract", name)
-	ContractAbi := make([]byte, fi.Size())
-	ContractAbi, err = json.Marshal(Abi)
-	if err != nil {
-                fmt.Printf("Abi Reformat Error: %v", Abi)
-                return
-        }
-        
-	abi.Setmapval(mapstruct, "contract_abi", ContractAbi)
-	param, _ := abi.MarshalAbiEx(mapstruct, &Abi2, "bottos", "deployabi")
+	abi.Setmapval(mapstruct, "contract_abi", tempAbi)
+	
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "deployabi")
 
 	trx1 := &chain.Transaction{
 		Version:     1,
