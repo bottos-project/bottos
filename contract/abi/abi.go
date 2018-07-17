@@ -34,6 +34,7 @@ import (
 	//log "github.com/cihub/seelog"
 	"io"
 	"reflect"
+	"strings"
 )
 
 //ABIAction abi Action(Method)
@@ -257,12 +258,14 @@ func MarshalAbiEx(v map[string]interface{}, Abi *ABI, contractName string, metho
 }
 
 //DecodeAbiEx is to encode message
-func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subStructName string, mapResultIn *map[string]interface{}) (map[string]interface{}) {
+func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subStructName string, subStructValueName string, mapResultIn *map[string]interface{}) (map[string]interface{}) {
 	var errs error
 	mapResult := make(map[string]interface{})
 	
-	if(mapResultIn != nil) {
+	if(mapResultIn != nil && len(subStructName) > 0) {
 		mapResult = *mapResultIn 
+		mapResult[subStructValueName] = make(map[string]interface{})
+		mapResult = mapResult[subStructValueName].(map[string]interface{})
 	}
 	
 	abiFieldsAttr := getAbiFieldsByAbiEx(contractName, method, abi, subStructName)
@@ -287,7 +290,7 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 	}
 	var i uint64 = 0
 	for _, abiValTypeAttr := range abiFields {
-			abiValKey   := abiValTypeAttr.Key
+			abiValKey   := strings.ToLower(abiValTypeAttr.Key)
 			abiValType := abiValTypeAttr.Value
 
 			switch abiValType {
@@ -334,7 +337,7 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 					Setmapval(mapResult, abiValKey, common.BytesToHex(val))
 					i++
 				default:
-					DecodeAbiEx(contractName, method, r, abi, abiValType, &mapResult)
+					DecodeAbiEx(contractName, method, r, abi, abiValType, abiValKey, &mapResult)
 				}
 			i += 1
 		}
@@ -353,7 +356,7 @@ func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (
 	abi = *Abi
 
 	r := bytes.NewReader(data)
-	mapResult := DecodeAbiEx(contractName, method, r, abi, "", nil)
+	mapResult := DecodeAbiEx(contractName, method, r, abi, "", "", nil)
 	if mapResult == nil {
                return nil
         }
