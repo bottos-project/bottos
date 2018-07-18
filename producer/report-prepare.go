@@ -32,7 +32,7 @@ import (
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/protocol"
+	"github.com/bottos-project/bottos/context"
 )
 
 //ReportState is recording the state of reporters
@@ -43,7 +43,7 @@ type ReportState struct {
 	IsReporting       bool
 	CheckFlag         uint32
 	ReportEnable      bool
-	ProtocolInterface protocol.ProtocolInterface
+	ProtocolInterface context.ProtocolInterface
 }
 
 //IsReady is check if repoter state
