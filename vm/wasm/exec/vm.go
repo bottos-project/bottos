@@ -116,7 +116,7 @@ var endianess = binary.LittleEndian
 func NewVM(module *wasm.Module) (*VM, error) {
 
 	var value interface{}
-	var err error
+	var err   error
 
 	var vm = &VM{
 		envFunc:  NewEnvFunc(),
@@ -130,7 +130,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 	}
 
 	if len(module.LinearMemoryIndexSpace) <= 0 {
-		return nil, errors.New("*ERROR* Invalid wasm module !!! ")
+		return nil, ERR_INVALID_WASM
 	}
 
 	if module.Memory != nil && len(module.Memory.Entries) != 0 {
@@ -149,7 +149,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 			index, ok := value.(int32)
 			if !ok {
-				return nil, errors.New("*ERROR* Failed to get data index from memory !!!")
+				return nil, ERR_DATA_INDEX
 			}
 
 			// if it contains multi-function(splited by '0')
@@ -169,7 +169,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 	}
 
 	vm.compiledFuncs = make([]compiledFunction, len(module.FunctionIndexSpace))
-	vm.globals = make([]uint64, len(module.GlobalIndexSpace))
+	vm.globals       = make([]uint64, len(module.GlobalIndexSpace))
 	vm.newFuncTable()
 	vm.module = module
 
@@ -336,14 +336,13 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 		return nil, ErrInvalidArgumentCount
 	}
 
-	compiled := vm.compiledFuncs[fnIndex]
-	vm.ctx.stack = make([]uint64, 0, compiled.maxDepth)
-	vm.ctx.locals = make([]uint64, compiled.totalLocalVars)
-	vm.ctx.pc = 0
-	vm.ctx.code = compiled.code
+	compiled      := vm.compiledFuncs[fnIndex]
+	vm.ctx.stack   = make([]uint64, 0, compiled.maxDepth)
+	vm.ctx.locals  = make([]uint64, compiled.totalLocalVars)
+	vm.ctx.pc      = 0
+	vm.ctx.code    = compiled.code
 	vm.ctx.curFunc = fnIndex
-	fmt.Println("VM::ExecCode compiled: ",compiled.code," , fnIndex: ",fnIndex)
-	//记录最外层参数
+
 	for i, arg := range args {
 		vm.ctx.locals[i] = arg
 	}
@@ -371,8 +370,10 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 
 func (vm *VM) execCode(compiled compiledFunction) uint64 {
 	if compiled.funcProp.EnvFunc == true {
-		fmt.Println("VM::execCode compiled.funcProp.Method: ",compiled.funcProp.Method)
-		vm.ExecEnvFunc(compiled)
+		err := vm.ExecEnvFunc(compiled)
+		if err != nil {
+			return uint64(VM_ERROR_FAIL_EXECUTE_ENVFUNC)
+		}
 	}
 outer:
 	for int(vm.ctx.pc) < len(vm.ctx.code) {
@@ -391,7 +392,7 @@ outer:
 				continue
 			}
 		case compile.OpJmpNz:
-			target := vm.fetchInt64()
+			target      := vm.fetchInt64()
 			preserveTop := vm.fetchBool()
 			discard := vm.fetchInt64()
 			if vm.popUint32() != 0 {
@@ -437,7 +438,7 @@ outer:
 			}
 
 		case compile.OpDiscardPreserveTop:
-			top := vm.ctx.stack[len(vm.ctx.stack)-1]
+			top   := vm.ctx.stack[len(vm.ctx.stack)-1]
 			place := vm.fetchInt64()
 			vm.ctx.stack = vm.ctx.stack[:len(vm.ctx.stack)-int(place)]
 			vm.pushUint64(top)
@@ -450,7 +451,7 @@ outer:
 		return vm.ctx.stack[len(vm.ctx.stack)-1]
 	}
 
-	return 0
+	return uint64(VM_NOERROR)
 }
 
 // GetMemory get memory
@@ -461,17 +462,17 @@ func (vm *VM) GetMemory() []byte {
 // GetFuncParams get param
 func (vm *VM) GetFuncParams() []uint64 {
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 
 	return params
 }
 
 // ExecEnvFunc exec function
 func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
-	fmt.Println("VM::ExecEnvFunc vm.ctx.locals: ",vm.ctx.locals)
+
 	vm.envFunc.envFuncParam = vm.ctx.locals
 	vm.envFunc.envFuncCtx   = vm.ctx
-	oldCtx := vm.ctx
+	oldCtx                 := vm.ctx
 
 	if compiled.returns {
 		vm.envFunc.envFuncRtn = true
@@ -481,7 +482,8 @@ func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 
 	fc, ok := vm.envFunc.envFuncMap[compiled.funcProp.Method] //get env function
 	if !ok {
-		return errors.New("*ERROR* Failed to search the method :" + compiled.funcProp.Method)
+		fmt.Println("*ERROR* Failed to search the method: " + compiled.funcProp.Method)
+		return ERR_FIND_VM_METHOD
 	}
 
 	_, err := fc(vm)
@@ -490,7 +492,8 @@ func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 		if compiled.returns {
 			vm.pushUint64(0)
 		}
-		return errors.New("*ERROR* Failed to call the method :" + compiled.funcProp.Method)
+
+		return ERR_CALL_ENV_METHOD
 	}
 
 	return nil
@@ -507,7 +510,7 @@ func (vm *VM) GetMsgBytes() ([]byte, error) {
 func (vm *VM) SetContract(contract *contract.Context) error {
 
 	if contract == nil {
-		return errors.New("*ERROR* Empty parameter !!!")
+		return ERR_EMPTY_INVALID_PARAM
 	}
 
 	vm.contract = contract
