@@ -78,6 +78,10 @@ func handleSystemMsg(context actor.Context) bool {
 		log.Info("TrxActor received restart msg")
 	case *actor.Restarting:
 		log.Info("TrxActor received restarting msg")
+	case *actor.Stop:
+		log.Info("TrxActor received Stop msg")
+	case *actor.Stopped:
+		log.Info("TrxActor received Stopped msg")
 	default:
 		return false
 	}
@@ -110,6 +114,6 @@ func (t *TrxActor) Receive(context actor.Context) {
 		trxPool.RemoveTransactions(msg.Trxs)
 
 	default:
-		log.Info("trx actor: Unknown msg")
+		log.Error("trx actor: Unknown msg")
 	}
 }

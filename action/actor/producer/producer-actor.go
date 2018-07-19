@@ -64,7 +64,7 @@ func NewProducerActor(env *env.ActorEnv) *actor.PID {
 	return pid
 }
 
-func (p *ProducerActor) handleSystemMsg(context actor.Context) {
+func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
@@ -83,14 +83,28 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) {
 
 	case *actor.Restarting:
 		log.Info("ProducerActor received restarting msg")
+
+	case *actor.Stop:
+		log.Info("ProducerActor received Stop msg")
+
+	case *actor.Stopped:
+		log.Info("ProducerActor received Stopped msg")
+
+	default:
+		return false
 	}
 
+	return true
 }
 
 // Receive is to receive and handle message
 func (p *ProducerActor) Receive(context actor.Context) {
 
-	p.handleSystemMsg(context)
+	if p.handleSystemMsg(context) {
+		return
+	}
+
+	log.Error("ProducerActor received Unknown msg")
 }
 
 func (p *ProducerActor) working() {

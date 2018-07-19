@@ -57,7 +57,7 @@ func NewApiActor() *actor.PID {
 	}
 }
 
-func handleSystemMsg(context actor.Context) {
+func handleSystemMsg(context actor.Context) bool {
 
 	switch context.Message().(type) {
 	case *actor.Started:
@@ -68,10 +68,22 @@ func handleSystemMsg(context actor.Context) {
 		log.Info("ApiActor received restart msg")
 	case *actor.Restarting:
 		log.Info("ApiActor received restarting msg")
+	case *actor.Stop:
+		log.Info("ApiActor received Stop msg")
+	case *actor.Stopped:
+		log.Info("ApiActor received Stopped msg")
+	default :
+		return false
 	}
+
+	return true
 }
 
 //Receive process msg
 func (apiActor *ApiActor) Receive(context actor.Context) {
-	handleSystemMsg(context)
+	if handleSystemMsg(context) {
+		return
+	}
+
+	log.Error("ApiActor received Unknown msg")
 }

@@ -67,7 +67,8 @@ func GetTrxApplyService() *TrxApplyService {
 // CheckTransactionLifeTime is to check life time of a transaction
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
 
-	curTime := trxApplyService.core.HeadBlockTime()
+	chainState, _ := trxApplyService.roleIntf.GetChainState()
+	curTime := chainState.LastBlockTime
 
 	if curTime >= trx.Lifetime {
 		log.Error("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "have past, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())

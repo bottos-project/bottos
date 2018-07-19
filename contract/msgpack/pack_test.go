@@ -514,13 +514,11 @@ func TestCreateTokenStruct(t *testing.T) {
 	type TestStruct struct {
 		V1 string		
 		V2 uint64
-		V3 string
 	}
 
 	ts := TestStruct{
 		V1: "DTO",		
-		V2: 1000000000,
-		V3: "bottoscontract",
+		V2: 100000000000000000,
 	}
 	fmt.Println("TestCreateTokenStruct...")
 	b, err := Marshal(ts)
@@ -545,8 +543,8 @@ func TestIssueTokenStruct(t *testing.T) {
 
 	ts := TestStruct{
 		V1: "DTO",
-		V2: "bottoscontract",
-		V3: 1000000000,
+		V2: "testfrom",
+		V3: 100000000000000000,
 	}
 	fmt.Println("TestIssueTokenStruct...")
 	b, err := Marshal(ts)
@@ -571,12 +569,64 @@ func TestTransferTokenStruct(t *testing.T) {
 	}
 
 	ts := TestStruct{
-		V1: "bottoscontract",
-		V2: "saletest",
+		V1: "testfrom",
+		V2: "testto",
 		V3: "DTO",
-		V4: 1000000000,
+		V4:  1,
 	}
 	fmt.Println("TestTransferTokenStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}
+
+
+
+func TestTransferCreditStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 string
+		V3 string
+		V4 uint64
+	}
+
+	ts := TestStruct{
+		V1: "testfrom",
+		V2: "datadealmng",
+		V3: "DTO",
+		V4: 100,
+	}
+	fmt.Println("TestTransferCreditStruct...")
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Println("ts1 ", ts1)
+	fmt.Println(err)
+}
+
+func TestDeleteCreditStruct(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 string
+		V3 string
+	}
+
+	ts := TestStruct{
+		V1: "testfrom",
+		V2: "datadealmng",
+		V3: "DTO",
+	}
+	fmt.Println("TestDeleteCreditStruct...")
 	b, err := Marshal(ts)
 
 	fmt.Printf("%v\n", BytesToHex(b))
