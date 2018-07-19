@@ -181,7 +181,7 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 			return true, bottosErr.ErrNoError, nil
 		}
 
-		log.Error("process trx, failed bottos error: ", bottosErr.ErrNoError)
+		log.Error("process trx, failed bottos error: ", bottoserr)
 		return false, bottoserr, nil
 
 	}
