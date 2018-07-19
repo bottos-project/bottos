@@ -32,12 +32,13 @@ import (
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/context"
 	netprotocol "github.com/bottos-project/bottos/protocol"
 )
 
 type NetActor struct {
 	actorEnv *env.ActorEnv
-	protocol netprotocol.ProtocolInstance
+	protocol context.ProtocolInstance
 }
 
 var netactor *NetActor

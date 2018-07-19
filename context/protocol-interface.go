@@ -23,7 +23,7 @@
  * @Last Modified time:
  */
 
-package protocol
+package context
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"

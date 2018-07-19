@@ -6,6 +6,7 @@ import (
 	"github.com/bottos-project/bottos/bcli/p2p/stub"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/protocol"
 	log "github.com/cihub/seelog"
 	"io/ioutil"
@@ -68,7 +69,7 @@ func main() {
 	select {}
 }
 
-func newBlockTimer(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
+func newBlockTimer(bc *stub.BlockChainStub, p context.ProtocolInstance) {
 	time.Sleep(1 * time.Minute)
 
 	blockTimer := time.NewTimer(3 * time.Second)
@@ -82,7 +83,7 @@ func newBlockTimer(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
 	}
 }
 
-func newBlock(bc *stub.BlockChainStub, p protocol.ProtocolInstance) {
+func newBlock(bc *stub.BlockChainStub, p context.ProtocolInstance) {
 	if p.GetBlockSyncState() {
 		msg := bc.NewBlockMsg()
 		p.ProcessNewBlock(msg)

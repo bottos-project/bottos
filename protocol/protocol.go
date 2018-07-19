@@ -30,6 +30,7 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/p2p"
 	"github.com/bottos-project/bottos/protocol/block"
 	"github.com/bottos-project/bottos/protocol/common"
@@ -47,7 +48,7 @@ type protocol struct {
 	c *consensus.Consensus
 }
 
-func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) ProtocolInstance {
+func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) context.ProtocolInstance {
 	runner := p2p.MakeP2PServer(config)
 
 	p := &protocol{
