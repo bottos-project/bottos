@@ -88,7 +88,6 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 	for {
 		select {
 		case <-expire.C:
-			trxPool.mu.Lock()
 
 			var currentTime = common.Now()
 			for trxHash := range trxPool.pending {
@@ -97,8 +96,6 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 					trxPool.RemoveSingleTransactionbyHash(trxHash)
 				}
 			}
-
-			trxPool.mu.Unlock()
 
 		case <-trxPool.quit:
 			return
