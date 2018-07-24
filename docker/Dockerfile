@@ -27,14 +27,13 @@ RUN git clone https://github.com/bottos-project/crypto-go.git
 #go构建可执行文件
 WORKDIR $GOPATH/src/github.com/bottos-project/bottos
 RUN go build .
-
-ADD ./docker/botNode.sh /go/bin
-RUN chmod +x /go/bin/botNode.sh
+ 
+RUN chmod +x ./docker/botNode.sh
 
 #暴露端口
 EXPOSE 53/udp 8300 8301 8301/udp 8302 8302/udp 8400 8500 8080
 VOLUME /go/src/github.com/bottos-project/bottos/datadir
 #最终运行docker的命令
-WORKDIR $GOPATH/bin/
+WORKDIR $GOPATH/src/github.com/bottos-project/bottos/docker/
 ENTRYPOINT  ["./botNode.sh"]
 CMD ["start"]
