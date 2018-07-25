@@ -90,7 +90,7 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 	exit := make(chan bool, 0)
 
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGKILL)
 
 	go func() {
 		for sig := range sigc {
