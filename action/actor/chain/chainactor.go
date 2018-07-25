@@ -79,7 +79,7 @@ func NewChainActor(env *env.ActorEnv) *actor.PID {
 	}
 }
 
-func handleSystemMsg(context actor.Context) {
+func handleSystemMsg(context actor.Context) bool {
 
 	switch context.Message().(type) {
 	case *actor.Started:
@@ -90,13 +90,23 @@ func handleSystemMsg(context actor.Context) {
 		log.Info("BlockActor received restart msg")
 	case *actor.Restarting:
 		log.Info("BlockActor received restarting msg")
+	case *actor.Stop:
+		log.Info("BlockActor received Stop msg")
+	case *actor.Stopped:
+		log.Info("BlockActor received Stopped msg")
+	default:
+		return false
 	}
+
+	return true
 }
 
 //Receive process chain msg
 func (c *ChainActor) Receive(context actor.Context) {
 
-	handleSystemMsg(context)
+	if handleSystemMsg(context) {
+		return
+	}
 
 	switch msg := context.Message().(type) {
 	case *message.InsertBlockReq:
@@ -109,6 +119,8 @@ func (c *ChainActor) Receive(context actor.Context) {
 		c.HandleQueryBlockReq(context, msg)
 	case *message.QueryChainInfoReq:
 		c.HandleQueryChainInfoReq(context, msg)
+	default:
+		log.Error("BlockActor received Unknown msg")
 	}
 }
 

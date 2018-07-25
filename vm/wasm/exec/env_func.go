@@ -30,7 +30,6 @@
 package exec
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"github.com/bottos-project/bottos/common/types"
@@ -70,7 +69,8 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("getSender",        getSender)
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
-	envFunc.Register("strcat",           strcat)
+	envFunc.Register("strcat_s",         strcat_s)
+	envFunc.Register("strcpy_s",         strcpy_s)
 	envFunc.Register("isAccountExist",   isAccountExist)
 
 	return &envFunc
@@ -94,7 +94,7 @@ func getStrValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params  := envFunc.envFuncParam
 	if len(params) != 8 {
-		return false, errors.New("parameter count error while call getStrValue")
+		return false, ERR_PARAM_COUNT
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
@@ -109,7 +109,6 @@ func getStrValue(vm *VM) (bool, error) {
 	contract := make([]byte, contractLen)
 	object   := make([]byte, objectLen)
 	key      := make([]byte, keyLen)
-
 	copy(contract, vm.memory[contractPos:contractPos+contractLen])
 	copy(object,   vm.memory[objectPos:objectPos+objectLen])
 	copy(key,      vm.memory[keyPos:keyPos+keyLen])
@@ -147,7 +146,7 @@ func setStrValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 6 {
-		return false, errors.New("parameter count error while call setStrValue")
+		return false, ERR_PARAM_COUNT
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -159,12 +158,10 @@ func setStrValue(vm *VM) (bool, error) {
 	// length check
 
 	object := make([]byte, objectLen)
+	key    := make([]byte, keyLen)
+	value  := make([]byte, valueLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
-
-	value := make([]byte, valueLen)
 	copy(value, vm.memory[valuePos:valuePos+valueLen])
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
@@ -193,7 +190,7 @@ func removeStrValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 4 {
-		return false, errors.New("parameter count error while call removeStrValue")
+		return false, ERR_PARAM_COUNT
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
@@ -201,12 +198,10 @@ func removeStrValue(vm *VM) (bool, error) {
 	keyLen    := int(params[3])
 
 	// length check
-
 	object := make([]byte, objectLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
+	key    := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(object, vm.memory[objectPos:objectPos+objectLen])
 
 	log.Infof(string(object), len(object), string(key), len(key))
 	err := contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
@@ -232,7 +227,7 @@ func getBinValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 8 {
-		return false, errors.New("parameter count error while call getStrValue")
+		return false, ERR_PARAM_COUNT
 	}
 	contractPos := int(params[0])
 	contractLen := int(params[1])
@@ -285,24 +280,21 @@ func setBinValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 6 {
-		return false, errors.New("parameter count error while call setBinValue")
+		return false, ERR_PARAM_COUNT
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
-	valuePos := int(params[4])
-	valueLen := int(params[5])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
+	valuePos  := int(params[4])
+	valueLen  := int(params[5])
 
 	// length check
-
 	object := make([]byte, objectLen)
+	key    := make([]byte, keyLen)
+	value  := make([]byte, valueLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
-
-	value := make([]byte, valueLen)
 	copy(value, vm.memory[valuePos:valuePos+valueLen])
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
@@ -331,19 +323,17 @@ func removeBinValue(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params := envFunc.envFuncParam
 	if len(params) != 4 {
-		return false, errors.New("parameter count error while call removeBinValue")
+		return false, ERR_PARAM_COUNT
 	}
 	objectPos := int(params[0])
 	objectLen := int(params[1])
-	keyPos := int(params[2])
-	keyLen := int(params[3])
+	keyPos    := int(params[2])
+	keyLen    := int(params[3])
 
 	// length check
-
 	object := make([]byte, objectLen)
+	key    := make([]byte, keyLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
-
-	key := make([]byte, keyLen)
 	copy(key, vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(object), len(object), string(key), len(key))
@@ -404,15 +394,15 @@ func getParam(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
 	params  := envFunc.envFuncParam
 	if len(params) != 2 {
-		return false, errors.New("parameter count error while call memcpy")
+		return false, ERR_PARAM_COUNT
 	}
 
-	bufPos := int(params[0])
-	bufLen := int(params[1])
+	bufPos   := int(params[0])
+	bufLen   := int(params[1])
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
-		return false, errors.New("buffer not enough")
+		return false, ERR_OUT_BOUNDS
 	}
 
 	copy(vm.memory[int(bufPos):int(bufPos)+paramLen], contractCtx.Trx.Param)
@@ -431,7 +421,7 @@ func callTrx(vm *VM) (bool, error) {
 	params := envFunc.envFuncParam
 
 	if len(params) != 4 {
-		return false, errors.New("*ERROR* Parameter count error while call memcpy")
+		return false, ERR_PARAM_COUNT
 	}
 
 	cPos := int(params[0])
@@ -467,7 +457,7 @@ func callTrx(vm *VM) (bool, error) {
 	vm.subTrxLst = append(vm.subTrxLst, trx)
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint32(uint32(0))
+		vm.pushUint32(uint32(VM_NOERROR))
 	}
 
 	return true, nil
@@ -475,11 +465,12 @@ func callTrx(vm *VM) (bool, error) {
 
 func assert(vm *VM) (bool, error) {
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 
 	cond := int(params[0])
 	if cond != 1 {
 		errStr := "*ERROR* Failed to execute contract code !!!"
+		log.Infof(errStr)
 		panic(errStr)
 	}
 
@@ -493,15 +484,15 @@ func getCtxName(vm *VM) (bool, error) {
 
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
-	if len < ctxNameLen+1 {
+	if len < ctxNameLen + 1 {
 		log.Infof("*ERROR* Invaild string length \n")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
 	}
 
-	copy(vm.memory[pos:pos+len], []byte(ctxName))
-	vm.memory[pos+len] = 0
+	copy(vm.memory[pos:pos+ctxNameLen], []byte(ctxName))
+	vm.memory[pos+ctxNameLen] = 0
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(ctxNameLen))
 	}
@@ -535,8 +526,10 @@ func getSender(vm *VM) (bool, error) {
 func memset(vm *VM) (bool, error) {
 	params  := vm.envFunc.envFuncParam
 	if len(params) != 3 {
-		return false, errors.New("*ERROR* Invalid parameter count when call memset !!!")
+		fmt.Println("*ERROR* Invalid parameter count when call memset !!!")
+		return false, ERR_PARAM_COUNT
 	}
+
 	pos     := int(vm.envFunc.envFuncParam[0])
 	element := int(vm.envFunc.envFuncParam[1])
 	count   := int(vm.envFunc.envFuncParam[2])
@@ -557,14 +550,15 @@ func memset(vm *VM) (bool, error) {
 func memcpy(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
 	if len(params) != 3 {
-		return false, errors.New("*ERROR* Invalid parameter count when call memcpy")
+		return false, ERR_PARAM_COUNT
 	}
+
 	dst := int(params[0])
 	src := int(params[1])
 	len := int(params[2])
 
 	if dst < src && dst + len > src {
-		return false, errors.New("*ERROR* memcpy overlapped")
+		return false, ERR_OUT_BOUNDS
 	}
 
 	copy(vm.memory[dst:dst+len], vm.memory[src:src+len])
@@ -576,43 +570,63 @@ func memcpy(vm *VM) (bool, error) {
 }
 
 
-func strcat(vm *VM) (bool, error) {
+func strcat_s(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
-	if len(params) != 2 {
-		return false, errors.New("*ERROR* Invalid parameter count when call strcat")
+	if len(params) != 3 {
+		return false, ERR_PARAM_COUNT
 	}
 
 	dst      := int(params[0])
-	src      := int(params[1])
-	srcPoint := src
-	dstPoint := vm.StrLen(dst) + dst
-	/*
-	len , err := vm.getDataLen(dst);
-	if err == nil {
-		fmt.Println("VM::strcat len: ",len,",srcPoint-src: ",srcPoint-src)
-		if len < ( srcPoint - src ) {
-			if vm.envFunc.envFuncRtn {
-				vm.pushUint64(uint64(0))
-			}
-			fmt.Println("*ERROR* Invalid length count when call strcat")
-			return false, errors.New("*ERROR* Invalid length count when call strcat")
-		}
-	}
-	*/
+	totalLen := int(params[1])
+	src      := int(params[2])
 
-	for {
-		if vm.memory[srcPoint] == 0 {
-			break
+	dstLen    := vm.StrLen(dst)
+	srcLen    := vm.StrLen(src)
+	dstPoint  := dst      + dstLen
+	remindLen := totalLen - dstLen
+
+	if remindLen < srcLen + 1 {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint32(uint32(VM_ERROR_OUT_OF_MEMORY))
 		}
 
-		vm.memory[dstPoint] = vm.memory[srcPoint]
-		dstPoint++
-		srcPoint++
+		return true, nil
 	}
-	vm.memory[dstPoint] = 0
+
+	copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
+	vm.memory[dstPoint + srcLen] = 0
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint32(uint32(VM_NOERROR))
+	}
+
+	return true, nil
+}
+
+func strcpy_s(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 3 {
+		return false, ERR_PARAM_COUNT
+	}
+
+	dst      := int(params[0])
+	totalLen := int(params[1])
+	src      := int(params[2])
+
+	srcLen    := vm.StrLen(src)
+
+	if totalLen < srcLen + 1 {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint32(uint32(VM_ERROR_OUT_OF_MEMORY))
+		}
+
+		return true, nil
+	}
+
+	copy(vm.memory[dst:dst + srcLen],vm.memory[src:src + srcLen])
+	vm.memory[dst + srcLen] = 0
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(dst))
+		vm.pushUint32(uint32(VM_NOERROR))
 	}
 
 	return true, nil
@@ -621,7 +635,7 @@ func strcat(vm *VM) (bool, error) {
 func getMethod(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
 	if len(params) != 2 {
-		return false, errors.New("*ERROR* Invalid parameter count when call getMathod")
+		return false, ERR_PARAM_COUNT
 	}
 
 	pos    := int(params[0])
@@ -630,7 +644,7 @@ func getMethod(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	methodLen   := len(contractCtx.Trx.Method)
 	if methodLen > length {
-		return false, errors.New("*ERROR* Invalid length when call getMathod")
+		return false, ERR_OUT_BOUNDS
 	}
 
 	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
@@ -645,7 +659,7 @@ func getMethod(vm *VM) (bool, error) {
 func isAccountExist(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
 	if len(params) != 1 {
-		return false, errors.New("*ERROR* Invalid parameter count when call isAccountExist")
+		return false, ERR_PARAM_COUNT
 	}
 
 	contractCtx := vm.GetContract()

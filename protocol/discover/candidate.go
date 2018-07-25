@@ -284,6 +284,7 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 	}
 
 	//add peer
+	bReturnIndex := false
 	err := p2p.Runner.AddPeer(candi.peer)
 	if err == nil {
 		//send response ack
@@ -293,10 +294,11 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 		c.k.initCounter(candi.peer.Index)
 	} else {
 		candi.peer.Stop()
+		bReturnIndex = true
 	}
 
 	/*remove from canidata*/
-	c.deleteCandidate(ec, false)
+	c.deleteCandidate(ec, bReturnIndex)
 
 }
 
@@ -324,16 +326,18 @@ func (c *candidates) processHandshakeRspAck(index uint16, date []byte) {
 	}
 
 	//add peer
+	bReturnIndex := false
 	err := p2p.Runner.AddPeer(candi.peer)
 	if err == nil {
 		c.p.pushPeerIndex(candi.peer.Index)
 		c.k.initCounter(candi.peer.Index)
 	} else {
 		candi.peer.Stop()
+		bReturnIndex = true
 	}
 
 	/*remove from canidata*/
-	c.deleteCandidate(ec, false)
+	c.deleteCandidate(ec, bReturnIndex)
 }
 
 func (c *candidates) getCandidate(index uint16) *list.Element {

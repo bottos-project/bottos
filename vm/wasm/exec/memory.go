@@ -273,16 +273,16 @@ func (vm *VM) growMemory() {
 func (vm *VM) GetData(pos uint64) ([]byte, error) {
 
 	if pos < 0 || pos == uint64(math.MaxInt64) {
-		return nil, errors.New("*EORROR* Invalid parameter , position is out of memory !!! ")
+		return nil, ERR_OUT_BOUNDS
 	}
 
 	t, ok := vm.memType[pos] //map[uint64]*typeInfo
 	if !ok {
-		return nil, errors.New("*EORROR* Invalid parameter , the specified type can't be found by the parameter !!! ")
+		return nil, ERR_FINE_MAP
 	}
 
 	if int(pos)+t.Len > len(vm.memory) {
-		return nil, errors.New("*EORROR* Invalid parameter , position is out of memory !!!")
+		return nil, ERR_OUT_BOUNDS
 	}
 
 	return vm.memory[int(pos) : int(pos)+t.Len], nil
@@ -292,7 +292,7 @@ func (vm *VM) GetData(pos uint64) ([]byte, error) {
 func (vm *VM) StorageData(data interface{}) (int, error) {
 
 	if data == nil {
-		return 0, errors.New("*ERROR* Parameter is empty !!! ")
+		return 0, ERR_EMPTY_INVALID_PARAM
 	}
 
 	switch reflect.TypeOf(data).Kind() {
@@ -312,21 +312,21 @@ func (vm *VM) StorageData(data interface{}) (int, error) {
 			return vm.storageMemory(byteArray, Int32)
 
 		default:
-			return 0, errors.New("*ERROR* Parameter's type can't be supported !!! ")
+			return 0, ERR_UNSUPPORT_TYPE
 		}
 	default:
-		return 0, errors.New("*ERROR* Parameter's type can't be supported !!! ")
+		return 0, ERR_UNSUPPORT_TYPE
 	}
 }
 
 func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 
 	if size <= 0 || vm.memory == nil {
-		return 0, errors.New("*ERROR* Memory had't been initial or data is empty !!!")
+		return 0, ERR_EMPTY_INVALID_PARAM
 	}
 
 	if vm.memPos+size > len(vm.memory) {
-		return 0, errors.New("*ERROR* data size is out of the memory's limit !!!")
+		return 0, ERR_OUT_BOUNDS
 	}
 
 	newpos := vm.memPos + 1
@@ -340,10 +340,29 @@ func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
 	index, err := vm.getStoragePos(len(b), t) //get new pos after storage new data
 	if err != nil {
-		return 0, errors.New("*ERROR* Failed to get the position of data !!!")
+		return 0, ERR_GET_STORE_POS
 	}
 
 	copy(vm.memory[index:index+len(b)], b)
 
 	return index, nil
+}
+
+func (vm *VM) registerMemory(pos int , size int, t Type) (int, error) {
+
+	if pos <= 0 || size < 0 {
+		return 0, ERR_EMPTY_INVALID_PARAM
+	}
+
+	vm.memType[uint64(pos)] = &typeInfo{Type: t, Len: size}
+	return pos, nil
+}
+
+func (vm *VM) getDataLen(pos int) (int, error) {
+	ti , ok := vm.memType[uint64(pos)]
+	if !ok {
+		return 0 , ERR_FINE_MAP
+	}
+
+	return ti.Len , nil
 }

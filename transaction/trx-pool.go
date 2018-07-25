@@ -88,17 +88,14 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 	for {
 		select {
 		case <-expire.C:
-			trxPool.mu.Lock()
 
 			var currentTime = common.Now()
 			for trxHash := range trxPool.pending {
 				if currentTime >= (trxPool.pending[trxHash].Lifetime) {
 					log.Info("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", trxPool.pending[trxHash].Lifetime)
-					delete(trxPool.pending, trxHash)
+					trxPool.RemoveSingleTransactionbyHash(trxHash)
 				}
 			}
-
-			trxPool.mu.Unlock()
 
 		case <-trxPool.quit:
 			return
@@ -190,6 +187,10 @@ func (trxPool *TrxPool) GetAllPendingTransactions(context actor.Context) {
 
 // RemoveTransactions is interface to remove trxs in trx pool
 func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
+
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
 	for _, trx := range trxs {
 		delete(trxPool.pending, trx.Hash())
 	}
@@ -197,7 +198,21 @@ func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 
 // RemoveSingleTransaction is interface to remove single trx in trx pool
 func (trxPool *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
+	
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
 	delete(trxPool.pending, trx.Hash())
+}
+
+
+// RemoveSingleTransactionbyHash is interface to remove single trx in trx pool
+func (trxPool *TrxPool) RemoveSingleTransactionbyHash(trxHash common.Hash) {
+
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
+	delete(trxPool.pending, trxHash)
 }
 
 func (trxPool *TrxPool) getPubKey(accountName string) ([]byte, error) {
