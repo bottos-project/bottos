@@ -103,14 +103,14 @@ func (p *protocol) SetTrxActor(tpid *actor.PID) {
 	p.t.SetActor(tpid)
 }
 
-func (p *protocol) SetProducerActor(tpid *actor.PID) {
+func (p *protocol) SetConsensusActor(tpid *actor.PID) {
 	p.c.SetActor(tpid)
 }
 
-func (p *protocol) ProcessNewTrx(notify *message.NotifyTrx) {
+func (p *protocol) SendNewTrx(notify *message.NotifyTrx) {
 	p.t.SendNewTrx(notify)
 }
 
-func (p *protocol) ProcessNewBlock(notify *message.NotifyBlock) {
+func (p *protocol) SendNewBlock(notify *message.NotifyBlock) {
 	p.b.SendNewBlock(notify)
 }

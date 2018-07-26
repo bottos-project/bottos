@@ -86,7 +86,7 @@ func newBlockTimer(bc *stub.BlockChainStub, p context.ProtocolInstance) {
 func newBlock(bc *stub.BlockChainStub, p context.ProtocolInstance) {
 	if p.GetBlockSyncState() {
 		msg := bc.NewBlockMsg()
-		p.ProcessNewBlock(msg)
+		p.SendNewBlock(msg)
 	}
 }
 

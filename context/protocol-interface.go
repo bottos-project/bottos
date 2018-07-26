@@ -35,10 +35,10 @@ type ProtocolInstance interface {
 	Start()
 	SetChainActor(tpid *actor.PID)
 	SetTrxActor(tpid *actor.PID)
-	SetProducerActor(tpid *actor.PID)
+	SetConsensusActor(tpid *actor.PID)
 
-	ProcessNewTrx(notify *message.NotifyTrx)
-	ProcessNewBlock(notify *message.NotifyBlock)
+	SendNewTrx(notify *message.NotifyTrx)
+	SendNewBlock(notify *message.NotifyBlock)
 }
 
 type ProtocolInterface interface {

@@ -26,8 +26,12 @@
 package consensus
 
 import (
+	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
+	log "github.com/cihub/seelog"
 )
 
 type Consensus struct {
@@ -43,13 +47,77 @@ func (c *Consensus) SetActor(tid *actor.PID) {
 }
 
 func (c *Consensus) Dispatch(index uint16, p *p2p.Packet) {
+	switch p.H.PacketType {
+	case BlockStateMsg:
+		c.processBlockStateMsg(index, p.Data)
+	case HeadStateMsg:
+		c.processHeadStateMsg(index, p.Data)
+	}
+}
+
+func (c *Consensus) SendBlockStateMsg(block *types.ConsensusBlockState) {
+	buf, err := json.Marshal(block)
+	if err != nil {
+		log.Errorf("protocol block send marshal error")
+		return
+	}
+
+	head := p2p.Head{ProtocolType: pcommon.CONSENSUS_PACKET,
+		PacketType: BlockStateMsg,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: nil,
+		P: packet}
+	p2p.Runner.SendBroadcast(msg)
 
 }
 
-func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
+func (c *Consensus) SendHeadStateMsg(header *types.ConsensusHeaderState) {
+	buf, err := json.Marshal(header)
+	if err != nil {
+		log.Errorf("protocol block send marshal error")
+		return
+	}
 
+	head := p2p.Head{ProtocolType: pcommon.CONSENSUS_PACKET,
+		PacketType: HeadStateMsg,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: nil,
+		P: packet}
+	p2p.Runner.SendBroadcast(msg)
 }
 
 func (c *Consensus) Start() {
 
+}
+
+func (c *Consensus) processBlockStateMsg(index uint16, data []byte) {
+	var block types.ConsensusBlockState
+	err := json.Unmarshal(data, &block)
+	if err != nil {
+		log.Errorf("protocol consensus block Unmarshal error:%s", err)
+		return
+	}
+
+	c.actor.Tell(&block)
+}
+
+func (c *Consensus) processHeadStateMsg(index uint16, data []byte) {
+	var head types.ConsensusHeaderState
+	err := json.Unmarshal(data, &head)
+	if err != nil {
+		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		return
+	}
+
+	c.actor.Tell(&head)
 }
