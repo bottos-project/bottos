@@ -192,7 +192,7 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	}
 
 	if req.Begin > req.End ||
-		req.End-req.Begin >= SYNC_BLOCK_BUNDLE {
+		req.End-req.Begin >= SYNC_BLOCK_BUNDLE_MAX {
 		log.Errorf("protocol processBlockHeaderReq wrong lenght")
 		return
 	}
