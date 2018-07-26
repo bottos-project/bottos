@@ -58,7 +58,7 @@ const (
 
 	TIMER_HEADER_UPDATE_CHECK = 1
 
-	SYNC_BLOCK_BUNDLE = 10
+	SYNC_BLOCK_BUNDLE = 28
 )
 
 //DO NOT EDIT
@@ -319,7 +319,7 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 		return
 	}
 
-	log.Infof("protocol sync process block: %d", update.block.Header.Number)
+	log.Infof("protocol sync process block: %d, index: %d", update.block.Header.Number, update.index)
 
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		if s.set.headers[i] != nil &&
@@ -631,6 +631,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 			msg := p2p.UniMsgPacket{Index: info.index,
 				P: packet}
 
+			log.Debugf("protocol sendBlockHeaderReq index: %d", info.index)
 			p2p.Runner.SendUnicast(msg)
 			break
 		}
@@ -695,7 +696,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32, ptype uint16) {
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
-	log.Debugf("protocol sendBlockReq block %d, type: %d", number, ptype)
+	log.Debugf("protocol sendBlockReq block %d, type: %d, index: %d", number, ptype, index)
 	p2p.Runner.SendUnicast(msg)
 }
 

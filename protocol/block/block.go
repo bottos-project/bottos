@@ -217,9 +217,11 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 	var rsp blockHeaderRsp
 	err := json.Unmarshal(data, &rsp.set)
 	if err != nil {
-		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockHeaderRsp Unmarshal error:%s", err)
 		return
 	}
+
+	log.Debugf("protocol processBlockHeaderRsp index: %d", index)
 
 	b.s.set.syncheaderc <- &rsp
 }
