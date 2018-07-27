@@ -133,14 +133,15 @@ func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 }
 
 func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
-	buf, err := json.Marshal(data)
-	if err != nil {
-		log.Errorf("protocol block send marshal error")
-	}
-
 	last := chainNumber{LibNumber: b.chainIf.LastConsensusBlockNum(),
 		BlockNumber: b.chainIf.HeadBlockNum()}
 	b.s.updatec <- last
+
+	buf, err := json.Marshal(data)
+	if err != nil {
+		log.Errorf("protocol block send marshal error")
+		return
+	}
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
 		PacketType: BLOCK_UPDATE,
@@ -191,7 +192,7 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	}
 
 	if req.Begin > req.End ||
-		req.End-req.Begin >= SYNC_BLOCK_BUNDLE {
+		req.End-req.Begin >= SYNC_BLOCK_BUNDLE_MAX {
 		log.Errorf("protocol processBlockHeaderReq wrong lenght")
 		return
 	}
@@ -216,8 +217,11 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 	var rsp blockHeaderRsp
 	err := json.Unmarshal(data, &rsp.set)
 	if err != nil {
-		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
+		log.Errorf("protocol processBlockHeaderRsp Unmarshal error:%s", err)
+		return
 	}
+
+	log.Debugf("protocol processBlockHeaderRsp index: %d", index)
 
 	b.s.set.syncheaderc <- &rsp
 }
@@ -255,6 +259,7 @@ func (b *Block) processBlockInfo(index uint16, data []byte) {
 	err := json.Unmarshal(data, &block)
 	if err != nil {
 		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
+		return
 	}
 
 	update := &blockUpdate{index: index, block: &block}
@@ -267,6 +272,7 @@ func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 	err := json.Unmarshal(data, &block)
 	if err != nil {
 		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
+		return
 	}
 
 	update := blockUpdate{index: index, block: &block}
@@ -316,6 +322,7 @@ func (b *Block) processBlockHeaderUpdate(index uint16, data []byte) {
 	err := json.Unmarshal(data, &header)
 	if err != nil {
 		log.Errorf("protocol processBlockHeaderUpdate Unmarshal error:%s", err)
+		return
 	}
 
 	update := headerUpdate{index: index, header: &header}

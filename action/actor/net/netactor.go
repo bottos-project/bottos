@@ -83,10 +83,10 @@ func (n *NetActor) handleSystemMsg(context actor.Context) {
 		log.Info("NetActor received restarting msg")
 
 	case *message.NotifyTrx:
-		n.protocol.ProcessNewTrx(msg)
+		n.protocol.SendNewTrx(msg)
 
 	case *message.NotifyBlock:
-		n.protocol.ProcessNewBlock(msg)
+		n.protocol.SendNewBlock(msg)
 
 	default:
 		log.Error("netactor receive unknown message")
@@ -106,8 +106,8 @@ func (n *NetActor) setTrxActor(tpid *actor.PID) {
 	n.protocol.SetTrxActor(tpid)
 }
 
-func (n *NetActor) setProducerActor(tpid *actor.PID) {
-	n.protocol.SetTrxActor(tpid)
+func (n *NetActor) setConsensusActor(tpid *actor.PID) {
+	n.protocol.SetConsensusActor(tpid)
 }
 
 func SetChainActorPid(tpid *actor.PID) {
@@ -118,6 +118,6 @@ func SetTrxActorPid(tpid *actor.PID) {
 	netactor.setTrxActor(tpid)
 }
 
-func SetProducerActorPid(tpid *actor.PID) {
-	netactor.setProducerActor(tpid)
+func SetConsensusActorPid(tpid *actor.PID) {
+	netactor.setConsensusActor(tpid)
 }

@@ -31,6 +31,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
@@ -57,7 +58,8 @@ const (
 
 	TIMER_HEADER_UPDATE_CHECK = 1
 
-	SYNC_BLOCK_BUNDLE = 10
+	SYNC_BLOCK_BUNDLE     = 10
+	SYNC_BLOCK_BUNDLE_MAX = 100
 )
 
 //DO NOT EDIT
@@ -197,6 +199,10 @@ func (s *synchronizes) checkRoutine() {
 		case number := <-s.updatec:
 			s.updateLocalLib(number.LibNumber)
 			s.updateLocalNumber(number.BlockNumber)
+			if s.state == STATE_SYNCING {
+				log.Debugf("protocol local lib update in sync status : %d", s.libLocal)
+				s.set.endc <- s.libLocal
+			}
 		case block := <-s.blockc:
 			s.recvBlock(block)
 		case <-checkTimer.C:
@@ -223,8 +229,10 @@ func (s *synchronizes) syncSetRoutine() {
 			}
 		case update := <-s.set.syncblockc:
 			s.syncRecvBlock(update)
+		case number := <-s.set.beginc:
+			s.set.begincCheck(number)
 		case number := <-s.set.endc:
-			s.set.updateRemoteNumber(number)
+			s.set.endcCheck(number)
 		case <-s.set.syncHeaderTimer.C:
 			if s.set.state == SET_SYNC_HEADER {
 				s.syncBlockHeader()
@@ -312,7 +320,7 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 		return
 	}
 
-	log.Infof("protocol sync process block: %d", update.block.Header.Number)
+	log.Infof("protocol sync process block: %d, index: %d", update.block.Header.Number, update.index)
 
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		if s.set.headers[i] != nil &&
@@ -624,6 +632,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 			msg := p2p.UniMsgPacket{Index: info.index,
 				P: packet}
 
+			log.Debugf("protocol sendBlockHeaderReq index: %d", info.index)
 			p2p.Runner.SendUnicast(msg)
 			break
 		}
@@ -688,7 +697,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint32, ptype uint16) {
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
-	log.Debugf("protocol sendBlockReq block %d, type: %d", number, ptype)
+	log.Debugf("protocol sendBlockReq block %d, type: %d, index: %d", number, ptype, index)
 	p2p.Runner.SendUnicast(msg)
 }
 
@@ -730,7 +739,7 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	s.libLocal = s.set.end
 	s.lastLocal = s.set.end
-	log.Debugf("protocol catchup update local lib and number: %d", s.libLocal)
+	log.Debugf("protocol update local lib and number: %d", s.libLocal)
 
 	s.set.reset()
 
@@ -740,6 +749,8 @@ func (s *synchronizes) sendupBundleBlock() {
 }
 
 func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
+
+	start := common.MeasureStart()
 	log.Debugf("protocol send up block :%d", block.Header.Number)
 
 	for i := 0; i < 5; i++ {
@@ -758,10 +769,14 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
 
+		log.Error("elapsed time 1 ", common.Elapsed(start))
+
 		return rsp.ErrorNo
 	}
 
-	log.Warn("protocol block insert timeout with five times")
+	log.Error("protocol block insert timeout with five times")
+
+	log.Error("elapsed time 2 ", common.Elapsed(start))
 	return 0xff
 }
 
@@ -890,6 +905,7 @@ func (s *synchronizes) catchupCheck() {
 
 	s.c.counter++
 	if s.c.counter >= CATCHUP_COUNTER {
+		log.Debugf("protocol catchup counter error")
 		s.c.catchupReset()
 	} else {
 		log.Debugf("protocol catchup resend get block: %d", s.c.current)
@@ -978,6 +994,7 @@ type syncSet struct {
 	syncblockc      chan *blockUpdate
 	syncHeaderTimer *time.Timer
 	syncBlockTimer  *time.Timer
+	beginc          chan uint32
 	endc            chan uint32
 
 	headers [SYNC_BLOCK_BUNDLE]*types.Header
@@ -993,6 +1010,7 @@ func makeSyncSet() *syncSet {
 	return &syncSet{
 		syncheaderc: make(chan *blockHeaderRsp),
 		syncblockc:  make(chan *blockUpdate),
+		beginc:      make(chan uint32),
 		endc:        make(chan uint32),
 		state:       SET_SYNC_NULL}
 }
@@ -1034,11 +1052,31 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	return true
 }
 
-//updateRemoteNumber update peer max block number if some peer is disconnect
-func (set *syncSet) updateRemoteNumber(number uint32) {
-	if set.end > number && set.state != SET_SYNC_NULL {
-		log.Debugf("protocol update syn set max block number: %d", number)
-		set.end = number
+//endcCheck peer max lib change small if some peer is disconnect
+func (set *syncSet) endcCheck(number uint32) {
+	if set.state == SET_SYNC_NULL {
+		log.Debugf("protocol sync status null")
+		return
+	}
+
+	//remote lib change small , we should reset and wait for sync judge
+	if number < set.end {
+		log.Debugf("protocol endcCheck reset end: %d, lib: %d", set.end, number)
+		set.reset()
+	}
+}
+
+//begincCheck local lib change bigger when produce a block in p2p sync state
+func (set *syncSet) begincCheck(number uint32) {
+	if set.state == SET_SYNC_NULL {
+		log.Debugf("protocol sync status null")
+		return
+	}
+
+	//remote lib change small , we should reset and wait for sync judge
+	if number >= set.begin {
+		log.Debugf("protocol begincCheck reset begin: %d, lib: %d", set.begin, number)
+		set.reset()
 	}
 }
 
