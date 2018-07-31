@@ -71,12 +71,12 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 	curTime := chainState.LastBlockTime
 
 	if curTime >= trx.Lifetime {
-		log.Error("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "have past, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
+		log.Errorf("lifetime %v have past, head time %v, trx hash: %x",time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), trx.Hash())
 		return false
 	}
 
 	if trx.Lifetime >= (curTime + config.DEFAULT_MAX_LIFE_TIME) {
-		log.Error("lifetime ", time.Unix((int64)(trx.Lifetime), 0), "too far, head time ", time.Unix((int64)(curTime), 0), "trx hash: ", trx.Hash())
+		log.Errorf("lifetime %v too far, head time %v, trx hash: %x",time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), trx.Hash())
 		return false
 	}
 
@@ -88,7 +88,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
-		log.Error("check unique error ", trx.Hash())
+		log.Errorf("check unique error, trx: %x", trx.Hash())
 		log.Error("transactionExpiration is  ", transactionExpiration)
 
 		return false
@@ -109,7 +109,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 	var chainCursorLabel uint32 = (uint32)(blockHistory.BlockHash[common.HashLength-1]) + (uint32)(blockHistory.BlockHash[common.HashLength-2])<<8 + (uint32)(blockHistory.BlockHash[common.HashLength-3])<<16 + (uint32)(blockHistory.BlockHash[common.HashLength-4])<<24
 
 	if chainCursorLabel != trx.CursorLabel {
-		log.Error("check chain match error,trx cursorlabel ", trx.CursorLabel, "chain cursollabel ", chainCursorLabel, "trx: ", trx.Hash())
+		log.Errorf("check chain match error, trx cursorlabel %v, chain cursollabel %v, trx: %x", trx.CursorLabel, chainCursorLabel, trx.Hash())
 		return false
 	}
 
@@ -128,7 +128,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 
 	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
 	if nil != getAccountErr || nil == account {
-		log.Error("check account error", trx.Hash())
+		log.Errorf("check account error, trx: %x", trx.Hash())
 		return false, bottosErr.ErrTrxAccountError, nil
 	}
 
@@ -149,7 +149,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
 
 	if false == result {
-		log.Error("process trx error", trx.Hash())
+		log.Errorf("process trx error, trx: %x", trx.Hash())
 		return false, bottosError, nil
 	}
 

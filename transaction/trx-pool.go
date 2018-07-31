@@ -124,7 +124,7 @@ func (trxPool *TrxPool) Stop() {
 func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
-		log.Errorf("trx %v pending num over", trx.Hash())
+		log.Errorf("trx %x pending num over", trx.Hash())
 		return false, bottosErr.ErrTrxPendingNumLimit
 	}
 
@@ -161,13 +161,13 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 // HandleTransactionFromFront is handling trx from front
 func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	log.Infof("rcv trx %v from front,sender %v, contract %v, method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
+	log.Infof("rcv trx %x from front,sender %v, contract %v, method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
 // HandleTransactionFromP2P is handling trx from P2P
 func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-	log.Tracef("rcv trx %v from P2P,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
+	log.Tracef("rcv trx %x from P2P,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
 	trxPool.HandleTransactionCommon(context, trx)
 }
 
@@ -247,7 +247,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	senderPubKey, err := trxPool.getPubKey(trx.Sender)
 	if nil != err {
-		log.Errorf("trx %v get pub key error", trx.Hash())
+		log.Errorf("trx %x get pub key error", trx.Hash())
 		return false
 	}
 
@@ -259,7 +259,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
 
 	if false == verifyResult {
-		log.Errorf("trx %v verify signature failed, sender %v, pubkey %v", trx.Hash(), trx.Sender, senderPubKey)
+		log.Errorf("trx %x verify signature failed, sender %v, pubkey %v", trx.Hash(), trx.Sender, senderPubKey)
 	}
 
 	return verifyResult
