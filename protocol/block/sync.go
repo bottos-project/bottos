@@ -1122,6 +1122,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	}
 
 	if set.end < set.begin {
+		log.Errorf("protocol recvBlockHeader set end %d small than begin %d", set.end, set.begin)
 		return false
 	}
 
