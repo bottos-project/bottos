@@ -82,6 +82,12 @@ func (n *NetActor) handleSystemMsg(context actor.Context) {
 	case *actor.Restarting:
 		log.Info("NetActor received restarting msg")
 
+	case *actor.Stop:
+		log.Info("NetActor received Stop msg")
+
+	case *actor.Stopped:
+		log.Info("NetActor received Stopped msg")
+
 	case *message.NotifyTrx:
 		n.protocol.SendNewTrx(msg)
 
