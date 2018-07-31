@@ -131,7 +131,7 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
-		log.Error("trx ", intTrx.Hash(), " actor process failed")
+		log.Errorf("trx: %x actor process failed", intTrx.Hash(),)
 
 		return nil
 	}
