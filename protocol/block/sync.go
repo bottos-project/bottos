@@ -449,11 +449,8 @@ func (s *synchronizes) syncStateCheck() {
 	var remoteNumber uint32
 	var index uint16
 
+	//we can't judge where peer exist or not because we need in sync status when only one node
 	peerset := s.getPeers()
-	if len(peerset) == 0 {
-		//if no peer exist, judge by the next time, sync could be always false
-		return
-	}
 
 	catchindex := s.c.index
 	var catchremote uint32
@@ -480,8 +477,13 @@ func (s *synchronizes) syncStateCheck() {
 	//remote block lib be smaller, wo should reset it
 	if remoteLib < s.libRemote {
 		log.Errorf("protocol syncStateCheck remote lib number change smaller")
-		s.updateRemoteLib(remoteLib, true)
-		s.set.endc <- remoteLib
+		if remoteLib > 0 {
+			s.updateRemoteLib(remoteLib, true)
+			s.set.endc <- remoteLib
+		}
+
+		//judge by the next time, if no peer exist, sync could be always false
+		return
 	} else if remoteLib > s.libRemote {
 		log.Errorf("protocol syncStateCheck remote lib number change bigger")
 		s.updateRemoteLib(remoteLib, false)
@@ -494,7 +496,7 @@ func (s *synchronizes) syncStateCheck() {
 			s.updateRemoteNumber(remoteNumber, true)
 		}
 
-		//judge by the next time, if no peer exist, sync is always false
+		//judge by the next time, if no peer exist, sync could be always false
 		return
 	} else if remoteNumber > s.lastRemote {
 		log.Errorf("protocol syncStateCheck remote number change bigger")
