@@ -7,6 +7,10 @@ Bottos is building the infrastructure for AI development through blockchain tech
 Bottos blockchain architecture is shown below.
 ![](BottosArchitecture.png)
 
+## Deveplopers Forum
+
+https://gitter.im/bottos-project/bottos
+
 ## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
 
