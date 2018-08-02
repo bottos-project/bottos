@@ -25,7 +25,6 @@ package exec
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -36,15 +35,6 @@ import (
 	"github.com/bottos-project/bottos/vm/wasm/exec/internal/compile"
 	"github.com/bottos-project/bottos/vm/wasm/wasm"
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
-)
-
-var (
-	// ErrMultipleLinearMemories is returned by (*VM).NewVM when the module
-	// has more then one entries in the linear memory space.
-	ErrMultipleLinearMemories = errors.New("exec: more than one linear memories in module")
-	// ErrInvalidArgumentCount is returned by (*VM).ExecCode when an invalid
-	// number of arguments to the WebAssembly function are passed to it.
-	ErrInvalidArgumentCount = errors.New("exec: invalid number of arguments to function")
 )
 
 // InvalidReturnTypeError is returned by (*VM).ExecCode when the module
@@ -135,7 +125,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 	if module.Memory != nil && len(module.Memory.Entries) != 0 {
 		if len(module.Memory.Entries) > 1 {
-			return nil, ErrMultipleLinearMemories
+			return nil, ERR_MULTIPLE_LINEAR_MEMORIES
 		}
 		vm.memory = make([]byte, uint(module.Memory.Entries[0].Limits.Initial)*wasmPageSize)
 	}
@@ -333,12 +323,12 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 	}
 
 	if len(vm.module.GetFunction(int(fnIndex)).Sig.ParamTypes) != len(args) {
-		return nil, ErrInvalidArgumentCount
+		return nil, ERR_INVALID_ARGUMENT_COUNT
 	}
 
 	compiled      := vm.compiledFuncs[fnIndex]
 	vm.ctx.stack   = make([]uint64, 0, compiled.maxDepth)
-	vm.ctx.locals  = make([]uint64, compiled.totalLocalVars)
+	vm.ctx.locals  = make([]uint64, compiled.totalLocalVars) // number of local variables used by the function
 	vm.ctx.pc      = 0
 	vm.ctx.code    = compiled.code
 	vm.ctx.curFunc = fnIndex
@@ -348,6 +338,7 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 	}
 
 	var rtrn interface{}
+
 	res := vm.execCode(compiled)
 	if compiled.returns {
 		rtrnType := vm.module.GetFunction(int(fnIndex)).Sig.ReturnTypes[0]
@@ -526,4 +517,12 @@ func (vm *VM) GetContract() *contract.Context {
 func (vm *VM) SetChannel(channel chan []byte) error {
 	vm.vmChannel = channel
 	return nil
+}
+
+func (vm *VM) RecoverContext() bool {
+	if vm.envFunc != nil {
+		vm.ctx = vm.envFunc.envFuncCtx
+	}
+
+	return true
 }

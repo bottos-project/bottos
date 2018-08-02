@@ -98,9 +98,8 @@ func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
 		return
 	}
 
-	if t.sendupTrx(&trx) {
-		t.sendPacket(true, &trx, []uint16{index})
-	}
+	t.sendupTrx(&trx)
+
 }
 
 func (t *Transaction) sendupTrx(trx *types.Transaction) bool {

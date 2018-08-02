@@ -67,6 +67,7 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
 	envFunc.Register("getSender",        getSender)
+	envFunc.Register("malloc",           malloc)
 	envFunc.Register("memset",           memset)
 	envFunc.Register("memcpy",           memcpy)
 	envFunc.Register("strcat_s",         strcat_s)
@@ -321,7 +322,7 @@ func removeBinValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
 	}
@@ -334,7 +335,7 @@ func removeBinValue(vm *VM) (bool, error) {
 	object := make([]byte, objectLen)
 	key    := make([]byte, keyLen)
 	copy(object, vm.memory[objectPos:objectPos+objectLen])
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
+	copy(key,    vm.memory[keyPos:keyPos+keyLen])
 
 	log.Infof(string(object), len(object), string(key), len(key))
 	err := contractCtx.ContractDB.RemoveBinValue(contractCtx.Trx.Contract, string(object), string(key))
@@ -373,7 +374,6 @@ func printi64(vm *VM) (bool, error) {
 }
 
 func prints(vm *VM) (bool, error) {
-
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
 
@@ -382,7 +382,7 @@ func prints(vm *VM) (bool, error) {
 
 	BytesToString(value)
 	param := string(value)
-	fmt.Println("VM: func prints: ", param," , pos: ",pos)
+	fmt.Println("VM: func prints: ", param )
 	log.Infof("VM: func prints: %v\n", param)
 	return true, nil
 
@@ -418,7 +418,7 @@ func getParam(vm *VM) (bool, error) {
 func callTrx(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
@@ -469,7 +469,7 @@ func assert(vm *VM) (bool, error) {
 
 	cond := int(params[0])
 	if cond != 1 {
-		errStr := "*ERROR* Failed to execute contract code !!!"
+		errStr := "*ERROR* failed to execute safe-function !!!"
 		log.Infof(errStr)
 		panic(errStr)
 	}
@@ -613,7 +613,6 @@ func strcpy_s(vm *VM) (bool, error) {
 	src      := int(params[2])
 
 	srcLen    := vm.StrLen(src)
-
 	if totalLen < srcLen + 1 {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint32(uint32(VM_ERROR_OUT_OF_MEMORY))
@@ -697,3 +696,26 @@ func isAccountExist(vm *VM) (bool, error) {
 
 	return true, nil
 }
+
+func malloc(vm *VM) (bool, error) {
+	params  := vm.envFunc.envFuncParam
+	if len(params) != 1 {
+		return false, ERR_PARAM_COUNT
+	}
+
+	size := int(params[0])
+
+	index, err := vm.getStoragePos(size, Unknown)
+	if err != nil {
+		return false, err
+	}
+
+	vm.RecoverContext()
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(index))
+	}
+
+	return true, nil
+}
+
+

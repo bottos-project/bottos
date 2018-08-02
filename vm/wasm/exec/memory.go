@@ -265,7 +265,7 @@ func (vm *VM) growMemory() {
 	_ = vm.fetchInt8() // reserved (https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/BinaryEncoding.md#memory-related-operators-described-here)
 	curLen := len(vm.memory) / wasmPageSize
 	n := vm.popInt32()
-	vm.memory = append(vm.memory, make([]byte, n*wasmPageSize)...)
+	vm.memory = append(vm.memory, make([]byte, n*wasmPageSize)...) //auto extend range
 	vm.pushInt32(int32(curLen))
 }
 
@@ -329,7 +329,7 @@ func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 		return 0, ERR_OUT_BOUNDS
 	}
 
-	newpos := vm.memPos + 1
+	newpos    := vm.memPos + 1
 	vm.memPos += size
 
 	vm.memType[uint64(newpos)] = &typeInfo{Type: t, Len: size}

@@ -44,7 +44,7 @@ import (
 
 //DO NOT EDIT
 const (
-	TIMER_FAST_SYNC_LAST_BLOCK_NUMBER   = 1
+	TIMER_FAST_SYNC_LAST_BLOCK_NUMBER   = 2
 	TIMER_NORMAL_SYNC_LAST_BLOCK_NUMBER = 4
 	TIMER_CHECK_SYNC_LAST_BLOCK_NUMBER  = 20
 
@@ -58,8 +58,8 @@ const (
 
 	TIMER_HEADER_UPDATE_CHECK = 1
 
-	SYNC_BLOCK_BUNDLE     = 10
-	SYNC_BLOCK_BUNDLE_MAX = 100
+	SYNC_BLOCK_BUNDLE     = 30
+	SYNC_BLOCK_BUNDLE_MAX = 200
 )
 
 //DO NOT EDIT
@@ -87,7 +87,8 @@ type peerBlockInfo struct {
 	lastLib   uint32
 	lastBlock uint32
 
-	counter int16
+	syncTimeoutCounter int16
+	exchangeCounter    int16
 }
 
 type syncConfig struct {
@@ -101,10 +102,24 @@ func (s syncset) Len() int {
 }
 
 func (s syncset) Less(i, j int) bool {
-	return s[i].lastLib > s[j].lastLib
+	return s[i].syncTimeoutCounter < s[j].syncTimeoutCounter
 }
 
 func (s syncset) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+type syncsetlib syncset
+
+func (s syncsetlib) Len() int {
+	return len(s)
+}
+
+func (s syncsetlib) Less(i, j int) bool {
+	return s[i].lastLib < s[j].lastLib
+}
+
+func (s syncsetlib) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
@@ -235,6 +250,7 @@ func (s *synchronizes) syncSetRoutine() {
 			s.set.endcCheck(number)
 		case <-s.set.syncHeaderTimer.C:
 			if s.set.state == SET_SYNC_HEADER {
+				s.checkSyncHeaderTimeoutPeer()
 				s.syncBlockHeader()
 			}
 		case <-s.set.syncBlockTimer.C:
@@ -374,9 +390,9 @@ func (s *synchronizes) recvBlockNumberInfo(info *peerBlockInfo) {
 	if ok {
 		peer.lastBlock = info.lastBlock
 		peer.lastLib = info.lastLib
-		peer.counter++
+		peer.exchangeCounter++
 	} else {
-		info.counter = 1
+		info.exchangeCounter = 1
 		s.peers[info.index] = info
 	}
 
@@ -389,11 +405,30 @@ func (s *synchronizes) syncBlockNumberCheck() {
 	defer s.lock.Unlock()
 
 	for key, info := range s.peers {
-		if info.counter == 0 {
+		if info.exchangeCounter == 0 {
 			delete(s.peers, key)
 		} else {
-			info.counter = 0
+			info.exchangeCounter = 0
 		}
+	}
+}
+
+func (s *synchronizes) recordPeerSyncTimeout(index uint16) {
+	s.lock.Lock()
+	s.lock.Unlock()
+
+	peer, ok := s.peers[index]
+	if ok {
+		peer.syncTimeoutCounter++
+	}
+}
+
+func (s *synchronizes) resetPeerSyncTimeout() {
+	s.lock.Lock()
+	s.lock.Unlock()
+
+	for _, info := range s.peers {
+		info.syncTimeoutCounter = 0
 	}
 }
 
@@ -414,7 +449,9 @@ func (s *synchronizes) syncStateCheck() {
 	var remoteNumber uint32
 	var index uint16
 
+	//we can't judge where peer exist or not because we need in sync status when only one node
 	peerset := s.getPeers()
+
 	catchindex := s.c.index
 	var catchremote uint32
 
@@ -445,7 +482,7 @@ func (s *synchronizes) syncStateCheck() {
 			s.set.endc <- remoteLib
 		}
 
-		//judge by the next time, if no peer exist, sync is always false
+		//judge by the next time, if no peer exist, sync could be always false
 		return
 	} else if remoteLib > s.libRemote {
 		log.Errorf("protocol syncStateCheck remote lib number change bigger")
@@ -459,7 +496,7 @@ func (s *synchronizes) syncStateCheck() {
 			s.updateRemoteNumber(remoteNumber, true)
 		}
 
-		//judge by the next time, if no peer exist, sync is always false
+		//judge by the next time, if no peer exist, sync could be always false
 		return
 	} else if remoteNumber > s.lastRemote {
 		log.Errorf("protocol syncStateCheck remote number change bigger")
@@ -627,20 +664,38 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 	packet := p2p.Packet{H: head, Data: data}
 
 	peerset := s.getPeers()
-	for _, info := range peerset {
-		if info.lastLib >= end {
-			msg := p2p.UniMsgPacket{Index: info.index,
-				P: packet}
+	if len(peerset) == 0 {
+		log.Error("protocol sendBlockHeaderReq no peer")
+		return
+	}
 
-			log.Debugf("protocol sendBlockHeaderReq index: %d", info.index)
-			p2p.Runner.SendUnicast(msg)
-			break
+	//send to the peer which counter of time out is min
+	var min int16
+	var j int
+	for i, info := range peerset {
+		if info.lastLib >= end {
+			if min == 0 {
+				min = info.syncTimeoutCounter
+				j = i
+			} else if min > info.syncTimeoutCounter {
+				min = info.syncTimeoutCounter
+				j = i
+			}
 		}
 	}
+
+	msg := p2p.UniMsgPacket{Index: peerset[j].index,
+		P: packet}
+
+	s.set.indexHeader = peerset[j].index
+	log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader)
+
+	p2p.Runner.SendUnicast(msg)
 }
 
 func (s *synchronizes) syncBundleBlock() {
 	if s.set.end < s.set.begin {
+		log.Errorf("protocol syncBundleBlock end %d smaller than begin %d", s.set.end, s.set.begin)
 		return
 	}
 
@@ -653,12 +708,37 @@ func (s *synchronizes) syncBundleBlock() {
 	}
 
 	if len(numbers) == 0 {
+		log.Errorf("protocol syncBundleBlock sync bundle block finish, wait for send up")
 		return
 	}
 
 	peerset := s.getPeers()
+	if len(peerset) == 0 {
+		log.Errorf("protocol syncBundleBlock no peer")
+		return
+	}
 
 	sort.Sort(peerset)
+
+	//filter half of time out peer
+	setlen := peerset.Len()
+	if setlen%2 == 0 {
+		setlen = setlen/2 - 1
+	} else {
+		setlen = setlen / 2
+	}
+
+	avg := peerset[setlen].syncTimeoutCounter
+	var setlib syncsetlib
+	for _, info := range peerset {
+		if info.syncTimeoutCounter > avg {
+			break
+		} else {
+			setlib = append(setlib, info)
+		}
+	}
+
+	sort.Sort(setlib)
 
 	i := 0
 	for _, number := range numbers {
@@ -669,6 +749,7 @@ func (s *synchronizes) syncBundleBlock() {
 		for i < len(peerset) {
 			if peerset[i].lastLib >= number {
 				s.sendBlockReq(peerset[i].index, number, BLOCK_REQ)
+				s.set.indexs[number-s.set.begin] = peerset[i].index
 				i++
 				break
 			} else {
@@ -710,7 +791,23 @@ func (s *synchronizes) setSyncStateCheck() {
 	if sync {
 		s.sendupBundleBlock()
 	} else {
+		s.checkSyncBlockTimeoutPeers()
 		s.syncBundleBlock()
+	}
+}
+
+func (s *synchronizes) checkSyncHeaderTimeoutPeer() {
+	log.Debugf("protocol index %d sync head time out", s.set.indexHeader)
+	s.recordPeerSyncTimeout(s.set.indexHeader)
+}
+
+func (s *synchronizes) checkSyncBlockTimeoutPeers() {
+	lenght := s.set.end + 1 - s.set.begin
+	for i := 0; i < int(lenght) && i < SYNC_BLOCK_BUNDLE; i++ {
+		if s.set.blocks[i] == nil {
+			log.Debugf("protocol index %d sync block time out", s.set.indexs[i])
+			s.recordPeerSyncTimeout(s.set.indexs[i])
+		}
 	}
 }
 
@@ -745,6 +842,9 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	if s.libLocal < s.libRemote {
 		s.syncBlockHeader()
+	} else {
+		log.Debugf("protocol sync finish reset peer sync counter")
+		s.resetPeerSyncTimeout()
 	}
 }
 
@@ -997,8 +1097,10 @@ type syncSet struct {
 	beginc          chan uint32
 	endc            chan uint32
 
-	headers [SYNC_BLOCK_BUNDLE]*types.Header
-	blocks  [SYNC_BLOCK_BUNDLE]*types.Block
+	indexHeader uint16
+	headers     [SYNC_BLOCK_BUNDLE]*types.Header
+	indexs      [SYNC_BLOCK_BUNDLE]uint16
+	blocks      [SYNC_BLOCK_BUNDLE]*types.Block
 
 	begin uint32
 	end   uint32
@@ -1022,6 +1124,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	}
 
 	if set.end < set.begin {
+		log.Errorf("protocol recvBlockHeader set end %d small than begin %d", set.end, set.begin)
 		return false
 	}
 
@@ -1101,6 +1204,12 @@ func (set *syncSet) resetHeader() {
 	}
 }
 
+func (set *syncSet) resetIndex() {
+	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
+		set.indexs[i] = 0
+	}
+}
+
 func (set *syncSet) resetBlock() {
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		set.blocks[i] = nil
@@ -1111,7 +1220,9 @@ func (set *syncSet) reset() {
 	set.state = SET_SYNC_NULL
 	set.end = 0
 	set.begin = 0
+	set.indexHeader = 0
 	set.resetHeader()
+	set.resetIndex()
 	set.resetBlock()
 }
 

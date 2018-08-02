@@ -2,10 +2,14 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/bottos-project/bottos)](https://goreportcard.com/report/github.com/bottos-project/bottos)   [![License](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Bottos is to build an blockchain infrastructure.
+Bottos is building the infrastructure for AI development through blockchain technology in order to create a new decentralized AI ecosystem.
 
 Bottos blockchain architecture is shown below.
 ![](BottosArchitecture.png)
+
+## Deveplopers Forum
+
+https://gitter.im/bottos-project/bottos
 
 ## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
