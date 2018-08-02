@@ -58,7 +58,7 @@ const (
 
 	TIMER_HEADER_UPDATE_CHECK = 1
 
-	SYNC_BLOCK_BUNDLE     = 30
+	SYNC_BLOCK_BUNDLE     = 60
 	SYNC_BLOCK_BUNDLE_MAX = 200
 )
 
@@ -669,28 +669,28 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 		return
 	}
 
-	//send to the peer which counter of time out is min
-	var min int16
-	var j int
-	for i, info := range peerset {
+	sort.Sort(peerset)
+
+	//send to three peers which counter of time out is min
+	var counter uint16
+	for _, info := range peerset {
+		if counter >= 3 {
+			break
+		}
+
 		if info.lastLib >= end {
-			if min == 0 {
-				min = info.syncTimeoutCounter
-				j = i
-			} else if min > info.syncTimeoutCounter {
-				min = info.syncTimeoutCounter
-				j = i
-			}
+			msg := p2p.UniMsgPacket{Index: info.index,
+				P: packet}
+
+			s.set.indexHeader = info.index
+			log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader)
+
+			p2p.Runner.SendUnicast(msg)
+
+			counter++
 		}
 	}
 
-	msg := p2p.UniMsgPacket{Index: peerset[j].index,
-		P: packet}
-
-	s.set.indexHeader = peerset[j].index
-	log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader)
-
-	p2p.Runner.SendUnicast(msg)
 }
 
 func (s *synchronizes) syncBundleBlock() {
@@ -721,16 +721,18 @@ func (s *synchronizes) syncBundleBlock() {
 	sort.Sort(peerset)
 
 	//filter half of time out peer
-	setlen := peerset.Len()
-	if setlen%2 == 0 {
-		setlen = setlen/2 - 1
+	avglen := peerset.Len()
+	if avglen%2 == 0 {
+		avglen = avglen/2 - 1
 	} else {
-		setlen = setlen / 2
+		avglen = avglen / 2
 	}
 
-	avg := peerset[setlen].syncTimeoutCounter
+	avg := peerset[avglen].syncTimeoutCounter
 	var setlib syncsetlib
-	for _, info := range peerset {
+	var j int
+	for j = 0; j < len(peerset); j++ {
+		info := peerset[j]
 		if info.syncTimeoutCounter > avg {
 			break
 		} else {
@@ -740,20 +742,34 @@ func (s *synchronizes) syncBundleBlock() {
 
 	sort.Sort(setlib)
 
-	i := 0
-	for _, number := range numbers {
-		if i == len(peerset) {
-			i = 0
+	if setlib[len(setlib)-1].lastLib < numbers[len(numbers)-1] {
+		//can't filter peers, because timeout peer lib is bigger
+		for ; j < len(peerset); j++ {
+			setlib = append(setlib, peerset[j])
 		}
 
-		for i < len(peerset) {
-			if peerset[i].lastLib >= number {
-				s.sendBlockReq(peerset[i].index, number, BLOCK_REQ)
-				s.set.indexs[number-s.set.begin] = peerset[i].index
-				i++
+		sort.Sort(setlib)
+	}
+
+	if setlib[len(setlib)-1].lastLib < numbers[len(numbers)-1] {
+		log.Errorf("protocol syncBundleBlock peers max lib is smaller than number")
+		return
+	}
+
+	k := 0
+	for _, number := range numbers {
+		if k == len(setlib) {
+			k = 0
+		}
+
+		for k < len(setlib) {
+			if setlib[k].lastLib >= number {
+				s.sendBlockReq(setlib[k].index, number, BLOCK_REQ)
+				s.set.indexs[number-s.set.begin] = setlib[k].index
+				k++
 				break
 			} else {
-				i++
+				k++
 			}
 		}
 	}
@@ -1119,7 +1135,7 @@ func makeSyncSet() *syncSet {
 
 func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	if set.state != SET_SYNC_HEADER {
-		log.Errorf("protocol recvBlockHeader state error")
+		log.Debug("protocol recvBlockHeader state error, could have receive ack")
 		return false
 	}
 

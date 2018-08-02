@@ -50,6 +50,11 @@ type chainNumber struct {
 	BlockNumber uint32
 }
 
+type headerReq struct {
+	index uint16
+	req   *blockHeaderReq
+}
+
 type blockHeaderReq struct {
 	Begin uint32
 	End   uint32
