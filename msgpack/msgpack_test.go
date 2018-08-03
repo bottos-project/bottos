@@ -25,9 +25,9 @@
 package msgpack
 
 import (
-	"fmt"
-	//"bytes"
+	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"testing"
 )
 
@@ -133,5 +133,23 @@ func TestMarshalNilPtr(t *testing.T) {
 	b, err := Marshal(ts)
 
 	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+}
+
+func TestMarshalCustomHashType(t *testing.T) {
+	type Account struct {
+		AccountName string
+		CodeVersion [32]byte
+	}
+
+	fmt.Println("TestMarshalRoleAccount...")
+
+	ts := Account{
+		AccountName: "testuser",
+		CodeVersion: sha256.Sum256([]byte("testuser")),
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%x\n", b)
 	fmt.Println(err)
 }

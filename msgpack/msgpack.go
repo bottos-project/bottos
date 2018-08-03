@@ -34,6 +34,14 @@ import (
 
 type EncodeWriter func(reflect.Value, io.Writer) error
 
+type Encoder interface {
+	EncodeMsgpack(io.Writer) error
+}
+
+var (
+	encoderInterface = reflect.TypeOf(new(Encoder)).Elem()
+)
+
 //Marshal is to serialize the message
 func Marshal(v interface{}) ([]byte, error) {
 	writer := &bytes.Buffer{}
@@ -72,10 +80,16 @@ func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 		return encodeString, nil
 	case kind == reflect.Slice && t.Elem().Kind() == reflect.Uint8:
 		return encodeBytes, nil
+	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
+		return encodeByteArray, nil
 	case kind == reflect.Struct:
 		return makeStructEncoder(t, w)
 	case kind == reflect.Ptr:
 		return makePtrEncoder(t, w)
+	case t.Implements(encoderInterface):
+		return writeEncoder, nil
+	case kind != reflect.Ptr && reflect.PtrTo(t).Implements(encoderInterface):
+		return writeEncoderNoPtr, nil
 	default:
 		return nil, fmt.Errorf("msgpack, type %v not support", t)
 	}
@@ -113,6 +127,18 @@ func encodeString(val reflect.Value, w io.Writer) error {
 
 func encodeBytes(val reflect.Value, w io.Writer) error {
 	PackBin16(w, val.Bytes())
+	return nil
+}
+
+func encodeByteArray(val reflect.Value, w io.Writer) error {
+	if !val.CanAddr() {
+		copy := reflect.New(val.Type()).Elem()
+		copy.Set(val)
+		val = copy
+	}
+	size := val.Len()
+	slice := val.Slice(0, size).Bytes()
+	PackBin16(w, slice)
 	return nil
 }
 
@@ -161,6 +187,19 @@ func makePtrEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	}
 
 	return encoder, nil
+}
+
+func writeEncoder(val reflect.Value, w io.Writer) error {
+	fmt.Println(val)
+	return val.Interface().(Encoder).EncodeMsgpack(w)
+}
+
+func writeEncoderNoPtr(val reflect.Value, w io.Writer) error {
+	fmt.Println(val)
+	if !val.CanAddr() {
+		return fmt.Errorf("rlp: game over: unadressable value of type %v, EncodeRLP is pointer method", val.Type())
+	}
+	return val.Addr().Interface().(Encoder).EncodeMsgpack(w)
 }
 
 /*
