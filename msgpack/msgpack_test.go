@@ -49,6 +49,7 @@ func TestMarshalStruct(t *testing.T) {
 		V4 uint32
 		V5 uint64
 		V6 []byte
+		V7 bool
 	}
 
 	ts := TestStruct{
@@ -58,6 +59,7 @@ func TestMarshalStruct(t *testing.T) {
 		V4: 9999,
 		V5: 99999,
 		V6: []byte{0xac, 0xcd, 0xde},
+		V7: false,
 	}
 
 	b, err := Marshal(ts)
