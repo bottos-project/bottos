@@ -43,7 +43,8 @@ type Block struct {
 	chainIf chain.BlockChainInterface
 	s       *synchronizes
 
-	init bool
+	headerc chan *headerReq
+	init    bool
 }
 
 const (
@@ -55,6 +56,7 @@ const (
 func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
 	return &Block{s: makeSynchronizes(nodeType, chain),
 		chainIf: chain,
+		headerc: make(chan *headerReq),
 		init:    false}
 }
 
@@ -67,6 +69,7 @@ func (b *Block) SetActor(tid *actor.PID) {
 //Start start
 func (b *Block) Start() {
 	go b.waitActorReady()
+	go b.routine()
 }
 
 func (b *Block) waitActorReady() {
@@ -116,6 +119,15 @@ func (b *Block) Dispatch(index uint16, p *p2p.Packet) {
 		b.processBlockReq(index, p.Data, BLOCK_CATCH_REQUEST)
 	case BLOCK_CATCH_RESPONSE:
 		b.processBlockCatchRsp(index, p.Data)
+	}
+}
+
+func (b *Block) routine() {
+	for {
+		select {
+		case r := <-b.headerc:
+			b.processHeaderReq(r)
+		}
 	}
 }
 
@@ -191,15 +203,22 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 		return
 	}
 
-	if req.Begin > req.End ||
-		req.End-req.Begin >= SYNC_BLOCK_BUNDLE_MAX {
+	headReq := &headerReq{index: index, req: &req}
+	b.headerc <- headReq
+}
+
+func (b *Block) processHeaderReq(r *headerReq) {
+	if r.req.Begin > r.req.End ||
+		r.req.End-r.req.Begin >= SYNC_BLOCK_BUNDLE_MAX {
 		log.Errorf("protocol processBlockHeaderReq wrong lenght")
 		return
 	}
 
+	log.Debugf("protocol processHeaderReq")
+
 	var rsp blockHeaderRsp
 	j := 0
-	for i := req.Begin; i <= req.End; i++ {
+	for i := r.req.Begin; i <= r.req.End; i++ {
 		head := b.chainIf.GetHeaderByNumber(i)
 		if head == nil {
 			log.Errorf("protocol processBlockHeaderReq header:%d not exist", i)
@@ -210,7 +229,9 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 		j++
 	}
 
-	b.sendBlockHeaderRsp(index, &rsp)
+	log.Debugf("protocol send head response")
+
+	b.sendBlockHeaderRsp(r.index, &rsp)
 }
 
 func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
