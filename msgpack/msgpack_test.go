@@ -77,7 +77,7 @@ func TestMarshalNestStruct(t *testing.T) {
 		V2 uint32
 		V3 TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStruct1...")
+	fmt.Println("TestMarshalNestStruct...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -101,12 +101,32 @@ func TestMarshalNestStructPtr(t *testing.T) {
 		V2 uint32
 		V3 *TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStruct1...")
+	fmt.Println("TestMarshalNestStructPtr...")
 
 	ts := TestStruct{
 		V1: "testuser",
 		V2: 99,
 		V3: &TestSubStruct{V1: "123", V2: 3},
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+}
+
+func TestMarshalNilPtr(t *testing.T) {
+	type TestStruct struct {
+		V1 string
+		V2 *uint32
+		V3 uint64
+	}
+
+	fmt.Println("TestMarshalNilPtr...")
+
+	ts := TestStruct{
+		V1: "testuser",
+		V2: nil,
+		V3: 999999,
 	}
 	b, err := Marshal(ts)
 
