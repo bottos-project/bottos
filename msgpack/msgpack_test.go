@@ -48,7 +48,7 @@ func TestMarshalStruct(t *testing.T) {
 		V3 uint16
 		V4 uint32
 		V5 uint64
-		V6 []byte
+		//V6 []byte
 		V7 bool
 	}
 
@@ -58,13 +58,18 @@ func TestMarshalStruct(t *testing.T) {
 		V3: 999,
 		V4: 9999,
 		V5: 99999,
-		V6: []byte{0xac, 0xcd, 0xde},
-		V7: false,
+		//V6: []byte{0xac, 0xcd, 0xde},
+		V7: true,
 	}
 
 	b, err := Marshal(ts)
 
 	fmt.Printf("%v\n", BytesToHex(b))
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v \n", ts1)
 	fmt.Println(err)
 }
 
@@ -137,9 +142,11 @@ func TestMarshalNilPtr(t *testing.T) {
 }
 
 func TestMarshalCustomHashType(t *testing.T) {
+	type Hash [32]byte
+
 	type Account struct {
 		AccountName string
-		CodeVersion [32]byte
+		CodeVersion Hash
 	}
 
 	fmt.Println("TestMarshalRoleAccount...")
