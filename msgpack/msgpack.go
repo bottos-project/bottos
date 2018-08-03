@@ -18,7 +18,7 @@
 /*
  * file description:  msgpack go
  * @Author: Gong Zibin
- * @Date:   2017-12-20
+ * @Date:   2018-08-02
  * @Last Modified by:
  * @Last Modified time:
  */
@@ -146,7 +146,8 @@ func makePtrEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 
 	encoder := func(val reflect.Value, w io.Writer) error {
 		if val.IsNil() {
-			return fmt.Errorf("msgpack: Ptr is Nil")
+			_, err := PackNil(w)
+			return err
 		} else {
 			return encodeWriter(val.Elem(), w)
 		}

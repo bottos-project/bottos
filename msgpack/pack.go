@@ -30,6 +30,13 @@ import (
 )
 
 const (
+	// NIL nil or null type
+	NIL = 0xc0
+
+	// FALSE is a Bool type
+	FALSE = 0xc2
+	// TRUE is a Bool type
+	TRUE = 0xc3
 	//BIN16 is byte array type identifier
 	BIN16 = 0xc5
 	//UINT8 is uint8
@@ -71,6 +78,11 @@ const (
 
 //Bytes is []byte type
 type Bytes []byte
+
+// PackNil pack a nil type
+func PackNil(writer io.Writer) (n int, err error) {
+	return writer.Write(Bytes{NIL})
+}
 
 //PackUint8 is to pack a given value and writes it into the specified writer.
 func PackUint8(writer io.Writer, value uint8) (n int, err error) {
