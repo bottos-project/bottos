@@ -58,6 +58,8 @@ func Encode(v interface{}, w io.Writer) error {
 func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	kind := t.Kind()
 	switch {
+	case kind == reflect.Bool:
+		return encodeBool, nil
 	case kind == reflect.Uint8:
 		return encodeUint8, nil
 	case kind == reflect.Uint16:
@@ -77,6 +79,11 @@ func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	default:
 		return nil, fmt.Errorf("msgpack, type %v not support", t)
 	}
+}
+
+func encodeBool(val reflect.Value, w io.Writer) error {
+	PackBool(w, val.Bool())
+	return nil
 }
 
 func encodeUint8(val reflect.Value, w io.Writer) error {

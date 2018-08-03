@@ -84,6 +84,14 @@ func PackNil(writer io.Writer) (n int, err error) {
 	return writer.Write(Bytes{NIL})
 }
 
+// PackBool is to pack a bool value.
+func PackBool(writer io.Writer, value bool) (n int, err error) {
+	if value {
+		return writer.Write(Bytes{TRUE})
+	}
+	return writer.Write(Bytes{FALSE})
+}
+
 //PackUint8 is to pack a given value and writes it into the specified writer.
 func PackUint8(writer io.Writer, value uint8) (n int, err error) {
 	return writer.Write(Bytes{UINT8, value})
