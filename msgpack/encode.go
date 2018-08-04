@@ -26,8 +26,10 @@
 package msgpack
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"reflect"
 )
 
@@ -37,8 +39,13 @@ type Encoder interface {
 	EncodeMsgpack(io.Writer) error
 }
 
+const (
+	EXT_BIGINT = 1
+)
+
 var (
 	encoderInterface = reflect.TypeOf(new(Encoder)).Elem()
+	bigInt           = reflect.TypeOf(big.Int{})
 )
 
 //Encode is to encode message
@@ -55,6 +62,14 @@ func Encode(v interface{}, w io.Writer) error {
 func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	kind := t.Kind()
 	switch {
+	case t.Implements(encoderInterface):
+		return encodeCustom, nil
+	case kind != reflect.Ptr && reflect.PtrTo(t).Implements(encoderInterface):
+		return encodeCustomNoPtr, nil
+	case t.AssignableTo(reflect.PtrTo(bigInt)):
+		return encodeBigIntPtr, nil
+	case t.AssignableTo(bigInt):
+		return encodeBigIntNoPtr, nil
 	case kind == reflect.Bool:
 		return encodeBool, nil
 	case kind == reflect.Uint8:
@@ -75,10 +90,7 @@ func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 		return makeStructEncoder(t, w)
 	case kind == reflect.Ptr:
 		return makePtrEncoder(t, w)
-	case t.Implements(encoderInterface):
-		return writeEncoder, nil
-	case kind != reflect.Ptr && reflect.PtrTo(t).Implements(encoderInterface):
-		return writeEncoderNoPtr, nil
+
 	default:
 		return nil, fmt.Errorf("msgpack, type %v not support", t)
 	}
@@ -178,15 +190,33 @@ func makePtrEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	return encoder, nil
 }
 
-func writeEncoder(val reflect.Value, w io.Writer) error {
+func encodeBigIntPtr(val reflect.Value, w io.Writer) error {
+	ptr := val.Interface().(*big.Int)
+	if ptr == nil {
+		return errors.New("nil ptr")
+	}
+	return encodeBigInt(ptr, w)
+}
+
+func encodeBigIntNoPtr(val reflect.Value, w io.Writer) error {
+	i := val.Interface().(big.Int)
+	return encodeBigInt(&i, w)
+}
+
+func encodeBigInt(i *big.Int, w io.Writer) error {
+	_, err := PackExt16(w, EXT_BIGINT, i.Bytes())
+	return err
+}
+
+func encodeCustom(val reflect.Value, w io.Writer) error {
 	fmt.Println(val)
 	return val.Interface().(Encoder).EncodeMsgpack(w)
 }
 
-func writeEncoderNoPtr(val reflect.Value, w io.Writer) error {
+func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
 	fmt.Println(val)
 	if !val.CanAddr() {
-		return fmt.Errorf("rlp: game over: unadressable value of type %v, EncodeRLP is pointer method", val.Type())
+		return fmt.Errorf("msgpack: unadressable value of type %v", val.Type())
 	}
 	return val.Addr().Interface().(Encoder).EncodeMsgpack(w)
 }

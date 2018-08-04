@@ -39,6 +39,8 @@ const (
 	TRUE = 0xc3
 	//BIN16 is byte array type identifier
 	BIN16 = 0xc5
+	//EXT16
+	EXT16 = 0xc8
 	//UINT8 is uint8
 	UINT8 = 0xcc
 	//UINT16 is uint16
@@ -127,6 +129,16 @@ func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 func PackStr16(writer io.Writer, value string) (n int, err error) {
 	length := len(value)
 	n1, err := writer.Write(Bytes{STR16, byte(length >> 8), byte(length)})
+	if err != nil {
+		return n1, err
+	}
+	n2, err := writer.Write([]byte(value))
+	return n1 + n2, err
+}
+
+func PackExt16(writer io.Writer, t byte, value []byte) (n int, err error) {
+	length := len(value)
+	n1, err := writer.Write(Bytes{EXT16, byte(length >> 8), byte(length), t})
 	if err != nil {
 		return n1, err
 	}

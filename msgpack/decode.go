@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"reflect"
 )
 
@@ -68,6 +69,10 @@ func Decode(v interface{}, r io.Reader) error {
 func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	kind := t.Kind()
 	switch {
+	case t.AssignableTo(reflect.PtrTo(bigInt)):
+		return decodeBigInt, nil
+	case t.AssignableTo(bigInt):
+		return decodeBigIntNoPtr, nil
 	case kind == reflect.Bool:
 		return decodeBool, nil
 	case kind == reflect.Uint8:
@@ -80,6 +85,10 @@ func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 		return decodeUint64, nil
 	case kind == reflect.String:
 		return decodeString, nil
+	case kind == reflect.Slice && t.Elem().Kind() == reflect.Uint8:
+		return decodeBytes, nil
+	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
+		return decodeByteArray, nil
 	case kind == reflect.Struct:
 		return makeStructDecoder(t, r)
 	case kind == reflect.Ptr:
@@ -87,6 +96,53 @@ func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	default:
 		return nil, fmt.Errorf("msgpack, type %v, kind %v not support", t, kind)
 	}
+}
+
+func decodeBigIntNoPtr(v reflect.Value, r io.Reader) error {
+	return decodeBigInt(v.Addr(), r)
+}
+
+func decodeBigInt(v reflect.Value, r io.Reader) error {
+	val, t, err := UnpackExt16(r)
+	if err != nil {
+		return errors.New("msgpack: unpack ext fail")
+	}
+	if t != EXT_BIGINT {
+		return errors.New("msgpack: unpack ext type error")
+	}
+	i := v.Interface().(*big.Int)
+	if i == nil {
+		i = new(big.Int)
+		v.Set(reflect.ValueOf(i))
+	}
+	i.SetBytes(val)
+	return nil
+}
+
+func decodeBytes(v reflect.Value, r io.Reader) error {
+	val, err := UnpackBin16(r)
+	if err != nil {
+		return err
+	}
+	v.SetBytes(val)
+	return nil
+}
+
+func decodeByteArray(v reflect.Value, r io.Reader) error {
+	vlen := v.Len()
+	slice := v.Slice(0, vlen).Interface().([]byte)
+	val, err := UnpackBin16(r)
+	if err != nil {
+		return err
+	}
+
+	if len(val) != vlen {
+		return errors.New("msgpack: wrong array size")
+	}
+
+	copy(slice, val)
+
+	return nil
 }
 
 func decodeBool(v reflect.Value, r io.Reader) error {
@@ -151,6 +207,8 @@ type DecField struct {
 func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	fields := []DecField{}
 
+	fmt.Printf("%#x\n", r)
+
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
 		decoder, e := getDecoder(f.Type, r)
@@ -188,6 +246,19 @@ func makePtrDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 		if val.IsNil() {
 			newval = reflect.New(etype)
 		}
+		/*
+			suc, err := TryUnpackNil(r)
+			fmt.Println(suc, err)
+			if err != nil {
+				return err
+			}
+
+			if suc {
+				val.Set(reflect.Zero(t))
+				fmt.Println("no")
+			}
+		*/
+
 		if err = decoder(newval.Elem(), r); err == nil {
 			fmt.Println(newval.Type(), val.Type())
 			val.Set(newval)
