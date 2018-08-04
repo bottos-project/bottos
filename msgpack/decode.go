@@ -89,6 +89,8 @@ func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 		return decodeBytes, nil
 	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
 		return decodeByteArray, nil
+	case kind == reflect.Slice || kind == reflect.Array:
+		return makeArrayDecoder(t, r)
 	case kind == reflect.Struct:
 		return makeStructDecoder(t, r)
 	case kind == reflect.Ptr:
@@ -199,6 +201,80 @@ func decodeString(v reflect.Value, r io.Reader) error {
 	return nil
 }
 
+func decodeArray(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error {
+	vlen := v.Len()
+	size, err := UnpackArraySize(r)
+	if err != nil {
+		return err
+	}
+
+	if vlen != int(size) {
+		return fmt.Errorf("msgpack decoder: wrong array size, now %v, expected %v", int(size), vlen)
+	}
+	i := 0
+	for ; i < vlen; i++ {
+		if err := elemDecoder(v.Index(i), r); err != nil {
+			return fmt.Errorf("msgpack decoder: array decode error")
+		}
+	}
+	if i < vlen {
+		return fmt.Errorf("msgpack decoder: array size array")
+	}
+	return nil
+}
+
+func decodeSlice(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error {
+	size, err := UnpackArraySize(r)
+	if err != nil {
+		return err
+	}
+	if size == 0 {
+		v.Set(reflect.MakeSlice(v.Type(), 0, 0))
+		return nil
+	}
+
+	i := 0
+	for ; i < int(size); i++ {
+		if i >= v.Cap() {
+			newcap := v.Cap() + v.Cap()/2
+			if newcap < 4 {
+				newcap = 4
+			}
+			newv := reflect.MakeSlice(v.Type(), v.Len(), newcap)
+			reflect.Copy(newv, v)
+			v.Set(newv)
+		}
+		if i >= v.Len() {
+			v.SetLen(i + 1)
+		}
+		if err := elemDecoder(v.Index(i), r); err != nil {
+			return fmt.Errorf("msgpack decoder: slice decode error")
+		}
+	}
+	return nil
+}
+
+func makeArrayDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
+	etype := t.Elem()
+	elemDecoder, err := getDecoder(etype, r)
+	if err != nil {
+		return nil, err
+	}
+
+	var dec DecoderReader
+	switch {
+	case t.Kind() == reflect.Array:
+		dec = func(val reflect.Value, r io.Reader) error {
+			return decodeArray(val, r, elemDecoder)
+		}
+	default: // t.Kind() == reflect.Slice
+		dec = func(val reflect.Value, r io.Reader) error {
+			return decodeSlice(val, r, elemDecoder)
+		}
+	}
+	return dec, nil
+}
+
 type DecField struct {
 	decoder DecoderReader
 	index   int
@@ -206,8 +282,6 @@ type DecField struct {
 
 func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	fields := []DecField{}
-
-	fmt.Printf("%#x\n", r)
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
@@ -236,7 +310,6 @@ func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 
 func makePtrDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	etype := t.Elem()
-	fmt.Println(etype)
 	decoder, err := getDecoder(etype, r)
 	if err != nil {
 		return nil, err
@@ -260,7 +333,7 @@ func makePtrDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 		*/
 
 		if err = decoder(newval.Elem(), r); err == nil {
-			fmt.Println(newval.Type(), val.Type())
+			//fmt.Println(newval.Type(), val.Type())
 			val.Set(newval)
 		}
 		return err

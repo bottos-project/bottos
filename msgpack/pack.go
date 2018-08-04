@@ -32,7 +32,6 @@ import (
 const (
 	// NIL nil or null type
 	NIL = 0xc0
-
 	// FALSE is a Bool type
 	FALSE = 0xc2
 	// TRUE is a Bool type
@@ -53,29 +52,6 @@ const (
 	STR16 = 0xda
 	//ARRAY16 is array size type identifier
 	ARRAY16 = 0xdc
-	//LEN_INT32 value
-	LEN_INT32 = 4
-	//LEN_INT64 value
-	LEN_INT64 = 8
-	//MAX16BIT value
-	MAX16BIT = 2 << (16 - 1)
-	//REGULAR_UINT7_MAX value
-	REGULAR_UINT7_MAX = 2 << (7 - 1)
-	//REGULAR_UINT8_MAX value
-	REGULAR_UINT8_MAX = 2 << (8 - 1)
-	//REGULAR_UINT16_MAX value
-	REGULAR_UINT16_MAX = 2 << (16 - 1)
-	//REGULAR_UINT32_MAX value
-	REGULAR_UINT32_MAX = 2 << (32 - 1)
-
-	//SPECIAL_INT8 value
-	SPECIAL_INT8 = 32
-	//SPECIAL_INT16 value
-	SPECIAL_INT16 = 2 << (8 - 2)
-	//SPECIAL_INT32 value
-	SPECIAL_INT32 = 2 << (16 - 2)
-	//SPECIAL_INT64 value
-	SPECIAL_INT64 = 2 << (32 - 2)
 )
 
 //Bytes is []byte type
@@ -86,7 +62,7 @@ func PackNil(writer io.Writer) (n int, err error) {
 	return writer.Write(Bytes{NIL})
 }
 
-// PackBool is to pack a bool value.
+// PackBool pack a bool value.
 func PackBool(writer io.Writer, value bool) (n int, err error) {
 	if value {
 		return writer.Write(Bytes{TRUE})

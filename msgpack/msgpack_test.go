@@ -30,16 +30,19 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"time"
+
+	"github.com/bottos-project/bottos/common"
 )
 
 func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
 }
 
-func HexToBytes(str string) ([]byte, error) {
-	h, err := hex.DecodeString(str)
+func HexToBytes(str string) []byte {
+	h, _ := hex.DecodeString(str)
 
-	return h, err
+	return h
 }
 
 func TestMarshalStruct(t *testing.T) {
@@ -165,7 +168,7 @@ func TestMarshalCustomHashType(t *testing.T) {
 		CodeVersion Hash
 	}
 
-	fmt.Println("TestMarshalRoleAccount...")
+	fmt.Println("TestMarshalCustomHashType...")
 
 	ts := Account{
 		AccountName: "testuser",
@@ -202,5 +205,169 @@ func TestMarshalBigInt(t *testing.T) {
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
 	fmt.Printf("ts1: %#v\n", ts1)
+	fmt.Println(err)
+}
+
+func TestMarshalTransaction(t *testing.T) {
+	type Transaction struct {
+		Version     uint32
+		CursorNum   uint32
+		CursorLabel uint32
+		Lifetime    uint64
+		Sender      string
+		Contract    string
+		Method      string
+		Param       []byte
+		SigAlg      uint32
+		Signature   []byte
+	}
+
+	fmt.Println("TestMarshalTransaction...")
+
+	ts := Transaction{
+		Version:     1,
+		CursorNum:   999,
+		CursorLabel: 86868797,
+		Lifetime:    uint64(time.Now().Unix()),
+		Sender:      "alice",
+		Contract:    "bottos",
+		Method:      "transfer",
+		Param:       HexToBytes("dc000212345678"),
+		SigAlg:      1,
+		Signature:   []byte{},
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	ts1 := Transaction{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#x\n", ts)
+	fmt.Printf("ts1: %#x\n", ts1)
+	fmt.Println(err)
+}
+
+func TestMarshalBalance(t *testing.T) {
+	type Balance struct {
+		AccountName string
+		Balance     *big.Int
+	}
+
+	fmt.Println("TestMarshalTransaction...")
+
+	balance, _ := new(big.Int).SetString("100000000001000000000", 10)
+	ts := Balance{
+		AccountName: "alice",
+		Balance:     balance,
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	ts1 := Balance{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v\n", ts)
+	fmt.Printf("ts1: %#v\n", ts1)
+	fmt.Println(err)
+}
+
+type Name [16]byte // uint128
+func StringToName(s string) Name {
+	var name Name
+	name.SetBytes([]byte(s))
+	return name
+}
+func (h *Name) SetBytes(b []byte) {
+	if len(b) > len(h) {
+		b = b[len(b)-16:]
+	}
+	copy(h[16-len(b):], b)
+}
+
+func TestMarshalBlock(t *testing.T) {
+
+	type Header struct {
+		Version         uint32
+		PrevBlockHash   common.Hash
+		Number          uint32
+		Timestamp       uint64
+		MerkleRoot      common.Hash
+		Delegate        Name
+		DelegateSign    []byte
+		DelegateChanges []Name
+	}
+
+	type Transaction struct {
+		Version     uint32
+		CursorNum   uint32
+		CursorLabel uint32
+		Lifetime    uint64
+		Sender      Name
+		Contract    Name
+		Method      Name
+		Param       []byte
+		SigAlg      uint32
+		Signature   []byte
+	}
+
+	type Block struct {
+		Header       *Header
+		Transactions []*Transaction
+	}
+
+	fmt.Println("TestMarshalBlock...")
+
+	header := Header{
+		Version:         1,
+		PrevBlockHash:   common.Sha256([]byte("123")),
+		Number:          123,
+		Timestamp:       uint64(time.Now().Unix()),
+		MerkleRoot:      common.Sha256([]byte("234")),
+		Delegate:        StringToName("toliman"),
+		DelegateSign:    []byte{},
+		DelegateChanges: []Name{StringToName("toliman"), StringToName("ran")},
+	}
+	tx1 := Transaction{
+		Version:     1,
+		CursorNum:   999,
+		CursorLabel: 86868797,
+		Lifetime:    uint64(time.Now().Unix()),
+		Sender:      StringToName("alice"),
+		Contract:    StringToName("bottos"),
+		Method:      StringToName("transfer"),
+		Param:       HexToBytes("dc000212345678"),
+		SigAlg:      1,
+		Signature:   []byte{},
+	}
+	tx2 := Transaction{
+		Version:     1,
+		CursorNum:   999,
+		CursorLabel: 1412312421,
+		Lifetime:    uint64(time.Now().Unix()),
+		Sender:      StringToName("alice"),
+		Contract:    StringToName("bottos"),
+		Method:      StringToName("transfer"),
+		Param:       HexToBytes("dc000212345678"),
+		SigAlg:      1,
+		Signature:   []byte{},
+	}
+
+	block := Block{Header: &header}
+	block.Transactions = append(block.Transactions, &tx1)
+	block.Transactions = append(block.Transactions, &tx2)
+
+	fmt.Printf("block: %#v\n", block)
+
+	b, err := Marshal(block)
+
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	block1 := Block{}
+	err = Unmarshal(b, &block1)
+	fmt.Printf("block: %#x\n", block.Header)
+	fmt.Printf("block1: %#x\n", block1.Header)
 	fmt.Println(err)
 }
