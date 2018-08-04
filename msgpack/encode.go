@@ -86,6 +86,8 @@ func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 		return encodeBytes, nil
 	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
 		return encodeByteArray, nil
+	case kind == reflect.Slice || kind == reflect.Array:
+		return makeSliceEncoder(t, w)
 	case kind == reflect.Struct:
 		return makeStructEncoder(t, w)
 	case kind == reflect.Ptr:
@@ -141,6 +143,25 @@ func encodeByteArray(val reflect.Value, w io.Writer) error {
 	slice := val.Slice(0, size).Bytes()
 	PackBin16(w, slice)
 	return nil
+}
+
+func makeSliceEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
+	elemEncoder, err := getEncoder(t.Elem(), w)
+	if err != nil {
+		return nil, err
+	}
+
+	encoder := func(val reflect.Value, w io.Writer) error {
+		vlen := val.Len()
+		PackArraySize(w, uint16(vlen))
+		for i := 0; i < vlen; i++ {
+			if err := elemEncoder(val.Index(i), w); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return encoder, nil
 }
 
 type Field struct {
@@ -209,12 +230,10 @@ func encodeBigInt(i *big.Int, w io.Writer) error {
 }
 
 func encodeCustom(val reflect.Value, w io.Writer) error {
-	fmt.Println(val)
 	return val.Interface().(Encoder).EncodeMsgpack(w)
 }
 
 func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
-	fmt.Println(val)
 	if !val.CanAddr() {
 		return fmt.Errorf("msgpack: unadressable value of type %v", val.Type())
 	}
