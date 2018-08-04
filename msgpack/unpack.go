@@ -26,6 +26,7 @@
 package msgpack
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
@@ -61,6 +62,24 @@ func readByte(reader io.Reader) (v uint8, err error) {
 		return 0, e
 	}
 	return data[0], nil
+}
+
+//UnpackBool is to unpack message
+func TryUnpackNil(reader io.Reader) (suc bool, err error) {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(reader)
+	fmt.Printf("%x\n", buf)
+	fmt.Printf("%#x\n", reader)
+
+	var data Bytes1
+	_, err = buf.Read(data[0:])
+	if err == nil {
+		if data[0] == NIL {
+			return true, nil
+		}
+	}
+
+	return false, err
 }
 
 //UnpackBool is to unpack message
@@ -208,4 +227,23 @@ func UnpackBin16(reader io.Reader) ([]byte, error) {
 	}
 
 	return []byte{}, e
+}
+
+func UnpackExt16(reader io.Reader) ([]byte, byte, error) {
+	c, e := readByte(reader)
+	if e == nil && c == EXT16 {
+		size, _, e := readUint16(reader)
+		if e == nil {
+			t, e := readByte(reader)
+			if e == nil {
+				value := make([]byte, size)
+				n, e := reader.Read(value)
+				if e == nil && uint16(n) == size {
+					return value, t, nil
+				}
+			}
+		}
+	}
+
+	return []byte{}, 0, e
 }

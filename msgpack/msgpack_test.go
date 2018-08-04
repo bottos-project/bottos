@@ -28,6 +28,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"testing"
 )
 
@@ -48,7 +49,7 @@ func TestMarshalStruct(t *testing.T) {
 		V3 uint16
 		V4 uint32
 		V5 uint64
-		//V6 []byte
+		V6 []byte
 		V7 bool
 	}
 
@@ -58,7 +59,7 @@ func TestMarshalStruct(t *testing.T) {
 		V3: 999,
 		V4: 9999,
 		V5: 99999,
-		//V6: []byte{0xac, 0xcd, 0xde},
+		V6: []byte{0xac, 0xcd, 0xde},
 		V7: true,
 	}
 
@@ -95,6 +96,11 @@ func TestMarshalNestStruct(t *testing.T) {
 
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v \n", ts1)
+	fmt.Println(err)
 }
 
 func TestMarshalNestStructPtr(t *testing.T) {
@@ -119,6 +125,11 @@ func TestMarshalNestStructPtr(t *testing.T) {
 
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v, %#v\n", ts1, *ts1.V3)
+	fmt.Println(err)
 }
 
 func TestMarshalNilPtr(t *testing.T) {
@@ -139,6 +150,11 @@ func TestMarshalNilPtr(t *testing.T) {
 
 	fmt.Printf("%v\n", BytesToHex(b))
 	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v\n", ts1)
+	fmt.Println(err)
 }
 
 func TestMarshalCustomHashType(t *testing.T) {
@@ -158,5 +174,33 @@ func TestMarshalCustomHashType(t *testing.T) {
 	b, err := Marshal(ts)
 
 	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	ts1 := Account{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#x\n", ts1)
+	fmt.Println(err)
+}
+
+func TestMarshalBigInt(t *testing.T) {
+	type TestStruct struct {
+		V1 uint32
+		V2 *big.Int
+	}
+
+	fmt.Println("TestMarshalBigInt...")
+
+	ts := TestStruct{
+		V1: 9999,
+		V2: new(big.Int).SetUint64(uint64(999999)),
+	}
+	b, err := Marshal(ts)
+
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	fmt.Printf("ts1: %#v\n", ts1)
 	fmt.Println(err)
 }
