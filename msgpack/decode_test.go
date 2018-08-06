@@ -44,7 +44,7 @@ var decTests = []decTest{
 	// booleans
 	{input: "C3", ptr: new(bool), value: true},
 	{input: "C2", ptr: new(bool), value: false},
-	{input: "C5", ptr: new(bool), error: "msgpack: unpack bool fail"},
+	{input: "C4", ptr: new(bool), error: "msgpack decode: unknown type identifier C4"},
 
 	// integers
 	{input: "CC00", ptr: new(uint8), value: uint8(0)},
@@ -107,6 +107,16 @@ var decTests = []decTest{
 		input: "DC0002CD007FDA0006626F74746F73",
 		ptr:   new(testStruct),
 		value: testStruct{V1: 0x7F, V2: "bottos"},
+	},
+	{
+		input: "DC0002CD0005C0",
+		ptr:   new(nestStruct),
+		value: nestStruct{V1: 5, V2: nil},
+	},
+	{
+		input: "DC0002CD0001DC0002CD0002DC0002CD0003C0",
+		ptr:   new(nestStruct),
+		value: nestStruct{1, &nestStruct{2, &nestStruct{3, nil}}},
 	},
 }
 
