@@ -26,14 +26,20 @@
 package msgpack
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"reflect"
 )
 
-type DecoderReader func(reflect.Value, io.Reader) error
+type DecodeContext struct {
+	r    io.Reader
+	t    uint8
+	ext  uint8
+	size uint16
+}
+
+type DecoderReader func(reflect.Value, *DecodeContext) error
 
 type Decoder interface {
 	DecodeMsgpack(io.Reader) error
@@ -46,27 +52,31 @@ var (
 //Decode is to decode message
 func Decode(r io.Reader, v interface{}) error {
 	if v == nil {
-		return errors.New("msgpack decode: nil pointer")
+		return fmt.Errorf("msgpack decode: nil pointer")
 	}
 
 	rv := reflect.ValueOf(v)
 	t := rv.Type()
 	if t.Kind() != reflect.Ptr {
-		return errors.New("msgpack decode: need a pointer")
+		return fmt.Errorf("msgpack decode: need a pointer")
 	}
 	if rv.IsNil() {
-		return errors.New("msgpack decode: nil pointer")
+		return fmt.Errorf("msgpack decode: nil pointer")
 	}
 
-	decoder, err := getDecoder(t.Elem(), r)
+	decoder, err := getDecoder(t.Elem())
 	if err != nil {
 		return err
 	}
 
-	return decoder(rv.Elem(), r)
+	ctx := newDecodeContext(r)
+	if err := ctx.decode(); err != nil {
+		return err
+	}
+	return decoder(rv.Elem(), ctx)
 }
 
-func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
+func getDecoder(t reflect.Type) (DecoderReader, error) {
 	kind := t.Kind()
 	switch {
 	case t.AssignableTo(reflect.PtrTo(bigInt)):
@@ -90,27 +100,126 @@ func getDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
 		return decodeByteArray, nil
 	case kind == reflect.Slice || kind == reflect.Array:
-		return makeArrayDecoder(t, r)
+		return makeArrayDecoder(t)
 	case kind == reflect.Struct:
-		return makeStructDecoder(t, r)
+		return makeStructDecoder(t)
 	case kind == reflect.Ptr:
-		return makePtrDecoder(t, r)
+		return makePtrDecoder(t)
 	default:
 		return nil, fmt.Errorf("msgpack, type %v, kind %v not support", t, kind)
 	}
 }
 
-func decodeBigIntNoPtr(v reflect.Value, r io.Reader) error {
-	return decodeBigInt(v.Addr(), r)
+func newDecodeContext(r io.Reader) *DecodeContext {
+	ctx := &DecodeContext{r: r}
+	return ctx
 }
 
-func decodeBigInt(v reflect.Value, r io.Reader) error {
-	val, t, err := UnpackExt16(r)
+func (ctx *DecodeContext) reset() {
+	ctx.t = 0
+	ctx.size = 0
+	ctx.ext = 0
+}
+
+func (ctx *DecodeContext) decode() error {
+	ctx.reset()
+
+	t, err := ReadByte(ctx.r)
 	if err != nil {
-		return errors.New("msgpack: unpack ext fail")
+		return err
 	}
-	if t != EXT_BIGINT {
-		return errors.New("msgpack: unpack ext type error")
+
+	ctx.t = t
+	switch ctx.t {
+	case NIL:
+	case FALSE:
+	case TRUE:
+	case UINT8:
+	case UINT16:
+	case UINT32:
+	case UINT64:
+	case BIN16:
+		ctx.size, _, err = ReadUint16(ctx.r)
+		if err != nil {
+			return err
+		}
+	case STR16:
+		ctx.size, _, err = ReadUint16(ctx.r)
+		if err != nil {
+			return err
+		}
+	case ARRAY16:
+		ctx.size, _, err = ReadUint16(ctx.r)
+		if err != nil {
+			return err
+		}
+	case EXT16:
+		ctx.size, _, err = ReadUint16(ctx.r)
+		if err != nil {
+			return err
+		}
+		ctx.ext, err = ReadByte(ctx.r)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("msgpack decode: unknown type identifier %X", ctx.t)
+	}
+
+	return nil
+}
+
+func (ctx *DecodeContext) readUint() (uint64, error) {
+	var err error
+	switch ctx.t {
+	case UINT8:
+		v, err := ReadByte(ctx.r)
+		if err == nil {
+			return uint64(v), nil
+		}
+	case UINT16:
+		v, _, err := ReadUint16(ctx.r)
+		if err == nil {
+			return uint64(v), nil
+		}
+	case UINT32:
+		v, _, err := ReadUint32(ctx.r)
+		if err == nil {
+			return uint64(v), nil
+		}
+	case UINT64:
+		v, _, err := ReadUint64(ctx.r)
+		if err == nil {
+			return uint64(v), nil
+		}
+	}
+
+	return uint64(0), err
+}
+
+func (ctx *DecodeContext) readRaw() ([]byte, error) {
+	val := make([]byte, ctx.size)
+	n, e := ctx.r.Read(val)
+	if e == nil && n == int(ctx.size) {
+		return val, nil
+	}
+	return []byte{}, nil
+}
+
+func decodeBigIntNoPtr(v reflect.Value, ctx *DecodeContext) error {
+	return decodeBigInt(v.Addr(), ctx)
+}
+
+func decodeBigInt(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != EXT16 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, EXT16)
+	}
+	if ctx.ext != EXT_BIGINT {
+		return fmt.Errorf("msgpack: decode exttype %X, expected %X", ctx.ext, EXT_BIGINT)
+	}
+	val, err := ctx.readRaw()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode big.Int fail")
 	}
 	i := v.Interface().(*big.Int)
 	if i == nil {
@@ -121,99 +230,115 @@ func decodeBigInt(v reflect.Value, r io.Reader) error {
 	return nil
 }
 
-func decodeBytes(v reflect.Value, r io.Reader) error {
-	val, err := UnpackBin16(r)
-	if err != nil {
-		return err
+func decodeBool(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t == TRUE {
+		v.SetBool(true)
+	} else if ctx.t == FALSE {
+		v.SetBool(false)
+	} else {
+		return fmt.Errorf("msgpack: decode type %X, expected %X or %X", ctx.t, TRUE, FALSE)
 	}
-	v.SetBytes(val)
-	return nil
-}
-
-func decodeByteArray(v reflect.Value, r io.Reader) error {
-	vlen := v.Len()
-	slice := v.Slice(0, vlen).Interface().([]byte)
-	val, err := UnpackBin16(r)
-	if err != nil {
-		return err
-	}
-
-	if len(val) != vlen {
-		return errors.New("msgpack: wrong array size")
-	}
-
-	copy(slice, val)
 
 	return nil
 }
 
-func decodeBool(v reflect.Value, r io.Reader) error {
-	val, err := UnpackBool(r)
-	if err != nil {
-		return err
+func decodeUint8(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != UINT8 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT8)
 	}
-	v.SetBool(val)
+	val, err := ctx.readUint()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode uint8 fail")
+	}
+	v.SetUint(val)
 	return nil
 }
 
-func decodeUint8(v reflect.Value, r io.Reader) error {
-	val, err := UnpackUint8(r)
-	if err != nil {
-		return err
+func decodeUint16(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != UINT16 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT16)
 	}
-	v.SetUint(uint64(val))
+	val, err := ctx.readUint()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode uint16 fail")
+	}
+	v.SetUint(val)
 	return nil
 }
 
-func decodeUint16(v reflect.Value, r io.Reader) error {
-	val, err := UnpackUint16(r)
-	if err != nil {
-		return err
+func decodeUint32(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != UINT32 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT32)
 	}
-	v.SetUint(uint64(val))
+	val, err := ctx.readUint()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode uint32 fail")
+	}
+	v.SetUint(val)
 	return nil
 }
 
-func decodeUint32(v reflect.Value, r io.Reader) error {
-	val, err := UnpackUint32(r)
-	if err != nil {
-		return err
+func decodeUint64(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != UINT64 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT64)
 	}
-	v.SetUint(uint64(val))
+	val, err := ctx.readUint()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode uint64 fail")
+	}
+	v.SetUint(val)
 	return nil
 }
 
-func decodeUint64(v reflect.Value, r io.Reader) error {
-	val, err := UnpackUint64(r)
-	if err != nil {
-		return err
+func decodeString(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != STR16 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, STR16)
 	}
-	v.SetUint(uint64(val))
-	return nil
-}
-
-func decodeString(v reflect.Value, r io.Reader) error {
-	val, err := UnpackStr16(r)
+	val, err := ctx.readRaw()
 	if err != nil {
-		return err
+		return fmt.Errorf("msgpack: decode string fail")
 	}
 	v.SetString(string(val))
 	return nil
 }
 
-func decodeArray(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error {
-	vlen := v.Len()
-	size, err := UnpackArraySize(r)
+func decodeBytes(v reflect.Value, ctx *DecodeContext) error {
+	if ctx.t != BIN16 {
+		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, BIN16)
+	}
+	val, err := ctx.readRaw()
 	if err != nil {
-		return err
+		return fmt.Errorf("msgpack: decode bin16 fail")
+	}
+	v.SetBytes(val)
+	return nil
+}
+
+func decodeByteArray(v reflect.Value, ctx *DecodeContext) error {
+	val, err := ctx.readRaw()
+	if err != nil {
+		return fmt.Errorf("msgpack: decode bin16 fail")
 	}
 
-	if vlen != int(size) {
-		return fmt.Errorf("msgpack decoder: wrong array size %v, expected %v", int(size), vlen)
+	vlen := v.Len()
+	if len(val) != vlen {
+		return fmt.Errorf("msgpack: wrong array size")
+	}
+
+	slice := v.Slice(0, vlen).Interface().([]byte)
+	copy(slice, val)
+
+	return nil
+}
+
+func decodeArray(v reflect.Value, ctx *DecodeContext, elemDecoder DecoderReader) error {
+	vlen := v.Len()
+	if vlen != int(ctx.size) {
+		return fmt.Errorf("msgpack: wrong array size %v, expected %v", int(ctx.size), vlen)
 	}
 	i := 0
 	for ; i < vlen; i++ {
-		if err := elemDecoder(v.Index(i), r); err != nil {
+		if err := elemDecoder(v.Index(i), ctx); err != nil {
 			return fmt.Errorf("msgpack decoder: array decode error")
 		}
 	}
@@ -223,18 +348,15 @@ func decodeArray(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error 
 	return nil
 }
 
-func decodeSlice(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error {
-	size, err := UnpackArraySize(r)
-	if err != nil {
-		return err
-	}
-	if size == 0 {
+func decodeSlice(v reflect.Value, ctx *DecodeContext, elemDecoder DecoderReader) error {
+	asize := int(ctx.size)
+	if asize == 0 {
 		v.Set(reflect.MakeSlice(v.Type(), 0, 0))
 		return nil
 	}
 
 	i := 0
-	for ; i < int(size); i++ {
+	for ; i < asize; i++ {
 		if i >= v.Cap() {
 			newcap := v.Cap() + v.Cap()/2
 			if newcap < 4 {
@@ -247,16 +369,21 @@ func decodeSlice(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error 
 		if i >= v.Len() {
 			v.SetLen(i + 1)
 		}
-		if err := elemDecoder(v.Index(i), r); err != nil {
+
+		if err := ctx.decode(); err != nil {
+			return err
+		}
+
+		if err := elemDecoder(v.Index(i), ctx); err != nil {
 			return fmt.Errorf("msgpack decoder: slice decode error")
 		}
 	}
 	return nil
 }
 
-func makeArrayDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
+func makeArrayDecoder(t reflect.Type) (DecoderReader, error) {
 	etype := t.Elem()
-	elemDecoder, err := getDecoder(etype, r)
+	elemDecoder, err := getDecoder(etype)
 	if err != nil {
 		return nil, err
 	}
@@ -264,12 +391,12 @@ func makeArrayDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	var dec DecoderReader
 	switch {
 	case t.Kind() == reflect.Array:
-		dec = func(val reflect.Value, r io.Reader) error {
-			return decodeArray(val, r, elemDecoder)
+		dec = func(val reflect.Value, ctx *DecodeContext) error {
+			return decodeArray(val, ctx, elemDecoder)
 		}
 	default: // t.Kind() == reflect.Slice
-		dec = func(val reflect.Value, r io.Reader) error {
-			return decodeSlice(val, r, elemDecoder)
+		dec = func(val reflect.Value, ctx *DecodeContext) error {
+			return decodeSlice(val, ctx, elemDecoder)
 		}
 	}
 	return dec, nil
@@ -280,26 +407,28 @@ type DecField struct {
 	index int
 }
 
-func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
+func makeStructDecoder(t reflect.Type) (DecoderReader, error) {
 	fields := []DecField{}
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-
 		fields = append(fields, DecField{f.Type, i})
 	}
 
-	dec := func(val reflect.Value, r io.Reader) (err error) {
-		_, err = UnpackArraySize(r)
-		if err != nil {
-			return err
+	dec := func(val reflect.Value, ctx *DecodeContext) (err error) {
+		if len(fields) != int(ctx.size) {
+			return fmt.Errorf("msgpack decode: struct feild num mismatch, num %v, expected %v", len(fields), int(ctx.size))
 		}
 		for _, f := range fields {
-			decoder, err := getDecoder(f.t, r)
+			decoder, err := getDecoder(f.t)
 			if err != nil {
 				return err
 			}
-			err = decoder(val.Field(f.index), r)
+
+			if err := ctx.decode(); err != nil {
+				return err
+			}
+			err = decoder(val.Field(f.index), ctx)
 			if err != nil {
 				return err
 			}
@@ -309,31 +438,24 @@ func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 	return dec, nil
 }
 
-func makePtrDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
+func makePtrDecoder(t reflect.Type) (DecoderReader, error) {
 	etype := t.Elem()
-	decoder, err := getDecoder(etype, r)
+	decoder, err := getDecoder(etype)
 	if err != nil {
 		return nil, err
 	}
-	dec := func(val reflect.Value, r io.Reader) (err error) {
+	dec := func(val reflect.Value, ctx *DecodeContext) (err error) {
 		newval := val
 		if val.IsNil() {
 			newval = reflect.New(etype)
 		}
-		/*
-			suc, err := TryUnpackNil(r)
-			fmt.Println(suc, err)
-			if err != nil {
-				return err
-			}
 
-			if suc {
-				val.Set(reflect.Zero(t))
-				fmt.Println("no")
-			}
-		*/
+		if ctx.t == NIL {
+			val.Set(reflect.Zero(t))
+			return nil
+		}
 
-		if err = decoder(newval.Elem(), r); err == nil {
+		if err = decoder(newval.Elem(), ctx); err == nil {
 			val.Set(newval)
 		}
 		return err

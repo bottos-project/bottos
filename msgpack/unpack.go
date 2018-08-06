@@ -56,7 +56,7 @@ const (
 	FIRSTBYTEMASK = 0xf
 )
 
-func readByte(reader io.Reader) (v uint8, err error) {
+func ReadByte(reader io.Reader) (v uint8, err error) {
 	var data Bytes1
 	_, e := reader.Read(data[0:])
 	if e != nil {
@@ -85,7 +85,7 @@ func TryUnpackNil(reader io.Reader) (suc bool, err error) {
 
 //UnpackBool is to unpack message
 func UnpackBool(reader io.Reader) (v bool, err error) {
-	c, err := readByte(reader)
+	c, err := ReadByte(reader)
 	if err == nil {
 		if c == TRUE {
 			return true, nil
@@ -101,9 +101,9 @@ func UnpackBool(reader io.Reader) (v bool, err error) {
 
 //UnpackUint8 is to unpack message
 func UnpackUint8(reader io.Reader) (v uint8, err error) {
-	c, err := readByte(reader)
+	c, err := ReadByte(reader)
 	if err == nil && c == UINT8 {
-		v, err = readByte(reader)
+		v, err = ReadByte(reader)
 		if err == nil {
 			return v, nil
 		}
@@ -112,7 +112,7 @@ func UnpackUint8(reader io.Reader) (v uint8, err error) {
 	return 0, err
 }
 
-func readUint16(reader io.Reader) (v uint16, n int, err error) {
+func ReadUint16(reader io.Reader) (v uint16, n int, err error) {
 	var data Bytes2
 	n, e := reader.Read(data[0:])
 	if e != nil {
@@ -123,9 +123,9 @@ func readUint16(reader io.Reader) (v uint16, n int, err error) {
 
 //UnpackUint16 is to unpack message
 func UnpackUint16(reader io.Reader) (v uint16, err error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == UINT16 {
-		v, _, err = readUint16(reader)
+		v, _, err = ReadUint16(reader)
 		if err == nil {
 			return v, nil
 		}
@@ -134,7 +134,7 @@ func UnpackUint16(reader io.Reader) (v uint16, err error) {
 	return 0, err
 }
 
-func readUint32(reader io.Reader) (v uint32, n int, err error) {
+func ReadUint32(reader io.Reader) (v uint32, n int, err error) {
 	var data Bytes4
 	n, e := reader.Read(data[0:])
 	if e != nil {
@@ -145,9 +145,9 @@ func readUint32(reader io.Reader) (v uint32, n int, err error) {
 
 //UnpackUint32 is to unpack message
 func UnpackUint32(reader io.Reader) (v uint32, err error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == UINT32 {
-		v, _, err = readUint32(reader)
+		v, _, err = ReadUint32(reader)
 		if err == nil {
 			return v, nil
 		}
@@ -156,7 +156,7 @@ func UnpackUint32(reader io.Reader) (v uint32, err error) {
 	return 0, err
 }
 
-func readUint64(reader io.Reader) (v uint64, n int, err error) {
+func ReadUint64(reader io.Reader) (v uint64, n int, err error) {
 	var data Bytes8
 	n, e := reader.Read(data[0:])
 	if e != nil {
@@ -167,9 +167,9 @@ func readUint64(reader io.Reader) (v uint64, n int, err error) {
 
 //UnpackUint64 is to unpack message
 func UnpackUint64(reader io.Reader) (v uint64, err error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == UINT64 {
-		v, _, err = readUint64(reader)
+		v, _, err = ReadUint64(reader)
 		if err == nil {
 			return v, nil
 		}
@@ -180,7 +180,7 @@ func UnpackUint64(reader io.Reader) (v uint64, err error) {
 
 //UnpackArraySize is to unpack message
 func UnpackArraySize(reader io.Reader) (size uint16, err error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e != nil {
 		return 0, e
 	}
@@ -190,7 +190,7 @@ func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 		return 0, fmt.Errorf("Not Array 16")
 	}
 
-	size, _, e = readUint16(reader)
+	size, _, e = ReadUint16(reader)
 	if e != nil {
 		return 0, e
 	}
@@ -200,9 +200,9 @@ func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 
 //UnpackStr16 is to unpack message
 func UnpackStr16(reader io.Reader) (string, error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == STR16 {
-		size, _, e := readUint16(reader)
+		size, _, e := ReadUint16(reader)
 		if e == nil {
 			value := make([]byte, size)
 			n, e := reader.Read(value)
@@ -217,9 +217,9 @@ func UnpackStr16(reader io.Reader) (string, error) {
 
 //UnpackBin16 is to unpack message
 func UnpackBin16(reader io.Reader) ([]byte, error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == BIN16 {
-		size, _, e := readUint16(reader)
+		size, _, e := ReadUint16(reader)
 		if e == nil {
 			value := make([]byte, size)
 			n, e := reader.Read(value)
@@ -233,11 +233,11 @@ func UnpackBin16(reader io.Reader) ([]byte, error) {
 }
 
 func UnpackExt16(reader io.Reader) ([]byte, byte, error) {
-	c, e := readByte(reader)
+	c, e := ReadByte(reader)
 	if e == nil && c == EXT16 {
-		size, _, e := readUint16(reader)
+		size, _, e := ReadUint16(reader)
 		if e == nil {
-			t, e := readByte(reader)
+			t, e := ReadByte(reader)
 			if e == nil {
 				if size > 0 {
 					value := make([]byte, size)
