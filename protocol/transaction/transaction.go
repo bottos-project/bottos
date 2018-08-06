@@ -107,8 +107,8 @@ func (t *Transaction) sendupTrx(trx *types.Transaction) bool {
 		msg := &message.ReceiveTrx{Trx: trx}
 		handlerErr, err := t.actor.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
-			log.Errorf("send block request error:%s", err)
-			time.Sleep(10000)
+			log.Errorf("send trx request error:%s", err)
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 

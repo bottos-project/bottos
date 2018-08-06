@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/bottos-project/bottos/cmdcli"
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/chain/extra"
@@ -26,7 +27,14 @@ import (
 )
 
 func main() {
-	err := config.LoadConfig()
+	//TODO: The config's cli parameters will be used soon.
+	_, err := cmdcli.Init()
+	if err != nil {
+		log.Error("Parse cmdcli fail")
+		os.Exit(1)
+	}
+
+	err = config.LoadConfig()
 	if err != nil {
 		log.Error("Load config fail")
 		os.Exit(1)
