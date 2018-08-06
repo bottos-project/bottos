@@ -60,6 +60,8 @@ const (
 
 	SYNC_BLOCK_BUNDLE     = 60
 	SYNC_BLOCK_BUNDLE_MAX = 200
+
+	SYNC_HEADER_BUNDLE = 3
 )
 
 //DO NOT EDIT
@@ -682,7 +684,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 			msg := p2p.UniMsgPacket{Index: info.index,
 				P: packet}
 
-			s.set.indexHeader = info.index
+			s.set.indexHeader[counter] = info.index
 			log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader)
 
 			p2p.Runner.SendUnicast(msg)
@@ -814,7 +816,11 @@ func (s *synchronizes) setSyncStateCheck() {
 
 func (s *synchronizes) checkSyncHeaderTimeoutPeer() {
 	log.Debugf("protocol index %d sync head time out", s.set.indexHeader)
-	s.recordPeerSyncTimeout(s.set.indexHeader)
+	for i := 0; i < SYNC_HEADER_BUNDLE; i++ {
+		if s.set.indexHeader[i] != 0 {
+			s.recordPeerSyncTimeout(s.set.indexHeader[i])
+		}
+	}
 }
 
 func (s *synchronizes) checkSyncBlockTimeoutPeers() {
@@ -1113,7 +1119,7 @@ type syncSet struct {
 	beginc          chan uint32
 	endc            chan uint32
 
-	indexHeader uint16
+	indexHeader [SYNC_HEADER_BUNDLE]uint16
 	headers     [SYNC_BLOCK_BUNDLE]*types.Header
 	indexs      [SYNC_BLOCK_BUNDLE]uint16
 	blocks      [SYNC_BLOCK_BUNDLE]*types.Block
@@ -1220,6 +1226,12 @@ func (set *syncSet) resetHeader() {
 	}
 }
 
+func (set *syncSet) resetHeaderIndex() {
+	for i := 0; i < SYNC_HEADER_BUNDLE; i++ {
+		set.indexHeader[i] = 0
+	}
+}
+
 func (set *syncSet) resetIndex() {
 	for i := 0; i < SYNC_BLOCK_BUNDLE; i++ {
 		set.indexs[i] = 0
@@ -1236,7 +1248,7 @@ func (set *syncSet) reset() {
 	set.state = SET_SYNC_NULL
 	set.end = 0
 	set.begin = 0
-	set.indexHeader = 0
+	set.resetHeaderIndex()
 	set.resetHeader()
 	set.resetIndex()
 	set.resetBlock()
