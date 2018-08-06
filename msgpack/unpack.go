@@ -27,6 +27,7 @@ package msgpack
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -91,6 +92,8 @@ func UnpackBool(reader io.Reader) (v bool, err error) {
 		} else if c == FALSE {
 			return false, nil
 		}
+
+		return false, errors.New("msgpack: unpack bool fail")
 	}
 
 	return false, err

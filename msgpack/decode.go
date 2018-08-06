@@ -276,8 +276,8 @@ func makeArrayDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 }
 
 type DecField struct {
-	decoder DecoderReader
-	index   int
+	t     reflect.Type
+	index int
 }
 
 func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
@@ -285,11 +285,8 @@ func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		decoder, e := getDecoder(f.Type, r)
-		if e != nil {
-			return nil, e
-		}
-		fields = append(fields, DecField{decoder, i})
+
+		fields = append(fields, DecField{f.Type, i})
 	}
 
 	dec := func(val reflect.Value, r io.Reader) (err error) {
@@ -298,7 +295,11 @@ func makeStructDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 			return err
 		}
 		for _, f := range fields {
-			err = f.decoder(val.Field(f.index), r)
+			decoder, err := getDecoder(f.t, r)
+			if err != nil {
+				return err
+			}
+			err = decoder(val.Field(f.index), r)
 			if err != nil {
 				return err
 			}
@@ -333,7 +334,6 @@ func makePtrDecoder(t reflect.Type, r io.Reader) (DecoderReader, error) {
 		*/
 
 		if err = decoder(newval.Elem(), r); err == nil {
-			//fmt.Println(newval.Type(), val.Type())
 			val.Set(newval)
 		}
 		return err
