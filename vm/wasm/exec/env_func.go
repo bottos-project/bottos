@@ -61,11 +61,10 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("getStrValue",      getStrValue)
 	envFunc.Register("setStrValue",      setStrValue)
 	envFunc.Register("removeStrValue",   removeStrValue)
-	envFunc.Register("getStringValue",      getStrValue)
-        envFunc.Register("setStringValue",      setStrValue)
-        envFunc.Register("removeStringValue",   removeStrValue)
+	envFunc.Register("getStringValue",   getStrValue)
+	envFunc.Register("setStringValue",   setStrValue)
+	envFunc.Register("removeStringValue",removeStrValue)
 	envFunc.Register("getParam",         getParam)
-	envFunc.Register("getMethod",        getMethod)
 	envFunc.Register("callTrx",          callTrx)
 	envFunc.Register("assert",           assert)
 	envFunc.Register("getCtxName",       getCtxName)
@@ -407,7 +406,7 @@ func prints(vm *VM) (bool, error) {
 
 	BytesToString(value)
 	param := string(value)
-	fmt.Println("VM: func prints: ", param )
+	fmt.Println("VM: func prints: ", param ," , value: ",value)
 	log.Infof("VM: func prints: %v\n", param)
 	return true, nil
 }
@@ -577,6 +576,7 @@ func memset(vm *VM) (bool, error) {
 	for i := 0; i < count; i++ {
 		tempMem[i] = byte(element)
 	}
+	fmt.Println("vm::memset pos: ",pos,",count: ",count)
 	copy(vm.memory[pos:pos+count], tempMem)
 
 	if vm.envFunc.envFuncRtn {
@@ -665,34 +665,6 @@ func strcpy_s(vm *VM) (bool, error) {
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(VM_NOERROR))
-	}
-
-	return true, nil
-}
-
-func getMethod(vm *VM) (bool, error) {
-	params := vm.envFunc.envFuncParam
-	if len(params) != 2 {
-		return false, ERR_PARAM_COUNT
-	}
-
-	pos    := int(params[0])
-	length := int(params[1])
-
-	contractCtx := vm.GetContract()
-	methodLen   := len(contractCtx.Trx.Method)
-	if methodLen > length {
-		log.Infof("*ERROR* Invaild string length \n")
-		if vm.envFunc.envFuncRtn {
-			vm.pushUint64(uint64(0))
-		}
-		return true, nil
-	}
-
-	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
-
-	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(methodLen))
 	}
 
 	return true, nil
