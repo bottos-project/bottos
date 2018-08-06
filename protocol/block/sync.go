@@ -676,7 +676,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 	//send to three peers which counter of time out is min
 	var counter uint16
 	for _, info := range peerset {
-		if counter >= 3 {
+		if counter >= SYNC_HEADER_BUNDLE {
 			break
 		}
 
