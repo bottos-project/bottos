@@ -48,6 +48,8 @@ type encTest struct {
 	output, error string
 }
 
+var tests string = string("If you shed tears when you miss the sun, you also miss the stars.")
+
 var encTests = []encTest{
 	// booleans
 	{val: true, output: "C3"},
@@ -71,8 +73,11 @@ var encTests = []encTest{
 	{val: uint64(0xFFFFFFFFFFFFFFFF), output: "CFFFFFFFFFFFFFFFFF"},
 
 	// string
-	{val: string("If you shed tears when you miss the sun, you also miss the stars."), output: "DA0041" + toHex([]byte("If you shed tears when you miss the sun, you also miss the stars."))},
 
+	{
+		val:    string("If you shed tears when you miss the sun, you also miss the stars."),
+		output: "DA0041496620796F752073686564207465617273207768656E20796F75206D697373207468652073756E2C20796F7520616C736F206D697373207468652073746172732E",
+	},
 	// big.int
 	{val: big.NewInt(0), output: "C8000001"},
 	{val: big.NewInt(1), output: "C800010101"},
