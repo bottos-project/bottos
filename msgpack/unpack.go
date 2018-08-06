@@ -236,10 +236,14 @@ func UnpackExt16(reader io.Reader) ([]byte, byte, error) {
 		if e == nil {
 			t, e := readByte(reader)
 			if e == nil {
-				value := make([]byte, size)
-				n, e := reader.Read(value)
-				if e == nil && uint16(n) == size {
-					return value, t, nil
+				if size > 0 {
+					value := make([]byte, size)
+					n, e := reader.Read(value)
+					if e == nil && uint16(n) == size {
+						return value, t, nil
+					}
+				} else {
+					return []byte{}, t, nil
 				}
 			}
 		}
