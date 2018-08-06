@@ -30,23 +30,23 @@ import (
 )
 
 const (
-	// NIL nil or null type
+	// NIL nil or null type identifier
 	NIL = 0xc0
-	// FALSE is a Bool type
+	// FALSE is a Bool type identifier
 	FALSE = 0xc2
-	// TRUE is a Bool type
+	// TRUE is a Bool type identifier
 	TRUE = 0xc3
 	//BIN16 is byte array type identifier
 	BIN16 = 0xc5
-	//EXT16
+	//EXT16 is extension type identifier
 	EXT16 = 0xc8
-	//UINT8 is uint8
+	//UINT8 is uint8 type identifier
 	UINT8 = 0xcc
-	//UINT16 is uint16
+	//UINT16 is uint16 type identifier
 	UINT16 = 0xcd
-	//UINT32 is uint32
+	//UINT32 is uint32 type identifier
 	UINT32 = 0xce
-	//UINT64 is uint64
+	//UINT64 is uint64 type identifier
 	UINT64 = 0xcf
 	//STR16 is string type identifier
 	STR16 = 0xda
@@ -70,27 +70,27 @@ func PackBool(writer io.Writer, value bool) (n int, err error) {
 	return writer.Write(Bytes{FALSE})
 }
 
-//PackUint8 is to pack a given value and writes it into the specified writer.
+//PackUint8 is to pack a uint8.
 func PackUint8(writer io.Writer, value uint8) (n int, err error) {
 	return writer.Write(Bytes{UINT8, value})
 }
 
-//PackUint16 is to pack a given value and writes it into the specified writer.
+//PackUint16 is to pack a uint16
 func PackUint16(writer io.Writer, value uint16) (n int, err error) {
 	return writer.Write(Bytes{UINT16, byte(value >> 8), byte(value)})
 }
 
-//PackUint32 is to pack a given value and writes it into the specified writer.
+//PackUint32 is to pack a uint32.
 func PackUint32(writer io.Writer, value uint32) (n int, err error) {
 	return writer.Write(Bytes{UINT32, byte(value >> 24), byte(value >> 16), byte(value >> 8), byte(value)})
 }
 
-//PackUint64 is to pack a given value and writes it into the specified writer.
+//PackUint64 is to pack a uint64.
 func PackUint64(writer io.Writer, value uint64) (n int, err error) {
 	return writer.Write(Bytes{UINT64, byte(value >> 56), byte(value >> 48), byte(value >> 40), byte(value >> 32), byte(value >> 24), byte(value >> 16), byte(value >> 8), byte(value)})
 }
 
-//PackBin16 is to pack a given value and writes it into the specified writer.
+//PackBin16 is to pack a byte array.
 func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 	length := len(value)
 	n1, err := writer.Write(Bytes{BIN16, byte(length >> 8), byte(length)})
@@ -101,7 +101,7 @@ func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 	return n1 + n2, err
 }
 
-//PackStr16 is to pack a given value and writes it into the specified writer.
+//PackStr16 is to pack a string.
 func PackStr16(writer io.Writer, value string) (n int, err error) {
 	length := len(value)
 	n1, err := writer.Write(Bytes{STR16, byte(length >> 8), byte(length)})
@@ -112,6 +112,7 @@ func PackStr16(writer io.Writer, value string) (n int, err error) {
 	return n1 + n2, err
 }
 
+//PackExt16 is to pack a extension type.
 func PackExt16(writer io.Writer, t byte, value []byte) (n int, err error) {
 	length := len(value)
 	n1, err := writer.Write(Bytes{EXT16, byte(length >> 8), byte(length), t})
@@ -122,7 +123,7 @@ func PackExt16(writer io.Writer, t byte, value []byte) (n int, err error) {
 	return n1 + n2, err
 }
 
-//PackArraySize is to pack a given value and writes it into the specified writer.
+//PackArraySize is to pack a array size header.
 func PackArraySize(writer io.Writer, length uint16) (n int, err error) {
 	n, err = writer.Write(Bytes{ARRAY16, byte(length >> 8), byte(length)})
 	if err != nil {

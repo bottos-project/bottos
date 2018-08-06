@@ -55,7 +55,6 @@ func Encode(v interface{}, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-
 	return encoder(rv, w)
 }
 
@@ -165,8 +164,8 @@ func makeSliceEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 }
 
 type Field struct {
-	encoder EncodeWriter
-	index   int
+	t     reflect.Type
+	index int
 }
 
 func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
@@ -174,17 +173,17 @@ func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		encoder, err := getEncoder(f.Type, w)
-		if err != nil {
-			return nil, err
-		}
-		fields = append(fields, Field{encoder, i})
+		fields = append(fields, Field{f.Type, i})
 	}
 
 	encoder := func(val reflect.Value, w io.Writer) error {
 		PackArraySize(w, uint16(len(fields)))
 		for _, f := range fields {
-			if err := f.encoder(val.Field(f.index), w); err != nil {
+			encoder, err := getEncoder(f.t, w)
+			if err != nil {
+				return err
+			}
+			if err := encoder(val.Field(f.index), w); err != nil {
 				return err
 			}
 		}
@@ -203,9 +202,8 @@ func makePtrEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 		if val.IsNil() {
 			_, err := PackNil(w)
 			return err
-		} else {
-			return encodeWriter(val.Elem(), w)
 		}
+		return encodeWriter(val.Elem(), w)
 	}
 
 	return encoder, nil
@@ -235,7 +233,7 @@ func encodeCustom(val reflect.Value, w io.Writer) error {
 
 func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
 	if !val.CanAddr() {
-		return fmt.Errorf("msgpack: unadressable value of type %v", val.Type())
+		return fmt.Errorf("msgpack encode: unadressable value of type %v", val.Type())
 	}
 	return val.Addr().Interface().(Encoder).EncodeMsgpack(w)
 }

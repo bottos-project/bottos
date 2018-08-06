@@ -44,18 +44,18 @@ var (
 )
 
 //Decode is to decode message
-func Decode(v interface{}, r io.Reader) error {
+func Decode(r io.Reader, v interface{}) error {
 	if v == nil {
-		return errors.New("msgpack: nil pointer")
+		return errors.New("msgpack decode: nil pointer")
 	}
 
 	rv := reflect.ValueOf(v)
 	t := rv.Type()
 	if t.Kind() != reflect.Ptr {
-		return errors.New("msgpack: need a pointer")
+		return errors.New("msgpack decode: need a pointer")
 	}
 	if rv.IsNil() {
-		return errors.New("msgpack: need a pointer")
+		return errors.New("msgpack decode: nil pointer")
 	}
 
 	decoder, err := getDecoder(t.Elem(), r)
@@ -209,7 +209,7 @@ func decodeArray(v reflect.Value, r io.Reader, elemDecoder DecoderReader) error 
 	}
 
 	if vlen != int(size) {
-		return fmt.Errorf("msgpack decoder: wrong array size, now %v, expected %v", int(size), vlen)
+		return fmt.Errorf("msgpack decoder: wrong array size %v, expected %v", int(size), vlen)
 	}
 	i := 0
 	for ; i < vlen; i++ {
