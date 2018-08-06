@@ -97,29 +97,33 @@ func getStrValue(vm *VM) (bool, error) {
 	if len(params) != 8 {
 		return false, ERR_PARAM_COUNT
 	}
-	contractPos := int(params[0])
-	contractLen := int(params[1])
-	objectPos   := int(params[2])
-	objectLen   := int(params[3])
-	keyPos      := int(params[4])
-	keyLen      := int(params[5])
-	valueBufPos := int(params[6])
-	valueBufLen := int(params[7])
-
-	// length check
-	contract := make([]byte, contractLen)
-	object   := make([]byte, objectLen)
-	key      := make([]byte, keyLen)
-	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-	copy(object,   vm.memory[objectPos:objectPos+objectLen])
-	copy(key,      vm.memory[keyPos:keyPos+keyLen])
+	contractPos := uint64(params[0])
+	contractLen := uint64(params[1])
+	objectPos   := uint64(params[2])
+	objectLen   := uint64(params[3])
+	keyPos      := uint64(params[4])
+	keyLen      := uint64(params[5])
+	valueBufPos := uint64(params[6])
+	valueBufLen := uint64(params[7])
+	contract , err := Convert(vm , contractPos , contractLen)
+	if err != nil {
+		return true, nil
+	}
+	object   , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key      , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
 
-	valueLen := 0
+	var valueLen uint64 = 0
 	if err == nil {
-		valueLen = len(value)
+		valueLen = uint64(len(value))
 		// check buf len
 		if valueLen <= valueBufLen {
 			copy(vm.memory[valueBufPos:valueBufPos+valueLen], []byte(value))
@@ -149,26 +153,29 @@ func setStrValue(vm *VM) (bool, error) {
 	if len(params) != 6 {
 		return false, ERR_PARAM_COUNT
 	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
-	valuePos  := int(params[4])
-	valueLen  := int(params[5])
+	objectPos := uint64(params[0])
+	objectLen := uint64(params[1])
+	keyPos    := uint64(params[2])
+	keyLen    := uint64(params[3])
+	valuePos  := uint64(params[4])
+	valueLen  := uint64(params[5])
 
-	// length check
-
-	object := make([]byte, objectLen)
-	key    := make([]byte, keyLen)
-	value  := make([]byte, valueLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
-	copy(value, vm.memory[valuePos:valuePos+valueLen])
+	object , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key     , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
+	value   , err := Convert(vm , valuePos , valueLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
-	err := contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
-
 	result := 1
+	err = contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
 	if err != nil {
 		result = 0
 	}
@@ -193,19 +200,22 @@ func removeStrValue(vm *VM) (bool, error) {
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
 	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
+	objectPos := uint64(params[0])
+	objectLen := uint64(params[1])
+	keyPos    := uint64(params[2])
+	keyLen    := uint64(params[3])
 
-	// length check
-	object := make([]byte, objectLen)
-	key    := make([]byte, keyLen)
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
+	object , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key     , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	err := contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
+	err = contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	result := 1
 	if err != nil {
@@ -230,31 +240,33 @@ func getBinValue(vm *VM) (bool, error) {
 	if len(params) != 8 {
 		return false, ERR_PARAM_COUNT
 	}
-	contractPos := int(params[0])
-	contractLen := int(params[1])
-	objectPos   := int(params[2])
-	objectLen   := int(params[3])
-	keyPos      := int(params[4])
-	keyLen      := int(params[5])
-	valueBufPos := int(params[6])
-	valueBufLen := int(params[7])
+	contractPos := uint64(params[0])
+	contractLen := uint64(params[1])
+	objectPos   := uint64(params[2])
+	objectLen   := uint64(params[3])
+	keyPos      := uint64(params[4])
+	keyLen      := uint64(params[5])
+	valueBufPos := uint64(params[6])
+	valueBufLen := uint64(params[7])
 
-	// length check
-
-	contract := make([]byte, contractLen)
-	object   := make([]byte, objectLen)
-	key      := make([]byte, keyLen)
-
-	copy(contract, vm.memory[contractPos:contractPos+contractLen])
-	copy(object,   vm.memory[objectPos:objectPos+objectLen])
-	copy(key,      vm.memory[keyPos:keyPos+keyLen])
+	contract , err := Convert(vm , contractPos , contractLen)
+	if err != nil {
+		return true, nil
+	}
+	object   , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key      , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
+	var valueLen uint64 = 0
 	value, err := contractCtx.ContractDB.GetBinValue(string(contract), string(object), string(key))
-
-	valueLen := 0
 	if err == nil {
-		valueLen = len(value)
+		valueLen = uint64(len(value))
 		// check buf len
 		if valueLen <= valueBufLen {
 			copy(vm.memory[valueBufPos:valueBufPos+valueLen], value)
@@ -283,23 +295,28 @@ func setBinValue(vm *VM) (bool, error) {
 	if len(params) != 6 {
 		return false, ERR_PARAM_COUNT
 	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
-	valuePos  := int(params[4])
-	valueLen  := int(params[5])
+	objectPos := uint64(params[0])
+	objectLen := uint64(params[1])
+	keyPos    := uint64(params[2])
+	keyLen    := uint64(params[3])
+	valuePos  := uint64(params[4])
+	valueLen  := uint64(params[5])
 
-	// length check
-	object := make([]byte, objectLen)
-	key    := make([]byte, keyLen)
-	value  := make([]byte, valueLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-	copy(key, vm.memory[keyPos:keyPos+keyLen])
-	copy(value, vm.memory[valuePos:valuePos+valueLen])
+	object   , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key      , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
+	value    , err := Convert(vm , valuePos , valueLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
-	err := contractCtx.ContractDB.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
+	err = contractCtx.ContractDB.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
 
 	result := 1
 	if err != nil {
@@ -326,19 +343,22 @@ func removeBinValue(vm *VM) (bool, error) {
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
 	}
-	objectPos := int(params[0])
-	objectLen := int(params[1])
-	keyPos    := int(params[2])
-	keyLen    := int(params[3])
+	objectPos := uint64(params[0])
+	objectLen := uint64(params[1])
+	keyPos    := uint64(params[2])
+	keyLen    := uint64(params[3])
 
-	// length check
-	object := make([]byte, objectLen)
-	key    := make([]byte, keyLen)
-	copy(object, vm.memory[objectPos:objectPos+objectLen])
-	copy(key,    vm.memory[keyPos:keyPos+keyLen])
+	object   , err := Convert(vm , objectPos , objectLen)
+	if err != nil {
+		return true, nil
+	}
+	key      , err := Convert(vm , keyPos , keyLen)
+	if err != nil {
+		return true, nil
+	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	err := contractCtx.ContractDB.RemoveBinValue(contractCtx.Trx.Contract, string(object), string(key))
+	err = contractCtx.ContractDB.RemoveBinValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	result := 1
 	if err != nil {
@@ -357,7 +377,7 @@ func removeBinValue(vm *VM) (bool, error) {
 
 func printi(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
-	value := vm.envFunc.envFuncParam[0]
+	value       := vm.envFunc.envFuncParam[0]
 	fmt.Printf("VM: from contract: %v, method: %v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 	log.Infof("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
@@ -366,7 +386,7 @@ func printi(vm *VM) (bool, error) {
 
 func printi64(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
-	value := vm.envFunc.envFuncParam[0]
+	value       := vm.envFunc.envFuncParam[0]
 	fmt.Printf("VM: from contract: %v, method: %v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 	log.Infof("VM: from contract:%v, method:%v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
@@ -377,15 +397,16 @@ func prints(vm *VM) (bool, error) {
 	pos := vm.envFunc.envFuncParam[0]
 	len := vm.envFunc.envFuncParam[1]
 
-	value := make([]byte, len)
-	copy(value, vm.memory[pos:pos+len])
+	value , err := Convert(vm , pos , len)
+	if err != nil {
+		return true, nil
+	}
 
 	BytesToString(value)
 	param := string(value)
 	fmt.Println("VM: func prints: ", param )
 	log.Infof("VM: func prints: %v\n", param)
 	return true, nil
-
 }
 
 func getParam(vm *VM) (bool, error) {
@@ -402,7 +423,11 @@ func getParam(vm *VM) (bool, error) {
 	paramLen := len(contractCtx.Trx.Param)
 
 	if bufLen <= paramLen {
-		return false, ERR_OUT_BOUNDS
+		log.Infof("*ERROR* Invaild string length \n")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+		return true, nil
 	}
 
 	copy(vm.memory[int(bufPos):int(bufPos)+paramLen], contractCtx.Trx.Param)
@@ -424,13 +449,22 @@ func callTrx(vm *VM) (bool, error) {
 		return false, ERR_PARAM_COUNT
 	}
 
-	cPos := int(params[0])
-	mPos := int(params[1])
-	pPos := int(params[2])
-	pLen := int(params[3])
+	cPos := uint64(params[0])
+	mPos := uint64(params[1])
+	pPos := uint64(params[2])
+	pLen := uint64(params[3])
 
-	contrx := BytesToString(vm.memory[cPos : cPos+vm.memType[uint64(cPos)].Len-1])
-	method := BytesToString(vm.memory[mPos : mPos+vm.memType[uint64(mPos)].Len-1])
+	contrxByte , err := Convert(vm , cPos , uint64(vm.memType[uint64(cPos)].Len))
+	if err != nil {
+		return true, nil
+	}
+	methodByte , err := Convert(vm , mPos , uint64(vm.memType[uint64(mPos)].Len))
+	if err != nil {
+		return true, nil
+	}
+	contrx := BytesToString(contrxByte)
+	method := BytesToString(methodByte)
+
 	//the bytes after msgpack.Marshal
 	param := vm.memory[pPos : pPos+pLen]
 	value := make([]byte, len(param))
@@ -489,6 +523,7 @@ func getCtxName(vm *VM) (bool, error) {
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
+		return true, nil
 	}
 
 	copy(vm.memory[pos:pos+ctxNameLen], []byte(ctxName))
@@ -512,6 +547,7 @@ func getSender(vm *VM) (bool, error) {
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(0))
 		}
+		return true, nil
 	}
 
 	copy(vm.memory[pos:pos+senderNameLen], []byte(senderName))
@@ -643,7 +679,11 @@ func getMethod(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	methodLen   := len(contractCtx.Trx.Method)
 	if methodLen > length {
-		return false, ERR_OUT_BOUNDS
+		log.Infof("*ERROR* Invaild string length \n")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+		return true, nil
 	}
 
 	copy(vm.memory[pos:pos+methodLen], []byte(contractCtx.Trx.Method))
@@ -664,7 +704,11 @@ func isAccountExist(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	pos         := int(params[0])
 	length      := vm.StrLen(pos)
-	accountName := BytesToString(vm.memory[pos:pos+length])
+	accountNameByte , err := Convert(vm , uint64(pos) , uint64(length))
+	if err != nil {
+		return true, nil
+	}
+	accountName := BytesToString(accountNameByte)
 
 	if contractCtx == nil || contractCtx.RoleIntf == nil {
 		log.Infof("*ERROR* param is empty when call isAccountExist !!! ")
@@ -717,5 +761,3 @@ func malloc(vm *VM) (bool, error) {
 
 	return true, nil
 }
-
-

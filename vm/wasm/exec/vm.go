@@ -37,6 +37,13 @@ import (
 	ops "github.com/bottos-project/bottos/vm/wasm/wasm/operators"
 )
 
+type SrcFileType int
+const (
+	CPP SrcFileType = iota
+	JS
+	PY
+)
+
 // InvalidReturnTypeError is returned by (*VM).ExecCode when the module
 // specifies an invalid return type value for the executed function.
 type InvalidReturnTypeError int8
@@ -94,6 +101,9 @@ type VM struct {
 	subCtnLst     []*contract.Context
 
 	codeVersion   uint32
+
+	//to identify the type of source file
+	sourceFile    SrcFileType
 }
 
 // As per the WebAssembly spec: https://github.com/WebAssembly/design/blob/27ac254c854994103c24834a994be16f74f54186/Semantics.md#linear-memory
@@ -130,6 +140,13 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		vm.memory = make([]byte, uint(module.Memory.Entries[0].Limits.Initial)*wasmPageSize)
 	}
 	copy(vm.memory, module.LinearMemoryIndexSpace[0])
+
+	//it need modify if adding python or compiler change
+	if module.Other == nil {
+		vm.sourceFile = CPP
+	} else {
+		vm.sourceFile = JS
+	}
 
 	if module.Data != nil {
 		for _, funcList := range module.Data.Entries {
@@ -174,6 +191,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		for _, entry := range fn.Body.Locals {
 			totalLocalVars += int(entry.Count)
 		}
+
 		code, table := compile.Compile(disassembly.Code)
 		vm.compiledFuncs[i] = compiledFunction{
 			code:           code,
