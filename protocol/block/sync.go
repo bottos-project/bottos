@@ -850,7 +850,6 @@ func (s *synchronizes) sendupBundleBlock() {
 	for i := s.set.begin; i <= s.set.end; i++ {
 		if s.sendupBlock(s.set.blocks[j]) != chain.InsertBlockSuccess {
 			s.set.blocks[j] = nil
-			s.syncBundleBlock()
 			return
 		}
 		j++
@@ -891,14 +890,14 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
 
-		log.Error("elapsed time 1 ", common.Elapsed(start))
+		log.Debugf("elapsed time 1 ", common.Elapsed(start))
 
 		return rsp.ErrorNo
 	}
 
 	log.Error("protocol block insert timeout with five times")
 
-	log.Error("elapsed time 2 ", common.Elapsed(start))
+	log.Debugf("elapsed time 2 ", common.Elapsed(start))
 	return 0xff
 }
 
