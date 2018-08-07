@@ -139,7 +139,13 @@ func NewVM(module *wasm.Module) (*VM, error) {
 		}
 		vm.memory = make([]byte, uint(module.Memory.Entries[0].Limits.Initial)*wasmPageSize)
 	}
-	copy(vm.memory, module.LinearMemoryIndexSpace[0])
+
+	indexSpaceLen := len(module.LinearMemoryIndexSpace[0])
+	if copy(vm.memory, module.LinearMemoryIndexSpace[0]) == indexSpaceLen {
+		vm.memPos += (len(module.LinearMemoryIndexSpace[0]) + 1)
+	}else{
+		return nil , ERR_CREATE_VM
+	}
 
 	//it need modify if adding python or compiler change
 	if module.Other == nil {
