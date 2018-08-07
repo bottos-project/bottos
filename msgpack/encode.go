@@ -33,8 +33,10 @@ import (
 	"reflect"
 )
 
+//EncodeWriter function type of the encoder
 type EncodeWriter func(reflect.Value, io.Writer) error
 
+//Encoder interface for customization
 type Encoder interface {
 	EncodeMsgpack(io.Writer) error
 }
@@ -48,7 +50,7 @@ var (
 	bigInt           = reflect.TypeOf(big.Int{})
 )
 
-//Encode is to encode message
+//Encode encodes struct, ptr, slice/array and basic types to byte stream
 func Encode(v interface{}, w io.Writer) error {
 	rv := reflect.ValueOf(v)
 	encoder, err := getEncoder(rv.Type(), w)
@@ -163,17 +165,17 @@ func makeSliceEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	return encoder, nil
 }
 
-type Field struct {
+type structField struct {
 	t     reflect.Type
 	index int
 }
 
 func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
-	fields := []Field{}
+	fields := []structField{}
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		fields = append(fields, Field{f.Type, i})
+		fields = append(fields, structField{f.Type, i})
 	}
 
 	encoder := func(val reflect.Value, w io.Writer) error {
