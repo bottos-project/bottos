@@ -25,8 +25,10 @@
 package msgpack
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"math/big"
 	"testing"
 
@@ -329,4 +331,39 @@ func TestMarshalBlock(t *testing.T) {
 	block1 := Block{}
 	err = Unmarshal(b, &block1)
 	assert.Equal(t, block, block1)
+}
+
+type bTestStruct struct {
+	V1 uint32
+	V2 string
+	V3 *big.Int
+}
+
+var val bTestStruct = bTestStruct{
+	V1: uint32(999),
+	V2: "bottos",
+	V3: big.NewInt(0x7FFFFFFFFFFFFFFF),
+}
+
+func msgpackEncode() ([]byte, error) {
+	b := new(bytes.Buffer)
+	err := Encode(val, b)
+	return b.Bytes(), err
+}
+
+func jsonEncode() ([]byte, error) {
+	b, err := json.Marshal(val)
+	return b, err
+}
+
+func BenchmarkMsgpack(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		msgpackEncode()
+	}
+}
+
+func BenchmarkJson(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		jsonEncode()
+	}
 }
