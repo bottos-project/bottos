@@ -31,10 +31,13 @@ import (
 	"io"
 	"math/big"
 	"reflect"
+	"sync"
 )
 
 //EncodeWriter function type of the encoder
 type EncodeWriter func(reflect.Value, io.Writer) error
+
+var encoderCache sync.Map // map[reflect.Type]EncodeWriter
 
 //Encoder interface for customization
 type Encoder interface {
@@ -53,14 +56,14 @@ var (
 //Encode encodes struct, ptr, slice/array and basic types to byte stream
 func Encode(v interface{}, w io.Writer) error {
 	rv := reflect.ValueOf(v)
-	encoder, err := getEncoder(rv.Type(), w)
+	encoder, err := getEncoder(rv.Type())
 	if err != nil {
 		return err
 	}
 	return encoder(rv, w)
 }
 
-func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
+func newEncoder(t reflect.Type) (EncodeWriter, error) {
 	kind := t.Kind()
 	switch {
 	case t.Implements(encoderInterface):
@@ -88,15 +91,43 @@ func getEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	case kind == reflect.Array && t.Elem().Kind() == reflect.Uint8:
 		return encodeByteArray, nil
 	case kind == reflect.Slice || kind == reflect.Array:
-		return makeSliceEncoder(t, w)
+		return makeSliceEncoder(t)
 	case kind == reflect.Struct:
-		return makeStructEncoder(t, w)
+		return makeStructEncoder(t)
 	case kind == reflect.Ptr:
-		return makePtrEncoder(t, w)
-
+		return makePtrEncoder(t)
 	default:
-		return nil, fmt.Errorf("msgpack, type %v not support", t)
+		return unsupportedTypeEncoder, nil
 	}
+}
+
+func getEncoder(t reflect.Type) (EncodeWriter, error) {
+	if fi, ok := encoderCache.Load(t); ok {
+		return fi.(EncodeWriter), nil
+	}
+
+	var (
+		wg sync.WaitGroup
+		f  EncodeWriter
+	)
+	wg.Add(1)
+	fi, loaded := encoderCache.LoadOrStore(t, EncodeWriter(func(val reflect.Value, w io.Writer) error {
+		wg.Wait()
+		return f(val, w)
+	}))
+	if loaded {
+		return fi.(EncodeWriter), nil
+	}
+
+	encoder, err := newEncoder(t)
+	if err == nil {
+		encoderCache.Store(t, encoder)
+	}
+	return encoder, err
+}
+
+func unsupportedTypeEncoder(val reflect.Value, w io.Writer) error {
+	return fmt.Errorf("msgpack: supported type %v", val.Type())
 }
 
 func encodeBool(val reflect.Value, w io.Writer) error {
@@ -146,8 +177,8 @@ func encodeByteArray(val reflect.Value, w io.Writer) error {
 	return nil
 }
 
-func makeSliceEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
-	elemEncoder, err := getEncoder(t.Elem(), w)
+func makeSliceEncoder(t reflect.Type) (EncodeWriter, error) {
+	elemEncoder, err := getEncoder(t.Elem())
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +201,7 @@ type structField struct {
 	index int
 }
 
-func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
+func makeStructEncoder(t reflect.Type) (EncodeWriter, error) {
 	fields := []structField{}
 
 	for i := 0; i < t.NumField(); i++ {
@@ -181,7 +212,7 @@ func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	encoder := func(val reflect.Value, w io.Writer) error {
 		PackArraySize(w, uint16(len(fields)))
 		for _, f := range fields {
-			encoder, err := getEncoder(f.t, w)
+			encoder, err := getEncoder(f.t)
 			if err != nil {
 				return err
 			}
@@ -194,8 +225,8 @@ func makeStructEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
 	return encoder, nil
 }
 
-func makePtrEncoder(t reflect.Type, w io.Writer) (EncodeWriter, error) {
-	encodeWriter, err := getEncoder(t.Elem(), w)
+func makePtrEncoder(t reflect.Type) (EncodeWriter, error) {
+	encodeWriter, err := getEncoder(t.Elem())
 	if err != nil {
 		return nil, err
 	}
