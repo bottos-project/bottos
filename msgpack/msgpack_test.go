@@ -27,12 +27,11 @@ package msgpack
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"testing"
-	"time"
 
 	"github.com/bottos-project/bottos/common"
+	"github.com/stretchr/testify/assert"
 )
 
 func BytesToHex(d []byte) string {
@@ -67,14 +66,12 @@ func TestMarshalStruct(t *testing.T) {
 	}
 
 	b, err := Marshal(ts)
-
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0007da00087465737475736572cc63cd03e7ce0000270fcf000000000001869fc50003accddec3"))
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v \n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalNestStruct(t *testing.T) {
@@ -88,7 +85,6 @@ func TestMarshalNestStruct(t *testing.T) {
 		V2 uint32
 		V3 TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStruct...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -96,14 +92,12 @@ func TestMarshalNestStruct(t *testing.T) {
 		V3: TestSubStruct{V1: "123", V2: 3},
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0003da00087465737475736572ce00000063dc0002da0003313233ce00000003"))
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v \n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalNestStructPtr(t *testing.T) {
@@ -117,7 +111,6 @@ func TestMarshalNestStructPtr(t *testing.T) {
 		V2 uint32
 		V3 *TestSubStruct
 	}
-	fmt.Println("TestMarshalNestStructPtr...")
 
 	ts := TestStruct{
 		V1: "testuser",
@@ -125,14 +118,12 @@ func TestMarshalNestStructPtr(t *testing.T) {
 		V3: &TestSubStruct{V1: "123", V2: 3},
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0003da00087465737475736572ce00000063dc0002da0003313233ce00000003"))
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v, %#v\n", ts1, *ts1.V3)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalNilPtr(t *testing.T) {
@@ -142,47 +133,39 @@ func TestMarshalNilPtr(t *testing.T) {
 		V3 uint64
 	}
 
-	fmt.Println("TestMarshalNilPtr...")
-
 	ts := TestStruct{
 		V1: "testuser",
 		V2: nil,
 		V3: 999999,
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%v\n", BytesToHex(b))
-	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0003da00087465737475736572c0cf00000000000f423f"))
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v\n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalCustomHashType(t *testing.T) {
 	type Hash [32]byte
 
-	type Account struct {
+	type TestStruct struct {
 		AccountName string
 		CodeVersion Hash
 	}
 
-	fmt.Println("TestMarshalCustomHashType...")
-
-	ts := Account{
+	ts := TestStruct{
 		AccountName: "testuser",
 		CodeVersion: sha256.Sum256([]byte("testuser")),
 	}
 	b, err := Marshal(ts)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0002da00087465737475736572c50020ae5deb822e0d71992900471a7199d0d95b8e7c9d05c40a8245a281fd2c1d6684"))
 
-	fmt.Printf("%x\n", b)
-	fmt.Println(err)
-
-	ts1 := Account{}
+	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#x\n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalBigInt(t *testing.T) {
@@ -191,21 +174,16 @@ func TestMarshalBigInt(t *testing.T) {
 		V2 *big.Int
 	}
 
-	fmt.Println("TestMarshalBigInt...")
-
 	ts := TestStruct{
 		V1: 9999,
 		V2: new(big.Int).SetUint64(uint64(999999)),
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%x\n", b)
-	fmt.Println(err)
-
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0002ce0000270fc80003010f423f"))
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v\n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalTransaction(t *testing.T) {
@@ -222,13 +200,11 @@ func TestMarshalTransaction(t *testing.T) {
 		Signature   []byte
 	}
 
-	fmt.Println("TestMarshalTransaction...")
-
 	ts := Transaction{
 		Version:     1,
 		CursorNum:   999,
 		CursorLabel: 86868797,
-		Lifetime:    uint64(time.Now().Unix()),
+		Lifetime:    0x5b691451,
 		Sender:      "alice",
 		Contract:    "bottos",
 		Method:      "transfer",
@@ -237,15 +213,11 @@ func TestMarshalTransaction(t *testing.T) {
 		Signature:   []byte{},
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%x\n", b)
-	fmt.Println(err)
-
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc000ace00000001ce000003e7ce052d833dcf000000005b691451da0005616c696365da0006626f74746f73da00087472616e73666572c50007dc000212345678ce00000001c50000"))
 	ts1 := Transaction{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#x\n", ts)
-	fmt.Printf("ts1: %#x\n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 func TestMarshalBalance(t *testing.T) {
@@ -254,23 +226,18 @@ func TestMarshalBalance(t *testing.T) {
 		Balance     *big.Int
 	}
 
-	fmt.Println("TestMarshalTransaction...")
-
 	balance, _ := new(big.Int).SetString("100000000001000000000", 10)
 	ts := Balance{
 		AccountName: "alice",
 		Balance:     balance,
 	}
 	b, err := Marshal(ts)
-
-	fmt.Printf("%x\n", b)
-	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0002da0005616c696365c8000901056bc75e2d9eaaca00"))
 
 	ts1 := Balance{}
 	err = Unmarshal(b, &ts1)
-	fmt.Printf("ts1: %#v\n", ts)
-	fmt.Printf("ts1: %#v\n", ts1)
-	fmt.Println(err)
+	assert.Equal(t, ts, ts1)
 }
 
 type Name [16]byte // uint128
@@ -317,13 +284,11 @@ func TestMarshalBlock(t *testing.T) {
 		Transactions []*Transaction
 	}
 
-	fmt.Println("TestMarshalBlock...")
-
 	header := Header{
 		Version:         1,
 		PrevBlockHash:   common.Sha256([]byte("123")),
 		Number:          123,
-		Timestamp:       uint64(time.Now().Unix()),
+		Timestamp:       0x5b691451,
 		MerkleRoot:      common.Sha256([]byte("234")),
 		Delegate:        StringToName("toliman"),
 		DelegateSign:    []byte{},
@@ -333,7 +298,7 @@ func TestMarshalBlock(t *testing.T) {
 		Version:     1,
 		CursorNum:   999,
 		CursorLabel: 86868797,
-		Lifetime:    uint64(time.Now().Unix()),
+		Lifetime:    0x5b691451,
 		Sender:      StringToName("alice"),
 		Contract:    StringToName("bottos"),
 		Method:      StringToName("transfer"),
@@ -345,7 +310,7 @@ func TestMarshalBlock(t *testing.T) {
 		Version:     1,
 		CursorNum:   999,
 		CursorLabel: 1412312421,
-		Lifetime:    uint64(time.Now().Unix()),
+		Lifetime:    0x5b691451,
 		Sender:      StringToName("alice"),
 		Contract:    StringToName("bottos"),
 		Method:      StringToName("transfer"),
@@ -358,16 +323,10 @@ func TestMarshalBlock(t *testing.T) {
 	block.Transactions = append(block.Transactions, &tx1)
 	block.Transactions = append(block.Transactions, &tx2)
 
-	fmt.Printf("block: %#v\n", block)
-
 	b, err := Marshal(block)
-
-	fmt.Printf("%x\n", b)
-	fmt.Println(err)
-
+	assert.Nil(t, err)
+	assert.Equal(t, b, fromHex("dc0002dc0008ce00000001c50020a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3ce0000007bcf000000005b691451c50020114bd151f8fb0c58642d2170da4ae7d7c57977260ac2cc8905306cab6b2acabcc50010000000000000000000746f6c696d616ec50000dc0002c50010000000000000000000746f6c696d616ec500100000000000000000000000000072616edc0002dc000ace00000001ce000003e7ce052d833dcf000000005b691451c500100000000000000000000000616c696365c5001000000000000000000000626f74746f73c5001000000000000000007472616e73666572c50007dc000212345678ce00000001c50000dc000ace00000001ce000003e7ce542e2d65cf000000005b691451c500100000000000000000000000616c696365c5001000000000000000000000626f74746f73c5001000000000000000007472616e73666572c50007dc000212345678ce00000001c50000"))
 	block1 := Block{}
 	err = Unmarshal(b, &block1)
-	fmt.Printf("block: %#x\n", block.Header)
-	fmt.Printf("block1: %#x\n", block1.Header)
-	fmt.Println(err)
+	assert.Equal(t, block, block1)
 }

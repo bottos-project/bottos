@@ -39,8 +39,10 @@ type DecodeContext struct {
 	size uint16
 }
 
+//DecoderReader function type of the decoder
 type DecoderReader func(reflect.Value, *DecodeContext) error
 
+//Decoder interface for customization
 type Decoder interface {
 	DecodeMsgpack(io.Reader) error
 }
@@ -49,7 +51,7 @@ var (
 	decoderInterface = reflect.TypeOf(new(Decoder)).Elem()
 )
 
-//Decode is to decode message
+//Decode decodes byte stream to struct, slice/array or other basic types
 func Decode(r io.Reader, v interface{}) error {
 	if v == nil {
 		return fmt.Errorf("msgpack decode: nil pointer")
@@ -70,7 +72,7 @@ func Decode(r io.Reader, v interface{}) error {
 	}
 
 	ctx := newDecodeContext(r)
-	if err := ctx.decode(); err != nil {
+	if err = ctx.readHeader(); err != nil {
 		return err
 	}
 	return decoder(rv.Elem(), ctx)
@@ -121,7 +123,7 @@ func (ctx *DecodeContext) reset() {
 	ctx.ext = 0
 }
 
-func (ctx *DecodeContext) decode() error {
+func (ctx *DecodeContext) readHeader() error {
 	ctx.reset()
 
 	t, err := ReadByte(ctx.r)
@@ -370,7 +372,7 @@ func decodeSlice(v reflect.Value, ctx *DecodeContext, elemDecoder DecoderReader)
 			v.SetLen(i + 1)
 		}
 
-		if err := ctx.decode(); err != nil {
+		if err := ctx.readHeader(); err != nil {
 			return err
 		}
 
@@ -402,17 +404,12 @@ func makeArrayDecoder(t reflect.Type) (DecoderReader, error) {
 	return dec, nil
 }
 
-type DecField struct {
-	t     reflect.Type
-	index int
-}
-
 func makeStructDecoder(t reflect.Type) (DecoderReader, error) {
-	fields := []DecField{}
+	fields := []structField{}
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		fields = append(fields, DecField{f.Type, i})
+		fields = append(fields, structField{f.Type, i})
 	}
 
 	dec := func(val reflect.Value, ctx *DecodeContext) (err error) {
@@ -425,7 +422,7 @@ func makeStructDecoder(t reflect.Type) (DecoderReader, error) {
 				return err
 			}
 
-			if err := ctx.decode(); err != nil {
+			if err := ctx.readHeader(); err != nil {
 				return err
 			}
 			err = decoder(val.Field(f.index), ctx)

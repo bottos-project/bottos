@@ -50,6 +50,8 @@ type encTest struct {
 
 var tests string = string("If you shed tears when you miss the sun, you also miss the stars.")
 
+type NamedByteArray [4]byte
+
 var encTests = []encTest{
 	// booleans
 	{val: true, output: "C3"},
@@ -73,7 +75,6 @@ var encTests = []encTest{
 	{val: uint64(0xFFFFFFFFFFFFFFFF), output: "CFFFFFFFFFFFFFFFFF"},
 
 	// string
-
 	{
 		val:    string("If you shed tears when you miss the sun, you also miss the stars."),
 		output: "DA0041496620796F752073686564207465617273207768656E20796F75206D697373207468652073756E2C20796F7520616C736F206D697373207468652073746172732E",
@@ -104,8 +105,12 @@ var encTests = []encTest{
 	// struct
 	{val: testStruct{}, output: "DC0002CD0000DA0000"},
 	{val: testStruct{V1: 0x7F, V2: "bottos"}, output: "DC0002CD007FDA0006626F74746F73"},
+	// struct with nil
 	{val: &nestStruct{V1: 5, V2: nil}, output: "DC0002CD0005C0"},
 	{val: &nestStruct{1, &nestStruct{2, &nestStruct{3, nil}}}, output: "DC0002CD0001DC0002CD0002DC0002CD0003C0"},
+
+	// named byte array type
+	{val: NamedByteArray{0x1, 0x2, 0x3, 0x4}, output: "C5000401020304"},
 }
 
 func runEncTests(t *testing.T, f func(val interface{}) ([]byte, error)) {
