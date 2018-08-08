@@ -21,7 +21,10 @@ var Conf  config.Parameter
 var GenConf config.GenesisConfig
 var KeyPair config.KeyPair
 
-func Init() (config.Parameter, error) {
+func Init() (config.Parameter, config.GenesisConfig, error) {
+
+	config.InitParam(&Conf, &GenConf)
+
 	app := cli.NewApp()
 
 	app.Flags = []cli.Flag {
@@ -32,10 +35,12 @@ func Init() (config.Parameter, error) {
 		},
 		cli.StringFlag{
 			Name: "genesis",
+			Value: Conf.GenesisJson,
 			Usage: "genesis config file path the greeting",
 		},
 		cli.StringFlag{
 			Name: "datadir",
+			Value: Conf.DataDir,
 			Usage: "datadir's path",
 		},
 		cli.StringFlag{
@@ -45,29 +50,32 @@ func Init() (config.Parameter, error) {
 		},
 		cli.StringFlag{
 			Name: "apiport",
-			Value: "8090",
+			Value: strconv.Itoa(Conf.APIPort),
 			Usage: "api service port for the greeting",
 		},
 		cli.StringFlag{
 			Name: "disable-rpc",
+			Value: "0",
 			Usage: "disable rpc requests",
 		},
 		cli.StringFlag{
 			Name: "rpcport",
-			Value: "8080",
-			Usage: "rpc port for the greeting",
+			Value: "8690",
+			Usage: "json-rpc port for the greeting",
 		},
 		cli.StringFlag{
 			Name: "p2pport",
-			Value: "8096",
+			Value: Conf.P2PPort,
 			Usage: "local listen on this p2p port to receive remote p2p messages",
 		},
 		cli.StringFlag{
 			Name: "servaddr",
+			Value: Conf.ServAddr,
 			Usage: "for p2p sync / reply local server ip& port info",
 		},
 		cli.StringFlag{
 			Name: "peerlist",
+			Value: "",
 			Usage: "for p2p add pne / add neighbour. Example: 192.168.1.2:9868, 192.168.1.3:9868, 192.168.1.4:9868",
 		},
 		cli.StringFlag{
@@ -88,16 +96,43 @@ func Init() (config.Parameter, error) {
 		},
 		cli.StringFlag{
 			Name: "mongodb",
+			Value: Conf.OptionDb,
 			Usage: "db inst for load mongodb",
 		},
 		cli.StringFlag{
 			Name: "logconfig",
+			Value: Conf.LogConfig,
 			Usage: "for seelog config",
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
-		if(len(c.String("config")) > 0){
+		var ChaincfgExists bool
+		var GenesiscfgExists bool
+
+		_, err := os.Stat(c.String("config"))
+		if err != nil && os.IsNotExist(err) {
+			fmt.Println("'" + c.String("config") + "' file does not exist.")
+			ChaincfgExists = false
+		} else if err != nil {
+			fmt.Println("Read config file status error: ", err)
+			return err
+		} else {
+			ChaincfgExists = true
+		}
+	
+		_, err = os.Stat(c.String("genesis"))
+		if err != nil && os.IsNotExist(err) {
+			fmt.Println("'" + c.String("genesis") + "' file does not exist.")
+			GenesiscfgExists = false
+		} else if err != nil {
+			fmt.Println("Read config file status error: ", err)
+			return err
+		} else {
+			GenesiscfgExists = true
+		}
+
+		if ChaincfgExists == true {
 			file, e := loadConfigJson(c.String("config"))
 			if e != nil {
 				fmt.Println("Read config file error: ", e)
@@ -110,8 +145,8 @@ func Init() (config.Parameter, error) {
 				return e
 			}
 		}
-
-		if(len(c.String("genesis")) > 0){
+		
+		if GenesiscfgExists == true {
 			file, e := loadConfigJson(c.String("genesis"))
 			if e != nil {
 				fmt.Println("Read genesis config file error: ", e)
@@ -123,10 +158,6 @@ func Init() (config.Parameter, error) {
 				fmt.Println("Unmarshal config file error: ", e)
 				return e
 			}
-		}
-
-		if(len(c.String("datadir")) > 0){
-			Conf.DataDir = c.String("datadir")
 		}
 
 		if(len(c.String("disable-api")) > 0){
@@ -171,30 +202,26 @@ func Init() (config.Parameter, error) {
 			//TODO
 		}
 
-		if(len(c.String("enable-stale-report")) > 0){
+		if(len(c.String("enable-stale-report")) <= 0){
 			fmt.Println(c.String("enable-stale-report"))
-		}
-
-		if(len(c.String("api_service_version")) > 0){
-			Conf.ApiServiceVersion = c.String("api_service_version")
 		}
 
 		if(len(c.String("enable-mongodb")) > 0){
 			//TODO
 		}
 
-		if(len(c.String("mongodb")) > 0){
+		if(len(c.String("mongodb")) <= 0){
 			Conf.OptionDb = c.String("mongodb")
 		}
 
-		if(len(c.String("logconfig")) > 0){
+		if(len(c.String("logconfig")) <= 0){
 			Conf.LogConfig = c.String("logconfig")
 		}
 
 		return nil
 	}
 	err := app.Run(os.Args)
-	return Conf, err
+	return Conf, GenConf, err
 }
 
 
