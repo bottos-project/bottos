@@ -16,13 +16,13 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  msgpack go
+ * file description:  bpl test
  * @Author: Gong Zibin
  * @Date:   2018-08-02
  * @Last Modified by:
  * @Last Modified time:
  */
-package msgpack
+package bpl
 
 import (
 	"bytes"
