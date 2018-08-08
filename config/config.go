@@ -27,10 +27,8 @@ package config
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"os"
-
 	log "github.com/cihub/seelog"
 )
 
@@ -85,38 +83,39 @@ type InitDelegate struct {
 	Balance   uint64 `json:"balance"`
 }
 
+func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
+        
+        Conf.GenesisJson = "./genesis.json"
+        Conf.DataDir     = "./datadir/"
+        Conf.Consensus   = "dpos"
+        Conf.APIPort     = 8689
+        Conf.P2PPort     = "9868"
+        Conf.ServAddr    = "192.168.1.1"
+	Conf.PeerList    = []string{}
+        Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
+				       PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"}}
+        Conf.Delegates   = []string{}
+        Conf.ApiServiceEnable = true
+        Conf.ApiServiceName   = "bottos"
+        Conf.ApiServiceVersion = "3.0.0"
+        Conf.EnableStaleReport = true
+        Conf.OptionDb          = "127.0.0.1:27017"
+        Conf.LogConfig         = "/home/bottos/opt/go/bin/core/corelog.xml"
+        Conf.ChainId           = "00000000000000000000000000000000"
+
+	GenConf.GenesisTime    = 1524801531
+	GenConf.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
+	GenConf.InitDelegates  = []InitDelegate{}
+}
+
 // LoadConfig is to load config file
-func LoadConfig() error {
-	file, e := loadConfigJson(CONFIG_FILE_NAME)
-	if e != nil {
-		log.Error("Read config file error: ", e)
-		return e
-	}
-
-	param := Parameter{}
-	e = json.Unmarshal(file, &param)
-	if e != nil {
-		log.Error("Unmarshal config file error: ", e)
-		return e
-	}
-	Param = &param
-
-	file, e = loadConfigJson(param.GenesisJson)
-	if e != nil {
-		log.Error("Read genesis file error: ", e)
-		return e
-	}
-
-	loadLogConfig(param.LogConfig)
-
-	genesisConfig := GenesisConfig{}
-	e = json.Unmarshal(file, &genesisConfig)
-	if e != nil {
-		log.Error("Unmarshal genesis file error: ", e)
-		return e
-	}
-	Genesis = &genesisConfig
-
+func LoadConfig(Conf *Parameter, GensisConf *GenesisConfig) error {
+	
+	Param = Conf
+	Genesis = GensisConf
+	
+	loadLogConfig(Param.LogConfig)
+	
 	return nil
 }
 
