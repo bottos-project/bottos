@@ -194,3 +194,45 @@ func (vm *VM) StrLen(pos int) int {
 
 	return (i - pos)
 }
+
+func ConvertStr(param []byte , pos uint64 , len uint64) ([]byte , error) {
+	var i   uint64 = pos + 4
+	var cnt uint64 = 0
+	var res []byte
+
+	for {
+		res = append(res , param[i])
+		i   += 2
+		cnt += 1
+		if cnt == len {
+			break
+		}
+	}
+
+	return res,nil
+}
+
+func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
+	if vm.memory == nil || pos < 0 || len < 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
+
+	var value []byte
+	var err   error
+
+	if vm.sourceFile == CPP {
+		value = vm.memory[pos:pos+len]
+	} else if vm.sourceFile == JS {
+		value , err = ConvertStr(vm.memory , pos , len)
+		if err != nil {
+			return nil , err
+		}
+	} else if vm.sourceFile == PY {
+		//it will be implemented in the feature
+	}
+
+	return value , nil
+}
+
+
+

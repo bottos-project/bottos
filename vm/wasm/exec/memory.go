@@ -325,7 +325,7 @@ func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 		return 0, ERR_EMPTY_INVALID_PARAM
 	}
 
-	if vm.memPos+size > len(vm.memory) {
+	if vm.memPos + size > len(vm.memory) {
 		return 0, ERR_OUT_BOUNDS
 	}
 
@@ -342,8 +342,7 @@ func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
 	if err != nil {
 		return 0, ERR_GET_STORE_POS
 	}
-
-	copy(vm.memory[index:index+len(b)], b)
+	copy(vm.memory[index : index + len(b)], b)
 
 	return index, nil
 }

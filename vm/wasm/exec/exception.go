@@ -42,6 +42,14 @@ const (
 	VM_ERROR_FAIL_EXECUTE_ENVFUNC
 )
 
+const (
+	VM_NULL = iota
+)
+
+const (
+	VM_FALSE = iota
+	VM_TRUE
+)
 
 var ERR_EOF                      = errors.New("EOF")
 var ERR_STORE_METHOD             = errors.New("*ERROR* failed to store the method name at the memory")

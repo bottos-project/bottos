@@ -61,6 +61,8 @@ const (
 	CALL_DEP_LIMIT = 5
 	// CALL_WID_LIMIT config the max width of call
 	CALL_WID_LIMIT = 10
+
+	CALL_MAX_VM_LIMIT = 10
 	// CTX_WASM_FILE config ctx wasm file
 	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
 	// SUB_WASM_FILE config sub wasm file
@@ -117,16 +119,16 @@ type FuncInfo struct {
 
 type subCrxMsg struct {
 	ctx     *contract.Context
-	callDep int
+	callDep  int
 }
 
 var wasmEng *wasmEngine
 
 // vmInstance it means a VM instance , include its created time , end time and status
 type vmInstance struct {
-	vm         *VM       //it means a vm , it is a WASM module/file
-	createTime time.Time //vm instance's created time
-	endTime    time.Time //vm instance's deadline
+	vm         *VM        //it means a vm , it is a WASM module/file
+	createTime  time.Time //vm instance's created time
+	updateTime  time.Time //the time vm last used
 }
 
 // wasmEngine struct wasm is a executable environment for other caller
@@ -180,13 +182,13 @@ func (vm *VM) GetFuncInfo(method string, param []byte) error {
 
 	idx, err = vm.StorageData(method)
 	if err != nil {
-		return errors.New("*ERROR* Failed to store the method name at the memory !!!")
+		return ERR_STORE_MEMORY
 	}
 	vm.funcInfo.actIndex = uint64(idx)
 
 	idx, err = vm.StorageData(param)
 	if err != nil {
-		return errors.New("*ERROR* Failed to store the method arguments at the memory !!!")
+		return ERR_STORE_MEMORY
 	}
 	vm.funcInfo.argIndex = uint64(idx)
 
@@ -242,7 +244,6 @@ func NewWASM(ctx *contract.Context) *VM {
 		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
 		return nil
 	}
-
 	if module.Export == nil {
 		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
 		return nil
@@ -257,7 +258,6 @@ func NewWASM(ctx *contract.Context) *VM {
 
 	return vm
 }
-
 
 //Search the CTX infor at the database according to apply_context
 func NewWASMTst ( ctx *contract.Context ) *VM {
@@ -324,9 +324,17 @@ func NewWASMTst ( ctx *contract.Context ) *VM {
 	return vm
 }
 
-func (engine *wasmEngine) StopHandler() error {
-	engine.vmChannel <- []byte{0}
-	return nil
+func (engine *wasmEngine)  GetWasteVM() *vmInstance {
+	var tmp        float64 = 0
+	var updateTime float64 = 0
+	var vmi        *vmInstance = nil
+	for _ , vmInit := range engine.vmMap {
+		updateTime = time.Now().Sub(vmInit.updateTime).Seconds()
+		if tmp < updateTime {
+			vmi = vmInit
+		}
+	}
+	return vmi
 }
 
 func (engine *wasmEngine) Init() error {
@@ -341,32 +349,30 @@ func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, rec
 func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
 	defer func() {
 		if err := recover(); err != nil {
+			fmt.Println(err.(string))
 			log.Infof(err.(string))
 			return
 		}
 	}()
 
-	var pos      int
-	var err      error
-	var divisor  time.Duration
-	var deadline time.Time
+	var pos        int
+	var err        error
+	var updateTime time.Time
 
 	//search matched VM struct according to CTX
-	var vm       *VM = nil
+	var vm  *VM = nil
 	vmInst, ok := engine.vmMap[ctx.Trx.Contract]
 	if !ok {
 		vm = NewWASM(ctx)
 		if vm == nil {
-			return nil, errors.New("*ERROR* Failed to create a new VM instance !!!")
+			return nil, ERR_CREATE_VM
 		}
 
-		divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-		deadline   = time.Now().Add(divisor)
-
+		updateTime = time.Now()
 		engine.vmMap[ctx.Trx.Contract] = &vmInstance{
 			vm:         vm,
-			createTime: time.Now(),
-			endTime:    deadline,
+			createTime: updateTime,
+			updateTime: updateTime,
 		}
 
 		vm.SetContract(ctx)
@@ -375,7 +381,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	} else {
 		vm = vmInst.vm
 		if vm == nil {
-			return nil, errors.New("*ERROR* Failed to get a VM instance from memory !!!")
+			return nil, ERR_GET_VM
 		}
 
 		//if code's version in local memory is differsnt with the code's version , delete old one and update it
@@ -383,16 +389,14 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 			delete(engine.vmMap , ctx.Trx.Contract)
 			vm = NewWASM(ctx)
 			if vm == nil {
-				return nil, errors.New("*ERROR* Failed to create a new VM instance !!!")
+				return nil, ERR_CREATE_VM
 			}
 
-			divisor, _ = time.ParseDuration(VM_PERIOD_OF_VALIDITY)
-			deadline   = time.Now().Add(divisor)
-
+			updateTime = time.Now()
 			engine.vmMap[ctx.Trx.Contract] = &vmInstance{
 				vm:         vm,
-				createTime: time.Now(),
-				endTime:    deadline,
+				createTime: updateTime,
+				updateTime: updateTime,
 			}
 			vm.SetChannel(engine.vmChannel)
 		}
@@ -403,21 +407,24 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	method        := ENTRY_FUNCTION
 	funcEntry, ok := vm.module.Export.Entries[method]
 	if ok == false {
-		return nil, errors.New("*ERROR* Failed to find the method from the wasm module !!!")
+		return nil, ERR_FIND_VM_METHOD
 	}
 
 	findex := funcEntry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
-	funcParams  := make([]interface{}, 1)
-	//Get function's string first char
-	funcParams[0] = int([]byte(ctx.Trx.Method)[0])
+	funcParams   := make([]interface{}, 1)
+	if pos, err = vm.StorageData(ctx.Trx.Method); err != nil {
+		return nil, ERR_STORE_MEMORY
+	}
+	//Get Pos of function's string in memory
+	funcParams[0] = pos
 
-	paramLength := len(funcParams)
-	parameters  := make([]uint64, paramLength)
+	paramLength  := len(funcParams)
+	parameters   := make([]uint64, paramLength)
 
 	if paramLength != len(vm.module.Types.Entries[int(ftype)].ParamTypes) {
-		return nil, errors.New("*ERROR* Parameters count is not right")
+		return nil, ERR_PARAM_COUNT
 	}
 
 	// just handle parameter for entry function
@@ -433,11 +440,11 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 			parameters[i] = uint64(offset)
 		case string:
 			if pos, err = vm.StorageData(param.(string)); err != nil {
-				return nil, errors.New("*ERROR* Failed to storage data to memory !!!")
+				return nil, ERR_STORE_MEMORY
 			}
 			parameters[i] = uint64(pos)
 		default:
-			return nil, errors.New("*ERROR* parameter is unsupport type !!!")
+			return nil, ERR_UNSUPPORT_TYPE
 		}
 	}
 
@@ -451,7 +458,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	case uint32:
 		result = val
 	default:
-		return nil, errors.New("*ERROR* unsupported type !!!")
+		return nil, ERR_UNSUPPORT_TYPE
 	}
 
 	if result != 0 {
