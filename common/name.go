@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  Base58 encoded Name
+ * file description:  encoded Name
  * @Author: Gong Zibin
  * @Date:   2018-08-08
  * @Last Modified by:
@@ -31,18 +31,18 @@ import (
 )
 
 const (
-	// MAX_NAME_BYTE is max byte length of Name type
-	MAX_NAME_BYTE = 16
-	// ENCODE_RADIX base58
-	ENCODE_RADIX = 58
-	// ENCODE_BIT_LEN base58
+	// NAME_BYTE_LENGTH is byte length of Name type
+	NAME_BYTE_LENGTH = 16
+	// ENCODE_RADIX
+	ENCODE_RADIX = 38
+	// ENCODE_BIT_LEN
 	ENCODE_BIT_LEN = 6
 )
 
 // Name basic type for account name, method and contract
-type Name [MAX_NAME_BYTE]byte
+type Name [NAME_BYTE_LENGTH]byte
 
-var defaultEncoding = encoding([]byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"))
+var defaultEncoding = encoding([]byte("0123456789abcdefghijklmnopqrstuvwxyz-."))
 
 // NewName encode a string name to Name type
 func NewName(s string) (Name, error) {
@@ -102,7 +102,7 @@ func (encoding *EncodingStruct) encode(src []byte) (Name, error) {
 			bigname.Lsh(bigname, ENCODE_BIT_LEN)
 			bigname.Add(bigname, big.NewInt(idx))
 		} else {
-			return Name{}, fmt.Errorf("invalid character '%c' in decoding a base58 string \"%s\"", c, src)
+			return Name{}, fmt.Errorf("invalid character '%c' in decoding the string \"%s\"", c, src)
 		}
 	}
 
@@ -130,14 +130,14 @@ func (encoding *EncodingStruct) decode(name Name) ([]byte, error) {
 			reverse(decoded)
 			return decoded, nil
 		default:
-			return nil, fmt.Errorf("expecting a positive number in base58 encoding but got %q", bigname)
+			return nil, fmt.Errorf("expecting a positive number in encoding but got %q", bigname)
 		}
 	}
 }
 
 func (n *Name) setBytes(b []byte) {
 	if len(b) > len(n) {
-		b = b[len(b)-MAX_NAME_BYTE:]
+		b = b[len(b)-NAME_BYTE_LENGTH:]
 	}
-	copy(n[MAX_NAME_BYTE-len(b):], b)
+	copy(n[NAME_BYTE_LENGTH-len(b):], b)
 }

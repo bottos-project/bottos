@@ -36,14 +36,14 @@ import (
 )
 
 func TestNameEncoding(t *testing.T) {
-	decoded, err := NewName("bottos")
+	name, err := NewName("bottos")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	assert.Equal(t, decoded.Bytes(), fromHex("000000000000000000000008aecf3bb2"))
-	encoded := decoded.ToString()
-	assert.Equal(t, encoded, "bottos")
+	assert.Equal(t, name.Bytes(), fromHex("000000000000000000000002d875d61c"))
+	raw := name.ToString()
+	assert.Equal(t, raw, "bottos")
 }
 
 func TestErrorEncoding(t *testing.T) {
@@ -52,7 +52,7 @@ func TestErrorEncoding(t *testing.T) {
 }
 
 func TestErrorEncoding1(t *testing.T) {
-	_, err := NewName("l")
+	_, err := NewName("L")
 	assert.NotNil(t, err)
 }
 
