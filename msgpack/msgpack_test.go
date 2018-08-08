@@ -255,6 +255,14 @@ func (h *Name) SetBytes(b []byte) {
 	copy(h[16-len(b):], b)
 }
 
+func NewName(s string) common.Name {
+	name, err := common.NewName(s)
+	if err != nil {
+		panic(err)
+	}
+	return name
+}
+
 func TestMarshalBlock(t *testing.T) {
 
 	type Header struct {
@@ -263,9 +271,9 @@ func TestMarshalBlock(t *testing.T) {
 		Number          uint32
 		Timestamp       uint64
 		MerkleRoot      common.Hash
-		Delegate        Name
+		Delegate        common.Name
 		DelegateSign    []byte
-		DelegateChanges []Name
+		DelegateChanges []common.Name
 	}
 
 	type Transaction struct {
@@ -273,9 +281,9 @@ func TestMarshalBlock(t *testing.T) {
 		CursorNum   uint32
 		CursorLabel uint32
 		Lifetime    uint64
-		Sender      Name
-		Contract    Name
-		Method      Name
+		Sender      common.Name
+		Contract    common.Name
+		Method      common.Name
 		Param       []byte
 		SigAlg      uint32
 		Signature   []byte
@@ -292,18 +300,19 @@ func TestMarshalBlock(t *testing.T) {
 		Number:          123,
 		Timestamp:       0x5b691451,
 		MerkleRoot:      common.Sha256([]byte("234")),
-		Delegate:        StringToName("toliman"),
+		Delegate:        NewName("sirus"),
 		DelegateSign:    []byte{},
-		DelegateChanges: []Name{StringToName("toliman"), StringToName("ran")},
+		DelegateChanges: []common.Name{NewName("sirus"), NewName("ran")},
 	}
+
 	tx1 := Transaction{
 		Version:     1,
 		CursorNum:   999,
 		CursorLabel: 86868797,
 		Lifetime:    0x5b691451,
-		Sender:      StringToName("alice"),
-		Contract:    StringToName("bottos"),
-		Method:      StringToName("transfer"),
+		Sender:      NewName("bob"),
+		Contract:    NewName("bottos"),
+		Method:      NewName("transfer"),
 		Param:       HexToBytes("dc000212345678"),
 		SigAlg:      1,
 		Signature:   []byte{},
@@ -313,9 +322,9 @@ func TestMarshalBlock(t *testing.T) {
 		CursorNum:   999,
 		CursorLabel: 1412312421,
 		Lifetime:    0x5b691451,
-		Sender:      StringToName("alice"),
-		Contract:    StringToName("bottos"),
-		Method:      StringToName("transfer"),
+		Sender:      NewName("bob"),
+		Contract:    NewName("bottos"),
+		Method:      NewName("transfer"),
 		Param:       HexToBytes("dc000212345678"),
 		SigAlg:      1,
 		Signature:   []byte{},
@@ -327,7 +336,7 @@ func TestMarshalBlock(t *testing.T) {
 
 	b, err := Marshal(block)
 	assert.Nil(t, err)
-	assert.Equal(t, b, fromHex("dc0002dc0008ce00000001c50020a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3ce0000007bcf000000005b691451c50020114bd151f8fb0c58642d2170da4ae7d7c57977260ac2cc8905306cab6b2acabcc50010000000000000000000746f6c696d616ec50000dc0002c50010000000000000000000746f6c696d616ec500100000000000000000000000000072616edc0002dc000ace00000001ce000003e7ce052d833dcf000000005b691451c500100000000000000000000000616c696365c5001000000000000000000000626f74746f73c5001000000000000000007472616e73666572c50007dc000212345678ce00000001c50000dc000ace00000001ce000003e7ce542e2d65cf000000005b691451c500100000000000000000000000616c696365c5001000000000000000000000626f74746f73c5001000000000000000007472616e73666572c50007dc000212345678ce00000001c50000"))
+	assert.Equal(t, b, fromHex("dc0002dc0008ce00000001c50020a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3ce0000007bcf000000005b691451c50020114bd151f8fb0c58642d2170da4ae7d7c57977260ac2cc8905306cab6b2acabcc5001000000000000000000000000032a71d32c50000dc0002c5001000000000000000000000000032a71d32c500100000000000000000000000000003186ddc0002dc000ace00000001ce000003e7ce052d833dcf000000005b691451c5001000000000000000000000000000022ba2c50010000000000000000000000008aecf3bb2c5001000000000000000000000cf186dca6971c50007dc000212345678ce00000001c50000dc000ace00000001ce000003e7ce542e2d65cf000000005b691451c5001000000000000000000000000000022ba2c50010000000000000000000000008aecf3bb2c5001000000000000000000000cf186dca6971c50007dc000212345678ce00000001c50000"))
 	block1 := Block{}
 	err = Unmarshal(b, &block1)
 	assert.Equal(t, block, block1)
