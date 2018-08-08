@@ -16,14 +16,14 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  msgpack encode
+ * file description:  bpl encode
  * @Author: Gong Zibin
  * @Date:   2018-08-02
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package msgpack
+package bpl
 
 import (
 	"errors"
