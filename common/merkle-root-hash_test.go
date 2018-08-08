@@ -26,8 +26,10 @@
 package common
 
 import (
-	log "github.com/cihub/seelog"
+	"encoding/hex"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMerkleRootHash_Odd(t *testing.T) {
@@ -39,7 +41,7 @@ func TestMerkleRootHash_Odd(t *testing.T) {
 	hs = append(hs, Sha256([]byte("5")))
 
 	root := ComputeMerkleRootHash(hs)
-	log.Infof("root hash: %x\n", root)
+	assert.Equal(t, "50dd1f0877598fd73c723dc2de6e395d37506e1529cc78cd6acfcf70ff210ea0", toHex(root.Bytes()))
 }
 
 func TestMerkleRootHash_Even(t *testing.T) {
@@ -50,14 +52,14 @@ func TestMerkleRootHash_Even(t *testing.T) {
 	hs = append(hs, Sha256([]byte("4")))
 
 	root := ComputeMerkleRootHash(hs)
-	log.Infof("root hash: %x\n", root)
+	assert.Equal(t, "c07b1be99d1105123783dbddd8d63303d42626bb26176e68c5fcc7a34905840a", toHex(root.Bytes()))
 }
 
 func TestMerkleRootHash_NULL(t *testing.T) {
 	var hs []Hash
 
 	root := ComputeMerkleRootHash(hs)
-	log.Infof("empty root hash: %x\n", root)
+	assert.Equal(t, "0000000000000000000000000000000000000000000000000000000000000000", toHex(root.Bytes()))
 }
 
 // https://btc.com/0000000000000000003c4601e87ab5389c15d9c48c37076472aa7d45cdd4fa30
@@ -69,12 +71,7 @@ func TestMerkleRootHash_BTC_0000000000000000003c4601e87ab5389c15d9c48c37076472aa
 	root := ComputeMerkleRootHash(hs)
 
 	rootStr := reverseHash(root).ToHexString()
-	expectedRootStr := "2fc7d439472c12c27b8eff3a758c01772d4ae0ed2d6139fc4bbddac9b8943c3c"
-	if rootStr != expectedRootStr {
-		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	} else {
-		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	}
+	assert.Equal(t, "2fc7d439472c12c27b8eff3a758c01772d4ae0ed2d6139fc4bbddac9b8943c3c", rootStr)
 }
 
 // https://btc.com/00000000000010e45e3d943559acb2be2323fceb24182e811eb4dffcf4b1f6c8
@@ -89,12 +86,7 @@ func TestMerkleRootHash_BTC_00000000000010e45e3d943559acb2be2323fceb24182e811eb4
 	root := ComputeMerkleRootHash(hs)
 
 	rootStr := reverseHash(root).ToHexString()
-	expectedRootStr := "ed0733aaeb0c0ec41b1f368c537ec32bea711c789d6d44ea1452077300f401a1"
-	if rootStr != expectedRootStr {
-		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	} else {
-		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	}
+	assert.Equal(t, "ed0733aaeb0c0ec41b1f368c537ec32bea711c789d6d44ea1452077300f401a1", rootStr)
 
 }
 
@@ -109,12 +101,7 @@ func TestMerkleRootHash_BTC_000000000000000000010f01933e19182a0d2f3f134bfd6559ef
 	root := ComputeMerkleRootHash(hs)
 
 	rootStr := reverseHash(root).ToHexString()
-	expectedRootStr := "c03c955ae773acf0d052a15a8a95487d29d2c210449e3094007b286a3b4d50f3"
-	if rootStr != expectedRootStr {
-		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	} else {
-		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	}
+	assert.Equal(t, "c03c955ae773acf0d052a15a8a95487d29d2c210449e3094007b286a3b4d50f3", rootStr)
 
 }
 
@@ -144,12 +131,7 @@ func TestMerkleRootHash_BTC_000000000000030de89e7729d5785c4730839b6e16ea9fb686a5
 	root := ComputeMerkleRootHash(hs)
 
 	rootStr := reverseHash(root).ToHexString()
-	expectedRootStr := "acb5aeb11e2a607e610b90f2722cf68aec719af2a2fd6a6af179764e90169af4"
-	if rootStr != expectedRootStr {
-		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	} else {
-		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	}
+	assert.Equal(t, "acb5aeb11e2a607e610b90f2722cf68aec719af2a2fd6a6af179764e90169af4", rootStr)
 
 }
 
@@ -178,15 +160,10 @@ func TestMerkleRootHash_BTC_000000000000000000165f317acde835bc398f5186e987775aff
 	root := ComputeMerkleRootHash(hs)
 
 	rootStr := reverseHash(root).ToHexString()
-	expectedRootStr := "8361ee29a7f28a80d06c475f2160a2ee5c52fa6eb8de93098672145dd8a05ac3"
-	if rootStr != expectedRootStr {
-		log.Infof("fail, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	} else {
-		log.Infof("suc, root: %s, expected: %s\n", rootStr, expectedRootStr)
-	}
+	assert.Equal(t, "8361ee29a7f28a80d06c475f2160a2ee5c52fa6eb8de93098672145dd8a05ac3", rootStr)
 }
 
-func reverse(a []byte) []byte {
+func reverseByte(a []byte) []byte {
 	b := make([]byte, len(a))
 	for i := len(a)/2 - 1; i >= 0; i-- {
 		opp := len(a) - 1 - i
@@ -196,11 +173,15 @@ func reverse(a []byte) []byte {
 }
 
 func reverseHash(h Hash) Hash {
-	return BytesToHash(reverse(h[:]))
+	return BytesToHash(reverseByte(h[:]))
 }
 
 func bitcoinHashConvert(hashstr string) Hash {
 	h := HexToHash(hashstr)
 	h = reverseHash(h)
 	return h
+}
+
+func toHex(b []byte) string {
+	return hex.EncodeToString(b)
 }
