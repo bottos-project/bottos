@@ -1,4 +1,4 @@
-{
+﻿{
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
     "consensus":"dpos",
@@ -44,6 +44,7 @@
         "procyon"
     ],
     "api_service_enable": true,
+    "restful_api_service_enable": true,
     "api_service_name": "bottos",
     "api_service_version": "3.0.0",
 	"enable_stale_report": true,
