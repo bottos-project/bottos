@@ -54,13 +54,14 @@ type Parameter struct {
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
-	ApiServiceEnable  bool      `json:"api_service_enable"`
-	ApiServiceName    string    `json:"api_service_name"`
-	ApiServiceVersion string    `json:"api_service_version"`
+	RpcServiceEnable  bool      `json:"rpc_service_enable"`
+	RpcServiceName    string    `json:"rpc_service_name"`
+	RpcServiceVersion string    `json:"rpc_service_version"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
 	ChainId           string    `json:"chain_id"`
+	DelegateSignKey   KeyPair   `json:"delegate_signkey_pair"`
 }
 
 // KeyPair is definition of key pair
@@ -95,17 +96,19 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
         Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
 				       PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"}}
         Conf.Delegates   = []string{}
-        Conf.ApiServiceEnable = true
-        Conf.ApiServiceName   = "bottos"
-        Conf.ApiServiceVersion = "3.0.0"
+        Conf.RpcServiceEnable = true
+        Conf.RpcServiceName   = "bottos"
+        Conf.RpcServiceVersion = "3.0.0"
         Conf.EnableStaleReport = true
-        Conf.OptionDb          = "127.0.0.1:27017"
+        Conf.OptionDb          = ""
         Conf.LogConfig         = "/home/bottos/opt/go/bin/core/corelog.xml"
         Conf.ChainId           = "00000000000000000000000000000000"
-
+	
 	GenConf.GenesisTime    = 1524801531
 	GenConf.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
 	GenConf.InitDelegates  = []InitDelegate{}
+
+	
 }
 
 // LoadConfig is to load config file

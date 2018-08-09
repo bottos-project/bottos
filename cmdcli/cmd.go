@@ -43,9 +43,8 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Value: Conf.DataDir,
 			Usage: "datadir's path",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name: "disable-api",
-			Value:"0",
 			Usage: "disable restful api's requests",
 		},
 		cli.StringFlag{
@@ -53,9 +52,8 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Value: strconv.Itoa(Conf.APIPort),
 			Usage: "api service port for the greeting",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name: "disable-rpc",
-			Value: "0",
 			Usage: "disable rpc requests",
 		},
 		cli.StringFlag{
@@ -86,11 +84,11 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Name: "delegate",
 			Usage: "Assign one producer. Later this section will no more be used.\n Only one delegate is allowed in one node(other than bottos account).",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name: "enable-stale-report",
 			Usage: "",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name: "enable-mongodb",
 			Usage: "",
 		},
@@ -159,13 +157,21 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 				return e
 			}
 		}
-
-		if(len(c.String("disable-api")) > 0){
-			//TODO
-
+		
+		if len(c.String("datadir")) > 0 {
+			Conf.DataDir = c.String("datadir")
+		}
+		
+		if len(c.String("logconfig")) > 0 {
+			Conf.LogConfig = c.String("logconfig")
+		}
+		
+		if len(c.String("servaddr")) > 0 {
+			Conf.ServAddr = c.String("servaddr")
 		}
 
-		if(len(c.String("apiport")) > 0){
+		if len(c.String("apiport")) > 0 {
+			//For new restful api port
 			api_port,e:=strconv.Atoi(c.String("apiport"))
 			if e != nil {
 				fmt.Println(e.Error())
@@ -173,8 +179,12 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			}
 			Conf.APIPort = api_port
 		}
+		
+		if len(c.String("rpcport")) > 0 {
+			//TO DO: for micro rpc port. The port is not be used by now.
+		}
 
-		if(len(c.String("p2pport")) > 0){
+		if len(c.String("p2pport")) > 0 {
 			/*p2p_port_,e:=strconv.Atoi(c.String("p2pport"))
 			if e != nil {
 				fmt.Println(e.Error())
@@ -183,39 +193,51 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Conf.P2PPort = c.String("p2pport")//p2p_port
 		}
 
-		if(len(c.String("peerlist")) > 0){
+		if len(c.String("peerlist")) > 0 {
+			var strval string
 			peer_list := c.String("peerlist")
-			Conf.PeerList = strings.Split(peer_list, ",")
-		}
-
-		if(len(c.String("delegate-signkey")) > 0){
-			key := strings.Split(c.String("delegate-signkey"), ",")
-			if(len(key) != 2){
-				return fmt.Errorf("delegate-signkey params exception");
+			
+			strval = strings.Replace(peer_list, " ", "", -1)
+			Conf.PeerList = strings.Split(strval, ",")
+			if len(Conf.PeerList[0]) <= 0 {
+				Conf.PeerList = Conf.PeerList[1:]
 			}
-			KeyPair.PrivateKey = key[0];
-			KeyPair.PublicKey = key[1];
-			Conf.KeyPairs[0] = KeyPair;
+			if len(Conf.PeerList[len(Conf.PeerList) - 1]) <= 0 {
+				Conf.PeerList = Conf.PeerList[:len(Conf.PeerList) - 1]
+			}
 		}
 
-		if(len(c.String("delegate")) > 0){
-			//TODO
+		if len(c.String("delegate-signkey")) > 0 {
+			strval := strings.Replace(c.String("delegate-signkey"), " ", "", -1)
+			key := strings.Split(strval, ",")
+			KeyPair.PrivateKey = key[0]
+			KeyPair.PublicKey = key[1]
+			Conf.DelegateSignKey = KeyPair
 		}
 
-		if(len(c.String("enable-stale-report")) <= 0){
-			fmt.Println(c.String("enable-stale-report"))
+		if len(c.String("delegate")) > 0 {
+			Conf.Delegates = []string{c.String("delegate")}
 		}
-
-		if(len(c.String("enable-mongodb")) > 0){
-			//TODO
-		}
-
-		if(len(c.String("mongodb")) <= 0){
+		
+		if len(c.String("mongodb")) > 0 {
 			Conf.OptionDb = c.String("mongodb")
 		}
+		
+		if c.GlobalIsSet("enable-stale-report") {
+			fmt.Println(c.String("enable-stale-report"))
+			Conf.EnableStaleReport = true
+		}
 
-		if(len(c.String("logconfig")) <= 0){
-			Conf.LogConfig = c.String("logconfig")
+		if ! c.GlobalIsSet("enable-mongodb") {
+			Conf.OptionDb = ""
+		}
+		
+		if c.GlobalIsSet("disable-api") {
+			//TODO for new restful api
+		}
+		
+		if c.GlobalIsSet("disable-rpc") {
+			Conf.RpcServiceEnable = false
 		}
 
 		return nil
@@ -223,7 +245,6 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 	err := app.Run(os.Args)
 	return Conf, GenConf, err
 }
-
 
 func loadConfigJson(fn string) ([]byte, error) {
 	file, e := ioutil.ReadFile(fn)

@@ -33,7 +33,6 @@ func main() {
 		log.Error("Parse cmdcli fail")
 		os.Exit(1)
 	}
-
 	err = config.LoadConfig(&GlobalConf, &GenesisConf)
 	if err != nil {
 		log.Error("Load config fail")
@@ -75,15 +74,16 @@ func main() {
 	var trxPool = transaction.InitTrxPool(actorenv, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
 
-	if config.Param.ApiServiceEnable {
+	if config.Param.RpcServiceEnable {
 		repo := caapi.NewApiService(actorenv)
 
 		service := micro.NewService(
-			micro.Name(config.Param.ApiServiceName),
-			micro.Version(config.Param.ApiServiceVersion),
+			micro.Name(config.Param.RpcServiceName),
+			micro.Version(config.Param.RpcServiceVersion),
 		)
-
-		service.Init()
+		
+		//Prompt this due to it parse cli parmeters which conflict to urfave/cli.
+		//service.Init()
 		api.RegisterChainHandler(service.Server(), repo)
 		if err := service.Run(); err != nil {
 			panic(err)
