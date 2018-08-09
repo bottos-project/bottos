@@ -1,9 +1,9 @@
-{
+﻿{
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
     "consensus":"dpos",
     "api_port": 8689,
-    "p2p_port": "9868",
+    "p2p_port": 9868,
     "serv_addr":"192.168.1.1",
     "peer_list": [
     ],
@@ -43,11 +43,12 @@
         "ran",
         "procyon"
     ],
-    "api_service_enable": true,
-    "api_service_name": "bottos",
-    "api_service_version": "3.0.0",
-	"enable_stale_report": true,
-	"option_db":"127.0.0.1:27017",
+    "restful_api_service_enable": true,
+    "rpc_service_enable": true,
+    "rpc_service_name": "bottos",
+    "rpc_service_version": "3.0.0",
+    "enable_stale_report": true,
+    "option_db":"127.0.0.1:27017",
     "log_config":"corelog.xml",
     "chain_id":"00000000000000000000000000000000"
 }

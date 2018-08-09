@@ -31,6 +31,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 	log "github.com/cihub/seelog"
 	"net"
+	"strconv"
 )
 
 //LocalPeerInfo ourself node info
@@ -57,7 +58,7 @@ type NewconnCb func(conn net.Conn)
 //MakeP2PServer create instance
 func MakeP2PServer(p *config.Parameter) *P2PServer {
 	LocalPeerInfo.Addr = p.ServAddr
-	LocalPeerInfo.Port = p.P2PPort
+	LocalPeerInfo.Port = strconv.Itoa(p.P2PPort)
 	LocalPeerInfo.ChainId = p.ChainId
 
 	id := LocalPeerInfo.Addr + LocalPeerInfo.Port
