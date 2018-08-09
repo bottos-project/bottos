@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -35,6 +35,7 @@ import (
 	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/action/env"
+	restactor"github.com/bottos-project/bottos/restful/handler"
 )
 
 var apiActorPid *actor.PID
@@ -78,7 +79,9 @@ func registerActorMsgTbl(m *MultiActor) {
 
 	log.Info("RegisterActorMsgTbl")
 	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
-	apiactor.SetChainActorPid(m.chainActorPid)
+	restactor.SetTrxActorPid(m.trxActorPid) // api --> trx
+	apiactor.SetChainActorPid(m.chainActorPid) // api --> chain
+	restactor.SetChainActorPid(m.chainActorPid)	// restapi --> chain
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
 	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> trx
