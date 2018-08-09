@@ -1,4 +1,4 @@
-package handler
+﻿package handler
 
 import (
 	"net/http"
@@ -99,7 +99,7 @@ var routes = Routes{
 	},
 	Route{
 		"",
-		"GET",
+		"POST",
 		GET_BLK_DETAIL,
 		GetBlock,
 	},

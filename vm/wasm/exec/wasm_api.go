@@ -178,7 +178,7 @@ func (vm *VM) GetFuncInfo(method string, param []byte) error {
 	vm.funcInfo.funcIndex = int64(index)
 
 	var err error
-	var idx int
+	var idx uint64
 
 	idx, err = vm.StorageData(method)
 	if err != nil {
@@ -244,6 +244,7 @@ func NewWASM(ctx *contract.Context) *VM {
 		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
 		return nil
 	}
+
 	if module.Export == nil {
 		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
 		return nil
@@ -258,6 +259,7 @@ func NewWASM(ctx *contract.Context) *VM {
 
 	return vm
 }
+
 
 //Search the CTX infor at the database according to apply_context
 func NewWASMTst ( ctx *contract.Context ) *VM {
@@ -355,7 +357,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 		}
 	}()
 
-	var pos        int
+	var pos        uint64
 	var err        error
 	var updateTime time.Time
 
@@ -413,13 +415,13 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	findex := funcEntry.Index
 	ftype  := vm.module.Function.Types[int(findex)]
 
-	funcParams   := make([]interface{}, 1)
+	funcParams := make([]interface{}, 1)
 	if pos, err = vm.StorageData(ctx.Trx.Method); err != nil {
 		return nil, ERR_STORE_MEMORY
 	}
 	//Get Pos of function's string in memory
 	funcParams[0] = pos
-
+	//funcParams[0] = int([]byte(ctx.Trx.Method)[0])
 	paramLength  := len(funcParams)
 	parameters   := make([]uint64, paramLength)
 
@@ -432,6 +434,8 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 		switch param.(type) {
 		case int:
 			parameters[i] = uint64(param.(int))
+		case uint64:
+			parameters[i] = param.(uint64)
 		case []byte:
 			offset, err := vm.storageMemory(param.([]byte), Int8)
 			if err != nil {

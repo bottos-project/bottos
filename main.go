@@ -79,9 +79,7 @@ func main() {
 
 	//Enabled RestFul Api
 	if config.Param.RestFulApiServiceEnable{
-		router := handler.NewRouter()
-		//log.Critical(http.ListenAndServe("127.0.0.1:8083", router))
-		log.Critical(http.ListenAndServe("127.0.0.1"+":"+strconv.Itoa(config.Param.APIPort), router))
+		go startRestApi(roleIntf)
 	}
 
 	//Enabled Rpc Api
@@ -122,4 +120,12 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 	}()
 
 	<-exit
+}
+
+func startRestApi(roleIntf role.RoleInterface){
+	router := handler.NewRouter()
+	//transfer to restful handler
+	handler.SetRoleIntf(roleIntf)
+	//log.Critical(http.ListenAndServe("127.0.0.1:8083", router))
+	log.Critical(http.ListenAndServe("127.0.0.1"+":"+strconv.Itoa(config.Param.APIPort), router))
 }
