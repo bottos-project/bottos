@@ -3,7 +3,7 @@
     "data_dir": "./datadir/",
     "consensus":"dpos",
     "api_port": 8689,
-    "p2p_port": "9868",
+    "p2p_port": 9868,
     "serv_addr":"192.168.1.1",
     "peer_list": [
     ],

@@ -10,7 +10,6 @@ import(
 	cli "gopkg.in/urfave/cli.v1"
 	"os"
 	"github.com/bottos-project/bottos/config"
-	"strconv"
 	"io/ioutil"
 	"bytes"
 	"fmt"
@@ -47,21 +46,21 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Name: "disable-api",
 			Usage: "disable restful api's requests",
 		},
-		cli.StringFlag{
+		cli.IntFlag{
 			Name: "apiport",
-			Value: strconv.Itoa(Conf.APIPort),
+			Value: Conf.APIPort,
 			Usage: "api service port for the greeting",
 		},
 		cli.BoolFlag{
 			Name: "disable-rpc",
 			Usage: "disable rpc requests",
 		},
-		cli.StringFlag{
+		cli.IntFlag{
 			Name: "rpcport",
-			Value: "8690",
+			Value: 8690,
 			Usage: "json-rpc port for the greeting",
 		},
-		cli.StringFlag{
+		cli.IntFlag{
 			Name: "p2pport",
 			Value: Conf.P2PPort,
 			Usage: "local listen on this p2p port to receive remote p2p messages",
@@ -170,27 +169,17 @@ func Init() (config.Parameter, config.GenesisConfig, error) {
 			Conf.ServAddr = c.String("servaddr")
 		}
 
-		if len(c.String("apiport")) > 0 {
+		if c.Int("apiport") > 0 {
 			//For new restful api port
-			api_port,e:=strconv.Atoi(c.String("apiport"))
-			if e != nil {
-				fmt.Println(e.Error())
-				return e
-			}
-			Conf.APIPort = api_port
+			Conf.APIPort = c.Int("apiport")
 		}
 		
-		if len(c.String("rpcport")) > 0 {
+		if c.Int("rpcport") > 0 {
 			//TO DO: for micro rpc port. The port is not be used by now.
 		}
 
-		if len(c.String("p2pport")) > 0 {
-			/*p2p_port_,e:=strconv.Atoi(c.String("p2pport"))
-			if e != nil {
-				fmt.Println(e.Error())
-				return e
-			}*/
-			Conf.P2PPort = c.String("p2pport")//p2p_port
+		if c.Int("p2pport") > 0 {
+			Conf.P2PPort = c.Int("p2pport")
 		}
 
 		if len(c.String("peerlist")) > 0 {

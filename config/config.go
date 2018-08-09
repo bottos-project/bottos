@@ -49,7 +49,7 @@ type Parameter struct {
 	DataDir           string    `json:"data_dir"`
 	Consensus         string    `json:"consensus"`
 	APIPort           int       `json:"api_port"`
-	P2PPort           string    `json:"p2p_port"`
+	P2PPort           int       `json:"p2p_port"`
 	ServAddr          string    `json:"serv_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
@@ -91,7 +91,7 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
         Conf.DataDir     = "./datadir/"
         Conf.Consensus   = "dpos"
         Conf.APIPort     = 8689
-        Conf.P2PPort     = "9868"
+        Conf.P2PPort     = 9868
         Conf.ServAddr    = "192.168.1.1"
 	Conf.PeerList    = []string{}
         Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
