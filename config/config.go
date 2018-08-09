@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -57,6 +57,7 @@ type Parameter struct {
 	RpcServiceEnable  bool      `json:"rpc_service_enable"`
 	RpcServiceName    string    `json:"rpc_service_name"`
 	RpcServiceVersion string    `json:"rpc_service_version"`
+	RestFulApiServiceEnable  bool      `json:"restful_api_service_enable"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
