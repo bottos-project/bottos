@@ -43,9 +43,9 @@
         "ran",
         "procyon"
     ],
-    "api_service_enable": true,
-    "api_service_name": "bottos",
-    "api_service_version": "3.0.0",
+    "rpc_service_enable": true,
+    "rpc_service_name": "bottos",
+    "rpc_service_version": "3.0.0",
 	"enable_stale_report": true,
 	"option_db":"127.0.0.1:27017",
     "log_config":"corelog.xml",
