@@ -179,12 +179,17 @@ func ByteToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(bits)
 }
 
-func (vm *VM) StrLen(pos int) int {
+func (vm *VM) StrLen(pos uint64) uint64 {
 	if pos <= 0 {
 		return 0
 	}
 
-	i := pos
+	if vm.sourceFile == JS {
+		//if source file is js file , the byte array's first element will be array's length
+		return uint64(vm.memory[pos])
+	}
+
+	var i uint64 = pos
 	for {
 		if vm.memory[i] == 0 {
 			break
@@ -212,8 +217,13 @@ func ConvertStr(param []byte , pos uint64 , len uint64) ([]byte , error) {
 	return res,nil
 }
 
-func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
-	if vm.memory == nil || pos < 0 || len < 0 {
+func Convert(vm *VM , pos uint64 , length uint64) ([]byte , error) {
+	if vm.memory == nil || pos < 0 || length < 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
+
+	vmLen := uint64(len(vm.memory))
+	if pos >= vmLen || pos + length >= vmLen {
 		return nil , ERR_EMPTY_INVALID_PARAM
 	}
 
@@ -221,9 +231,9 @@ func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
 	var err   error
 
 	if vm.sourceFile == CPP {
-		value = vm.memory[pos:pos+len]
+		value = vm.memory[pos : pos + length]
 	} else if vm.sourceFile == JS {
-		value , err = ConvertStr(vm.memory , pos , len)
+		value , err = ConvertStr(vm.memory , pos , length)
 		if err != nil {
 			return nil , err
 		}

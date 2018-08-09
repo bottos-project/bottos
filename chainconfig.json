@@ -1,4 +1,4 @@
-{
+﻿{
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
     "consensus":"dpos",
@@ -43,11 +43,12 @@
         "ran",
         "procyon"
     ],
+    "restful_api_service_enable": true,
     "rpc_service_enable": true,
     "rpc_service_name": "bottos",
     "rpc_service_version": "3.0.0",
-	"enable_stale_report": true,
-	"option_db":"127.0.0.1:27017",
+    "enable_stale_report": true,
+    "option_db":"127.0.0.1:27017",
     "log_config":"corelog.xml",
     "chain_id":"00000000000000000000000000000000"
 }

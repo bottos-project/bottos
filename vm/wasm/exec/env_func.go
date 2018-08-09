@@ -56,6 +56,7 @@ func NewEnvFunc() *EnvFunc {
 		envFuncParamIdx: 0,
 	}
 
+	//env function for C/C++
 	envFunc.Register("printi",           printi)
 	envFunc.Register("prints",           prints)
 	envFunc.Register("getStrValue",      getStrValue)
@@ -418,6 +419,8 @@ func prints(vm *VM) (bool, error) {
 
 	value , err := Convert(vm , pos , len)
 	if err != nil {
+		fmt.Println("*ERROR* vm::prints failed to convert parameter in prints , err: ", err)
+		log.Infof("*ERROR* vm::prints failed to convert parameter in prints , err: ", err)
 		return true, nil
 	}
 
@@ -503,7 +506,7 @@ func getParam(vm *VM) (bool, error) {
 	}
 
 	copy(vm.memory[int(bufPos):int(bufPos)+paramLen], contractCtx.Trx.Param)
-	fmt.Println("VM::getParam paramLen: ",paramLen," , contractCtx.Trx.Param: ",contractCtx.Trx.Param)
+	fmt.Println("VM::getParam contractCtx.Trx.Param: ",contractCtx.Trx.Param)
 	vm.ctx = vm.envFunc.envFuncCtx
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(paramLen))
@@ -527,19 +530,19 @@ func callTrx(vm *VM) (bool, error) {
 	pPos := uint64(params[2])
 	pLen := uint64(params[3])
 
-	contrxByte , err := Convert(vm , cPos , uint64(vm.memType[uint64(cPos)].Len))
+	contrxByte , err := Convert(vm , cPos , vm.StrLen(cPos))
 	if err != nil {
 		return true, nil
 	}
-	methodByte , err := Convert(vm , mPos , uint64(vm.memType[uint64(mPos)].Len))
+	methodByte , err := Convert(vm , mPos , vm.StrLen(mPos))
 	if err != nil {
 		return true, nil
 	}
+
 	contrx := BytesToString(contrxByte)
 	method := BytesToString(methodByte)
-
 	//the bytes after msgpack.Marshal
-	param := vm.memory[pPos : pPos+pLen]
+	param := vm.memory[pPos : pPos + pLen]
 	value := make([]byte, len(param))
 	copy(value, param)
 
@@ -731,9 +734,9 @@ func strcat_s(vm *VM) (bool, error) {
 		return false, ERR_PARAM_COUNT
 	}
 
-	dst      := int(params[0])
-	totalLen := int(params[1])
-	src      := int(params[2])
+	dst      := uint64(params[0])
+	totalLen := uint64(params[1])
+	src      := uint64(params[2])
 
 	dstLen    := vm.StrLen(dst)
 	srcLen    := vm.StrLen(src)
@@ -764,9 +767,9 @@ func strcpy_s(vm *VM) (bool, error) {
 		return false, ERR_PARAM_COUNT
 	}
 
-	dst      := int(params[0])
-	totalLen := int(params[1])
-	src      := int(params[2])
+	dst      := uint64(params[0])
+	totalLen := uint64(params[1])
+	src      := uint64(params[2])
 
 	srcLen    := vm.StrLen(src)
 	if totalLen < srcLen + 1 {
@@ -795,7 +798,7 @@ func isAccountExist(vm *VM) (bool, error) {
 	}
 
 	contractCtx := vm.GetContract()
-	pos         := int(params[0])
+	pos         := uint64(params[0])
 	length      := vm.StrLen(pos)
 	accountNameByte , err := Convert(vm , uint64(pos) , uint64(length))
 	if err != nil {
