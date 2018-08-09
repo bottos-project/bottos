@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -55,6 +55,7 @@ type Parameter struct {
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
 	ApiServiceEnable  bool      `json:"api_service_enable"`
+	RestFulApiServiceEnable  bool      `json:"restful_api_service_enable"`
 	ApiServiceName    string    `json:"api_service_name"`
 	ApiServiceVersion string    `json:"api_service_version"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
