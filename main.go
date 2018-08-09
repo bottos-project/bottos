@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"os"
@@ -24,6 +24,9 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/micro/go-micro"
 	"github.com/bottos-project/bottos/cmdcli"
+	"github.com/bottos-project/bottos/restful/handler"
+	"net/http"
+	"strconv"
 )
 
 func main() {
@@ -74,6 +77,13 @@ func main() {
 
 	var trxPool = transaction.InitTrxPool(actorenv, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
+
+	//Enabled RestFul Api
+	if config.Param.RestFulApiServiceEnable{
+		router := handler.NewRouter()
+		//log.Critical(http.ListenAndServe("127.0.0.1:8083", router))
+		log.Critical(http.ListenAndServe("127.0.0.1"+":"+strconv.Itoa(config.Param.APIPort), router))
+	}
 
 	if config.Param.ApiServiceEnable {
 		repo := caapi.NewApiService(actorenv)
