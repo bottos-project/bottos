@@ -78,6 +78,8 @@ func NewEnvFunc() *EnvFunc {
 	envFunc.Register("strcpy_s",         strcpy_s)
 	envFunc.Register("isAccountExist",   isAccountExist)
 
+	envFunc.Register("getMethodJs",       getMethodJs)
+
 	return &envFunc
 }
 
@@ -424,7 +426,6 @@ func prints(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	BytesToString(value)
 	param := string(value)
 	fmt.Println("VM: func prints: ", param)
 	log.Infof("VM: func prints: %v\n", param)
@@ -519,30 +520,40 @@ func getParam(vm *VM) (bool, error) {
 func callTrx(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
-	params  := envFunc.envFuncParam
+	params := envFunc.envFuncParam
 
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
 	}
 
-	cPos := uint64(params[0])
-	mPos := uint64(params[1])
-	pPos := uint64(params[2])
-	pLen := uint64(params[3])
+	cPos := params[0]
+	mPos := params[1]
+	pPos := params[2]
+	pLen := params[3]
 
-	contrxByte , err := Convert(vm , cPos , vm.StrLen(cPos))
+	contrxByte, err := Convert(vm, cPos, vm.StrLen(cPos))
 	if err != nil {
 		return true, nil
 	}
-	methodByte , err := Convert(vm , mPos , vm.StrLen(mPos))
+	methodByte, err := Convert(vm, mPos, vm.StrLen(mPos))
 	if err != nil {
 		return true, nil
 	}
 
 	contrx := BytesToString(contrxByte)
 	method := BytesToString(methodByte)
+
+	var param []byte
 	//the bytes after msgpack.Marshal
-	param := vm.memory[pPos : pPos + pLen]
+	if vm.sourceFile == CPP {
+		param = vm.memory[pPos: pPos+pLen]
+	} else if vm.sourceFile == JS {
+		param , err = PackStrToByteArray(vm, pPos, vm.StrLen(pPos))
+		if err != nil {
+			return true, nil
+		}
+	}
+
 	value := make([]byte, len(param))
 	copy(value, param)
 
@@ -684,7 +695,7 @@ func memset(vm *VM) (bool, error) {
 	for ; i < count; i++ {
 		tempMem[i] = byte(element)
 	}
-	fmt.Println("vm::memset pos: ",pos,",count: ",count)
+
 	copy(vm.memory[pos:pos + count], tempMem)
 
 	if vm.envFunc.envFuncRtn {
@@ -843,7 +854,7 @@ func malloc(vm *VM) (bool, error) {
 		return false, ERR_PARAM_COUNT
 	}
 
-	size := int(params[0])
+	size := uint64(params[0])
 
 	index, err := vm.getStoragePos(size, Unknown)
 	if err != nil {
@@ -857,6 +868,35 @@ func malloc(vm *VM) (bool, error) {
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(index))
 	}
+
+	return true, nil
+}
+
+func getMethodJs(vm *VM) (bool, error) {
+	//
+	envFunc := vm.envFunc
+	params  := envFunc.envFuncParam
+	if len(params) != 1 {
+		return false, ERR_PARAM_COUNT
+	}
+
+	pos     := uint64(params[0])
+	fmt.Println("vm::getMethodJs pos: = ",pos)
+	/*
+	var pos uint64 = 0
+	var err error
+	contractCtx := vm.GetContract()
+	if pos, err = vm.StorageData(contractCtx.Trx.Method); err != nil {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(VM_NULL))
+		}
+		return true, nil
+	}
+	fmt.Println("VM::getMethodJs contractCtx.Trx.Method: ",string(contractCtx.Trx.Method)," , pos: ",pos)
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(pos)
+	}
+	*/
 
 	return true, nil
 }

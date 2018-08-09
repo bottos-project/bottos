@@ -62,7 +62,7 @@ const (
 
 type typeInfo struct {
 	Type Type
-	Len  int
+	Len  uint64
 }
 
 // ErrOutOfBoundsMemoryAccess is the error value used while trapping the VM
@@ -281,15 +281,15 @@ func (vm *VM) GetData(pos uint64) ([]byte, error) {
 		return nil, ERR_FINE_MAP
 	}
 
-	if int(pos)+t.Len > len(vm.memory) {
+	if pos + t.Len > uint64(len(vm.memory)) {
 		return nil, ERR_OUT_BOUNDS
 	}
 
-	return vm.memory[int(pos) : int(pos)+t.Len], nil
+	return vm.memory[int(pos) : pos + t.Len], nil
 }
 
 // StorageData store data
-func (vm *VM) StorageData(data interface{}) (int, error) {
+func (vm *VM) StorageData(data interface{}) (uint64, error) {
 
 	if data == nil {
 		return 0, ERR_EMPTY_INVALID_PARAM
@@ -319,13 +319,13 @@ func (vm *VM) StorageData(data interface{}) (int, error) {
 	}
 }
 
-func (vm *VM) getStoragePos(size int, t Type) (int, error) {
+func (vm *VM) getStoragePos(size uint64, t Type) (uint64, error) {
 
 	if size <= 0 || vm.memory == nil {
 		return 0, ERR_EMPTY_INVALID_PARAM
 	}
 
-	if vm.memPos + size > len(vm.memory) {
+	if vm.memPos + size > uint64(len(vm.memory)) {
 		return 0, ERR_OUT_BOUNDS
 	}
 
@@ -337,17 +337,18 @@ func (vm *VM) getStoragePos(size int, t Type) (int, error) {
 	return newpos, nil
 }
 
-func (vm *VM) storageMemory(b []byte, t Type) (int, error) {
-	index, err := vm.getStoragePos(len(b), t) //get new pos after storage new data
+func (vm *VM) storageMemory(b []byte, t Type) (uint64 , error) {
+	index, err := vm.getStoragePos(uint64(len(b)), t) //get new pos after storage new data
 	if err != nil {
 		return 0, ERR_GET_STORE_POS
 	}
-	copy(vm.memory[index : index + len(b)], b)
+	copy(vm.memory[index : index + uint64(len(b))], b)
+	vm.memory[index + uint64(len(b))] = 0
 
 	return index, nil
 }
 
-func (vm *VM) registerMemory(pos int , size int, t Type) (int, error) {
+func (vm *VM) registerMemory(pos int , size uint64, t Type) (int, error) {
 
 	if pos <= 0 || size < 0 {
 		return 0, ERR_EMPTY_INVALID_PARAM
@@ -357,7 +358,7 @@ func (vm *VM) registerMemory(pos int , size int, t Type) (int, error) {
 	return pos, nil
 }
 
-func (vm *VM) getDataLen(pos int) (int, error) {
+func (vm *VM) getDataLen(pos int) (uint64, error) {
 	ti , ok := vm.memType[uint64(pos)]
 	if !ok {
 		return 0 , ERR_FINE_MAP
