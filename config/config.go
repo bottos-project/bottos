@@ -102,7 +102,7 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
         Conf.RpcServiceVersion = "3.0.0"
         Conf.EnableStaleReport = true
         Conf.OptionDb          = ""
-        Conf.LogConfig         = "/home/bottos/opt/go/bin/core/corelog.xml"
+        Conf.LogConfig         = "corelog.xml"
         Conf.ChainId           = "00000000000000000000000000000000"
 	
 	GenConf.GenesisTime    = 1524801531
