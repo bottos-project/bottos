@@ -289,7 +289,7 @@ func getBinValue(vm *VM) (bool, error) {
 		valueLen = uint64(len(value))
 		// check buf len
 		if valueLen <= valueBufLen {
-			copy(vm.memory[valueBufPos:valueBufPos+valueLen], value)
+			copy(vm.memory[valueBufPos:valueBufPos + valueLen], value)
 		} else {
 			valueLen = 0
 		}
@@ -462,7 +462,8 @@ func getMethod(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	if uint64(copy(vm.memory[pos:pos + methodLen], []byte(contractCtx.Trx.Method))) != methodLen {
+	if vm.storageMemorySpecifyPos(pos , methodLen , []byte(contractCtx.Trx.Method) , true) != nil {
+		fmt.Println("VM::getParam *ERROR* Failed to storage data to specify pos in memory !!!")
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(VM_NULL))
 		}
@@ -507,7 +508,13 @@ func getParam(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	copy(vm.memory[bufPos : bufPos + paramLen], contractCtx.Trx.Param)
+	if vm.storageMemorySpecifyPos(bufPos , paramLen , contractCtx.Trx.Param , true) != nil {
+		fmt.Println("VM::getParam *ERROR* Failed to storage data to specify pos in memory !!!")
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(VM_NULL))
+		}
+		return true, nil
+	}
 
 	vm.ctx = vm.envFunc.envFuncCtx
 	if vm.envFunc.envFuncRtn {
@@ -547,12 +554,14 @@ func callTrx(vm *VM) (bool, error) {
 	var param []byte
 	//the bytes after msgpack.Marshal
 	if vm.sourceFile == CPP {
-		param = vm.memory[pPos: pPos+pLen]
+		param = vm.memory[pPos:pPos + pLen]
 	} else if vm.sourceFile == JS {
 		param , err = PackStrToByteArray(vm, pPos, vm.StrLen(pPos))
 		if err != nil {
 			return true, nil
 		}
+	} else if vm.sourceFile == PY {
+		//Todo some special operation for python
 	}
 
 	value := make([]byte, len(param))
@@ -626,8 +635,15 @@ func getCtxName(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	copy(vm.memory[pos:pos+ctxNameLen], []byte(ctxName))
-	vm.memory[pos+ctxNameLen] = 0
+	if vm.storageMemorySpecifyPos(pos , ctxNameLen , []byte(ctxName) , true) != nil {
+		fmt.Println("VM::getCtxName *ERROR* Failed to storage data to specify pos in memory !!!")
+		log.Infof("*ERROR* Failed to storage data to specify pos in memory !!!")
+		if vm.envFunc.envFuncRtn {
+			vm.pushInt32(int32(VM_NULL))
+		}
+		return true, nil
+	}
+
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(ctxNameLen))
 	}
@@ -661,8 +677,14 @@ func getSender(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	copy(vm.memory[pos:pos+senderNameLen], []byte(senderName))
-	vm.memory[pos+senderNameLen] = 0
+	if vm.storageMemorySpecifyPos(pos , senderNameLen , []byte(senderName) , true) != nil {
+		fmt.Println("VM::getSender *ERROR* Failed to storage data to specify pos in memory !!!")
+		if vm.envFunc.envFuncRtn {
+			vm.pushInt32(int32(VM_NULL))
+		}
+		return true, nil
+	}
+
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(senderNameLen))
 	}
@@ -697,7 +719,15 @@ func memset(vm *VM) (bool, error) {
 		tempMem[i] = byte(element)
 	}
 
-	copy(vm.memory[pos:pos + count], tempMem)
+	//fmt.Println("VM::memset pos: ",pos," , count: ",count)
+	//copy(vm.memory[pos:pos + count], tempMem)
+	if vm.storageMemorySpecifyPos(pos , count , tempMem , false) != nil {
+		fmt.Println("VM::getSender *ERROR* Failed to storage data to specify pos in memory !!!")
+		if vm.envFunc.envFuncRtn {
+			vm.pushInt32(int32(VM_NULL))
+		}
+		return true, nil
+	}
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushInt32(int32(pos))
@@ -731,7 +761,20 @@ func memcpy(vm *VM) (bool, error) {
 		return true, nil
 	}
 
+	/*
 	copy(vm.memory[dst:dst + length], vm.memory[src:src + length])
+	if vm.envFunc.envFuncRtn {
+		vm.pushUint64(uint64(dst))
+	}
+	*/
+
+	if vm.storageMemorySpecifyPos(dst , length , vm.memory[src:src + length] , false) != nil {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(VM_NULL))
+		}
+		return true, nil
+	}
+
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint64(uint64(dst))
 	}
@@ -763,8 +806,15 @@ func strcat_s(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
-	vm.memory[dstPoint + srcLen] = 0
+	//copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
+	//vm.memory[dstPoint + srcLen] = 0
+	if vm.storageMemorySpecifyPos(dstPoint , srcLen , vm.memory[src:src + srcLen] , true) != nil {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(VM_ERROR_FAIL_STORAGE_MEMORY))
+		}
+		return true, nil
+	}
+
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(VM_NOERROR))
 	}
@@ -788,12 +838,17 @@ func strcpy_s(vm *VM) (bool, error) {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint32(uint32(VM_ERROR_OUT_OF_MEMORY))
 		}
-
 		return true, nil
 	}
 
-	copy(vm.memory[dst:dst + srcLen],vm.memory[src:src + srcLen])
-	vm.memory[dst + srcLen] = 0
+	//copy(vm.memory[dst:dst + srcLen],vm.memory[src:src + srcLen])
+	//vm.memory[dst + srcLen] = 0
+	if vm.storageMemorySpecifyPos(dst , srcLen , vm.memory[src:src + srcLen] , true) != nil {
+		if vm.envFunc.envFuncRtn {
+			vm.pushUint64(uint64(VM_ERROR_FAIL_STORAGE_MEMORY))
+		}
+		return true, nil
+	}
 
 	if vm.envFunc.envFuncRtn {
 		vm.pushUint32(uint32(VM_NOERROR))
