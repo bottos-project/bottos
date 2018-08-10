@@ -65,7 +65,7 @@ func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
 
-func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
+func ConvertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	param, err := common.HexToBytes(trx.Param)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		return nil
 	}
 
-	intTrx, err := convertApiTrxToIntTrx(trx)
+	intTrx, err := ConvertApiTrxToIntTrx(trx)
 	if err != nil {
 		return nil
 	}
