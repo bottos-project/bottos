@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -65,7 +65,7 @@ func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
 
-func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
+func ConvertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	param, err := common.HexToBytes(trx.Param)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	return intTrx, nil
 }
 
-func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
+func ConvertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	apiTrx := &api.Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -116,7 +116,7 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		return nil
 	}
 
-	intTrx, err := convertApiTrxToIntTrx(trx)
+	intTrx, err := ConvertApiTrxToIntTrx(trx)
 	if err != nil {
 		return nil
 	}
@@ -139,13 +139,13 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 	if bottosErr.ErrNoError == handlerErr {
 		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
-		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
+		resp.Result.Trx = ConvertIntTrxToApiTrx(intTrx)
 		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
 		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
-		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
+		resp.Result.Trx = ConvertIntTrxToApiTrx(intTrx)
 		//resp.Msg = handlerErr.(string)GetCodeString
 		//resp.Msg = "to be add detail error description"
 		var tempErr bottosErr.ErrCode
@@ -178,7 +178,7 @@ func (a *ApiService) GetTransaction(ctx context.Context, req *api.GetTransaction
 		return nil
 	}
 
-	resp.Result = convertIntTrxToApiTrx(response.Trx)
+	resp.Result = ConvertIntTrxToApiTrx(response.Trx)
 	resp.Errcode = uint32(bottosErr.ErrNoError)
 	return nil
 }

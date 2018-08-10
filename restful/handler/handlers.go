@@ -18,6 +18,8 @@ import (
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/role"
+	service "github.com/bottos-project/bottos/action/actor/api"
+	log "github.com/cihub/seelog"
 )
 
 //ApiService is actor service
@@ -160,11 +162,104 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 }
 
 func SendTransaction(w http.ResponseWriter, r *http.Request) {
+	var trx *api.Transaction
+	_ = json.NewDecoder(r.Body).Decode(&trx)
 
+	if trx == nil {
+		//rsp.retCode = ??
+		if err := json.NewEncoder(w).Encode(trx); err != nil {
+			panic(err)
+		}
+	}
+
+	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
+	if err != nil {
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+	}
+
+	reqMsg := &message.PushTrxReq{
+		Trx: intTrx,
+	}
+
+	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+
+	var resp Todo
+	if nil != err {
+		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
+
+		log.Errorf("trx: %x actor process failed", intTrx.Hash(), )
+
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	result := &api.SendTransactionResponse_Result{}
+	if bottosErr.ErrNoError == handlerErr {
+		result.TrxHash = intTrx.Hash().ToHexString()
+		result.Trx = service.ConvertIntTrxToApiTrx(intTrx)
+		resp.Result = result
+		resp.Msg = "trx receive succ"
+		resp.Errcode = 0
+	} else {
+		result.TrxHash = intTrx.Hash().ToHexString()
+		result.Trx = service.ConvertIntTrxToApiTrx(intTrx)
+		resp.Result = result
+		//resp.Msg = handlerErr.(string)GetCodeString
+		//resp.Msg = "to be add detail error description"
+		var tempErr bottosErr.ErrCode
+		tempErr = handlerErr.(bottosErr.ErrCode)
+
+		resp.Errcode = (uint32)(tempErr)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+	}
+
+	log.Infof("trx: %v %s", result.TrxHash, resp.Msg)
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
 }
+
+type reqStruct struct {
+	TrxHash string `json:"trx_hash,omitemty"`
+}
+
 func GetTransaction(w http.ResponseWriter, r *http.Request) {
+	var req *reqStruct
+	_ = json.NewDecoder(r.Body).Decode(&req)
 
+	msgReq := &message.QueryTrxReq{
+		TrxHash: common.HexToHash(req.TrxHash),
 }
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	var resp Todo
+	if err != nil {
+		resp.Errcode = 1
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	response := res.(*message.QueryTrxResp)
+	if response.Trx == nil {
+		resp.Errcode = uint32(bottosErr.ErrApiTrxNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiTrxNotFound)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	resp.Result = service.ConvertIntTrxToApiTrx(response.Trx)
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
+}
+
 //GetAccount query account info
 func GetAccount(w http.ResponseWriter, r *http.Request) {
 	var msgReq api.GetAccountRequest

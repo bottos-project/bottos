@@ -15,13 +15,15 @@ const (
 	GET_BLK_BY_HASH       = "/v1/block/details/hash/:hash"
 	GET_BLK_HEIGHT        = "/v1/block/height"
 	//GET_BLK_HASH          = "/v1/block/hash/:height"
+
+
 	GET_BLK_INFO   = "/v1/block/header"
 	GET_BLK_DETAIL = "/v1/block/detail"
 
 	SEND_TRANSACTION = "/v1/transaction/send"
 	GET_TRANSACTION  = "/v1/transaction/get"
 
-	GET_ACCOUNT = "/v1/account/get"
+	GET_ACCOUNT = "/v1/account/info"
 
 	GET_KEY_VALUE = "/v1/account/get"
 
