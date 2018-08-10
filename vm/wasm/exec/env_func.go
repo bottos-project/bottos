@@ -489,26 +489,8 @@ func getParam(vm *VM) (bool, error) {
 
 	bufPos   := params[0]
 	bufLen   := params[1]
-	vmLen    := uint64(len(vm.memory))
 	paramLen := uint64(len(contractCtx.Trx.Param))
-	if bufPos >= vmLen || bufPos + bufLen >= vmLen {
-		fmt.Println("VM::getParam *ERROR* Out of bound")
-		log.Infof("*ERROR* Out of bound \n")
-		if vm.envFunc.envFuncRtn {
-			vm.pushUint64(uint64(VM_NULL))
-		}
-		return true, nil
-	}
-
-	if bufLen <= paramLen {
-		log.Infof("*ERROR* Invaild string length \n")
-		if vm.envFunc.envFuncRtn {
-			vm.pushUint64(uint64(VM_NULL))
-		}
-		return true, nil
-	}
-
-	if vm.storageMemorySpecifyPos(bufPos , paramLen , contractCtx.Trx.Param , true) != nil {
+	if vm.storageMemorySpecifyPos(bufPos , bufLen , contractCtx.Trx.Param , true) != nil {
 		fmt.Println("VM::getParam *ERROR* Failed to storage data to specify pos in memory !!!")
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(VM_NULL))
@@ -518,7 +500,7 @@ func getParam(vm *VM) (bool, error) {
 
 	vm.ctx = vm.envFunc.envFuncCtx
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint64(uint64(paramLen))
+		vm.pushUint64(paramLen)
 	}
 
 	return true, nil
@@ -806,8 +788,6 @@ func strcat_s(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	//copy(vm.memory[dstPoint:dstPoint + srcLen],vm.memory[src:src + srcLen])
-	//vm.memory[dstPoint + srcLen] = 0
 	if vm.storageMemorySpecifyPos(dstPoint , srcLen , vm.memory[src:src + srcLen] , true) != nil {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(VM_ERROR_FAIL_STORAGE_MEMORY))
@@ -841,8 +821,6 @@ func strcpy_s(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	//copy(vm.memory[dst:dst + srcLen],vm.memory[src:src + srcLen])
-	//vm.memory[dst + srcLen] = 0
 	if vm.storageMemorySpecifyPos(dst , srcLen , vm.memory[src:src + srcLen] , true) != nil {
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(VM_ERROR_FAIL_STORAGE_MEMORY))

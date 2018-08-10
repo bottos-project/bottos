@@ -371,16 +371,17 @@ func (vm *VM) getDataLen(pos uint64) (uint64, error) {
 
 //To storage a byte to a specify pos in vm.memory
 func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign bool) error {
-	if pos == 0 || length == 0 {
+	if pos == 0 || length == 0 || data == nil || len(data) == 0 {
 		return ERR_EMPTY_INVALID_PARAM
 	}
 
-	if data == nil {
+	vmLen  := uint64(len(vm.memory))
+	datLen := uint64(len(data))
+	if datLen > length {
 		return ERR_EMPTY_INVALID_PARAM
 	}
 
-	vmLen := uint64(len(vm.memory))
-	if pos >= vmLen || pos + length >= vmLen {
+	if pos >= vmLen || pos + datLen >= vmLen {
 		return ERR_EMPTY_INVALID_PARAM
 	}
 
@@ -391,16 +392,15 @@ func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign b
 		return ERR_USED_POS
 	}
 
-	if uint64(copy(vm.memory[pos:pos + length], data)) != length {
+	if uint64(copy(vm.memory[pos:pos + datLen], data)) != length {
 		return ERR_STORE_MEMORY
 	}
 
 	if sign == true {
-		vm.memory[pos + length] = 0
-		length += 1
+		vm.memory[pos + datLen] = 0
+		datLen += 1
 	}
 
-	fmt.Println("VM::storageMemorySpecifyPos vm.memPos: ",vm.memPos,",pos: ",pos)
 	if vm.memPos == pos {
 		//Todo if it is need to record new pos , it need be consided
 	}

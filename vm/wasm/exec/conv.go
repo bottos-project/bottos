@@ -212,7 +212,6 @@ func ConvertStr (param []byte , pos uint64 , length uint64) ([]byte , error) {
 	}
 
 	for {
-		//fmt.Println("param[i]: ",param[i]," , i: ",i)
 		res = append(res , param[i])
 		i   += 2
 		cnt += 1
