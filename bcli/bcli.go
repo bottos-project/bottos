@@ -77,7 +77,8 @@ func (cli *CLI) printUsage() {
 func NewCLI() *CLI {
 	cli := &CLI{}
 	service := micro.NewService()
-	service.Init()
+	//avoid parameters conflict with those of bcli
+	//service.Init()
 	cli.client = chain.NewChainService("bottos", service.Client())
 
 	return cli
