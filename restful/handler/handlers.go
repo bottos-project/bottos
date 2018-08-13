@@ -53,8 +53,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 func TodoIndex(w http.ResponseWriter, r *http.Request) {
 	todos := Todos{
-		Todo{Name: "Write presentation"},
-		Todo{Name: "Host meetup"},
+		Todo{Msg: "Write presentation"},
+		Todo{Msg: "Host meetup"},
 	}
 
 	if err := json.NewEncoder(w).Encode(todos); err != nil {
@@ -122,7 +122,11 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//params := mux.Vars(r)
 	var msgReq *message.QueryBlockReq
-	_ = json.NewDecoder(r.Body).Decode(&msgReq)
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
 
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	var resp Todo
@@ -163,7 +167,11 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 
 func SendTransaction(w http.ResponseWriter, r *http.Request) {
 	var trx *api.Transaction
-	_ = json.NewDecoder(r.Body).Decode(&trx)
+	err := json.NewDecoder(r.Body).Decode(&trx)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
 
 	if trx == nil {
 		//rsp.retCode = ??
@@ -230,7 +238,11 @@ type reqStruct struct {
 
 func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	var req *reqStruct
-	_ = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
 
 	msgReq := &message.QueryTrxReq{
 		TrxHash: common.HexToHash(req.TrxHash),
@@ -263,7 +275,11 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 //GetAccount query account info
 func GetAccount(w http.ResponseWriter, r *http.Request) {
 	var msgReq api.GetAccountRequest
-	_ = json.NewDecoder(r.Body).Decode(&msgReq)
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
 	name := msgReq.AccountName
 
 	account, err := roleIntf.GetAccount(name)
@@ -311,7 +327,38 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetAbi(w http.ResponseWriter, r *http.Request) {
+func GetContractAbi(w http.ResponseWriter, r *http.Request) {
+	var req *api.GetAbiRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
+	//contract := req.Contract
+	account, err := roleIntf.GetAccount(req.Contract)
+	var resp Todo
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	if len(account.ContractAbi) > 0 {
+		resp.Result = string(account.ContractAbi)
+	} else {
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
+}
+
+func GetContractCode(w http.ResponseWriter, r *http.Request) {
 
 }
 
