@@ -334,7 +334,37 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetKeyValue(w http.ResponseWriter, r *http.Request) {
+	var req *api.GetKeyValueRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
 
+	contract := req.Contract
+	object := req.Object
+	key := req.Key
+	value, err := contractDbIns.GetBinValue(contract, object, key)
+	var resp Todo
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	result := &api.GetKeyValueResponse_Result{}
+	result.Contract = contract
+	result.Object = object
+	result.Key = key
+	result.Value = common.BytesToHex(value)
+	resp.Result = result
+	resp.Errcode = 0
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
 }
 
 func GetContractAbi(w http.ResponseWriter, r *http.Request) {
