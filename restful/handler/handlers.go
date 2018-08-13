@@ -363,5 +363,31 @@ func GetContractCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
+	var req *api.GetTransferCreditRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
+	name := req.Name
+	spender := req.Spender
+	credit, err := roleIntf.GetTransferCredit(name, spender)
+	var resp Todo
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrTransferCreditNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrTransferCreditNotFound)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
 
+	result := &api.GetTransferCreditResponse_Result{}
+	result.Name = credit.Name
+	result.Spender = credit.Spender
+	result.Limit = credit.Limit
+	resp.Result = result
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
 }
