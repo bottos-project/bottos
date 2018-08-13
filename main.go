@@ -79,7 +79,7 @@ func main() {
 
 	//Enabled RestFul Api
 	if config.Param.RestFulApiServiceEnable{
-		go startRestApi(roleIntf)
+		go startRestApi(roleIntf, contractDB)
 	}
 
 	//Enabled Rpc Api
@@ -122,10 +122,11 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 	<-exit
 }
 
-func startRestApi(roleIntf role.RoleInterface){
+func startRestApi(roleIntf role.RoleInterface, contractDB *contractdb.ContractDB) {
 	router := handler.NewRouter()
 	//transfer to restful handler
 	handler.SetRoleIntf(roleIntf)
+	handler.SetContractDbIns(contractDB)
 	//log.Critical(http.ListenAndServe("127.0.0.1:8083", router))
 	log.Critical(http.ListenAndServe("127.0.0.1"+":"+strconv.Itoa(config.Param.APIPort), router))
 }

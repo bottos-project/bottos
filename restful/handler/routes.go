@@ -24,7 +24,7 @@ const (
 	GET_CONTRACT_CODE = "/v1/contract/code"
 
 	// Common query
-	GET_KEY_VALUE = "/v1/account/get"
+	GET_KEY_VALUE = "/v1/common/query"
 
 	//node
 	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"

@@ -20,6 +20,8 @@ import (
 	"github.com/bottos-project/bottos/role"
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
+	"github.com/bottos-project/bottos/contract/contractdb"
+
 )
 
 //ApiService is actor service
@@ -32,6 +34,14 @@ var roleIntf role.RoleInterface
 func SetRoleIntf(tpid role.RoleInterface) {
 	roleIntf = tpid
 }
+
+var contractDbIns *contractdb.ContractDB
+//SetChainActorPid set chain actor pid
+func SetContractDbIns(tpid *contractdb.ContractDB) {
+	contractDbIns = tpid
+}
+
+
 
 var chainActorPid *actor.PID
 
@@ -359,7 +369,34 @@ func GetContractAbi(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetContractCode(w http.ResponseWriter, r *http.Request) {
+	var req *api.GetAbiRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		panic(err)
+	}
+	//contract := req.Contract
+	account, err := roleIntf.GetAccount(req.Contract)
+	var resp Todo
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
 
+	if len(account.ContractCode) > 0 {
+		resp.Result = common.BytesToHex(account.ContractCode)
+	} else {
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		panic(err)
+	}
 }
 
 func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
