@@ -36,16 +36,11 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 	
 	mapstruct := make(map[string]interface{})
 	
-	/*for key, value := range(pushtrxinfo.ParamMap) {
+	for key, value := range(pushtrxinfo.ParamMap) {
 	
         	abi.Setmapval(mapstruct, key, value)
-	}*/
+	}
 
-	abi.Setmapval(mapstruct, "nodeIP", "0a0a0a0a")
-	abi.Setmapval(mapstruct, "clusterIP", "0b0b0b0b")
-	abi.Setmapval(mapstruct, "uuid", "33")
-	abi.Setmapval(mapstruct, "capacity", "2GB")
-	
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, pushtrxinfo.contract, pushtrxinfo.method)
 
 	trx := &chain.Transaction{
