@@ -49,8 +49,8 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 		CursorLabel: chainInfo.CursorLabel,
 		Lifetime:    chainInfo.HeadBlockTime + 100,
 		Sender:      pushtrxinfo.sender,
-		Contract:    "nodeclustermng",
-		Method:      "reg",
+		Contract:    pushtrxinfo.contract,
+		Method:      pushtrxinfo.method,
 		Param:       BytesToHex(param),
 		SigAlg:      1,
 	}
