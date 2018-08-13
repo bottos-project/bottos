@@ -6,7 +6,6 @@ import (
 
 	"golang.org/x/net/context"
 	"github.com/bottos-project/bottos/contract/abi"
-	"github.com/bottos-project/bottos/common"
 	chain "github.com/bottos-project/bottos/api"
 )
 
@@ -17,8 +16,26 @@ type BcliPushTrxInfo struct {
 	ParamMap map[string]interface{}
 }
 
-func (cli *CLI) BcliGetTransaction (trxhash common.Hash) {
+func (cli *CLI) BcliGetTransaction (trxhash string) {
+	gettrx := &chain.GetTransactionRequest{trxhash}
+	newAccountRsp, err := cli.client.GetTransaction(context.TODO(), gettrx)
+	if err != nil || newAccountRsp == nil {
+		fmt.Println(err)
+		return
+	}
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %v\n", newAccountRsp.Msg)
+		return
+	}
+
+	fmt.Printf("GetTransaction Succeed\n")
+
+	b, _ := json.Marshal(newAccountRsp.Result)
+	cli.jsonPrint(b)
 	
+	fmt.Printf("Trx: %v\n", newAccountRsp.Result)
 }
 
 func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
