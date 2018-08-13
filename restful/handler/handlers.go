@@ -21,7 +21,6 @@ import (
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
 	"github.com/bottos-project/bottos/contract/contractdb"
-
 )
 
 //ApiService is actor service
@@ -40,8 +39,6 @@ var contractDbIns *contractdb.ContractDB
 func SetContractDbIns(tpid *contractdb.ContractDB) {
 	contractDbIns = tpid
 }
-
-
 
 var chainActorPid *actor.PID
 
@@ -275,7 +272,10 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp.Result = service.ConvertIntTrxToApiTrx(response.Trx)
+	//resp.Result = service.ConvertIntTrxToApiTrx(response.Trx)
+	role := &role.Role{Db: contractDbIns.Db}
+	resp.Result = service.ConvertIntTrxToApiTrxInter(response.Trx, role)
+
 	resp.Errcode = uint32(bottosErr.ErrNoError)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		panic(err)
