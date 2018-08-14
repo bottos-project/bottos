@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 func Test_PushTransaction(t *testing.T) {
 	cli := NewCLI()
-	fmt.Println(cli)
 	CONFIG = &CLIConfig{}
 	CONFIG.KeyPairs = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"},}
 	CONFIG.ChainId  = "00000000000000000000000000000000"
@@ -24,12 +22,20 @@ func Test_PushTransaction(t *testing.T) {
 
 func Test_GetTransaction(t *testing.T) {
 	cli := NewCLI()
-	fmt.Println(cli)
 	CONFIG = &CLIConfig{}
 	CONFIG.KeyPairs = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"},}
 	CONFIG.ChainId  = "00000000000000000000000000000000"
 	
-	trxhash := "17b6167249e6b854e3dbcb7c5144f0763aa464ad245d9939ef96814c2fceb9d6"
+	trxhash := "683a6343f56655f392887888407b48a90e83e3338e71e1cd802cafb93cdb19f4"
 	
 	cli.BcliGetTransaction("restful", "http://127.0.0.1:8689/v1/transaction/get", trxhash)
+}
+
+func Test_DeployCode(t *testing.T) {
+	cli := NewCLI()
+	CONFIG = &CLIConfig{}
+	CONFIG.KeyPairs = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"},}
+	CONFIG.ChainId  = "00000000000000000000000000000000"
+	
+	cli.deploycode("restful", "http://127.0.0.1:8689/v1/transaction/send", "nodeclustermng", "./nodeclustermng.wasm")
 }
