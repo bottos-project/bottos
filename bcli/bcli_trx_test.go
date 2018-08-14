@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func Test_PushTransaction(t *testing.T) {
 	cli := NewCLI()
 	fmt.Println(cli)
@@ -14,14 +13,13 @@ func Test_PushTransaction(t *testing.T) {
 	CONFIG.ChainId  = "00000000000000000000000000000000"
 	var pushtrx BcliPushTrxInfo
 	
-	pushtrx.sender   = "tester01"
+	pushtrx.sender   = "bottos"
         pushtrx.contract = "nodeclustermng"
         pushtrx.method   = "reg"
         pushtrx.ParamMap = map[string]interface{}{"nodeIP":"0a0a0a0a", "clusterIP":"0b0b0b0b", "uuid":"33", "capacity":"2GB"}
-	
-	//fmt.Printf("BcliPushTransaction %v!!!", pushtrx)
-	
-	cli.BcliPushTransaction(&pushtrx)
+
+	cli.BcliPushTransaction("restful", "http://127.0.0.1:8689/v1/transaction/send", &pushtrx)
+
 }
 
 func Test_GetTransaction(t *testing.T) {
@@ -33,8 +31,5 @@ func Test_GetTransaction(t *testing.T) {
 	
 	trxhash := "17b6167249e6b854e3dbcb7c5144f0763aa464ad245d9939ef96814c2fceb9d6"
 	
-	
-	//fmt.Printf("BcliPushTransaction %v!!!", pushtrx)
-	
-	cli.BcliGetTransaction(trxhash)
+	cli.BcliGetTransaction("restful", "http://127.0.0.1:8689/v1/transaction/get", trxhash)
 }
