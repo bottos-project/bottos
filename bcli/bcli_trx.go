@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 	"github.com/bottos-project/bottos/contract/abi"
 	chain "github.com/bottos-project/bottos/api"
+	TODO "github.com/bottos-project/bottos/restful/handler"
 )
 
 type BcliPushTrxInfo struct {
@@ -47,10 +48,14 @@ func send_httpreq (get_or_post string, ReqUrl string, ReqMsg io.Reader) ([]byte,
     if resp.StatusCode != 200 {
 		return nil, errors.New(string(body))
     }
-
-    fmt.Println("body:", string(body))
     
     return body, nil
+}
+
+type GetTransactionResponse struct {
+	Errcode uint32       `protobuf:"varint,1,opt,name=errcode" json:"errcode,omitempty"`
+	Msg     string       `protobuf:"bytes,2,opt,name=msg" json:"msg,omitempty"`
+	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
 func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash string) {
@@ -58,9 +63,12 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 		return
 	}
 	
+	var newAccountRsp *chain.GetTransactionResponse
+	var err error
+	
 	if http_method == "grpc" {
 		gettrx := &chain.GetTransactionRequest{trxhash}
-		newAccountRsp, err := cli.client.GetTransaction(context.TODO(), gettrx)
+		newAccountRsp, err = cli.client.GetTransaction(context.TODO(), gettrx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
 			return
@@ -83,23 +91,23 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		req, _ := json.Marshal(gettrx)
 		req_new := bytes.NewBuffer([]byte(req))
-		fmt.Println("req_new:", req_new)
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
 		if err != nil || httpRspBody == nil {
 			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
 			return
 		}
 		
-		fmt.Println("Done. Get transaction result body is: ", httpRspBody, ".")
-
-		var trx chain.Transaction
-		err = json.Unmarshal(httpRspBody, &trx)
+		var trxrespbody TODO.Todo
+		
+		err = json.Unmarshal(httpRspBody, &trxrespbody)
+		
 		if err != nil {
-		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", httpRspBody, ".")
+		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
 		    return
 		}
 		
-		fmt.Println("Done. Get transaction result trx is: ", trx, ".")
+		b, _ := json.Marshal(trxrespbody.Result)
+		cli.jsonPrint(b)
 	}
 }
 
@@ -162,7 +170,6 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	} else {
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
-		fmt.Println("req_new:", req_new)
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
 		if err != nil || httpRspBody == nil {
 			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
@@ -171,7 +178,6 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 		var respbody chain.SendTransactionResponse
 		json.Unmarshal(httpRspBody, &respbody)
 		newAccountRsp = &respbody
-		//fmt.Println("Done. Push transaction result body is: ", respbody, ".")
 	}
 	
 
