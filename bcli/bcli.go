@@ -363,7 +363,11 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
 
-func (cli *CLI) deploycode(name string, path string) {
+func (cli *CLI) deploycode(http_method, http_url, name string, path string) {
+	if http_method != "restful" && http_method != "grpc" {
+		return
+	}
+
 	chainInfo, err := cli.getChainInfo()
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -426,19 +430,33 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	trx.Signature = sign
+	var deployCodeRsp *chain.SendTransactionResponse
+	
+	if http_method == "grpc" {
+		deployCodeRsp, err = cli.client.SendTransaction(context.TODO(), trx)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	deployCodeRsp, err := cli.client.SendTransaction(context.TODO(), trx)
-	if err != nil {
-		fmt.Println(err)
-		return
+		if deployCodeRsp.Errcode != 0 {
+			fmt.Printf("Deploy contract error:\n")
+			fmt.Printf("    %v\n", deployCodeRsp.Msg)
+			return
+		}
+	} else {
+		req, _ := json.Marshal(trx)
+    		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			return
+		}
+		var respbody chain.SendTransactionResponse
+		json.Unmarshal(httpRspBody, &respbody)
+		deployCodeRsp = &respbody
 	}
-
-	if deployCodeRsp.Errcode != 0 {
-		fmt.Printf("Deploy contract error:\n")
-		fmt.Printf("    %v\n", deployCodeRsp.Msg)
-		return
-	}
-
+	
 	fmt.Printf("Deploy contract: %v Succeed\n", name)
 	fmt.Printf("Trx: \n")
 
@@ -643,7 +661,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deploycode(*deployCodeName, *deployCodePath)
+		cli.deploycode("grpc", "127.0.0.1:8689/v1/transaction/send", *deployCodeName, *deployCodePath)
 	}
 
 	if deployAbiCmd.Parsed() {
