@@ -22,11 +22,9 @@ type BcliPushTrxInfo struct {
 
 func send_httpreq (get_or_post string, ReqUrl string, ReqMsg io.Reader) ([]byte, error) {
     var err error	
-    //fmt.Println("send_httpreq 11: get_or_post:", get_or_post, ", ReqUrl:",ReqUrl, ", ReqMsg:", ReqMsg)
     
     client := &http.Client{}
     req, _ := http.NewRequest(get_or_post, ReqUrl, ReqMsg)
-    //fmt.Println("send_httpreq 22: get_or_post:", get_or_post, ", ReqUrl:",ReqUrl, ", ReqMsg:", ReqMsg)
     //req.Header.Set("Connection", "keep-alive")
     resp, err := client.Do(req)
     
