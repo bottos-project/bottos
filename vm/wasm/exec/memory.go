@@ -385,12 +385,14 @@ func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign b
 		return ERR_EMPTY_INVALID_PARAM
 	}
 
+	/*
 	_ , ok := vm.memType[pos]
 	if ok {
 		fmt.Println("*ERROR* Failed to assign the pos to storage because it had been used by others")
 		log.Infof("*ERROR* Failed to assign the pos to storage because it had been used by others \n")
 		return ERR_USED_POS
 	}
+	*/
 
 	if uint64(copy(vm.memory[pos:pos + datLen], data)) != length {
 		return ERR_STORE_MEMORY
