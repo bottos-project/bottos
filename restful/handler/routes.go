@@ -8,7 +8,7 @@ import (
 
 const (
 	//block
-	GET_BLK_INFO   = "/v1/block/header"
+	GET_BLK_INFO   = "/v1/block/height"
 	GET_BLK_DETAIL = "/v1/block/detail"
 
 	// Transaction

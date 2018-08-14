@@ -101,6 +101,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	response := res.(*message.QueryChainInfoResp)
@@ -110,6 +111,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.GetInfoResponse_Result{}
@@ -133,6 +135,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
@@ -143,6 +146,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	response := res.(*message.QueryBlockResp)
@@ -152,6 +156,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.GetBlockResponse_Result{}
@@ -178,6 +183,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 
 	if trx == nil {
@@ -185,6 +191,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(trx); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
@@ -192,6 +199,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	reqMsg := &message.PushTrxReq{
@@ -210,6 +218,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.SendTransactionResponse_Result{}
@@ -249,6 +258,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 
 	msgReq := &message.QueryTrxReq{
@@ -261,6 +271,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	response := res.(*message.QueryTrxResp)
@@ -270,6 +281,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	//resp.Result = service.ConvertIntTrxToApiTrx(response.Trx)
@@ -289,6 +301,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 	name := msgReq.AccountName
 
@@ -300,6 +313,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	balance, err := roleIntf.GetBalance(name)
@@ -309,6 +323,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	stakedBalance, err := roleIntf.GetStakedBalance(name)
@@ -318,6 +333,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.GetAccountResponse_Result{}
@@ -339,6 +355,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 
 	contract := req.Contract
@@ -352,6 +369,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.GetKeyValueResponse_Result{}
@@ -373,6 +391,7 @@ func GetContractAbi(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
@@ -383,6 +402,7 @@ func GetContractAbi(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	if len(account.ContractAbi) > 0 {
@@ -404,6 +424,7 @@ func GetContractCode(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
@@ -414,6 +435,7 @@ func GetContractCode(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	if len(account.ContractCode) > 0 {
@@ -435,6 +457,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("request error: %s", err)
 		panic(err)
+		return
 	}
 	name := req.Name
 	spender := req.Spender
@@ -446,6 +469,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	result := &api.GetTransferCreditResponse_Result{}
