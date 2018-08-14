@@ -79,7 +79,7 @@ type VM struct {
 
 	funcTable     [256]func()
 
-	memPos        int
+	memPos        uint64
 	//To avoid the too much the number of recursion execution(dep) in contract
 	callDep       int
 	//To limit the too much the number of new contract execution(wid) in contract
@@ -120,7 +120,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 	var vm = &VM{
 		envFunc:  NewEnvFunc(),
-		memPos:   -1,
+		memPos:   0,
 		memType:  make(map[uint64]*typeInfo),
 		memory:   make([]byte, wasmPageSize),
 		contract: nil,
@@ -142,7 +142,7 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 	indexSpaceLen := len(module.LinearMemoryIndexSpace[0])
 	if copy(vm.memory, module.LinearMemoryIndexSpace[0]) == indexSpaceLen {
-		vm.memPos += (len(module.LinearMemoryIndexSpace[0]) + 1)
+		vm.memPos += uint64(len(module.LinearMemoryIndexSpace[0]))
 	}else{
 		return nil , ERR_CREATE_VM
 	}
@@ -167,18 +167,18 @@ func NewVM(module *wasm.Module) (*VM, error) {
 
 			// if it contains multi-function(splited by '0')
 			if bytes.Contains(funcList.Data, []byte{byte(0)}) != true {
-				vm.memType[uint64(index)] = &typeInfo{Type: String, Len: len(funcList.Data)}
+				vm.memType[uint64(index)] = &typeInfo{Type: String, Len: uint64(len(funcList.Data))}
 			} else {
 				var idx = int(index)
 				funcArray := bytes.Split(funcList.Data, []byte{byte(0)})
 				for _, function := range funcArray {
-					vm.memType[uint64(idx)] = &typeInfo{Type: String, Len: len(function) + 1}
+					vm.memType[uint64(idx)] = &typeInfo{Type: String, Len: uint64(len(function) + 1)}
 					idx += len(function) + 1
 				}
 			}
 		}
 	} else {
-		vm.memPos = len(vm.memory) / 2
+		vm.memPos = uint64(len(vm.memory) / 2)
 	}
 
 	vm.compiledFuncs = make([]compiledFunction, len(module.FunctionIndexSpace))

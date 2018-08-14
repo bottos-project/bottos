@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -49,18 +49,21 @@ type Parameter struct {
 	DataDir           string    `json:"data_dir"`
 	Consensus         string    `json:"consensus"`
 	APIPort           int       `json:"api_port"`
-	P2PPort           string    `json:"p2p_port"`
+	P2PPort           int       `json:"p2p_port"`
 	ServAddr          string    `json:"serv_addr"`
+	ServInterAddr           string    `json:"serv_inter_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
-	ApiServiceEnable  bool      `json:"api_service_enable"`
-	ApiServiceName    string    `json:"api_service_name"`
-	ApiServiceVersion string    `json:"api_service_version"`
+	RpcServiceEnable  bool      `json:"rpc_service_enable"`
+	RpcServiceName    string    `json:"rpc_service_name"`
+	RpcServiceVersion string    `json:"rpc_service_version"`
+	RestFulApiServiceEnable  bool      `json:"restful_api_service_enable"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
 	ChainId           string    `json:"chain_id"`
+	DelegateSignKey   KeyPair   `json:"delegate_signkey_pair"`
 }
 
 // KeyPair is definition of key pair
@@ -89,23 +92,25 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
         Conf.DataDir     = "./datadir/"
         Conf.Consensus   = "dpos"
         Conf.APIPort     = 8689
-        Conf.P2PPort     = "9868"
+        Conf.P2PPort     = 9868
         Conf.ServAddr    = "192.168.1.1"
+	Conf.ServInterAddr = "127.0.0.1"
 	Conf.PeerList    = []string{}
         Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
 				       PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"}}
         Conf.Delegates   = []string{}
-        Conf.ApiServiceEnable = true
-        Conf.ApiServiceName   = "bottos"
-        Conf.ApiServiceVersion = "3.0.0"
+        Conf.RpcServiceEnable = true
+        Conf.RpcServiceName   = "bottos"
+        Conf.RpcServiceVersion = "3.0.0"
         Conf.EnableStaleReport = true
-        Conf.OptionDb          = "127.0.0.1:27017"
-        Conf.LogConfig         = "/home/bottos/opt/go/bin/core/corelog.xml"
+        Conf.OptionDb          = ""
+        Conf.LogConfig         = "corelog.xml"
         Conf.ChainId           = "00000000000000000000000000000000"
-
+	
 	GenConf.GenesisTime    = 1524801531
 	GenConf.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
 	GenConf.InitDelegates  = []InitDelegate{}
+
 }
 
 // LoadConfig is to load config file

@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -38,6 +38,7 @@ import (
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	log "github.com/cihub/seelog"
+	"github.com/bottos-project/bottos/role"
 )
 
 //ApiService is actor service
@@ -65,7 +66,21 @@ func SetTrxActorPid(tpid *actor.PID) {
 	trxactorPid = tpid
 }
 
-func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
+
+type Transaction struct {
+	Version     uint32 `protobuf:"varint,1,opt,name=version" json:"version"`
+	CursorNum   uint32 `protobuf:"varint,2,opt,name=cursor_num,json=cursorNum" json:"cursor_num"`
+	CursorLabel uint32 `protobuf:"varint,3,opt,name=cursor_label,json=cursorLabel" json:"cursor_label"`
+	Lifetime    uint64 `protobuf:"varint,4,opt,name=lifetime" json:"lifetime"`
+	Sender      string `protobuf:"bytes,5,opt,name=sender" json:"sender"`
+	Contract    string `protobuf:"bytes,6,opt,name=contract" json:"contract"`
+	Method      string `protobuf:"bytes,7,opt,name=method" json:"method"`
+	Param       interface{} `protobuf:"bytes,8,opt,name=param" json:"param"`
+	SigAlg      uint32 `protobuf:"varint,9,opt,name=sig_alg,json=sigAlg" json:"sig_alg"`
+	Signature   string `protobuf:"bytes,10,opt,name=signature" json:"signature"`
+}
+
+func ConvertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	param, err := common.HexToBytes(trx.Param)
 	if err != nil {
 		return nil, err
@@ -92,7 +107,7 @@ func convertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	return intTrx, nil
 }
 
-func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
+func ConvertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	apiTrx := &api.Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -109,6 +124,29 @@ func convertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	return apiTrx
 }
 
+func ConvertIntTrxToApiTrxInter(trx *types.Transaction,r *role.Role) interface{} {
+	parmConvered, err := role.ParseParam(r, trx.Param, trx.Contract, trx.Method)
+	if err != nil {
+		log.Errorf("role.ParseParam: %s", err)
+		panic(err)
+	}
+
+	apiTrx := &Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       parmConvered,
+		SigAlg:      trx.SigAlg,
+		Signature:   common.BytesToHex(trx.Signature),
+	}
+
+	return apiTrx
+}
+
 //PushTrx push trx
 func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, resp *api.SendTransactionResponse) error {
 	if trx == nil {
@@ -116,7 +154,7 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		return nil
 	}
 
-	intTrx, err := convertApiTrxToIntTrx(trx)
+	intTrx, err := ConvertApiTrxToIntTrx(trx)
 	if err != nil {
 		return nil
 	}
@@ -139,13 +177,13 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 	if bottosErr.ErrNoError == handlerErr {
 		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
-		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
+		resp.Result.Trx = ConvertIntTrxToApiTrx(intTrx)
 		resp.Msg = "trx receive succ"
 		resp.Errcode = 0
 	} else {
 		resp.Result = &api.SendTransactionResponse_Result{}
 		resp.Result.TrxHash = intTrx.Hash().ToHexString()
-		resp.Result.Trx = convertIntTrxToApiTrx(intTrx)
+		resp.Result.Trx = ConvertIntTrxToApiTrx(intTrx)
 		//resp.Msg = handlerErr.(string)GetCodeString
 		//resp.Msg = "to be add detail error description"
 		var tempErr bottosErr.ErrCode
@@ -178,7 +216,7 @@ func (a *ApiService) GetTransaction(ctx context.Context, req *api.GetTransaction
 		return nil
 	}
 
-	resp.Result = convertIntTrxToApiTrx(response.Trx)
+	resp.Result = ConvertIntTrxToApiTrx(response.Trx)
 	resp.Errcode = uint32(bottosErr.ErrNoError)
 	return nil
 }

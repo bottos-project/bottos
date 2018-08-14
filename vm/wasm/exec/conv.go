@@ -33,6 +33,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
+	"strconv"
+	"fmt"
 )
 
 func (vm *VM) i32Wrapi64() {
@@ -179,12 +181,17 @@ func ByteToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(bits)
 }
 
-func (vm *VM) StrLen(pos int) int {
+func (vm *VM) StrLen(pos uint64) uint64 {
 	if pos <= 0 {
 		return 0
 	}
 
-	i := pos
+	if vm.sourceFile == JS {
+		//if source file is js file , the byte array's first element will be array's length
+		return uint64(vm.memory[pos])
+	}
+
+	var i uint64 = pos
 	for {
 		if vm.memory[i] == 0 {
 			break
@@ -195,25 +202,42 @@ func (vm *VM) StrLen(pos int) int {
 	return (i - pos)
 }
 
-func ConvertStr(param []byte , pos uint64 , len uint64) ([]byte , error) {
+//for js
+func ConvertStr (param []byte , pos uint64 , length uint64) ([]byte , error) {
 	var i   uint64 = pos + 4
 	var cnt uint64 = 0
 	var res []byte
+	if length == 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
 
 	for {
 		res = append(res , param[i])
 		i   += 2
 		cnt += 1
-		if cnt == len {
+		if cnt == length {
 			break
 		}
 	}
 
-	return res,nil
+	return res , nil
 }
 
-func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
-	if vm.memory == nil || pos < 0 || len < 0 {
+func UnConvertStr(param []byte , pos uint64 , len uint64) ([]byte , error) {
+
+
+
+	return nil,nil
+}
+
+//for common
+func Convert(vm *VM , pos uint64 , length uint64) ([]byte , error) {
+	if vm.memory == nil || pos < 0 || length < 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
+
+	vmLen := uint64(len(vm.memory))
+	if pos >= vmLen || pos + length >= vmLen {
 		return nil , ERR_EMPTY_INVALID_PARAM
 	}
 
@@ -221,9 +245,9 @@ func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
 	var err   error
 
 	if vm.sourceFile == CPP {
-		value = vm.memory[pos:pos+len]
+		value = vm.memory[pos : pos + length]
 	} else if vm.sourceFile == JS {
-		value , err = ConvertStr(vm.memory , pos , len)
+		value , err = ConvertStr(vm.memory , pos , length)
 		if err != nil {
 			return nil , err
 		}
@@ -234,5 +258,68 @@ func Convert(vm *VM , pos uint64 , len uint64) ([]byte , error) {
 	return value , nil
 }
 
+func RemoveElement(slice []byte, start, end uint64) []byte {
+	return append(slice[:start], slice[end:]...)
+}
 
+func ByteArrToNum(numArray []byte) (byte , error) {
+	num ,err := strconv.Atoi(string(numArray))
+	if err != nil{
+		fmt.Println("*ERROR* Failed to convert number from string !!!")
+		return 0 , err
+	}
+
+	return byte(num) , nil
+}
+
+//for js
+func PackStrToByteArray(vm *VM, pos uint64 , length uint64) ([]byte , error) {
+	if length == 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
+
+	arrByte , err := ConvertStr(vm.memory , pos , length)
+	if err != nil {
+		return nil , err
+	}
+
+	var i     uint64 = 0
+	var idx   uint64 = 0
+	var tmp []byte
+	var res []byte
+	var num   byte   = 0
+
+	for {
+		if arrByte[i] == 44 { // 44 = ','
+			if len(tmp) == 0 {
+				continue
+			}
+
+			if num ,err = ByteArrToNum(tmp) ; err != nil {
+				return nil , err
+			}
+			res = append(res , num)
+
+			tmp = RemoveElement(tmp , 0 , idx)
+			idx = 0
+
+		} else {
+			tmp = append(tmp , arrByte[i])
+			idx += 1
+		}
+
+		i += 1
+
+		if i == length {
+			if num ,err = ByteArrToNum(tmp) ; err != nil {
+				return nil , err
+			}
+			res = append(res , num)
+			break
+		}
+
+	}
+
+	return res , nil
+}
 
