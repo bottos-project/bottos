@@ -34,8 +34,6 @@ import (
 	"errors"
 	"math"
 	"reflect"
-	"fmt"
-	log "github.com/cihub/seelog"
 )
 
 // Type define one variable type
@@ -72,7 +70,7 @@ type typeInfo struct {
 var ErrOutOfBoundsMemoryAccess = errors.New("exec: out of bounds memory access")
 
 func (vm *VM) fetchBaseAddr() int {
-	return int(vm.fetchUint32() + uint32(vm.popInt32()))
+	return    int(vm.fetchUint32() + uint32(vm.popInt32()))
 }
 
 // inBounds returns true when the next vm.fetchBaseAddr() + offset
@@ -388,13 +386,14 @@ func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign b
 	/*
 	_ , ok := vm.memType[pos]
 	if ok {
-		fmt.Println("*ERROR* Failed to assign the pos to storage because it had been used by others")
-		log.Infof("*ERROR* Failed to assign the pos to storage because it had been used by others \n")
-		return ERR_USED_POS
+		//fmt.Println("*ERROR* Failed to assign the pos to storage because it had been used by others")
+		//log.Infof("*ERROR* Failed to assign the pos to storage because it had been used by others \n")
+		//return ERR_USED_POS
+		//if t.Len
 	}
 	*/
 
-	if uint64(copy(vm.memory[pos:pos + datLen], data)) != length {
+	if uint64(copy(vm.memory[pos:pos + datLen], data)) != datLen {
 		return ERR_STORE_MEMORY
 	}
 
@@ -406,7 +405,7 @@ func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign b
 	if vm.memPos == pos {
 		//Todo if it is need to record new pos , it need be consided
 	}
-	vm.memType[pos] = &typeInfo{Type: Int8 , Len: length}
+	vm.memType[pos] = &typeInfo{Type: Int8 , Len: datLen}
 
 	return nil
 }
