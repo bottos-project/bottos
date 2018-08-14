@@ -51,6 +51,7 @@ type Parameter struct {
 	APIPort           int       `json:"api_port"`
 	P2PPort           int       `json:"p2p_port"`
 	ServAddr          string    `json:"serv_addr"`
+	ServInterAddr           string    `json:"serv_inter_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
@@ -93,6 +94,7 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
         Conf.APIPort     = 8689
         Conf.P2PPort     = 9868
         Conf.ServAddr    = "192.168.1.1"
+	Conf.ServInterAddr = "127.0.0.1"
 	Conf.PeerList    = []string{}
         Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
 				       PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"}}
@@ -109,7 +111,6 @@ func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
 	GenConf.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
 	GenConf.InitDelegates  = []InitDelegate{}
 
-	
 }
 
 // LoadConfig is to load config file
