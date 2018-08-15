@@ -466,7 +466,7 @@ func getMethod(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	if vm.storageMemorySpecifyPos(pos , methodLen , []byte(contractCtx.Trx.Method) , true) != nil {
+	if vm.storageMemorySpecifyPos(pos , length , []byte(contractCtx.Trx.Method) , true) != nil {
 		fmt.Println("VM::getParam *ERROR* Failed to storage data to specify pos in memory !!!")
 		if vm.envFunc.envFuncRtn {
 			vm.pushUint64(uint64(VM_NULL))
@@ -542,10 +542,11 @@ func callTrx(vm *VM) (bool, error) {
 	if vm.sourceFile == CPP {
 		param = vm.memory[pPos:pPos + pLen]
 	} else if vm.sourceFile == JS {
-		param , err = PackStrToByteArray(vm, pPos, vm.StrLen(pPos))
+		param , err = ConvertU8Byte(vm.memory, pPos, pLen)
 		if err != nil {
 			return true, nil
 		}
+		fmt.Println("VM::callTrx contrx: ",contrx," , method: ",method," , pLen: ",pLen," , param: ",param)
 	} else if vm.sourceFile == PY {
 		//Todo some special operation for python
 	}
@@ -621,7 +622,7 @@ func getCtxName(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	if vm.storageMemorySpecifyPos(pos , ctxNameLen , []byte(ctxName) , true) != nil {
+	if vm.storageMemorySpecifyPos(pos , length , []byte(ctxName) , true) != nil {
 		fmt.Println("VM::getCtxName *ERROR* Failed to storage data to specify pos in memory !!!")
 		log.Infof("*ERROR* Failed to storage data to specify pos in memory !!!")
 		if vm.envFunc.envFuncRtn {
@@ -663,7 +664,7 @@ func getSender(vm *VM) (bool, error) {
 		return true, nil
 	}
 
-	if vm.storageMemorySpecifyPos(pos , senderNameLen , []byte(senderName) , true) != nil {
+	if vm.storageMemorySpecifyPos(pos , length , []byte(senderName) , true) != nil {
 		fmt.Println("VM::getSender *ERROR* Failed to storage data to specify pos in memory !!!")
 		if vm.envFunc.envFuncRtn {
 			vm.pushInt32(int32(VM_NULL))

@@ -127,6 +127,5 @@ func startRestApi(roleIntf role.RoleInterface, contractDB *contractdb.ContractDB
 	//transfer to restful handler
 	handler.SetRoleIntf(roleIntf)
 	handler.SetContractDbIns(contractDB)
-	//log.Critical(http.ListenAndServe("127.0.0.1:8083", router))
-	log.Critical(http.ListenAndServe("127.0.0.1"+":"+strconv.Itoa(config.Param.APIPort), router))
+	log.Critical(http.ListenAndServe(config.Param.ServInterAddr+":"+strconv.Itoa(config.Param.APIPort), router))
 }

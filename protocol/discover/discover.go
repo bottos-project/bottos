@@ -104,7 +104,7 @@ func (d *Discover) Dispatch(index uint16, p *p2p.Packet) {
 
 }
 
-//NewConnCb keey a connection with a peer
+//NewConnCb accept a connection with a peer
 func (d *Discover) NewConnCb(conn net.Conn, sendup p2p.SendupCb) {
 	//new candidate peer
 	info := p2p.PeerInfo{}
@@ -119,6 +119,7 @@ func (d *Discover) NewConnCb(conn net.Conn, sendup p2p.SendupCb) {
 	p.Start()
 }
 
+//newConn create a connection with a peer
 func (d *Discover) newConn(peer p2p.PeerInfo) error {
 	addrPort := peer.Addr + ":" + peer.Port
 	conn, err := net.DialTimeout("tcp", addrPort, 2*time.Second)
