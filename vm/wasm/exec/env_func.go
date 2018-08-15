@@ -80,6 +80,10 @@ func NewEnvFunc() *EnvFunc {
 
 	envFunc.Register("getMethodJs",       getMethodJs)
 
+	envFunc.Register("getBinValue",      getBinValue)
+ 	envFunc.Register("setBinValue",      setBinValue)
+	envFunc.Register("removeBinValue",   removeBinValue)
+
 	return &envFunc
 }
 
