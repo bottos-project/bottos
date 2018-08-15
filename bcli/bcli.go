@@ -19,6 +19,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -41,6 +42,7 @@ import (
 	"strings"
 
 	"github.com/bitly/go-simplejson"
+	TODO "github.com/bottos-project/bottos/restful/handler"
 )
 
 // CLI responsible for processing command line arguments
@@ -102,6 +104,33 @@ func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 	return chainInfo, nil
 }
 
+func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
+		getinfo := &chain.GetInfoRequest{}
+		req, _ := json.Marshal(getinfo)
+		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("GET", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+			return nil, errors.New("Error!")
+		}
+		
+		var trxrespbody  TODO.Todo
+		
+		err = json.Unmarshal(httpRspBody, &trxrespbody)
+		
+		if err != nil {
+		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		    return nil, errors.New("Error!")
+		}
+		
+		b, _ := json.Marshal(trxrespbody.Result)
+		//cli.jsonPrint(b)
+		var chainInfo chain.GetInfoResponse_Result
+		json.Unmarshal(b, &chainInfo)
+		
+	return &chainInfo, nil
+}
+
 func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	ctrx := &types.BasicTransaction{
 		Version:     trx.Version,
@@ -132,7 +161,9 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 }
 
 func (cli *CLI) transfer(from, to string, amount int) {
-	chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -266,7 +297,9 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 }
 
 func (cli *CLI) newaccount(name string, pubkey string) {
-	chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -367,13 +400,15 @@ func (cli *CLI) deploycode(http_method, http_url, name string, path string) {
 	if http_method != "restful" && http_method != "grpc" {
 		return
 	}
-
-	chainInfo, err := cli.getChainInfo()
+	
+	//chainInfo, err = cli.getChainInfo()
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
 	}
-
 	_, err = ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("Open wasm file error: ", err)
@@ -503,7 +538,9 @@ func checkAbi(abiRaw []byte) error {
 }
 
 func (cli *CLI) deployabi(name string, path string) {
-	chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
