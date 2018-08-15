@@ -40,6 +40,7 @@ const (
 	VM_ERROR_OUT_OF_MEMORY
 	VM_ERROR_INVALID_PARAMETER_COUNT
 	VM_ERROR_FAIL_EXECUTE_ENVFUNC
+	VM_ERROR_FAIL_STORAGE_MEMORY
 )
 
 const (
@@ -67,6 +68,7 @@ var ERR_EMPTY_INVALID_PARAM      = errors.New("*ERROR* empty parameter or invali
 var ERR_INVALID_WASM             = errors.New("*ERROR* invalid wasm module")
 var ERR_DATA_INDEX               = errors.New("*ERROR* failed to get data index from memory")
 var ERR_FINE_MAP                 = errors.New("*ERROR* the specified value can't be found by the key from the map")
+var ERR_USED_POS                 = errors.New("*ERROR* the specified storage pos had been used")
 // ErrMultipleLinearMemories is returned by (*VM).NewVM when the module
 // has more then one entries in the linear memory space.
 var ERR_MULTIPLE_LINEAR_MEMORIES = errors.New("*ERROR* more than one linear memories in module")

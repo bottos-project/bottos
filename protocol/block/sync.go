@@ -513,6 +513,7 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 		log.Debugf("protocol syncStateJudge lib small than remote, need sync")
 
 		if !s.once {
+			s.state = STATE_SYNCING
 			s.syncBlockHeader()
 			s.once = true
 			return
@@ -685,7 +686,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint32, end uint32) {
 				P: packet}
 
 			s.set.indexHeader[counter] = info.index
-			log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader)
+			log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader[counter])
 
 			p2p.Runner.SendUnicast(msg)
 
@@ -890,14 +891,14 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
 
-		log.Debugf("elapsed time 1 ", common.Elapsed(start))
+		log.Debugf("elapsed time 1 %d ", common.Elapsed(start))
 
 		return rsp.ErrorNo
 	}
 
 	log.Error("protocol block insert timeout with five times")
 
-	log.Debugf("elapsed time 2 ", common.Elapsed(start))
+	log.Debugf("elapsed time 2 %d", common.Elapsed(start))
 	return 0xff
 }
 
@@ -994,19 +995,11 @@ func (s *synchronizes) getBcastFilterPeers(index uint16) []uint16 {
 	var filter []p2p.PeerData
 
 	if k+1+number < total {
-		if k == 0 {
-			filter = append(peers[0:0], peers[number:]...)
-		} else {
-			filter = append(peers[0:k+1], peers[k+1+number:]...)
-		}
+		filter = append(peers[0:k], peers[k+1+number:]...)
 	} else if k+1+number == total {
-		filter = append(peers[0 : k+1])
+		filter = append(peers[0:k])
 	} else {
-		if k+1 < total {
-			filter = append(peers[k+number-total+number-1 : k+1])
-		} else {
-			filter = append(peers[number:])
-		}
+		filter = append(peers[k+1+number-total : k])
 	}
 
 	var indexs []uint16
@@ -1063,12 +1056,11 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	} else if result == chain.InsertBlockErrorNotLinked {
 		if s.c.current > s.c.begin {
-			log.Errorf("protocol catchup no link, start catchup from last: %d", s.lastLocal)
-			s.c.begin = s.lastLocal + 1
+			log.Errorf("protocol catchup no link, start catchup from begin: %d", s.lastLocal)
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
-		} else if s.c.begin == s.lastLocal+1 {
+		} else if s.c.current == s.c.begin && s.c.begin > s.libLocal+1 {
 			log.Errorf("protocol catchup no link, start catchup from lib: %d", s.libLocal)
 			s.c.begin = s.libLocal + 1
 			s.c.current = s.c.begin

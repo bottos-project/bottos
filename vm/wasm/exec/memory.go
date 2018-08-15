@@ -70,7 +70,7 @@ type typeInfo struct {
 var ErrOutOfBoundsMemoryAccess = errors.New("exec: out of bounds memory access")
 
 func (vm *VM) fetchBaseAddr() int {
-	return int(vm.fetchUint32() + uint32(vm.popInt32()))
+	return    int(vm.fetchUint32() + uint32(vm.popInt32()))
 }
 
 // inBounds returns true when the next vm.fetchBaseAddr() + offset
@@ -348,21 +348,64 @@ func (vm *VM) storageMemory(b []byte, t Type) (uint64 , error) {
 	return index, nil
 }
 
-func (vm *VM) registerMemory(pos int , size uint64, t Type) (int, error) {
+func (vm *VM) registerMemory(pos uint64 , size uint64, t Type) (uint64, error) {
 
-	if pos <= 0 || size < 0 {
+	if pos == 0 || size == 0 {
 		return 0, ERR_EMPTY_INVALID_PARAM
 	}
 
-	vm.memType[uint64(pos)] = &typeInfo{Type: t, Len: size}
+	vm.memType[pos] = &typeInfo{Type: t, Len: size}
 	return pos, nil
 }
 
-func (vm *VM) getDataLen(pos int) (uint64, error) {
-	ti , ok := vm.memType[uint64(pos)]
+func (vm *VM) getDataLen(pos uint64) (uint64, error) {
+	ti , ok := vm.memType[pos]
 	if !ok {
 		return 0 , ERR_FINE_MAP
 	}
 
 	return ti.Len , nil
+}
+
+//To storage a byte to a specify pos in vm.memory
+func (vm *VM) storageMemorySpecifyPos(pos , length uint64 , data []byte , sign bool) error {
+	if pos == 0 || length == 0 || data == nil || len(data) == 0 {
+		return ERR_EMPTY_INVALID_PARAM
+	}
+
+	vmLen  := uint64(len(vm.memory))
+	datLen := uint64(len(data))
+	if datLen > length {
+		return ERR_EMPTY_INVALID_PARAM
+	}
+
+	if pos >= vmLen || pos + datLen >= vmLen {
+		return ERR_EMPTY_INVALID_PARAM
+	}
+
+	/*
+	_ , ok := vm.memType[pos]
+	if ok {
+		//fmt.Println("*ERROR* Failed to assign the pos to storage because it had been used by others")
+		//log.Infof("*ERROR* Failed to assign the pos to storage because it had been used by others \n")
+		//return ERR_USED_POS
+		//if t.Len
+	}
+	*/
+
+	if uint64(copy(vm.memory[pos:pos + datLen], data)) != datLen {
+		return ERR_STORE_MEMORY
+	}
+
+	if sign == true {
+		vm.memory[pos + datLen] = 0
+		datLen += 1
+	}
+
+	if vm.memPos == pos {
+		//Todo if it is need to record new pos , it need be consided
+	}
+	vm.memType[pos] = &typeInfo{Type: Int8 , Len: datLen}
+
+	return nil
 }

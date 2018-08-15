@@ -61,6 +61,7 @@ func (t *Transaction) Dispatch(index uint16, p *p2p.Packet) {
 }
 
 func (t *Transaction) SendNewTrx(notify *message.NotifyTrx) {
+	log.Debugf("protocol send new trx %s ", notify.Trx.Hash().ToHexString())
 	t.sendPacket(true, notify.Trx, nil)
 }
 
@@ -98,6 +99,7 @@ func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
 		return
 	}
 
+	log.Debugf("protocol send up trx %s from index %d", trx.Hash().ToHexString(), index)
 	t.sendupTrx(&trx)
 
 }
@@ -113,10 +115,11 @@ func (t *Transaction) sendupTrx(trx *types.Transaction) bool {
 		}
 
 		if handlerErr == bottosErr.ErrNoError {
-			log.Errorf("send block request response error:%d", handlerErr)
+			log.Debugf("protocol send up trx request success")
 			return true
 		}
 
+		log.Errorf("protocol send up trx request response error:%d", handlerErr)
 		return false
 	}
 

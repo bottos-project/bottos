@@ -5,6 +5,7 @@
     "api_port": 8689,
     "p2p_port": 9868,
     "serv_addr":"192.168.1.1",
+    "serv_inter_addr":"127.0.0.1",
     "peer_list": [
     ],
     "key_pairs": [{

@@ -212,7 +212,6 @@ func ConvertStr (param []byte , pos uint64 , length uint64) ([]byte , error) {
 	}
 
 	for {
-		//fmt.Println("param[i]: ",param[i]," , i: ",i)
 		res = append(res , param[i])
 		i   += 2
 		cnt += 1
@@ -324,3 +323,24 @@ func PackStrToByteArray(vm *VM, pos uint64 , length uint64) ([]byte , error) {
 	return res , nil
 }
 
+//for js
+func ConvertU8Byte (param []byte , pos uint64 , length uint64) ([]byte , error) {
+	var i   uint64 = pos + 16
+	var cnt uint64 = 0
+	var res []byte
+	if length == 0 {
+		return nil , ERR_EMPTY_INVALID_PARAM
+	}
+
+	for {
+		res = append(res , param[i])
+		i   += 4
+		cnt += 1
+		if cnt == length {
+			break
+		}
+	}
+
+	return res , nil
+
+}

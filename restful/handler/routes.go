@@ -7,38 +7,28 @@ import (
 )
 
 const (
-	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"
-	GET_CONN_COUNT   = "/v1/node/connectioncount"
-
-	GET_BLK_TXS_BY_HEIGHT = "/v1/block/transactions/height/:height"
-	GET_BLK_BY_HEIGHT     = "/v1/block/details/height/:height"
-	GET_BLK_BY_HASH       = "/v1/block/details/hash/:hash"
-	GET_BLK_HEIGHT        = "/v1/block/height"
-	//GET_BLK_HASH          = "/v1/block/hash/:height"
-	GET_BLK_INFO   = "/v1/block/header"
+	//block
+	GET_BLK_INFO   = "/v1/block/height"
 	GET_BLK_DETAIL = "/v1/block/detail"
 
+	// Transaction
 	SEND_TRANSACTION = "/v1/transaction/send"
 	GET_TRANSACTION  = "/v1/transaction/get"
 
-	GET_ACCOUNT = "/v1/account/get"
-
-	GET_KEY_VALUE = "/v1/account/get"
-
-	GET_ABI = "/v1/contract/getabi"
-
+	//Account
+	GET_ACCOUNT = "/v1/account/info"
 	GET_TRANSFER_CREDIT = "/v1/balance/GetTransferCredit"
 
-	GET_TX                = "/v1/transaction/:hash"
-	GET_STORAGE           = "/v1/storage/:hash/:key"
-	GET_BALANCE           = "/v1/balance/:addr"
-	GET_CONTRACT_STATE    = "/v1/contract/:hash"
-	GET_SMTCOCE_EVT_TXS   = "/v1/smartcode/event/transactions/:height"
-	GET_SMTCOCE_EVTS      = "/v1/smartcode/event/txhash/:hash"
-	GET_BLK_HGT_BY_TXHASH = "/v1/block/height/txhash/:hash"
-	GET_MERKLE_PROOF      = "/v1/merkleproof/:hash"
+	//Contract
+	GET_CONTRACT_ABI = "/v1/contract/abi"
+	GET_CONTRACT_CODE = "/v1/contract/code"
 
-	POST_RAW_TX = "/api/v1/transaction"
+	// Common query
+	GET_KEY_VALUE = "/v1/common/query"
+
+	//node
+	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"
+	GET_CONN_COUNT   = "/v1/node/connectioncount"
 )
 
 type Route struct {
@@ -130,8 +120,14 @@ var routes = Routes{
 	Route{
 		"",
 		"POST",
-		GET_ABI,
-		GetAbi,
+		GET_CONTRACT_ABI,
+		GetContractAbi,
+	},
+	Route{
+		"",
+		"POST",
+		GET_CONTRACT_CODE,
+		GetContractCode,
 	},
 	Route{
 		"",
