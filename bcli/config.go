@@ -46,7 +46,7 @@ var CONFIG *CLIConfig
 type CLIConfig struct {
 	KeyPairs []KeyPair `json:"key_pairs"`
 	ChainId  string `json:"chain_id"`
-	ChainAddr string `json: "chain_addr"`
+	ChainAddr string `json:"chain_addr"`
 }
 
 //KeyPair key pair
@@ -70,7 +70,6 @@ func LoadConfig() error {
 		return e
 	}
 	CONFIG = &config
-
 	return nil
 }
 
