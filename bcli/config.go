@@ -46,6 +46,7 @@ var CONFIG *CLIConfig
 type CLIConfig struct {
 	KeyPairs []KeyPair `json:"key_pairs"`
 	ChainId  string `json:"chain_id"`
+	ChainAddr string `json: "chain_addr"`
 }
 
 //KeyPair key pair
