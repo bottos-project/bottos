@@ -161,9 +161,10 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 }
 
 func (cli *CLI) transfer(from, to string, amount int) {
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfo()
+	/*infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	*/
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -297,9 +298,11 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 }
 
 func (cli *CLI) newaccount(name string, pubkey string) {
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfo()
+	/*infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	*/
+	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -396,15 +399,15 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
 
-func (cli *CLI) deploycode(http_method, http_url, name string, path string) {
+func (cli *CLI) deploycode(http_method string, http_url string, name string, path string) {
 	if http_method != "restful" && http_method != "grpc" {
 		return
 	}
 	
-	//chainInfo, err = cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfo()
+	/*infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
-	
+	*/
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -537,10 +540,11 @@ func checkAbi(abiRaw []byte) error {
 	return nil
 }
 
-func (cli *CLI) deployabi(name string, path string) {
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+func (cli *CLI) deployabi(http_method string, http_url string, name string, path string) {
+	chainInfo, err := cli.getChainInfo()
+	/*infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	*/
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return
@@ -599,11 +603,26 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	trx1.Signature = sign
+	
+	var deployAbiRsp *chain.SendTransactionResponse
 
-	deployAbiRsp, err := cli.client.SendTransaction(context.TODO(), trx1)
-	if err != nil {
-		fmt.Println(err)
-		return
+	if http_method == "grpc" {
+		deployAbiRsp, err = cli.client.SendTransaction(context.TODO(), trx1)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	} else {
+		req, _ := json.Marshal(trx1)
+    		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			return
+		}
+		var respbody chain.SendTransactionResponse
+		json.Unmarshal(httpRspBody, &respbody)
+		deployAbiRsp = &respbody
 	}
 
 	b, _ := json.Marshal(deployAbiRsp)
@@ -707,7 +726,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deployabi(*deployAbiName, *deployAbiPath)
+		cli.deployabi("grpc", "127.0.0.1:8689/v1/transaction/send", *deployAbiName, *deployAbiPath)
 	}
 }
 
