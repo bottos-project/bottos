@@ -32,7 +32,7 @@ import (
 	"github.com/bottos-project/bottos/bpl"
 	"encoding/hex"
 	"github.com/bottos-project/crypto-go/crypto"
-	"github.com/ontio/ontology/common/log"
+	log "github.com/cihub/seelog"
 )
 
 // Transaction define transaction struct for bottos protocol
