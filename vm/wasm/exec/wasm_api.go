@@ -64,7 +64,14 @@ const (
 
 	CALL_MAX_VM_LIMIT = 10
 	// CTX_WASM_FILE config ctx wasm file
-	CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	//CTX_WASM_FILE = "/opt/bin/go/usermng.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\math.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\callcontract.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\AssemblyScript\\assemblyscript\\examples\\example\\module.optimized.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\go\\src\\github.com\\AssemblyScript\\assemblyscript\\examples\\example\\module.optimized.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\commontoken.wasm"
+	CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\module.optimized.wasm"
+	//CTX_WASM_FILE = "C:\\Users\\stewa\\Desktop\\BottosCTX\\module.optimized.coredump.wasm"
 	// SUB_WASM_FILE config sub wasm file
 	SUB_WASM_FILE = "/opt/bin/go/sub.wasm"
 	// TST Test status
@@ -226,7 +233,7 @@ func GetWasmVersion(ctx *contract.Context) uint32 {
 
 
 // NewWASM Search the CTX infor at the database according to applyContext
-func NewWASM(ctx *contract.Context) *VM {
+func NewWASM1(ctx *contract.Context) *VM {
 	var err         error
 	var wasmCode    []byte
 	var codeVersion uint32
@@ -244,7 +251,7 @@ func NewWASM(ctx *contract.Context) *VM {
 		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
 		return nil
 	}
-
+	fmt.Println("module.Export: ",module.Export)
 	if module.Export == nil {
 		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
 		return nil
@@ -262,7 +269,7 @@ func NewWASM(ctx *contract.Context) *VM {
 
 
 //Search the CTX infor at the database according to apply_context
-func NewWASMTst ( ctx *contract.Context ) *VM {
+func NewWASM ( ctx *contract.Context ) *VM {
 
 	fmt.Println("NewWASM")
 
@@ -300,6 +307,7 @@ func NewWASMTst ( ctx *contract.Context ) *VM {
 
 		wasm_code, err = ioutil.ReadFile(wasm_file)
 		if err != nil {
+			fmt.Println("*ERROR*  error in read file", err.Error())
 			log.Infof("*ERROR*  error in read file", err.Error())
 			return nil
 		}
@@ -307,11 +315,13 @@ func NewWASMTst ( ctx *contract.Context ) *VM {
 
 	module, err := wasm.ReadModule(bytes.NewBuffer(wasm_code), importer)
 	if err != nil {
+		fmt.Println("*ERROR* Failed to parse the wasm module !!! " , err.Error())
 		log.Infof("*ERROR* Failed to parse the wasm module !!! " + err.Error())
 		return nil
 	}
 
 	if module.Export == nil  {
+		fmt.Println("*ERROR* Failed to find export method from wasm module !!!")
 		log.Infof("*ERROR* Failed to find export method from wasm module !!!")
 		return nil
 	}
@@ -349,10 +359,12 @@ func (engine *wasmEngine) Start(ctx *contract.Context, executionTime uint32, rec
 
 // Process the function is to be used for direct parameter insert
 func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionTime uint32, receivedBlock bool) ([]*types.Transaction, error) {
+
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println(err.(string))
 			log.Infof(err.(string))
+
 			return
 		}
 	}()
@@ -416,6 +428,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	ftype  := vm.module.Function.Types[int(findex)]
 
 	funcParams := make([]interface{}, 1)
+	//fmt.Println("ctx.Trx.Method: ",ctx.Trx.Method)
 	if pos, err = vm.StorageData(ctx.Trx.Method); err != nil {
 		return nil, ERR_STORE_MEMORY
 	}
@@ -462,6 +475,7 @@ func (engine *wasmEngine) Process(ctx *contract.Context, depth uint8, executionT
 	case uint32:
 		result = val
 	default:
+		fmt.Println("wasmEngine::Process 472 res.(type): ",val)
 		return nil, ERR_UNSUPPORT_TYPE
 	}
 

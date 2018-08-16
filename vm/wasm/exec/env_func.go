@@ -399,7 +399,7 @@ func removeBinValue(vm *VM) (bool, error) {
 func printi(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	value       := vm.envFunc.envFuncParam[0]
-
+	//fmt.Println("VM::printi vm.ctx.locals: ",vm.ctx.locals)
 	fmt.Printf("VM: from contract: %v, method: %v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 	log.Infof("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
@@ -417,15 +417,19 @@ func printi64(vm *VM) (bool, error) {
 
 //void     prints(unsigned char * str, uint32_t len);
 func prints(vm *VM) (bool, error) {
-	pos := vm.envFunc.envFuncParam[0]
-	len := vm.envFunc.envFuncParam[1]
+	pos  := vm.envFunc.envFuncParam[0]
+	pLen := vm.envFunc.envFuncParam[1]
 
-	value , err := Convert(vm , pos , len)
+	value , err := Convert(vm , pos , pLen)
 	if err != nil {
 		fmt.Println("*ERROR* vm::prints failed to convert parameter in prints , err: ", err)
 		log.Infof("*ERROR* vm::prints failed to convert parameter in prints , err: ", err)
 		return true, nil
 	}
+
+	//fmt.Println("<----------- before VM::prints value: ",value," , len(value): ",len(value))
+	//val , _ := UnConvertStr(value , 0 , uint64(len(value)))
+	//fmt.Println("<----------- after  VM::prints val:   ",val," , len(val): ",len(val))
 
 	param := string(value)
 	fmt.Println("VM: func prints: ", param)
@@ -542,7 +546,7 @@ func callTrx(vm *VM) (bool, error) {
 		if err != nil {
 			return true, nil
 		}
-		fmt.Println("VM::callTrx contrx: ",contrx," , method: ",method," , pLen: ",pLen," , param: ",param)
+		fmt.Println("VM::callTrx contrx: ",contrx," , method: ",method," , pLen: ",pLen," , param: ",vm.memory[pPos:pPos + 120])
 	} else if vm.sourceFile == PY {
 		//Todo some special operation for python
 	}

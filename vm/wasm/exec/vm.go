@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	//"os"
+    //"runtime"
 
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
@@ -70,7 +72,7 @@ type context struct {
 
 // VM is the execution context for executing WebAssembly bytecode.
 type VM struct {
-	ctx context
+	ctx           context
 
 	module        *wasm.Module
 	globals       []uint64
@@ -384,6 +386,17 @@ func (vm *VM) ExecCode(fnIndex int64, args ...uint64) (interface{}, error) {
 }
 
 func (vm *VM) execCode(compiled compiledFunction) uint64 {
+	fmt.Println("VM::execCode compiled: ",compiled)
+	defer func() {
+		err := recover()
+		//fmt.Println("EXCEPT !!! ",err)
+		if err != nil {
+			fmt.Println("*EXCEPT !!! VM::execCode err: ",err.(string))
+			//log.Infof(err.(string))
+			return
+		}
+	}()
+
 	if compiled.funcProp.EnvFunc == true {
 		err := vm.ExecEnvFunc(compiled)
 		if err != nil {
@@ -494,7 +507,7 @@ func (vm *VM) ExecEnvFunc(compiled compiledFunction) error {
 	} else {
 		vm.envFunc.envFuncRtn = false
 	}
-
+	fmt.Println("")
 	fc, ok := vm.envFunc.envFuncMap[compiled.funcProp.Method] //get env function
 	if !ok {
 		fmt.Println("*ERROR* Failed to search the method: " + compiled.funcProp.Method)

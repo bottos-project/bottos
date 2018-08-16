@@ -29,9 +29,23 @@
 
 package exec
 
-import "errors"
+import (
+	"errors"
+    "fmt"
+)
 
 func (vm *VM) doCall(compiled compiledFunction, index int64) {
+
+	defer func() {
+		err := recover()
+		//fmt.Println("*EXCEPT !!! VM::doCall err: ",err.(string))
+		if err != nil {
+			fmt.Println("*EXCEPT !!! VM::doCall err: ",err.(string))
+			//log.Infof(err.(string))
+			return
+		}
+	}()
+
 	newStack := make([]uint64, compiled.maxDepth)
 	locals   := make([]uint64, compiled.totalLocalVars)
 
@@ -72,6 +86,15 @@ var (
 )
 
 func (vm *VM) call() {
+	defer func() {
+		err := recover()
+		//fmt.Println("EXCEPT !!! ",err)
+		if err != nil {
+			fmt.Println("*EXCEPT !!! VM::call err: ",err.(string))
+			//log.Infof(err.(string))
+			return
+		}
+	}()
 	index := vm.fetchUint32()
 	vm.doCall(vm.compiledFuncs[index], int64(index))
 }

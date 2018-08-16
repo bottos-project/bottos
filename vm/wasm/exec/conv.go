@@ -223,11 +223,32 @@ func ConvertStr (param []byte , pos uint64 , length uint64) ([]byte , error) {
 	return res , nil
 }
 
-func UnConvertStr(param []byte , pos uint64 , len uint64) ([]byte , error) {
+func UnConvertStr(param []byte , pos uint64 , length uint64) ([]byte , error) {
+	dLen  := len(param)
+	nLen  := uint64(3 + dLen * 2)
+	var value []byte
+	var i     uint64 = 3
+	var j     uint64 = 0
 
+	value = append(value , byte(dLen))
+	value = append(value , 0)
+	value = append(value , 0)
+	for {
 
+		if i % 2 == 0 {
+			value = append(value, param[j])
+			j++
+		} else {
+			value = append(value, 0)
+		}
 
-	return nil,nil
+		if i == nLen - 1 {
+			break
+		}
+		i++
+	}
+
+	return value ,nil
 }
 
 //for common
