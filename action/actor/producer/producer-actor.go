@@ -38,7 +38,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/producer"
 	"github.com/bottos-project/bottos/role"
-	proto "github.com/golang/protobuf/proto"
+	"github.com/bottos-project/bottos/bpl"
 )
 
 // ProducerActor is to define actor for producer
@@ -137,7 +137,7 @@ func (p *ProducerActor) working() {
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
-			data, _ := proto.Marshal(trx)
+			data, _ := bpl.Marshal(trx)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {

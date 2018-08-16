@@ -34,8 +34,8 @@ import (
 	chain "github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract/abi"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/crypto-go/crypto"
-	proto "github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro"
 
 	"net/http"
@@ -144,7 +144,7 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 		SigAlg:      trx.SigAlg,
 	}
 
-	data, err := proto.Marshal(ctrx)
+	data, err := bpl.Marshal(ctrx)
 	if nil != err {
 		return "", err
 	}

@@ -33,13 +33,13 @@ import (
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/contractdb"
 	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/bpl"
 
 	"crypto/sha256"
 	"encoding/hex"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/crypto-go/crypto"
-	proto "github.com/golang/protobuf/proto"
 	log "github.com/cihub/seelog"
 )
 
@@ -240,7 +240,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 		SigAlg:      trx.SigAlg,
 	}
 
-	serializeData, err := proto.Marshal(trxToVerify)
+	serializeData, err := bpl.Marshal(trxToVerify)
 	if nil != err {
 		return false
 	}

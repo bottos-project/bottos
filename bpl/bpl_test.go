@@ -34,7 +34,7 @@ import (
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/stretchr/testify/assert"
-)
+	)
 
 func BytesToHex(d []byte) string {
 	return hex.EncodeToString(d)
@@ -73,6 +73,30 @@ func TestMarshalStruct(t *testing.T) {
 
 	ts1 := TestStruct{}
 	err = Unmarshal(b, &ts1)
+	assert.Equal(t, ts, ts1)
+}
+
+
+// The value of an uninitialized slice is nil.
+// ref. to https://golang.org/ref/spec#Slice_types
+func TestMarshalNilSlice(t *testing.T) {
+
+	type TestStruct struct {
+		V1 uint32
+		V2 []byte
+	}
+
+	ts := TestStruct{V1:1}
+	assert.Nil(t, ts.V2)
+
+	ts = TestStruct{V1:1, V2:[]byte{}}
+	assert.NotNil(t, ts.V2)
+	b, err := Marshal(ts)
+	assert.Nil(t, err)
+
+	ts1 := TestStruct{}
+	err = Unmarshal(b, &ts1)
+	assert.NotNil(t, ts1.V2)
 	assert.Equal(t, ts, ts1)
 }
 
@@ -331,12 +355,13 @@ func TestMarshalBlock(t *testing.T) {
 	}
 
 	block := Block{Header: &header}
+	block.Transactions = make([]*Transaction, 2)
 	block.Transactions = append(block.Transactions, &tx1)
 	block.Transactions = append(block.Transactions, &tx2)
 
 	b, err := Marshal(block)
 	assert.Nil(t, err)
-	assert.Equal(t, b, fromHex("dc0002dc0008ce00000001c50020a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3ce0000007bcf000000005b691451c50020114bd151f8fb0c58642d2170da4ae7d7c57977260ac2cc8905306cab6b2acabcc5001000000000000000000000000032a71d32c50000dc0002c5001000000000000000000000000032a71d32c500100000000000000000000000000003186ddc0002dc000ace00000001ce000003e7ce052d833dcf000000005b691451c5001000000000000000000000000000022ba2c50010000000000000000000000008aecf3bb2c5001000000000000000000000cf186dca6971c50007dc000212345678ce00000001c50000dc000ace00000001ce000003e7ce542e2d65cf000000005b691451c5001000000000000000000000000000022ba2c50010000000000000000000000008aecf3bb2c5001000000000000000000000cf186dca6971c50007dc000212345678ce00000001c50000"))
+	assert.Equal(t, b, fromHex("dc0002dc0008ce00000001c50020a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3ce0000007bcf000000005b691451c50020114bd151f8fb0c58642d2170da4ae7d7c57977260ac2cc8905306cab6b2acabcc500100000000000000000000000001c49b79cc50000dc0002c500100000000000000000000000001c49b79cc500100000000000000000000000000001b297dc0004c0c0dc000ace00000001ce000003e7ce052d833dcf000000005b691451c500100000000000000000000000000000b60bc50010000000000000000000000002d875d61cc500100000000000000000000075b29770f39bc50007dc000212345678ce00000001c50000dc000ace00000001ce000003e7ce542e2d65cf000000005b691451c500100000000000000000000000000000b60bc50010000000000000000000000002d875d61cc500100000000000000000000075b29770f39bc50007dc000212345678ce00000001c50000"))
 	block1 := Block{}
 	err = Unmarshal(b, &block1)
 	assert.Equal(t, block, block1)
