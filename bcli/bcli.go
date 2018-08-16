@@ -716,7 +716,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deploycode("grpc", "127.0.0.1:8689/v1/transaction/send", *deployCodeName, *deployCodePath)
+		cli.deploycode("grpc", CONFIG.ChainAddr+"/v1/transaction/send", *deployCodeName, *deployCodePath)
 	}
 
 	if deployAbiCmd.Parsed() {
@@ -725,7 +725,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deployabi("grpc", "127.0.0.1:8689/v1/transaction/send", *deployAbiName, *deployAbiPath)
+		cli.deployabi("grpc", CONFIG.ChainAddr+"/v1/transaction/send", *deployAbiName, *deployAbiPath)
 	}
 }
 
