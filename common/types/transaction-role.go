@@ -30,9 +30,9 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/bpl"
-	"github.com/ontio/ontology/common/log"
 	"encoding/hex"
 	"github.com/bottos-project/crypto-go/crypto"
+	"github.com/ontio/ontology/common/log"
 )
 
 // Transaction define transaction struct for bottos protocol
