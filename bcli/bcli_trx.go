@@ -203,4 +203,62 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
+type GetContractCodeAbi struct {
+	Contract string `json:"contract"`
+}
 
+func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, save_to_abi_path string) (string, string) {
+	
+	var err error
+	
+	httpurl_contractcode := "http://"+CONFIG.ChainAddr+"/v1/contract/code"
+	getcontract := &GetContractCodeAbi{Contract: contract}
+	req, _ := json.Marshal(getcontract)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", httpurl_contractcode, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+		return "", ""
+	}
+	
+	var trxrespbody TODO.Todo
+	var contractcode string
+	var abivalue     string
+	
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+	contractcode = trxrespbody.Result.(string)
+	if err != nil {
+	    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+	    return "", ""
+	}
+	
+	fmt.Println("\n============CONTRACTCODE===============\n", req_new)
+	b, _ := json.Marshal(trxrespbody.Result)
+	cli.jsonPrint(b)
+
+	http_urlAbi := "http://"+CONFIG.ChainAddr+ "/v1/contract/abi"
+
+	getcontract = &GetContractCodeAbi{Contract: contract}
+	req, _ = json.Marshal(getcontract)
+	req_new = bytes.NewBuffer([]byte(req))
+	
+	httpRspBody, err = send_httpreq("POST", http_urlAbi, req_new)
+	
+	if err != nil || httpRspBody == nil {
+		fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+		return "", ""
+	}
+	
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+	abivalue = trxrespbody.Result.(string)
+
+	if err != nil {
+	    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+	    return "", ""
+	}
+	
+	fmt.Println("\n============ABI===============\n", req_new)
+	fmt.Println(trxrespbody.Result)
+	
+	return contractcode, abivalue
+}
