@@ -1,10 +1,12 @@
-﻿package main
+package main
 
 import (
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"net/http"
+	"strconv"
 
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/chain"
@@ -12,39 +14,84 @@ import (
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/contract/contractdb"
-
 	cactor "github.com/bottos-project/bottos/action/actor"
 	caapi "github.com/bottos-project/bottos/action/actor/api"
 	"github.com/bottos-project/bottos/action/actor/transaction"
 	actionenv "github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/restful/handler"
 	"github.com/bottos-project/bottos/transaction"
 	log "github.com/cihub/seelog"
 	"github.com/micro/go-micro"
-	"github.com/bottos-project/bottos/cmdcli"
-	"github.com/bottos-project/bottos/restful/handler"
-	"net/http"
-	"strconv"
+	"github.com/bottos-project/bottos/cmd"
+
+	cli "gopkg.in/urfave/cli.v1"
+	"runtime"
+	"fmt"
 )
 
+var (
+	app = cli.NewApp()
+)
+
+func init() {
+	app.Usage = "the bottos command line interface"
+	app.Version = "3.2.0"
+	app.Copyright = "Copyright 2017~2022 The Bottos Authors"
+	app.Flags = []cli.Flag {
+		cmd.ConfigFileFlag,
+		cmd.GenesisFileFlag,
+		cmd.DataDirFlag,
+		cmd.DisableAPIFlag,
+		cmd.APIPortFlag,
+		cmd.DisableRPCFlag,
+		cmd.RPCPortFlag,
+		cmd.P2PPortFlag,
+		cmd.ServerAddrFlag,
+		cmd.PeerListFlag,
+		cmd.DelegateSignkeyFlag,
+		cmd.DelegateFlag,
+		cmd.EnableStaleReportFlag,
+		cmd.EnableMongoDBFlag,
+		cmd.MongoDBFlag,
+		cmd.LogConfigFlag,
+	}
+	app.Action = startBottos
+	app.Before = func(ctx *cli.Context) error {
+		runtime.GOMAXPROCS(runtime.NumCPU())
+		return nil
+	}
+}
+
 func main() {
-	//TODO: The config's cli parameters will be used soon.
-	GlobalConf, GenesisConf, err := cmdcli.Init()
-	if err != nil {
-		log.Error("Parse cmdcli fail")
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	err = config.LoadConfig(&GlobalConf, &GenesisConf)
-	if err != nil {
-		log.Error("Load config fail")
+}
+
+func loadConfig(ctx *cli.Context) {
+	config.InitConfig()
+
+	if err := config.InitLogConfig(ctx); err != nil {
 		os.Exit(1)
 	}
 
-	dbInst := db.NewDbService(config.Param.DataDir, filepath.Join(config.Param.DataDir, "blockchain"), config.Param.OptionDb)
+	if err := config.LoadConfig(ctx); err != nil {
+		log.Errorf("%v", err)
+		os.Exit(1)
+	}
+}
+
+func startBottos(ctx *cli.Context) error {
+	loadConfig(ctx)
+
+	blockDBPath := filepath.Join(config.Param.DataDir, "block/")
+	stateDBPath := filepath.Join(config.Param.DataDir, "state.db")
+	dbInst := db.NewDbService(blockDBPath, stateDBPath, config.Param.OptionDb)
 	if dbInst == nil {
-		log.Error("Create DB service fail")
+		log.Critical("Create DB service fail")
 		os.Exit(1)
 	}
 
@@ -53,13 +100,13 @@ func main() {
 
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
-		log.Info("Create Native Contract error: ", err)
+		log.Critical("Create Native Contract error: ", err)
 		os.Exit(1)
 	}
 
 	chain, err := chain.CreateBlockChain(dbInst, roleIntf, nc)
 	if err != nil {
-		log.Error("Create BlockChain error: ", err)
+		log.Critical("Create BlockChain error: ", err)
 		os.Exit(1)
 	}
 
@@ -78,34 +125,22 @@ func main() {
 	trxactor.SetTrxPool(trxPool)
 
 	//Enabled RestFul Api
-	if config.Param.RestFulApiServiceEnable{
+	if config.Param.RestFulApiServiceEnable {
 		go startRestApi(roleIntf, contractDB)
 	}
 
 	//Enabled Rpc Api
 	if config.Param.RpcServiceEnable {
-		repo := caapi.NewApiService(actorenv)
-
-		service := micro.NewService(
-			micro.Name(config.Param.RpcServiceName),
-			micro.Version(config.Param.RpcServiceVersion),
-		)
-		
-		//Prompt this due to it parse cli parmeters which conflict to urfave/cli.
-		//service.Init()
-		api.RegisterChainHandler(service.Server(), repo)
-		if err := service.Run(); err != nil {
-			panic(err)
-		}
+		go startRPCService(actorenv)
 	}
 
 	WaitSystemDown(chain, multiActors)
+	return nil
 }
 
 //WaitSystemDown is to handle ctrl+C
 func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) {
 	exit := make(chan bool, 0)
-
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGKILL)
 
@@ -128,4 +163,18 @@ func startRestApi(roleIntf role.RoleInterface, contractDB *contractdb.ContractDB
 	handler.SetRoleIntf(roleIntf)
 	handler.SetContractDbIns(contractDB)
 	log.Critical(http.ListenAndServe(config.Param.ServInterAddr+":"+strconv.Itoa(config.Param.APIPort), router))
+}
+
+func startRPCService(actorenv *actionenv.ActorEnv) {
+	repo := caapi.NewApiService(actorenv)
+
+	service := micro.NewService(
+		micro.Name(config.Param.RpcServiceName),
+		micro.Version(config.Param.RpcServiceVersion),
+	)
+
+	api.RegisterChainHandler(service.Server(), repo)
+	if err := service.Run(); err != nil {
+		log.Critical("RPC Service fail: ", err)
+	}
 }

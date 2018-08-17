@@ -54,7 +54,7 @@ func NewNetActor(env *env.ActorEnv) *actor.PID {
 	pid, err := actor.SpawnNamed(props, "NetActor")
 	if err == nil {
 
-		netactor.protocol = netprotocol.MakeProtocol(config.Param, env.Chain)
+		netactor.protocol = netprotocol.MakeProtocol(&config.Param, env.Chain)
 		netactor.protocol.Start()
 
 		env.Protocol = netactor.protocol

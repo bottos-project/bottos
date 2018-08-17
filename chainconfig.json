@@ -50,6 +50,6 @@
     "rpc_service_version": "3.0.0",
     "enable_stale_report": true,
     "option_db":"127.0.0.1:27017",
-    "log_config":"corelog.xml",
+    "log_config":"./corelog.xml",
     "chain_id":"00000000000000000000000000000000"
 }

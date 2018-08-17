@@ -28,20 +28,24 @@ package config
 import (
 	"bytes"
 	"io/ioutil"
-	"os"
+	"fmt"
+	"encoding/json"
+	"strings"
+	"github.com/bottos-project/bottos/cmd"
+	cli "gopkg.in/urfave/cli.v1"
 	log "github.com/cihub/seelog"
 )
 
 const (
-	// CONFIG_FILE_NAME is definition of config file name
-	CONFIG_FILE_NAME = "./chainconfig.json"
+	// DEFAULT_CONFIG_FILENAME is definition of config file name
+	DEFAULT_CONFIG_FILENAME = "./chainconfig.json"
 )
 
 // Param is var of Parameter type
-var Param *Parameter
+var Param Parameter
 
 // Genesis is var of GenesisConfig type
-var Genesis *GenesisConfig
+var Genesis GenesisConfig
 
 // Parameter is definition of config param
 type Parameter struct {
@@ -51,7 +55,7 @@ type Parameter struct {
 	APIPort           int       `json:"api_port"`
 	P2PPort           int       `json:"p2p_port"`
 	ServAddr          string    `json:"serv_addr"`
-	ServInterAddr           string    `json:"serv_inter_addr"`
+	ServInterAddr	  string    `json:"serv_inter_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
@@ -86,41 +90,183 @@ type InitDelegate struct {
 	Balance   uint64 `json:"balance"`
 }
 
-func InitParam(Conf *Parameter, GenConf *GenesisConfig) {
-        
-        Conf.GenesisJson = "./genesis.json"
-        Conf.DataDir     = "./datadir/"
-        Conf.Consensus   = "dpos"
-        Conf.APIPort     = 8689
-        Conf.P2PPort     = 9868
-        Conf.ServAddr    = "192.168.1.1"
-	Conf.ServInterAddr = "127.0.0.1"
-	Conf.PeerList    = []string{}
-        Conf.KeyPairs    = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", 
-				       PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"}}
-        Conf.Delegates   = []string{}
-        Conf.RpcServiceEnable = true
-        Conf.RpcServiceName   = "bottos"
-        Conf.RpcServiceVersion = "3.0.0"
-        Conf.EnableStaleReport = true
-        Conf.OptionDb          = ""
-        Conf.LogConfig         = "corelog.xml"
-        Conf.ChainId           = "00000000000000000000000000000000"
-	
-	GenConf.GenesisTime    = 1524801531
-	GenConf.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
-	GenConf.InitDelegates  = []InitDelegate{}
+func InitConfig() {
+	Param.GenesisJson = "./genesis.json"
+	Param.DataDir     = "./datadir/"
+	Param.Consensus   = "dpos"
+	Param.APIPort     = 8689
+	Param.P2PPort     = 9868
+	Param.ServAddr    = "192.168.1.1"
+	Param.ServInterAddr = "127.0.0.1"
+	Param.PeerList    = []string{}
+	Param.KeyPairs    = []KeyPair {
+		{
+			PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45",
+			PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
+		},
+	}
+	Param.Delegates   = []string{}
+	Param.RpcServiceEnable = true
+	Param.RpcServiceName   = "bottos"
+	Param.RpcServiceVersion = "3.0.0"
+	Param.EnableStaleReport = true
+	Param.OptionDb          = ""
+	Param.LogConfig         = "./corelog.xml"
+	Param.ChainId           = "00000000000000000000000000000000"
 
+	Genesis.GenesisTime    = 1524801531
+	Genesis.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
+	Genesis.InitDelegates  = []InitDelegate{}
 }
 
+func loadConfigFile(fn string) error {
+	file, e := loadConfigJson(fn)
+	if e != nil {
+		return fmt.Errorf("Load config file error: ", e)
+	}
+
+	e = json.Unmarshal(file, &Param)
+	if e != nil {
+		return fmt.Errorf("Parse config file error: %v", e)
+	}
+
+	return nil
+}
+
+func loadGenesisFile(fn string) error {
+	file, e := loadConfigJson(fn)
+	if e != nil {
+		return fmt.Errorf("Load genesis file error: ", e)
+	}
+
+	e = json.Unmarshal(file, &Genesis)
+	if e != nil {
+		return fmt.Errorf("Parse genesis file error: %v", e)
+	}
+
+	return nil
+}
+
+
 // LoadConfig is to load config file
-func LoadConfig(Conf *Parameter, GensisConf *GenesisConfig) error {
-	
-	Param = Conf
-	Genesis = GensisConf
-	
-	loadLogConfig(Param.LogConfig)
-	
+func LoadConfig(ctx *cli.Context) error {
+	configFn := DEFAULT_CONFIG_FILENAME
+	if ctx.GlobalIsSet(cmd.ConfigFileFlag.Name) {
+		configFn = ctx.GlobalString(cmd.ConfigFileFlag.Name)
+	}
+	if err := loadConfigFile(configFn); err != nil {
+		return err
+	}
+
+	genesisFn := Param.GenesisJson
+	if ctx.GlobalIsSet(cmd.GenesisFileFlag.Name) {
+		genesisFn = ctx.GlobalString(cmd.GenesisFileFlag.Name)
+	}
+	if err := loadGenesisFile(genesisFn); err != nil {
+		return err
+	}
+	Param.GenesisJson = genesisFn
+
+	if ctx.GlobalIsSet(cmd.DataDirFlag.Name) {
+		Param.DataDir = ctx.GlobalString(cmd.DataDirFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.LogConfigFlag.Name) {
+		Param.LogConfig = ctx.GlobalString(cmd.LogConfigFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.ServerAddrFlag.Name) {
+		Param.ServAddr = ctx.GlobalString(cmd.ServerAddrFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.ServerAddrFlag.Name) {
+		Param.ServAddr = ctx.GlobalString(cmd.ServerAddrFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.APIPortFlag.Name) {
+		Param.APIPort = ctx.GlobalInt(cmd.APIPortFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.RPCPortFlag.Name) {
+		//Param.RPCPort = ctx.GlobalInt(cmd.RPCPortFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.P2PPortFlag.Name) {
+		Param.P2PPort = ctx.GlobalInt(cmd.P2PPortFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.DelegateFlag.Name) {
+		d := ctx.GlobalString(cmd.DelegateFlag.Name)
+		Param.Delegates = []string{d}
+	}
+
+	if ctx.GlobalIsSet(cmd.MongoDBFlag.Name) {
+		Param.OptionDb = ctx.GlobalString(cmd.MongoDBFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.EnableStaleReportFlag.Name) {
+		Param.EnableStaleReport = ctx.GlobalBool(cmd.EnableStaleReportFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.DisableRPCFlag.Name) {
+		Param.RpcServiceEnable = ctx.GlobalBool(cmd.DisableRPCFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.PeerListFlag.Name) {
+		raw := ctx.GlobalString(cmd.PeerListFlag.Name)
+		peerList, err := parsePeerListCLI(raw)
+		if err != nil {
+			return fmt.Errorf("parse peerlist error")
+		}
+		Param.PeerList = make([]string, len(peerList))
+		copy(Param.PeerList, peerList)
+	}
+
+	if ctx.GlobalIsSet(cmd.DelegateSignkeyFlag.Name) {
+		raw := ctx.GlobalString(cmd.DelegateSignkeyFlag.Name)
+		keypair, err := parseKeyPairCLI(raw)
+		if err != nil {
+			return err
+		}
+		Param.DelegateSignKey = keypair
+	}
+
+	return nil
+}
+
+func parsePeerListCLI(raw string) ([]string, error) {
+	var peerList []string
+	val := strings.Replace(raw, " ", "", -1)
+	peerList = strings.Split(val, ",")
+	// check peers
+	return peerList, nil
+}
+
+func parseKeyPairCLI(raw string) (KeyPair, error) {
+	val := strings.Replace(raw, " ", "", -1)
+	keys := strings.Split(val, ",")
+	if len(keys) < 2 {
+		return KeyPair{}, fmt.Errorf("parse delegate sign key error")
+	}
+	keypair := KeyPair{}
+	keypair.PrivateKey = keys[0]
+	keypair.PublicKey = keys[1]
+	// check key
+	return keypair, nil
+}
+
+// InitLogConfig initialize log config
+func InitLogConfig(ctx *cli.Context) error {
+	if ctx.GlobalIsSet(cmd.LogConfigFlag.Name) {
+		Param.LogConfig = ctx.GlobalString(cmd.LogConfigFlag.Name)
+	}
+
+	defer log.Flush()
+	logger, err := log.LoggerFromConfigAsFile(Param.LogConfig)
+	if err != nil {
+		return fmt.Errorf("parse log config file error: ", err)
+	}
+	log.ReplaceLogger(logger)
 	return nil
 }
 
@@ -133,16 +279,4 @@ func loadConfigJson(fn string) ([]byte, error) {
 	// Remove the UTF-8 Byte Order Mark
 	file = bytes.TrimPrefix(file, []byte("\xef\xbb\xbf"))
 	return file, nil
-}
-
-// loadLogConfig is to load log config file
-func loadLogConfig(logConfigFile string) {
-	defer log.Flush()
-	logger, err := log.LoggerFromConfigAsFile(logConfigFile)
-	if err != nil {
-		log.Critical("*ERROR* Failed to parse config log file !!!", err)
-		os.Exit(1)
-		return
-	}
-	log.ReplaceLogger(logger)
 }
