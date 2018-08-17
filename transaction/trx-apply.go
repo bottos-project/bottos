@@ -25,15 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bottos-project/bottos/action/env"
-
-	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract"
-	"github.com/bottos-project/bottos/contract/contractdb"
 	"github.com/bottos-project/bottos/role"
 	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
 	log "github.com/cihub/seelog"
@@ -42,8 +38,6 @@ import (
 // TrxApplyService is to define a service for apply a transaction
 type TrxApplyService struct {
 	roleIntf   role.RoleInterface
-	ContractDB *contractdb.ContractDB
-	core       chain.BlockChainInterface
 	ncIntf     contract.NativeContractInterface
 }
 
@@ -51,9 +45,9 @@ var trxApplyServiceInst *TrxApplyService
 var once sync.Once
 
 // CreateTrxApplyService is to new a TrxApplyService
-func CreateTrxApplyService(env *env.ActorEnv) *TrxApplyService {
+func CreateTrxApplyService(roleIntf role.RoleInterface, nc contract.NativeContractInterface) *TrxApplyService {
 	once.Do(func() {
-		trxApplyServiceInst = &TrxApplyService{roleIntf: env.RoleIntf, ContractDB: env.ContractDB, core: env.Chain, ncIntf: env.NcIntf}
+		trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf, ncIntf: nc}
 	})
 
 	return trxApplyServiceInst
@@ -172,7 +166,7 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 
 	bottoserr := bottosErr.ErrNoError
 
-	applyContext := &contract.Context{RoleIntf: trxApplyService.roleIntf, ContractDB: trxApplyService.ContractDB, Trx: trx}
+	applyContext := &contract.Context{RoleIntf: trxApplyService.roleIntf, Trx: trx}
 
 	if trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) {
 		contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)

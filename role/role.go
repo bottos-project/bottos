@@ -80,6 +80,12 @@ type RoleInterface interface {
 	ElectNextTermDelegates(block *types.Block, writeState bool) []string
 	ShuffleEelectCandidateList(block *types.Block) ([]string, error)
 
+	SetStrValue(contract string, object string, key string, value string) error
+	GetStrValue(contract string, object string, key string) (string, error)
+	SetBinValue(contract string, object string, key string, value []byte) error
+	GetBinValue(contract string, object string, key string) ([]byte, error)
+	RemoveKeyValue(contract string, object string, key string) error
+
 	ApplyPersistance(block *types.Block) error
 }
 
@@ -261,6 +267,26 @@ func (r *Role) ShuffleEelectCandidateList(block *types.Block) ([]string, error) 
 	return ShuffleEelectCandidateListRole(r.Db, block)
 }
 
+func (r *Role) SetStrValue(contract string, object string, key string, value string) error {
+	return SetStrValue(r.Db, contract, object, key, value)
+}
+
+func (r *Role) GetStrValue(contract string, object string, key string) (string, error) {
+	return GetStrValue(r.Db, contract, object, key)
+}
+
+func (r *Role) SetBinValue(contract string, object string, key string, value []byte) error {
+	return SetBinValue(r.Db, contract, object, key, value)
+}
+
+func (r *Role) GetBinValue(contract string, object string, key string) ([]byte, error) {
+	return GetBinValue(r.Db, contract, object, key)
+}
+
+func (r *Role) RemoveKeyValue(contract string, object string, key string) error {
+	return RemoveKeyValue(r.Db, contract, object, key)
+}
+
 //ApplyPersistance is to apply persistence blocks to option db
 func (r *Role) ApplyPersistance(block *types.Block) error {
 	return ApplyPersistanceRole(r, r.Db, block)
@@ -283,4 +309,6 @@ func (r *Role) initRole() {
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)
 	CreateTransactionExpirationRole(r.Db)
+
+	CreateKeyValueRole(r.Db)
 }

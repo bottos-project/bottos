@@ -29,9 +29,9 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/bpl"
 
-	"github.com/golang/protobuf/proto"
-)
+	)
 
 var (
 	//BlockHashPrefix prefix of block hash
@@ -60,7 +60,7 @@ func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 	}
 
 	block := types.Block{}
-	if err := proto.Unmarshal(data, &block); err != nil {
+	if err := bpl.Unmarshal(data, &block); err != nil {
 		return nil
 	}
 	return &block
@@ -111,7 +111,7 @@ func writeHead(db *db.DBService, block *types.Block) error {
 //WriteBlock write block in db
 func WriteBlock(db *db.DBService, block *types.Block) error {
 	key := append(BlockHashPrefix, block.Hash().Bytes()...)
-	data, _ := proto.Marshal(block)
+	data, _ := bpl.Marshal(block)
 
 	err := db.Put(key, data)
 	if err != nil {

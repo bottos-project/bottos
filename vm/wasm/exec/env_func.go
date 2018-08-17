@@ -80,6 +80,10 @@ func NewEnvFunc() *EnvFunc {
 
 	envFunc.Register("getMethodJs",       getMethodJs)
 
+	envFunc.Register("getBinValue",      getBinValue)
+ 	envFunc.Register("setBinValue",      setBinValue)
+	envFunc.Register("removeBinValue",   removeBinValue)
+
 	return &envFunc
 }
 
@@ -137,7 +141,7 @@ func getStrValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
-	value, err := contractCtx.ContractDB.GetStrValue(string(contract), string(object), string(key))
+	value, err := contractCtx.RoleIntf.GetStrValue(string(contract), string(object), string(key))
 
 	var valueLen uint64 = 0
 	if err == nil {
@@ -193,8 +197,9 @@ func setStrValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
+	err = contractCtx.RoleIntf.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
+
 	result := 1
-	err = contractCtx.ContractDB.SetStrValue(contractCtx.Trx.Contract, string(object), string(key), string(value))
 	if err != nil {
 		result = 0
 	}
@@ -235,7 +240,7 @@ func removeStrValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	err = contractCtx.ContractDB.RemoveStrValue(contractCtx.Trx.Contract, string(object), string(key))
+	err = contractCtx.RoleIntf.RemoveKeyValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	result := 1
 	if err != nil {
@@ -284,7 +289,7 @@ func getBinValue(vm *VM) (bool, error) {
 
 	log.Infof(string(contract), len(contract), string(object), len(object), string(key), len(key))
 	var valueLen uint64 = 0
-	value, err := contractCtx.ContractDB.GetBinValue(string(contract), string(object), string(key))
+	value, err := contractCtx.RoleIntf.GetBinValue(string(contract), string(object), string(key))
 	if err == nil {
 		valueLen = uint64(len(value))
 		// check buf len
@@ -336,7 +341,7 @@ func setBinValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
-	err = contractCtx.ContractDB.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
+	err = contractCtx.RoleIntf.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
 
 	result := 1
 	if err != nil {
@@ -378,7 +383,7 @@ func removeBinValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	err = contractCtx.ContractDB.RemoveBinValue(contractCtx.Trx.Contract, string(object), string(key))
+	err = contractCtx.RoleIntf.RemoveKeyValue(contractCtx.Trx.Contract, string(object), string(key))
 
 	result := 1
 	if err != nil {
@@ -566,7 +571,7 @@ func callTrx(vm *VM) (bool, error) {
 		SigAlg:      vm.contract.Trx.SigAlg,
 		Signature:   []byte{},
 	}
-	ctx := &contract.Context{RoleIntf: vm.GetContract().RoleIntf, ContractDB: vm.GetContract().ContractDB, Trx: trx}
+	ctx := &contract.Context{RoleIntf: vm.GetContract().RoleIntf, Trx: trx}
 
 	//Todo thread synchronization
 	vm.callWid++

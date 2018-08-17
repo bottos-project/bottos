@@ -44,7 +44,7 @@ type DecoderReader func(reflect.Value, *DecodeContext) error
 
 //Decoder interface for customization
 type Decoder interface {
-	DecodeMsgpack(io.Reader) error
+	DecodeBPL(io.Reader) error
 }
 
 var (

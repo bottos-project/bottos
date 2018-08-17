@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"errors"
 
 	"github.com/gorilla/mux"
 	"github.com/bottos-project/bottos/action/env"
@@ -17,10 +18,11 @@ import (
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/role"
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
-	"github.com/bottos-project/bottos/contract/contractdb"
+	"github.com/bottos-project/bottos/contract/abi"
 )
 
 //ApiService is actor service
@@ -32,12 +34,6 @@ var roleIntf role.RoleInterface
 //SetChainActorPid set chain actor pid
 func SetRoleIntf(tpid role.RoleInterface) {
 	roleIntf = tpid
-}
-
-var contractDbIns *contractdb.ContractDB
-//SetChainActorPid set chain actor pid
-func SetContractDbIns(tpid *contractdb.ContractDB) {
-	contractDbIns = tpid
 }
 
 var chainActorPid *actor.PID
@@ -130,7 +126,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 //GetBlock query block
 func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//params := mux.Vars(r)
-	var msgReq *message.QueryBlockReq
+	var msgReq *api.GetBlockRequest
 	err := json.NewDecoder(r.Body).Decode(&msgReq)
 	if err != nil {
 		log.Errorf("request error: %s", err)
@@ -138,7 +134,10 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	msgReq2 := &message.QueryBlockReq{common.HexToHash(msgReq.BlockHash),
+		msgReq.BlockNum}
+
+	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
 	var resp Todo
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
@@ -252,6 +251,81 @@ type reqStruct struct {
 	TrxHash string `json:"trx_hash,omitemty"`
 }
 
+type Transaction struct {
+	Version     uint32 `json:"version"`
+	CursorNum   uint32 `json:"cursor_num"`
+	CursorLabel uint32 `json:"cursor_label"`
+	Lifetime    uint64 `json:"lifetime"`
+	Sender      string `json:"sender"`
+	Contract    string `json:"contract"`
+	Method      string `json:"method"`
+	Param       interface{} `json:"param"`
+	SigAlg      uint32 `json:"sig_alg"`
+	Signature   string `json:"signature"`
+}
+
+
+func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
+	account, err := r.GetAccount(contract)
+	if err != nil {
+		return nil, errors.New("Get account fail")
+	}
+
+	Abi, err := abi.ParseAbi(account.ContractAbi)
+	if err != nil {
+		return nil, err
+	}
+
+	return Abi, nil
+}
+
+
+func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, Method string) (interface{}, error) {
+	var Abi *abi.ABI = nil
+	if Contract != "bottos" {
+		var err error
+		Abi, err = getContractAbi(r, Contract)
+		if  err != nil {
+			return nil, errors.New("External Abi is empty!")
+		}
+	} else {
+		Abi = abi.GetAbi()
+	}
+
+	if Abi == nil {
+		return nil, errors.New("Abi is empty!")
+	}
+
+	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
+	if decodedParam == nil || len(decodedParam) <= 0 {
+		return nil, errors.New("ParseTransactionParam: FAILED")
+	}
+	return decodedParam, nil
+}
+
+func convertIntTrxToApiTrxInter(trx *types.Transaction,r role.RoleInterface) interface{} {
+	parmConvered, err := ParseTransactionParam(r, trx.Param, trx.Contract, trx.Method)
+	if err != nil {
+		log.Errorf("role.ParseParam: %s", err)
+		panic(err)
+	}
+
+	apiTrx := &Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       parmConvered,
+		SigAlg:      trx.SigAlg,
+		Signature:   common.BytesToHex(trx.Signature),
+	}
+
+	return apiTrx
+}
+
 func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	var req *reqStruct
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -285,8 +359,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//resp.Result = service.ConvertIntTrxToApiTrx(response.Trx)
-	role := &role.Role{Db: contractDbIns.Db}
-	resp.Result = service.ConvertIntTrxToApiTrxInter(response.Trx, role)
+	resp.Result = convertIntTrxToApiTrxInter(response.Trx, roleIntf)
 
 	resp.Errcode = uint32(bottosErr.ErrNoError)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -361,7 +434,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 	contract := req.Contract
 	object := req.Object
 	key := req.Key
-	value, err := contractDbIns.GetBinValue(contract, object, key)
+	value, err := roleIntf.GetBinValue(contract, object, key)
 	var resp Todo
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)

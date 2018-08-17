@@ -25,18 +25,23 @@
 package types
 
 import (
-	log "github.com/cihub/seelog"
 	"testing"
-
-	"github.com/golang/protobuf/proto"
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/stretchr/testify/assert"
 )
 
 func newTrx(contract string, method string, param []byte) *Transaction {
 	trx := &Transaction{
+		Version: 1,
+		CursorNum: 1,
+		CursorLabel: 1,
+		Lifetime: 1,
 		Sender:   contract,
 		Contract: contract,
 		Method:   method,
 		Param:    param,
+		SigAlg: 1,
+		Signature: []byte{},
 	}
 
 	return trx
@@ -45,31 +50,30 @@ func newTrx(contract string, method string, param []byte) *Transaction {
 func TestDerivedTransaction_onelayer(t *testing.T) {
 	trx := newTrx("test", "testmethod", []byte{})
 
-	trx1 := &DerivedTransaction{Transaction: newTrx("subtest1", "testmethod", []byte{})}
-	trx2 := &DerivedTransaction{Transaction: newTrx("subtest2", "testmethod", []byte{})}
-	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{})}
+	trx1 := &DerivedTransaction{Transaction: newTrx("subtest1", "testmethod", []byte{}), DerivedTrx:make([]*DerivedTransaction,0)}
+	trx2 := &DerivedTransaction{Transaction: newTrx("subtest2", "testmethod", []byte{}), DerivedTrx:make([]*DerivedTransaction,0)}
+	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{}), DerivedTrx:make([]*DerivedTransaction,0)}
 	var derivedTrx []*DerivedTransaction
 	derivedTrx = append(derivedTrx, trx1)
 	derivedTrx = append(derivedTrx, trx2)
 	derivedTrx = append(derivedTrx, trx3)
 	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
-	data, err := proto.Marshal(handledTrx)
-	log.Info(handledTrx)
-	log.Infof("data:%x\n", data)
+	data, err := bpl.Marshal(handledTrx)
+	assert.Nil(t, err)
 
 	unmTrx := &HandledTransaction{}
-	err = proto.Unmarshal(data, unmTrx)
-	log.Info(err)
-	log.Info(unmTrx)
+	err = bpl.Unmarshal(data, unmTrx)
+	assert.Nil(t, err)
+	assert.Equal(t, handledTrx, unmTrx)
 }
 
 func TestDerivedTransaction_twolayer(t *testing.T) {
 	trx := newTrx("test", "testmethod", []byte{})
 
-	trx11 := &DerivedTransaction{Transaction: newTrx("subtest11", "testmethod", []byte{5, 6, 7})}
-	trx12 := &DerivedTransaction{Transaction: newTrx("subtest12", "testmethod", []byte{6, 7, 8})}
-	trx13 := &DerivedTransaction{Transaction: newTrx("subtest13", "testmethod", []byte{7, 8, 9})}
+	trx11 := &DerivedTransaction{Transaction: newTrx("subtest11", "testmethod", []byte{5, 6, 7}), DerivedTrx:make([]*DerivedTransaction,0)}
+	trx12 := &DerivedTransaction{Transaction: newTrx("subtest12", "testmethod", []byte{6, 7, 8}), DerivedTrx:make([]*DerivedTransaction,0)}
+	trx13 := &DerivedTransaction{Transaction: newTrx("subtest13", "testmethod", []byte{7, 8, 9}), DerivedTrx:make([]*DerivedTransaction,0)}
 
 	var derivedTrx1 []*DerivedTransaction
 	derivedTrx1 = append(derivedTrx1, trx11)
@@ -80,7 +84,7 @@ func TestDerivedTransaction_twolayer(t *testing.T) {
 
 	trx1 := &DerivedTransaction{Transaction: newTrx("subtest1", "testmethod", []byte{1, 2, 3}), DerivedTrx: derivedTrx1}
 	trx2 := &DerivedTransaction{Transaction: newTrx("subtest2", "testmethod", []byte{2, 3, 4}), DerivedTrx: derivedTrx2}
-	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{3, 4, 5})}
+	trx3 := &DerivedTransaction{Transaction: newTrx("subtest3", "testmethod", []byte{3, 4, 5}), DerivedTrx:make([]*DerivedTransaction,0)}
 
 	var derivedTrx []*DerivedTransaction
 	derivedTrx = append(derivedTrx, trx1)
@@ -88,18 +92,11 @@ func TestDerivedTransaction_twolayer(t *testing.T) {
 	derivedTrx = append(derivedTrx, trx3)
 	handledTrx := &HandledTransaction{Transaction: trx, DerivedTrx: derivedTrx}
 
-	data, err := proto.Marshal(handledTrx)
-	log.Info(handledTrx)
-	log.Infof("data:%x\n", data)
+	data, err := bpl.Marshal(handledTrx)
+	assert.Nil(t, err)
 
 	unmHandledTrx := &HandledTransaction{}
-	err = proto.Unmarshal(data, unmHandledTrx)
-	log.Info(err)
-	log.Info(unmHandledTrx.Transaction)
-	log.Info(unmHandledTrx.DerivedTrx[0].Transaction)
-	log.Info(unmHandledTrx.DerivedTrx[0].DerivedTrx)
-	log.Info(unmHandledTrx.DerivedTrx[1].Transaction)
-	log.Info(unmHandledTrx.DerivedTrx[1].DerivedTrx)
-	log.Info(unmHandledTrx.DerivedTrx[2].Transaction)
-	log.Info(unmHandledTrx.DerivedTrx[2].DerivedTrx)
+	err = bpl.Unmarshal(data, unmHandledTrx)
+	assert.Nil(t, err)
+	assert.Equal(t, handledTrx, unmHandledTrx)
 }

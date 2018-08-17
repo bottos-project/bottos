@@ -28,8 +28,7 @@ package contract
 import (
 	"math/big"
 
-	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/common/safemath"
+		"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
@@ -140,13 +139,12 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 		return nil
 	}
 
-	pubkey, _ := common.HexToBytes(config.Param.KeyPairs[0].PublicKey)
 	a := abi.CreateNativeContractABI()
 	abijson, _ := abi.AbiToJson(a)
 	bto := &role.Account{
 		AccountName: config.BOTTOS_CONTRACT_NAME,
 		CreateTime:  config.Genesis.GenesisTime,
-		PublicKey:   pubkey,
+		PublicKey:   config.Genesis.GenesisKey,
 		ContractAbi: []byte(abijson),
 	}
 	roleIntf.SetAccount(bto.AccountName, bto)

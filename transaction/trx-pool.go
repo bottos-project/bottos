@@ -26,20 +26,20 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/contract/contractdb"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/bpl"
 
 	"crypto/sha256"
 	"encoding/hex"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/crypto-go/crypto"
-	proto "github.com/golang/protobuf/proto"
 	log "github.com/cihub/seelog"
 )
 
@@ -54,26 +54,26 @@ var TrxPoolInst *TrxPool
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction
 	roleIntf    role.RoleInterface
-	contractDB  *contractdb.ContractDB
 	netActorPid *actor.PID
 
+	dbInst *db.DBService
 	mu   sync.RWMutex
 	quit chan struct{}
 }
 
 // InitTrxPool is init trx pool process when system start
-func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
+func InitTrxPool(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst := &TrxPool{
 		pending:     make(map[common.Hash]*types.Transaction),
-		roleIntf:    env.RoleIntf,
-		contractDB:  env.ContractDB,
+		roleIntf:    roleIntf,
 		netActorPid: netActorPid,
+		dbInst:      dbInstance,
 
 		quit: make(chan struct{}),
 	}
 
-	CreateTrxApplyService(env)
+	CreateTrxApplyService(roleIntf, nc)
 
 	go TrxPoolInst.expirationCheckLoop()
 
@@ -240,7 +240,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 		SigAlg:      trx.SigAlg,
 	}
 
-	serializeData, err := proto.Marshal(trxToVerify)
+	serializeData, err := bpl.Marshal(trxToVerify)
 	if nil != err {
 		return false
 	}
@@ -253,7 +253,7 @@ func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(serializeData)))
-	h.Write([]byte(config.Param.ChainId))	
+	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
 	hashData := h.Sum(nil)
 
 	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)

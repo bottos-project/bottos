@@ -28,8 +28,24 @@ package types
 import (
 	"crypto/sha256"
 	"github.com/bottos-project/bottos/common"
-	"github.com/golang/protobuf/proto"
+	"github.com/bottos-project/bottos/bpl"
 )
+
+type Block struct {
+	Header       *Header
+	Transactions []*Transaction
+}
+
+type Header struct {
+	Version         uint32
+	PrevBlockHash   []byte
+	Number          uint32
+	Timestamp       uint64
+	MerkleRoot      []byte
+	Delegate        []byte
+	DelegateSign    []byte
+	DelegateChanges []string
+}
 
 func NewBlock(h *Header, txs []*Transaction) *Block {
 	b := Block{Header: copyHeader(h)}
@@ -55,7 +71,7 @@ func (b *Block) Hash() common.Hash {
 }
 
 func (h *Header) Hash() common.Hash {
-	data, _ := proto.Marshal(h)
+	data, _ := bpl.Marshal(h)
 	temp := sha256.Sum256(data)
 	hash := sha256.Sum256(temp[:])
 	return hash
@@ -67,20 +83,20 @@ func copyHeader(h *Header) *Header {
 }
 
 func (b *Block) GetPrevBlockHash() common.Hash {
-	bh := b.GetHeader().GetPrevBlockHash()
+	bh := b.Header.GetPrevBlockHash()
 	return common.BytesToHash(bh)
 }
 
 func (b *Block) GetNumber() uint32 {
-	return b.GetHeader().GetNumber()
+	return b.Header.GetNumber()
 }
 
 func (b *Block) GetTimestamp() uint64 {
-	return b.GetHeader().GetTimestamp()
+	return b.Header.GetTimestamp()
 }
 
 func (b *Block) GetMerkleRoot() common.Hash {
-	bh := b.GetHeader().GetMerkleRoot()
+	bh := b.Header.GetMerkleRoot()
 	return common.BytesToHash(bh)
 }
 
@@ -101,11 +117,11 @@ func (b *Block) Sign(signkey string) common.Hash {
 }
 
 func (b *Block) GetDelegate() []byte {
-	return b.GetHeader().GetDelegate()
+	return b.Header.GetDelegate()
 }
 
 func (b *Block) GetDelegateSign() common.Hash {
-	bh := b.GetHeader().GetDelegateSign()
+	bh := b.Header.GetDelegateSign()
 	return common.BytesToHash(bh)
 }
 
@@ -116,5 +132,55 @@ func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
 		}
 	}
 
+	return nil
+}
+
+
+func (m *Header) GetPrevBlockHash() []byte {
+	if m != nil {
+		return m.PrevBlockHash
+	}
+	return nil
+}
+
+func (m *Header) GetNumber() uint32 {
+	if m != nil {
+		return m.Number
+	}
+	return 0
+}
+
+func (m *Header) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *Header) GetMerkleRoot() []byte {
+	if m != nil {
+		return m.MerkleRoot
+	}
+	return nil
+}
+
+func (m *Header) GetDelegate() []byte {
+	if m != nil {
+		return m.Delegate
+	}
+	return nil
+}
+
+func (m *Header) GetDelegateSign() []byte {
+	if m != nil {
+		return m.DelegateSign
+	}
+	return nil
+}
+
+func (m *Header) GetDelegateChanges() []string {
+	if m != nil {
+		return m.DelegateChanges
+	}
 	return nil
 }

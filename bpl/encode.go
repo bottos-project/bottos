@@ -41,7 +41,7 @@ var encoderCache sync.Map // map[reflect.Type]EncodeWriter
 
 //Encoder interface for customization
 type Encoder interface {
-	EncodeMsgpack(io.Writer) error
+	EncodeBPL(io.Writer) error
 }
 
 const (
@@ -261,12 +261,12 @@ func encodeBigInt(i *big.Int, w io.Writer) error {
 }
 
 func encodeCustom(val reflect.Value, w io.Writer) error {
-	return val.Interface().(Encoder).EncodeMsgpack(w)
+	return val.Interface().(Encoder).EncodeBPL(w)
 }
 
 func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
 	if !val.CanAddr() {
 		return fmt.Errorf("msgpack encode: unadressable value of type %v", val.Type())
 	}
-	return val.Addr().Interface().(Encoder).EncodeMsgpack(w)
+	return val.Addr().Interface().(Encoder).EncodeBPL(w)
 }

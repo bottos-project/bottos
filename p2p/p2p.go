@@ -57,9 +57,9 @@ type NewconnCb func(conn net.Conn)
 
 //MakeP2PServer create instance
 func MakeP2PServer(p *config.Parameter) *P2PServer {
-	LocalPeerInfo.Addr = p.ServAddr
+	LocalPeerInfo.Addr = p.P2PServAddr
 	LocalPeerInfo.Port = strconv.Itoa(p.P2PPort)
-	LocalPeerInfo.ChainId = p.ChainId
+	LocalPeerInfo.ChainId = common.BytesToHex(config.GetChainID())
 
 	id := LocalPeerInfo.Addr + LocalPeerInfo.Port
 	LocalPeerInfo.Id = common.DoubleSha256([]byte(id)).ToHexString()
