@@ -1,11 +1,10 @@
 ﻿{
     "genesis_json": "./genesis.json",
     "data_dir": "./datadir/",
-    "consensus":"dpos",
-    "api_port": 8689,
+    "rest_port": 8689,
+    "rest_serv_addr": "localhost",
     "p2p_port": 9868,
-    "serv_addr":"192.168.1.1",
-    "serv_inter_addr":"127.0.0.1",
+    "p2p_serv_addr": "192.168.1.1",
     "peer_list": [
     ],
     "key_pairs": [{
@@ -44,12 +43,13 @@
         "ran",
         "procyon"
     ],
-    "restful_api_service_enable": true,
-    "rpc_service_enable": true,
+    "delegate_signkey": {
+        "private_key": "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45",
+        "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"
+    },
     "rpc_service_name": "bottos",
     "rpc_service_version": "3.0.0",
     "enable_stale_report": true,
     "option_db":"127.0.0.1:27017",
-    "log_config":"./corelog.xml",
-    "chain_id":"00000000000000000000000000000000"
+    "log_config":"./corelog.xml"
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2017~2022 The Bottos Authors
+// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -27,21 +27,26 @@ package config
 
 import (
 	"bytes"
-	"io/ioutil"
-	"fmt"
 	"encoding/json"
-	"strings"
-	"github.com/bottos-project/bottos/cmd"
-	cli "gopkg.in/urfave/cli.v1"
-	log "github.com/cihub/seelog"
-	"time"
-	"github.com/bottos-project/bottos/common"
+	"fmt"
 	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/cmd"
+	"github.com/bottos-project/bottos/common"
+	log "github.com/cihub/seelog"
+	cli "gopkg.in/urfave/cli.v1"
+	"io/ioutil"
+	"strings"
+	"time"
 )
 
 const (
-	// DEFAULT_CONFIG_FILENAME is definition of config file name
-	DEFAULT_CONFIG_FILENAME = "./chainconfig.json"
+	// DefaultConfigPath is definition of config file name
+	DefaultConfigPath = "./chainconfig.json"
+	DefaultRESTPort   = 8689
+	DefaultRESTServer = "localhost"
+	DefaultRPCPort    = 8690
+	DefaultRPCServer  = "localhost"
+	DefaultP2PPort    = 9868
 )
 
 var (
@@ -57,23 +62,19 @@ var (
 type Parameter struct {
 	GenesisJson       string    `json:"genesis_json"`
 	DataDir           string    `json:"data_dir"`
-	Consensus         string    `json:"consensus"`
-	APIPort           int       `json:"api_port"`
+	RESTPort          int       `json:"rest_port"`
+	RESTServAddr      string    `json:"rest_serv_addr"`
 	P2PPort           int       `json:"p2p_port"`
-	ServAddr          string    `json:"serv_addr"`
-	ServInterAddr	  string    `json:"serv_inter_addr"`
+	P2PServAddr       string    `json:"p2p_serv_addr"`
 	PeerList          []string  `json:"peer_list"`
 	KeyPairs          []KeyPair `json:"key_pairs"`
 	Delegates         []string  `json:"delegates"`
-	RpcServiceEnable  bool      `json:"rpc_service_enable"`
+	DelegateSignKey   KeyPair   `json:"delegate_signkey"`
 	RpcServiceName    string    `json:"rpc_service_name"`
 	RpcServiceVersion string    `json:"rpc_service_version"`
-	RestFulApiServiceEnable  bool      `json:"restful_api_service_enable"`
 	EnableStaleReport bool      `json:"enable_stale_report"`
 	OptionDb          string    `json:"option_db"`
 	LogConfig         string    `json:"log_config"`
-	ChainId           string    `json:"chain_id"`
-	DelegateSignKey   KeyPair   `json:"delegate_signkey_pair"`
 }
 
 // KeyPair is definition of key pair
@@ -97,32 +98,29 @@ type InitDelegate struct {
 
 func InitConfig() {
 	initParam()
-
-
+	initGenesis()
 }
 
 func initParam() {
 	Param.GenesisJson = "./genesis.json"
-	Param.DataDir     = "./datadir/"
-	Param.Consensus   = "dpos"
-	Param.APIPort     = 8689
-	Param.P2PPort     = 9868
-	Param.ServAddr    = "192.168.1.1"
-	Param.ServInterAddr = "127.0.0.1"
-	Param.PeerList    = []string{}
-	Param.KeyPairs    = []KeyPair {
+	Param.DataDir = "./datadir/"
+	Param.RESTPort = DefaultRESTPort
+	Param.P2PPort = DefaultP2PPort
+	Param.P2PServAddr = "192.168.1.1"
+	Param.RESTServAddr = DefaultRESTServer
+	Param.PeerList = []string{}
+	Param.KeyPairs = []KeyPair{
 		{
 			PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45",
-			PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
+			PublicKey:  "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
 		},
 	}
-	Param.Delegates   = []string{}
-	Param.RpcServiceEnable = true
-	Param.RpcServiceName   = "bottos"
+	Param.Delegates = []string{}
+	Param.RpcServiceName = "bottos"
 	Param.RpcServiceVersion = "3.0.0"
 	Param.EnableStaleReport = true
-	Param.OptionDb          = ""
-	Param.LogConfig         = "./corelog.xml"
+	Param.OptionDb = ""
+	Param.LogConfig = "./corelog.xml"
 }
 
 func initGenesis() {
@@ -184,7 +182,7 @@ func loadGenesisFile(fn string) error {
 
 // LoadConfig is to load config file
 func LoadConfig(ctx *cli.Context) error {
-	configFn := DEFAULT_CONFIG_FILENAME
+	configFn := DefaultConfigPath
 	if ctx.GlobalIsSet(cmd.ConfigFileFlag.Name) {
 		configFn = ctx.GlobalString(cmd.ConfigFileFlag.Name)
 	}
@@ -209,24 +207,24 @@ func LoadConfig(ctx *cli.Context) error {
 		Param.LogConfig = ctx.GlobalString(cmd.LogConfigFlag.Name)
 	}
 
-	if ctx.GlobalIsSet(cmd.ServerAddrFlag.Name) {
-		Param.ServAddr = ctx.GlobalString(cmd.ServerAddrFlag.Name)
+	if ctx.GlobalIsSet(cmd.RESTPortFlag.Name) {
+		Param.RESTPort = ctx.GlobalInt(cmd.RESTPortFlag.Name)
 	}
 
-	if ctx.GlobalIsSet(cmd.ServerAddrFlag.Name) {
-		Param.ServAddr = ctx.GlobalString(cmd.ServerAddrFlag.Name)
-	}
-
-	if ctx.GlobalIsSet(cmd.RestPortFlag.Name) {
-		Param.APIPort = ctx.GlobalInt(cmd.RestPortFlag.Name)
-	}
-
-	if ctx.GlobalIsSet(cmd.RPCPortFlag.Name) {
-		//Param.RPCPort = ctx.GlobalInt(cmd.RPCPortFlag.Name)
+	if ctx.GlobalIsSet(cmd.RESTServerAddrFlag.Name) {
+		Param.RESTServAddr = ctx.GlobalString(cmd.RESTServerAddrFlag.Name)
 	}
 
 	if ctx.GlobalIsSet(cmd.P2PPortFlag.Name) {
 		Param.P2PPort = ctx.GlobalInt(cmd.P2PPortFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.P2PServerAddrFlag.Name) {
+		Param.P2PServAddr = ctx.GlobalString(cmd.P2PServerAddrFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(cmd.RPCPortFlag.Name) {
+		//Param.RPCPort = ctx.GlobalInt(cmd.RPCPortFlag.Name)
 	}
 
 	if ctx.GlobalIsSet(cmd.DelegateFlag.Name) {
@@ -240,10 +238,6 @@ func LoadConfig(ctx *cli.Context) error {
 
 	if ctx.GlobalIsSet(cmd.EnableStaleReportFlag.Name) {
 		Param.EnableStaleReport = ctx.GlobalBool(cmd.EnableStaleReportFlag.Name)
-	}
-
-	if ctx.GlobalIsSet(cmd.DisableRPCFlag.Name) {
-		Param.RpcServiceEnable = ctx.GlobalBool(cmd.DisableRPCFlag.Name)
 	}
 
 	if ctx.GlobalIsSet(cmd.PeerListFlag.Name) {

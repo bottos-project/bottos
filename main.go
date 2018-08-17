@@ -6,9 +6,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"net/http"
-	"strconv"
-
-	"github.com/bottos-project/bottos/api"
+		"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/chain/extra"
 	"github.com/bottos-project/bottos/config"
@@ -26,9 +24,10 @@ import (
 	"github.com/micro/go-micro"
 	"github.com/bottos-project/bottos/cmd"
 
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 	"runtime"
 	"fmt"
+	"strconv"
 )
 
 var (
@@ -43,12 +42,12 @@ func init() {
 		cmd.ConfigFileFlag,
 		cmd.GenesisFileFlag,
 		cmd.DataDirFlag,
-		cmd.DisableAPIFlag,
-		cmd.RestPortFlag,
+		cmd.DisableRESTFlag,
+		cmd.RESTPortFlag,
 		cmd.DisableRPCFlag,
 		cmd.RPCPortFlag,
 		cmd.P2PPortFlag,
-		cmd.ServerAddrFlag,
+		cmd.RESTServerAddrFlag,
 		cmd.PeerListFlag,
 		cmd.DelegateSignkeyFlag,
 		cmd.DelegateFlag,
@@ -82,6 +81,8 @@ func loadConfig(ctx *cli.Context) {
 		log.Errorf("%v", err)
 		os.Exit(1)
 	}
+
+	log.Infof("Bottos ChainID: %x", config.GetChainID())
 }
 
 func startBottos(ctx *cli.Context) error {
@@ -124,13 +125,13 @@ func startBottos(ctx *cli.Context) error {
 	var trxPool = transaction.InitTrxPool(actorenv, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
 
-	//Enabled RestFul Api
-	if config.Param.RestFulApiServiceEnable {
+	//start RESTful Api
+	if !ctx.GlobalBool(cmd.DisableRESTFlag.Name) {
 		go startRestApi(roleIntf, contractDB)
 	}
 
-	//Enabled Rpc Api
-	if config.Param.RpcServiceEnable {
+	//start Rpc Api
+	if !ctx.GlobalBool(cmd.DisableRPCFlag.Name) {
 		go startRPCService(actorenv)
 	}
 
@@ -162,7 +163,11 @@ func startRestApi(roleIntf role.RoleInterface, contractDB *contractdb.ContractDB
 	//transfer to restful handler
 	handler.SetRoleIntf(roleIntf)
 	handler.SetContractDbIns(contractDB)
-	log.Critical(http.ListenAndServe(config.Param.ServInterAddr+":"+strconv.Itoa(config.Param.APIPort), router))
+	err := http.ListenAndServe(config.Param.RESTServAddr + ":" + strconv.Itoa(config.Param.RESTPort), router)
+	if err != nil {
+		log.Critical("RESTful server fail: ", err)
+		os.Exit(1)
+	}
 }
 
 func startRPCService(actorenv *actionenv.ActorEnv) {
@@ -175,6 +180,6 @@ func startRPCService(actorenv *actionenv.ActorEnv) {
 
 	api.RegisterChainHandler(service.Server(), repo)
 	if err := service.Run(); err != nil {
-		log.Critical("RPC Service fail: ", err)
+		log.Critical("RPC server fail: ", err)
 	}
 }

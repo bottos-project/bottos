@@ -25,8 +25,8 @@
 package cmd
 
 import (
-	cli "gopkg.in/urfave/cli.v1"
-)
+	"gopkg.in/urfave/cli.v1"
+	)
 
 var (
 	ConfigFileFlag = cli.StringFlag{
@@ -41,14 +41,18 @@ var (
 		Name: "datadir",
 		Usage: "Data directory for the databases",
 	}
-	DisableAPIFlag = cli.BoolFlag{
+	DisableRESTFlag = cli.BoolFlag{
 		Name: "disable-api",
 		Usage: "Disable RESTful API server",
 	}
-	RestPortFlag = cli.IntFlag{
+	RESTPortFlag = cli.IntFlag{
 		Name: "restport",
 		Usage: "RESTful API server listening port",
 		Value: 8689,
+	}
+	RESTServerAddrFlag = cli.StringFlag{
+		Name: "rest-servaddr",
+		Usage: "RESTful API server address",
 	}
 	DisableRPCFlag = cli.BoolFlag{
 		Name: "disable-rpc",
@@ -64,8 +68,8 @@ var (
 		Usage: "P2P network listening port",
 		Value: 9868,
 	}
-	ServerAddrFlag = cli.StringFlag{
-		Name: "servaddr",
+	P2PServerAddrFlag = cli.StringFlag{
+		Name: "p2p-servaddr",
 		Usage: "P2P network server address",
 	}
 	PeerListFlag = cli.StringFlag{
