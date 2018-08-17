@@ -131,6 +131,41 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 	return &chainInfo, nil
 }
 
+func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint32, block_hash string) (*chain.GetBlockResponse_Result, error) {
+		var getinfo *chain.GetBlockRequest
+		if block_num >= 0 {
+			getinfo = &chain.GetBlockRequest{BlockNum:block_num}
+		} else if len(block_hash) > 0 {
+			getinfo = &chain.GetBlockRequest{BlockHash:block_hash}
+		} else {
+			getinfo = &chain.GetBlockRequest{BlockNum:0}
+		}
+
+		req, _ := json.Marshal(getinfo)
+		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+			return nil, errors.New("Error!")
+		}
+		
+		var trxrespbody  TODO.Todo
+		
+		err = json.Unmarshal(httpRspBody, &trxrespbody)
+		
+		if err != nil {
+		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		    return nil, errors.New("Error!")
+		}
+		
+		b, _ := json.Marshal(trxrespbody.Result)
+		//cli.jsonPrint(b)
+		var blockInfo chain.GetBlockResponse_Result
+		json.Unmarshal(b, &blockInfo)
+		
+	return &blockInfo, nil
+}
+
 func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	ctrx := &types.BasicTransaction{
 		Version:     trx.Version,
