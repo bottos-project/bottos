@@ -38,7 +38,7 @@ import (
 // Transaction define transaction struct for bottos protocol
 type Transaction struct {
 	Version     uint32
-	CursorNum   uint32
+	CursorNum   uint64
 	CursorLabel uint32
 	Lifetime    uint64
 	Sender      string // max length 21
@@ -72,7 +72,7 @@ func (trx *Transaction) Hash() common.Hash {
 // BasicTransaction define transaction struct for transaction signature
 type BasicTransaction struct {
 	Version     uint32
-	CursorNum   uint32
+	CursorNum   uint64
 	CursorLabel uint32
 	Lifetime    uint64
 	Sender      string

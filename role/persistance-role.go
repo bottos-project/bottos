@@ -58,7 +58,7 @@ type BlockInfo struct {
 	ID              bson.ObjectId          `bson:"_id"`
 	BlockHash       string /*common.Hash*/ `bson:"block_hash"`
 	PrevBlockHash   string /*[]byte*/      `bson:"prev_block_hash"`
-	BlockNumber     uint32                 `bson:"block_number"`
+	BlockNumber     uint64                 `bson:"block_number"`
 	Timestamp       uint64                 `bson:"timestamp"`
 	MerkleRoot      string /*[]byte*/      `bson:"merkle_root"`
 	DelegateAccount string                 `bson:"delegate"`
@@ -70,11 +70,11 @@ type BlockInfo struct {
 // TxInfo is definition of tx
 type TxInfo struct {
 	ID            bson.ObjectId          `bson:"_id"`
-	BlockNum      uint32                 `bson:"block_number"`
+	BlockNum      uint64                 `bson:"block_number"`
 	TransactionID string /*common.Hash*/ `bson:"transaction_id"`
 	SequenceNum   uint32                 `bson:"sequence_num"`
 	BlockHash     string /*common.Hash*/ `bson:"block_hash"`
-	CursorNum     uint32                 `bson:"cursor_num"`
+	CursorNum     uint64                 `bson:"cursor_num"`
 	CursorLabel   uint32                 `bson:"cursor_label"`
 	Lifetime      uint64                 `bson:"lifetime"`
 	Sender        string                 `bson:"sender"`

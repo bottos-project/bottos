@@ -7,7 +7,7 @@ option go_package = "github.com/bottos-project/bottos/api";
 // BasicTransaction definition for serialization
 message BasicTransaction {
 	uint32 			version						= 1; //ambiguous
-	uint32 			cursor_num	              	= 2;
+	uint64 			cursor_num	              	= 2;
 	uint32 			cursor_label		      	= 3;
 	uint64 			lifetime	               	= 4;
 	string		 	sender                  	= 5; // max length: 16

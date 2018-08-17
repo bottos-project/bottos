@@ -39,7 +39,7 @@ type Block struct {
 type Header struct {
 	Version         uint32
 	PrevBlockHash   []byte
-	Number          uint32
+	Number          uint64
 	Timestamp       uint64
 	MerkleRoot      []byte
 	Delegate        []byte
@@ -87,7 +87,7 @@ func (b *Block) GetPrevBlockHash() common.Hash {
 	return common.BytesToHash(bh)
 }
 
-func (b *Block) GetNumber() uint32 {
+func (b *Block) GetNumber() uint64 {
 	return b.Header.GetNumber()
 }
 
@@ -143,7 +143,7 @@ func (m *Header) GetPrevBlockHash() []byte {
 	return nil
 }
 
-func (m *Header) GetNumber() uint32 {
+func (m *Header) GetNumber() uint64 {
 	if m != nil {
 		return m.Number
 	}

@@ -67,7 +67,7 @@ func GetBlock(db *db.DBService, hash common.Hash) *types.Block {
 }
 
 //GetBlockHashByNumber get block from db by number
-func GetBlockHashByNumber(db *db.DBService, number uint32) common.Hash {
+func GetBlockHashByNumber(db *db.DBService, number uint64) common.Hash {
 	hash, _ := db.Get(append(BlockNumberPrefix, common.NumberToBytes(number, 32)...))
 	if len(hash) == 0 {
 		return common.Hash{}
