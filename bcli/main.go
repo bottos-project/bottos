@@ -29,5 +29,6 @@ func main() {
 	}
 
 	cli := NewCLI()
-	cli.Run()
+	//cli.Run()
+	cli.RunNewCLI()
 }
