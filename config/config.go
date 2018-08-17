@@ -34,6 +34,7 @@ import (
 	"github.com/bottos-project/bottos/cmd"
 	cli "gopkg.in/urfave/cli.v1"
 	log "github.com/cihub/seelog"
+	"time"
 )
 
 const (
@@ -79,7 +80,6 @@ type KeyPair struct {
 // GenesisConfig is definition of genesis config
 type GenesisConfig struct {
 	GenesisTime   uint64         `json:"genesis_time"`
-	ChainId       string         `json:"chain_id"`
 	InitDelegates []InitDelegate `json:"init_delegates"`
 }
 
@@ -115,7 +115,6 @@ func InitConfig() {
 	Param.ChainId           = "00000000000000000000000000000000"
 
 	Genesis.GenesisTime    = 1524801531
-	Genesis.ChainId        = "0000000000000000000000000000000000000000000000000000000000000000"
 	Genesis.InitDelegates  = []InitDelegate{}
 }
 
@@ -139,10 +138,27 @@ func loadGenesisFile(fn string) error {
 		return fmt.Errorf("Load genesis file error: ", e)
 	}
 
-	e = json.Unmarshal(file, &Genesis)
+	type GenesisStruct struct {
+		GenesisTime   string         `json:"genesis_time"`
+		InitDelegates []InitDelegate `json:"init_delegates"`
+	}
+	gs := GenesisStruct{}
+	e = json.Unmarshal(file, &gs)
 	if e != nil {
 		return fmt.Errorf("Parse genesis file error: %v", e)
 	}
+
+	gtstr := gs.GenesisTime
+	if !strings.HasSuffix(gtstr, "Z") {
+		gtstr += "Z"
+	}
+	gt, e := time.Parse(time.RFC3339, gtstr)
+	if e != nil {
+		return fmt.Errorf("Parse genesis time error: %v", e)
+	}
+	Genesis.GenesisTime = uint64(gt.Unix())
+	Genesis.InitDelegates = make([]InitDelegate, len(gs.InitDelegates))
+	copy(Genesis.InitDelegates, gs.InitDelegates)
 
 	return nil
 }
