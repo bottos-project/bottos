@@ -31,66 +31,69 @@ import (
 var (
 	ConfigFileFlag = cli.StringFlag{
 		Name: "config",
-		Usage: "config file path the greeting,If without this path, the bottos process will boot up with default config in hardcode",
+		Usage: "Config file path",
 	}
 	GenesisFileFlag = cli.StringFlag{
 		Name: "genesis",
-		Usage: "genesis config file path the greeting",
+		Usage: "Genesis config file path",
 	}
 	DataDirFlag = cli.StringFlag{
 		Name: "datadir",
-		Usage: "datadir's path",
+		Usage: "Data directory for the databases",
 	}
 	DisableAPIFlag = cli.BoolFlag{
 		Name: "disable-api",
-		Usage: "disable restful api's requests",
+		Usage: "Disable RESTful API server",
 	}
-	APIPortFlag = cli.IntFlag{
-		Name: "apiport",
-		Usage: "api service port for the greeting",
+	RestPortFlag = cli.IntFlag{
+		Name: "restport",
+		Usage: "RESTful API server listening port",
+		Value: 8689,
 	}
 	DisableRPCFlag = cli.BoolFlag{
 		Name: "disable-rpc",
-		Usage: "disable rpc requests",
+		Usage: "Disable RPC server",
 	}
 	RPCPortFlag = cli.IntFlag{
 		Name: "rpcport",
-		Usage: "json-rpc port for the greeting",
+		Usage: "RPC server listening port",
+		Value: 8690,
 	}
 	P2PPortFlag = cli.IntFlag{
 		Name: "p2pport",
-		Usage: "local listen on this p2p port to receive remote p2p messages",
+		Usage: "P2P network listening port",
+		Value: 9868,
 	}
 	ServerAddrFlag = cli.StringFlag{
 		Name: "servaddr",
-		Usage: "for p2p sync / reply local server ip& port info",
+		Usage: "P2P network server address",
 	}
 	PeerListFlag = cli.StringFlag{
 		Name: "peerlist",
-		Usage: "for p2p add pne / add neighbour. Example: 192.168.1.2:9868, 192.168.1.3:9868, 192.168.1.4:9868",
+		Usage: "Comma separated list of network peers (192.168.1.2:9868,192.168.1.3:9868,192.168.1.4:9868)",
 	}
 	DelegateSignkeyFlag = cli.StringFlag{
 		Name: "delegate-signkey",
-		Usage: "--delegate-signkey=<pubkey>,<private key>.Param struct needs be modified ,public and private key for native contract, external contracts' accounts",
+		Usage: "Sign key for delegate (<public key>,<private key>)",
 	}
 	DelegateFlag = cli.StringFlag{
 		Name: "delegate",
-		Usage: "Assign one producer. Later this section will no more be used.\n Only one delegate is allowed in one node(other than bottos account).",
+		Usage: "Producer account name",
 	}
 	EnableStaleReportFlag = cli.BoolFlag{
 		Name: "enable-stale-report",
-		Usage: "",
+		Usage: "Enable stale block production",
 	}
 	EnableMongoDBFlag = cli.BoolFlag{
 		Name: "enable-mongodb",
-		Usage: "",
+		Usage: "Enable mongodb plugin",
 	}
 	MongoDBFlag = cli.StringFlag{
 		Name: "mongodb",
-		Usage: "db inst for load mongodb",
+		Usage: "MongoDB connection config",
 	}
 	LogConfigFlag = cli.StringFlag{
 		Name: "logconfig",
-		Usage: "for seelog config",
+		Usage: "Log config file path",
 	}
 )

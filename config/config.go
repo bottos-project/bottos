@@ -199,8 +199,8 @@ func LoadConfig(ctx *cli.Context) error {
 		Param.ServAddr = ctx.GlobalString(cmd.ServerAddrFlag.Name)
 	}
 
-	if ctx.GlobalIsSet(cmd.APIPortFlag.Name) {
-		Param.APIPort = ctx.GlobalInt(cmd.APIPortFlag.Name)
+	if ctx.GlobalIsSet(cmd.RestPortFlag.Name) {
+		Param.APIPort = ctx.GlobalInt(cmd.RestPortFlag.Name)
 	}
 
 	if ctx.GlobalIsSet(cmd.RPCPortFlag.Name) {

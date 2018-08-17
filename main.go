@@ -44,7 +44,7 @@ func init() {
 		cmd.GenesisFileFlag,
 		cmd.DataDirFlag,
 		cmd.DisableAPIFlag,
-		cmd.APIPortFlag,
+		cmd.RestPortFlag,
 		cmd.DisableRPCFlag,
 		cmd.RPCPortFlag,
 		cmd.P2PPortFlag,
