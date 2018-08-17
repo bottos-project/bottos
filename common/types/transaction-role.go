@@ -102,7 +102,7 @@ func (trx *Transaction) VerifySignature(pubkey []byte) bool {
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(data)))
-	h.Write([]byte(config.Param.ChainId))
+	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
 	hash := h.Sum(nil)
 
 	ok := crypto.VerifySign(pubkey, hash, trx.Signature)
@@ -133,7 +133,7 @@ func (trx *Transaction) Sign(param []byte, privkey []byte) ([]byte, error) {
 
 	h := sha256.New()
 	h.Write([]byte(hex.EncodeToString(data)))
-	h.Write([]byte(config.Param.ChainId))
+	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
 	hash := h.Sum(nil)
 	signdata, err := crypto.Sign(hash, privkey)
 
