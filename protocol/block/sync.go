@@ -27,13 +27,13 @@ package block
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/bpl"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"math"
@@ -608,7 +608,7 @@ func (s *synchronizes) sendLastBlockNumberReq() {
 func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 	rsp := chainNumber{LibNumber: s.libLocal, BlockNumber: s.lastLocal}
 
-	data, err := json.Marshal(rsp)
+	data, err := bpl.Marshal(rsp)
 	if err != nil {
 		log.Error("protocol sendGetLastRsp Marshal data error ")
 		return
@@ -654,7 +654,7 @@ func (s *synchronizes) syncBlockHeader() {
 func (s *synchronizes) sendBlockHeaderReq(begin uint64, end uint64) {
 	header := blockHeaderReq{Begin: begin, End: end}
 
-	data, err := json.Marshal(header)
+	data, err := bpl.Marshal(header)
 	if err != nil {
 		log.Error("protocol sendBlockHeaderReq Marshal number error ")
 		return
@@ -782,7 +782,7 @@ func (s *synchronizes) syncBundleBlock() {
 
 func (s *synchronizes) sendBlockReq(index uint16, number uint64, ptype uint16) {
 
-	data, err := json.Marshal(number)
+	data, err := bpl.Marshal(number)
 	if err != nil {
 		log.Error("protocol sendGetBlock Marshal number error ")
 		return
@@ -913,7 +913,7 @@ func (s *synchronizes) broadcastRcvNewBlock(update *blockUpdate) {
 }
 
 func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
-	buf, err := json.Marshal(update.block)
+	buf, err := bpl.Marshal(update.block)
 	if err != nil {
 		log.Errorf("protocol block send marshal error")
 	}
@@ -943,7 +943,7 @@ func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 }
 
 func (s *synchronizes) broadcastNewBlockHeader(update *blockUpdate, all bool) {
-	buf, err := json.Marshal(update.block.Header)
+	buf, err := bpl.Marshal(update.block.Header)
 	if err != nil {
 		log.Errorf("protocol block send marshal error")
 	}

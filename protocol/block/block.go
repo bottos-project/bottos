@@ -26,12 +26,12 @@
 package block
 
 import (
-	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/bpl"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"time"
@@ -149,7 +149,7 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 		BlockNumber: b.chainIf.HeadBlockNum()}
 	b.s.updatec <- last
 
-	buf, err := json.Marshal(data)
+	buf, err := bpl.Marshal(data)
 	if err != nil {
 		log.Errorf("protocol block send marshal error")
 		return
@@ -180,7 +180,7 @@ func (b *Block) processLastBlockNumberReq(index uint16, data []byte) {
 
 func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 	var last chainNumber
-	err := json.Unmarshal(data, &last)
+	err := bpl.Unmarshal(data, &last)
 	if err != nil {
 		log.Errorf("protocol processLastBlockNumberRsp Unmarshal error:%s", err)
 		return
@@ -197,7 +197,7 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 	var req blockHeaderReq
-	err := json.Unmarshal(data, &req)
+	err := bpl.Unmarshal(data, &req)
 	if err != nil {
 		log.Errorf("protocol processBlockHeaderReq Unmarshal err:%s", err)
 		return
@@ -236,7 +236,7 @@ func (b *Block) processHeaderReq(r *headerReq) {
 
 func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 	var rsp blockHeaderRsp
-	err := json.Unmarshal(data, &rsp.set)
+	err := bpl.Unmarshal(data, &rsp.set)
 	if err != nil {
 		log.Errorf("protocol processBlockHeaderRsp Unmarshal error:%s", err)
 		return
@@ -249,7 +249,7 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 
 func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 	var blocknumber uint64
-	err := json.Unmarshal(data, &blocknumber)
+	err := bpl.Unmarshal(data, &blocknumber)
 	if err != nil {
 		log.Errorf("protocol processBlockReq Unmarshal error:%s", err)
 		return
@@ -277,7 +277,7 @@ func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 
 func (b *Block) processBlockInfo(index uint16, data []byte) {
 	var block types.Block
-	err := json.Unmarshal(data, &block)
+	err := bpl.Unmarshal(data, &block)
 	if err != nil {
 		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
 		return
@@ -290,7 +290,7 @@ func (b *Block) processBlockInfo(index uint16, data []byte) {
 
 func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 	var block types.Block
-	err := json.Unmarshal(data, &block)
+	err := bpl.Unmarshal(data, &block)
 	if err != nil {
 		log.Errorf("protocol processBlockInfo Unmarshal error:%s", err)
 		return
@@ -301,7 +301,7 @@ func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 }
 
 func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
-	data, err := json.Marshal(rsp.set)
+	data, err := bpl.Marshal(rsp.set)
 	if err != nil {
 		log.Error("protocol sendGetBlock Marshal number error ")
 		return
@@ -320,7 +320,7 @@ func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
 }
 
 func (b *Block) sendBlockRsp(index uint16, block *types.Block, ptype uint16) {
-	data, err := json.Marshal(block)
+	data, err := bpl.Marshal(block)
 	if err != nil {
 		log.Error("protocol sendGetBlock Marshal number error ")
 		return
@@ -340,7 +340,7 @@ func (b *Block) sendBlockRsp(index uint16, block *types.Block, ptype uint16) {
 
 func (b *Block) processBlockHeaderUpdate(index uint16, data []byte) {
 	var header types.Header
-	err := json.Unmarshal(data, &header)
+	err := bpl.Unmarshal(data, &header)
 	if err != nil {
 		log.Errorf("protocol processBlockHeaderUpdate Unmarshal error:%s", err)
 		return

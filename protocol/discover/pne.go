@@ -27,7 +27,7 @@ package discover
 
 import (
 	"container/list"
-	"encoding/json"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/p2p"
@@ -186,7 +186,7 @@ func (p *pne) sendPneResponse(index uint16) {
 		Neighbor: peers,
 	}
 
-	data, err := json.Marshal(resp)
+	data, err := bpl.Marshal(resp)
 	if err != nil {
 		log.Errorf("protocol pne response addrs Marshal error:%s", err)
 		return
@@ -226,7 +226,7 @@ func (p *pne) processPneNeighborRsp(index uint16, date []byte) {
 	}
 
 	var rsp PeerNeighborRsp
-	err := json.Unmarshal(date, &rsp)
+	err := bpl.Unmarshal(date, &rsp)
 	if err != nil {
 		log.Errorf("protocol ProcessPneNeighborRsp Unmarshal error")
 		return
