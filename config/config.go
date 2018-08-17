@@ -35,6 +35,7 @@ import (
 	log "github.com/cihub/seelog"
 	cli "gopkg.in/urfave/cli.v1"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 )
@@ -47,6 +48,10 @@ const (
 	DefaultRPCPort    = 8690
 	DefaultRPCServer  = "localhost"
 	DefaultP2PPort    = 9868
+)
+
+const (
+	DefaultGenesisKey = "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"
 )
 
 var (
@@ -85,8 +90,9 @@ type KeyPair struct {
 
 // GenesisConfig is definition of genesis config
 type GenesisConfig struct {
-	GenesisTime   uint64         `json:"genesis_time"`
-	InitDelegates []InitDelegate `json:"init_delegates"`
+	GenesisTime   uint64
+	GenesisKey    []byte
+	InitDelegates []InitDelegate
 }
 
 // InitDelegate is definition of init delegate
@@ -124,6 +130,17 @@ func initParam() {
 }
 
 func initGenesis() {
+	var err error
+	Genesis.GenesisTime, err = timeFromRFC3339("2018-08-01T12:00:00Z")
+	if err != nil {
+		fmt.Printf("Genesis time parse error: %v", err)
+		os.Exit(1)
+	}
+	Genesis.GenesisKey, err = common.HexToBytes(DefaultGenesisKey)
+	if err != nil {
+		fmt.Printf("Genesis key parse error: %v", err)
+		os.Exit(1)
+	}
 	data, _ := bpl.Marshal(Genesis)
 	ChainID = common.DoubleSha256(data)
 }
@@ -152,25 +169,28 @@ func loadGenesisFile(fn string) error {
 		return fmt.Errorf("Load genesis file error: ", e)
 	}
 
-	type GenesisStruct struct {
+	type genesisStruct struct {
 		GenesisTime   string         `json:"genesis_time"`
+		GenesisKey    string         `json:"genesis_key"`
 		InitDelegates []InitDelegate `json:"init_delegates"`
 	}
-	gs := GenesisStruct{}
+	gs := genesisStruct{}
 	e = json.Unmarshal(file, &gs)
 	if e != nil {
 		return fmt.Errorf("Parse genesis file error: %v", e)
 	}
 
-	gtstr := gs.GenesisTime
-	if !strings.HasSuffix(gtstr, "Z") {
-		gtstr += "Z"
+	var err error
+	Genesis.GenesisTime, err = timeFromRFC3339(gs.GenesisTime)
+	if err != nil {
+		fmt.Printf("Genesis time parse error: %v", err)
+		os.Exit(1)
 	}
-	gt, e := time.Parse(time.RFC3339, gtstr)
-	if e != nil {
-		return fmt.Errorf("Parse genesis time error: %v", e)
+	Genesis.GenesisKey, err = common.HexToBytes(gs.GenesisKey)
+	if err != nil {
+		fmt.Printf("Genesis key parse error: %v", err)
+		os.Exit(1)
 	}
-	Genesis.GenesisTime = uint64(gt.Unix())
 	Genesis.InitDelegates = make([]InitDelegate, len(gs.InitDelegates))
 	copy(Genesis.InitDelegates, gs.InitDelegates)
 
@@ -178,6 +198,18 @@ func loadGenesisFile(fn string) error {
 	ChainID = common.DoubleSha256(data)
 
 	return nil
+}
+
+func timeFromRFC3339(ts string) (uint64, error) {
+	if !strings.HasSuffix(ts, "Z") {
+		ts += "Z"
+	}
+	gt, e := time.Parse(time.RFC3339, ts)
+	if e != nil {
+		return 0, fmt.Errorf("Parse genesis time error: %v", e)
+	}
+
+	return uint64(gt.Unix()), nil
 }
 
 // LoadConfig is to load config file
