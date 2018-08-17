@@ -248,7 +248,7 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 }
 
 func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
-	var blocknumber uint32
+	var blocknumber uint64
 	err := json.Unmarshal(data, &blocknumber)
 	if err != nil {
 		log.Errorf("protocol processBlockReq Unmarshal error:%s", err)

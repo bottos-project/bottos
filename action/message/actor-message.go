@@ -49,7 +49,7 @@ type QueryTrxResp struct {
 //QueryBlockReq the key of block query
 type QueryBlockReq struct {
 	BlockHash   common.Hash
-	BlockNumber uint32
+	BlockNumber uint64
 }
 
 //QueryBlockResp the response of block query
@@ -64,8 +64,8 @@ type QueryChainInfoReq struct {
 
 //QueryChainInfoResp the response of chain info query
 type QueryChainInfoResp struct {
-	HeadBlockNum          uint32
-	LastConsensusBlockNum uint32
+	HeadBlockNum          uint64
+	LastConsensusBlockNum uint64
 	HeadBlockHash         common.Hash
 	HeadBlockTime         uint64
 	HeadBlockDelegate     string
@@ -132,6 +132,6 @@ type ReceiveBlock struct {
 
 //ReceiveBlockResp chainactor->p2pactor
 type ReceiveBlockResp struct {
-	BlockNum uint32
+	BlockNum uint64
 	ErrorNo  uint32
 }

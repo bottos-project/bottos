@@ -48,7 +48,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 // Transaction definition for gprc interface
 type Transaction struct {
 	Version     uint32 `protobuf:"varint,1,opt,name=version" json:"version"`
-	CursorNum   uint32 `protobuf:"varint,2,opt,name=cursor_num,json=cursorNum" json:"cursor_num"`
+	CursorNum   uint64 `protobuf:"varint,2,opt,name=cursor_num,json=cursorNum" json:"cursor_num"`
 	CursorLabel uint32 `protobuf:"varint,3,opt,name=cursor_label,json=cursorLabel" json:"cursor_label"`
 	Lifetime    uint64 `protobuf:"varint,4,opt,name=lifetime" json:"lifetime"`
 	Sender      string `protobuf:"bytes,5,opt,name=sender" json:"sender"`
@@ -71,7 +71,7 @@ func (m *Transaction) GetVersion() uint32 {
 	return 0
 }
 
-func (m *Transaction) GetCursorNum() uint32 {
+func (m *Transaction) GetCursorNum() uint64 {
 	if m != nil {
 		return m.CursorNum
 	}

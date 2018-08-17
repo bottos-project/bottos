@@ -71,7 +71,7 @@ func (c *BlockChainCache) GetBlock(hash common.Hash) *types.Block {
 }
 
 //GetBlockByNum get block by block number
-func (c *BlockChainCache) GetBlockByNum(number uint32) *types.Block {
+func (c *BlockChainCache) GetBlockByNum(number uint64) *types.Block {
 	if hash, ok := c.cache.Get(number); ok {
 		return c.GetBlock(hash.(common.Hash))
 	}
@@ -89,7 +89,7 @@ func (c *BlockChainCache) HasBlock(hash common.Hash) bool {
 }
 
 //Trim remove block from cache
-func (c *BlockChainCache) Trim(headBlockNum uint32, LIB uint32) error {
+func (c *BlockChainCache) Trim(headBlockNum uint64, LIB uint64) error {
 	if c.startBlock == nil {
 		return nil
 	}

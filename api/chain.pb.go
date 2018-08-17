@@ -119,7 +119,7 @@ func (m *GetTransactionResponse) GetResult() *Transaction {
 }
 
 type GetBlockRequest struct {
-	BlockNum  uint32 `protobuf:"varint,1,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
+	BlockNum  uint64 `protobuf:"varint,1,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
 	BlockHash string `protobuf:"bytes,2,opt,name=block_hash,json=blockHash" json:"block_hash,omitempty"`
 }
 
@@ -128,7 +128,7 @@ func (m *GetBlockRequest) String() string            { return proto.CompactTextS
 func (*GetBlockRequest) ProtoMessage()               {}
 func (*GetBlockRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
 
-func (m *GetBlockRequest) GetBlockNum() uint32 {
+func (m *GetBlockRequest) GetBlockNum() uint64 {
 	if m != nil {
 		return m.BlockNum
 	}
@@ -176,7 +176,7 @@ func (m *GetBlockResponse) GetResult() *GetBlockResponse_Result {
 
 type GetBlockResponse_Result struct {
 	PrevBlockHash    string         `protobuf:"bytes,1,opt,name=prev_block_hash,json=prevBlockHash" json:"prev_block_hash,omitempty"`
-	BlockNum         uint32         `protobuf:"varint,2,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
+	BlockNum         uint64         `protobuf:"varint,2,opt,name=block_num,json=blockNum" json:"block_num,omitempty"`
 	BlockHash        string         `protobuf:"bytes,3,opt,name=block_hash,json=blockHash" json:"block_hash,omitempty"`
 	CursorBlockLabel uint32         `protobuf:"varint,4,opt,name=cursor_block_label,json=cursorBlockLabel" json:"cursor_block_label,omitempty"`
 	BlockTime        uint64         `protobuf:"varint,5,opt,name=block_time,json=blockTime" json:"block_time,omitempty"`
@@ -198,7 +198,7 @@ func (m *GetBlockResponse_Result) GetPrevBlockHash() string {
 	return ""
 }
 
-func (m *GetBlockResponse_Result) GetBlockNum() uint32 {
+func (m *GetBlockResponse_Result) GetBlockNum() uint64 {
 	if m != nil {
 		return m.BlockNum
 	}
@@ -295,12 +295,12 @@ func (m *GetInfoResponse) GetResult() *GetInfoResponse_Result {
 }
 
 type GetInfoResponse_Result struct {
-	HeadBlockNum          uint32 `protobuf:"varint,1,opt,name=head_block_num,json=headBlockNum" json:"head_block_num,omitempty"`
+	HeadBlockNum          uint64 `protobuf:"varint,1,opt,name=head_block_num,json=headBlockNum" json:"head_block_num,omitempty"`
 	HeadBlockHash         string `protobuf:"bytes,2,opt,name=head_block_hash,json=headBlockHash" json:"head_block_hash,omitempty"`
 	HeadBlockTime         uint64 `protobuf:"varint,3,opt,name=head_block_time,json=headBlockTime" json:"head_block_time,omitempty"`
 	HeadBlockDelegate     string `protobuf:"bytes,4,opt,name=head_block_delegate,json=headBlockDelegate" json:"head_block_delegate,omitempty"`
 	CursorLabel           uint32 `protobuf:"varint,5,opt,name=cursor_label,json=cursorLabel" json:"cursor_label,omitempty"`
-	LastConsensusBlockNum uint32 `protobuf:"varint,6,opt,name=last_consensus_block_num,json=lastConsensusBlockNum" json:"last_consensus_block_num,omitempty"`
+	LastConsensusBlockNum uint64 `protobuf:"varint,6,opt,name=last_consensus_block_num,json=lastConsensusBlockNum" json:"last_consensus_block_num,omitempty"`
 }
 
 func (m *GetInfoResponse_Result) Reset()                    { *m = GetInfoResponse_Result{} }
@@ -308,7 +308,7 @@ func (m *GetInfoResponse_Result) String() string            { return proto.Compa
 func (*GetInfoResponse_Result) ProtoMessage()               {}
 func (*GetInfoResponse_Result) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{6, 0} }
 
-func (m *GetInfoResponse_Result) GetHeadBlockNum() uint32 {
+func (m *GetInfoResponse_Result) GetHeadBlockNum() uint64 {
 	if m != nil {
 		return m.HeadBlockNum
 	}
@@ -343,7 +343,7 @@ func (m *GetInfoResponse_Result) GetCursorLabel() uint32 {
 	return 0
 }
 
-func (m *GetInfoResponse_Result) GetLastConsensusBlockNum() uint32 {
+func (m *GetInfoResponse_Result) GetLastConsensusBlockNum() uint64 {
 	if m != nil {
 		return m.LastConsensusBlockNum
 	}
