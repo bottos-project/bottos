@@ -1,32 +1,31 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-	"net/http"
-		"github.com/bottos-project/bottos/api"
-	"github.com/bottos-project/bottos/chain"
-	"github.com/bottos-project/bottos/chain/extra"
-	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/db"
-	"github.com/bottos-project/bottos/role"
-	"github.com/bottos-project/bottos/contract"
-	"github.com/bottos-project/bottos/contract/contractdb"
 	cactor "github.com/bottos-project/bottos/action/actor"
 	caapi "github.com/bottos-project/bottos/action/actor/api"
 	"github.com/bottos-project/bottos/action/actor/transaction"
 	actionenv "github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/api"
+	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/chain/extra"
+	"github.com/bottos-project/bottos/cmd"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/restful/handler"
+	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/transaction"
 	log "github.com/cihub/seelog"
 	"github.com/micro/go-micro"
-	"github.com/bottos-project/bottos/cmd"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 
+	"fmt"
 	"gopkg.in/urfave/cli.v1"
 	"runtime"
-	"fmt"
 	"strconv"
 )
 
@@ -38,7 +37,7 @@ func init() {
 	app.Usage = "the bottos command line interface"
 	app.Version = "3.2.0"
 	app.Copyright = "Copyright 2017~2022 The Bottos Authors"
-	app.Flags = []cli.Flag {
+	app.Flags = []cli.Flag{
 		cmd.ConfigFileFlag,
 		cmd.GenesisFileFlag,
 		cmd.DataDirFlag,
@@ -97,7 +96,6 @@ func startBottos(ctx *cli.Context) error {
 	}
 
 	roleIntf := role.NewRole(dbInst)
-	contractDB := contractdb.NewContractDB(dbInst)
 
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
@@ -115,19 +113,18 @@ func startBottos(ctx *cli.Context) error {
 
 	actorenv := &actionenv.ActorEnv{
 		RoleIntf:   roleIntf,
-		ContractDB: contractDB,
 		Chain:      chain,
 		TxStore:    txStore,
 		NcIntf:     nc,
 	}
 	multiActors := cactor.InitActors(actorenv)
 
-	var trxPool = transaction.InitTrxPool(actorenv, multiActors.GetNetActor())
+	var trxPool = transaction.InitTrxPool(dbInst, roleIntf, nc, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
 
 	//start RESTful Api
 	if !ctx.GlobalBool(cmd.DisableRESTFlag.Name) {
-		go startRestApi(roleIntf, contractDB)
+		go startRestApi(roleIntf)
 	}
 
 	//start Rpc Api
@@ -158,12 +155,11 @@ func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) 
 	<-exit
 }
 
-func startRestApi(roleIntf role.RoleInterface, contractDB *contractdb.ContractDB) {
+func startRestApi(roleIntf role.RoleInterface) {
 	router := handler.NewRouter()
 	//transfer to restful handler
 	handler.SetRoleIntf(roleIntf)
-	handler.SetContractDbIns(contractDB)
-	err := http.ListenAndServe(config.Param.RESTServAddr + ":" + strconv.Itoa(config.Param.RESTPort), router)
+	err := http.ListenAndServe(config.Param.RESTServAddr+":"+strconv.Itoa(config.Param.RESTPort), router)
 	if err != nil {
 		log.Critical("RESTful server fail: ", err)
 		os.Exit(1)

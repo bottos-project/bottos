@@ -26,12 +26,12 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/contract/contractdb"
+	"github.com/bottos-project/bottos/contract"
+	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/bpl"
 
@@ -54,26 +54,26 @@ var TrxPoolInst *TrxPool
 type TrxPool struct {
 	pending     map[common.Hash]*types.Transaction
 	roleIntf    role.RoleInterface
-	contractDB  *contractdb.ContractDB
 	netActorPid *actor.PID
 
+	dbInst *db.DBService
 	mu   sync.RWMutex
 	quit chan struct{}
 }
 
 // InitTrxPool is init trx pool process when system start
-func InitTrxPool(env *env.ActorEnv, netActorPid *actor.PID) *TrxPool {
+func InitTrxPool(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst := &TrxPool{
 		pending:     make(map[common.Hash]*types.Transaction),
-		roleIntf:    env.RoleIntf,
-		contractDB:  env.ContractDB,
+		roleIntf:    roleIntf,
 		netActorPid: netActorPid,
+		dbInst:      dbInstance,
 
 		quit: make(chan struct{}),
 	}
 
-	CreateTrxApplyService(env)
+	CreateTrxApplyService(roleIntf, nc)
 
 	go TrxPoolInst.expirationCheckLoop()
 
