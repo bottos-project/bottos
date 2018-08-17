@@ -130,7 +130,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 //GetBlock query block
 func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//params := mux.Vars(r)
-	var msgReq *message.QueryBlockReq
+	var msgReq *api.GetBlockRequest
 	err := json.NewDecoder(r.Body).Decode(&msgReq)
 	if err != nil {
 		log.Errorf("request error: %s", err)
@@ -138,7 +138,10 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	msgReq2 := &message.QueryBlockReq{common.HexToHash(msgReq.BlockHash),
+		msgReq.BlockNum}
+
+	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
 	var resp Todo
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
