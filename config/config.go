@@ -264,12 +264,8 @@ func LoadConfig(ctx *cli.Context) error {
 		Param.Delegates = []string{d}
 	}
 
-	if ctx.GlobalIsSet(cmd.EnableMongoDBFlag.Name) {
-		if ctx.GlobalIsSet(cmd.MongoDBFlag.Name) {
-			Param.OptionDb = ctx.GlobalString(cmd.MongoDBFlag.Name)
-		} else {
-			Param.OptionDb = ""
-		}
+	if ctx.GlobalIsSet(cmd.MongoDBFlag.Name) {
+		Param.OptionDb = ctx.GlobalString(cmd.MongoDBFlag.Name)
 	}
 
 	if ctx.GlobalIsSet(cmd.EnableStaleReportFlag.Name) {

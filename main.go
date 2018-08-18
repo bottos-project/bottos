@@ -27,6 +27,9 @@ import (
 	"gopkg.in/urfave/cli.v1"
 	"runtime"
 	"strconv"
+	"github.com/bottos-project/bottos/plugin/mongodb"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 var (
@@ -89,13 +92,22 @@ func startBottos(ctx *cli.Context) error {
 
 	blockDBPath := filepath.Join(config.Param.DataDir, "block/")
 	stateDBPath := filepath.Join(config.Param.DataDir, "state.db")
-	dbInst := db.NewDbService(blockDBPath, stateDBPath, config.Param.OptionDb)
+	dbInst := db.NewDbService(blockDBPath, stateDBPath)
 	if dbInst == nil {
 		log.Critical("Create DB service fail")
 		os.Exit(1)
 	}
 
 	roleIntf := role.NewRole(dbInst)
+
+	var mdbActor *actor.PID = nil
+	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
+		mdbActor = startMangoDB(roleIntf)
+		if mdbActor == nil {
+			log.Critical("Start MongoDB service fail")
+			os.Exit(1)
+		}
+	}
 
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
@@ -106,6 +118,17 @@ func startBottos(ctx *cli.Context) error {
 	chain, err := chain.CreateBlockChain(dbInst, roleIntf, nc)
 	if err != nil {
 		log.Critical("Create BlockChain error: ", err)
+		os.Exit(1)
+	}
+
+	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
+		chain.RegisterHandledBlockCallback(func (block *types.Block) {
+			mdbActor.Tell(block)
+		})
+	}
+
+	if err := chain.Init(); err != nil {
+		log.Critical("Initialize BlockChain error: ", err)
 		os.Exit(1)
 	}
 
@@ -178,4 +201,19 @@ func startRPCService(actorenv *actionenv.ActorEnv) {
 	if err := service.Run(); err != nil {
 		log.Critical("RPC server fail: ", err)
 	}
+}
+
+func startMangoDB(roleIntf role.RoleInterface) *actor.PID {
+	optiondb := db.NewOptionDbService(config.Param.OptionDb)
+	if optiondb == nil {
+		log.Errorf("Start optional db fail")
+		return nil
+	}
+
+	pid := mongodb.NewMdbActor(roleIntf, optiondb)
+	if pid == nil {
+		log.Errorf("Start mongodb fail")
+	}
+
+	return pid
 }

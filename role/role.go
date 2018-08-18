@@ -85,8 +85,6 @@ type RoleInterface interface {
 	SetBinValue(contract string, object string, key string, value []byte) error
 	GetBinValue(contract string, object string, key string) ([]byte, error)
 	RemoveKeyValue(contract string, object string, key string) error
-
-	ApplyPersistance(block *types.Block) error
 }
 
 //NewRole is creating new role
@@ -285,11 +283,6 @@ func (r *Role) GetBinValue(contract string, object string, key string) ([]byte, 
 
 func (r *Role) RemoveKeyValue(contract string, object string, key string) error {
 	return RemoveKeyValue(r.Db, contract, object, key)
-}
-
-//ApplyPersistance is to apply persistence blocks to option db
-func (r *Role) ApplyPersistance(block *types.Block) error {
-	return ApplyPersistanceRole(r, r.Db, block)
 }
 
 //initRole is to init role
