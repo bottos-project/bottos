@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"errors"
-
-	"github.com/gorilla/mux"
+		"github.com/gorilla/mux"
 	"github.com/bottos-project/bottos/action/env"
 	//"../error"
 	//"github.com/bottos-project/bottos/restful/error"
@@ -22,7 +20,7 @@ import (
 	"github.com/bottos-project/bottos/role"
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
-	"github.com/bottos-project/bottos/contract/abi"
+		"github.com/bottos-project/bottos/contract"
 )
 
 //ApiService is actor service
@@ -264,47 +262,8 @@ type Transaction struct {
 	Signature   string `json:"signature"`
 }
 
-
-func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
-	account, err := r.GetAccount(contract)
-	if err != nil {
-		return nil, errors.New("Get account fail")
-	}
-
-	Abi, err := abi.ParseAbi(account.ContractAbi)
-	if err != nil {
-		return nil, err
-	}
-
-	return Abi, nil
-}
-
-
-func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, Method string) (interface{}, error) {
-	var Abi *abi.ABI = nil
-	if Contract != "bottos" {
-		var err error
-		Abi, err = getContractAbi(r, Contract)
-		if  err != nil {
-			return nil, errors.New("External Abi is empty!")
-		}
-	} else {
-		Abi = abi.GetAbi()
-	}
-
-	if Abi == nil {
-		return nil, errors.New("Abi is empty!")
-	}
-
-	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
-	if decodedParam == nil || len(decodedParam) <= 0 {
-		return nil, errors.New("ParseTransactionParam: FAILED")
-	}
-	return decodedParam, nil
-}
-
 func convertIntTrxToApiTrxInter(trx *types.Transaction,r role.RoleInterface) interface{} {
-	parmConvered, err := ParseTransactionParam(r, trx.Param, trx.Contract, trx.Method)
+	parmConvered, err := contract.ParseParam(r, trx.Contract, trx.Method, trx.Param)
 	if err != nil {
 		log.Errorf("role.ParseParam: %s", err)
 		panic(err)
