@@ -30,7 +30,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/contract/abi/fieldmap"
 	//log "github.com/cihub/seelog"
 	"io"
 	"reflect"
@@ -47,7 +48,7 @@ type ABIAction struct {
 type ABIStruct struct {
 	Name   string    `json:"name"`
 	Base   string    `json:"base"`
-	Fields *FeildMap `json:"fields"`
+	Fields *fieldmap.FeildMap `json:"fields"`
 }
 
 //ABI struct for abi
@@ -58,45 +59,92 @@ type ABI struct {
 	Tables  []interface{} `json:"tables"`
 }
 
-//ABIStructs structs for ABI
-type ABIStructs struct {
-	Structs []struct {
-		Name   string            `json:"name"`
-		Base   string            `json:"base"`
-		Fields map[string]string `json:"fields"`
-	} `json:"structs"`
+type ABI1 struct {
+	AbiDef *ABIDef
+	Methods map[string]Method
 }
 
-//ParseAbi parse abiraw to struct for contracts
-func ParseAbi(abiRaw []byte) (*ABI, error) {
-	abis := &ABIStructs{}
-	err := json.Unmarshal(abiRaw, abis)
+//NewABIFromJSON parse abi json definition
+func NewABIFromJSON(abiJson []byte) (*ABI1, error) {
+	def := &ABIDef{}
+	err := json.Unmarshal(abiJson, def)
 	if err != nil {
-		return &ABI{}, err
+		return nil, err
 	}
+	return NewABIFromDef(def)
+}
 
-	abi := &ABI{}
-	abi.Structs = make([]ABIStruct, len(abis.Structs))
-	for i := range abi.Structs {
-		abi.Structs[i].Fields = New()
+func NewABIFromDef(abiDef *ABIDef) (*ABI1, error) {
+	fmt.Println("abiDef: ", abiDef)
+	a := ABI1{
+		AbiDef: abiDef,
+		Methods: make(map[string]Method),
 	}
-	err = json.Unmarshal(abiRaw, abi)
-	if err != nil {
-		return &ABI{}, err
-	}
-	
-	for i := range abi.Structs {
-		var s ABIStruct
-		for k, v := range abis.Structs[i].Fields {
-			
-			s = ABIStruct{Name: abis.Structs[i].Name, Fields: New()}
-			s.Fields.Set(k, v)
+	for _, method := range abiDef.Methods {
+		m := Method{Name: method.Name}
+		for _, defStruct := range abiDef.Structs {
+			if method.Type == defStruct.Name {
+				m.Fields = defStruct.Fields
+				a.Methods[method.Name] = m
+				break
+			}
 		}
-		abi.Structs = append(abi.Structs, s)
 	}
-	return abi, nil
 
+	fmt.Println("abi: ",a)
+
+	return &a, nil
 }
+
+func (abi *ABI1) Pack(methodName string, args ...interface{}) ([]byte, error)  {
+	method, exist := abi.Methods[methodName]
+	if !exist {
+		return nil, fmt.Errorf("method '%s' not found", methodName)
+	}
+
+	argNames := method.GetFieldNames()
+	if len(args) != len(argNames) {
+		return nil, fmt.Errorf("method '%s' arguments mismatch", methodName)
+	}
+
+	w := &bytes.Buffer{}
+	bpl.PackArraySize(w, uint16(len(args)))
+	for i, a := range args {
+		name := argNames[i]
+		typ, exist := method.GetFieldType(name)
+		if !exist {
+			return nil, fmt.Errorf("field '%s' not found", name)
+		}
+		switch typ {
+		case "string":
+			bpl.PackStr16(w, a.(string))
+		case "uint64":
+			bpl.PackUint64(w, a.(uint64))
+		}
+	}
+
+	return w.Bytes(), nil
+}
+
+func ParseAbi(abiRaw []byte) (*ABI, error) {
+	a := &ABI{}
+	err := json.Unmarshal(abiRaw, a)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+//AbiToJson parse abi to json for contracts
+func (abi *ABI1) ToJson(beautify bool) string {
+	data, _ := json.Marshal(abi.AbiDef)
+	if beautify {
+		return jsonFormat(data)
+	}
+	return string(data)
+}
+
 
 //AbiToJson parse abi to json for contracts
 func AbiToJson(abi *ABI) (string, error) {
@@ -114,32 +162,8 @@ func jsonFormat(data []byte) string {
 	return string(out.Bytes())
 }
 
-func getAbiFieldsByAbi(contractname string, method string, abi ABI, subStructName string) map[string]interface{} {
-	for _, subaction := range abi.Actions {
-		if subaction.ActionName != method {
-			continue
-		}
-
-		structname := subaction.Type
-
-		for _, substruct := range abi.Structs {
-			if subStructName != "" {
-				if substruct.Name != subStructName {
-					continue
-				}
-			} else if structname != substruct.Name {
-				continue
-			}
-
-			return substruct.Fields.values
-		}
-	}
-
-	return nil
-}
-
 //getAbiFieldsByAbiEx function
-func getAbiFieldsByAbiEx(contractname string, method string, abi ABI, subStructName string) *FeildMap {
+func getAbiFieldsByAbiEx(contractname string, method string, abi ABI, subStructName string) *fieldmap.FeildMap {
 	for _, subaction := range abi.Actions {
 		if subaction.ActionName != method {
 			continue
@@ -180,10 +204,10 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 	}
 	
 	if (count <= 0) {
-		return fmt.Errorf("EncodeAbiEx: count is 0!", count)
+		return fmt.Errorf("EncodeAbiEx: count is 0!")
 	}
 
-	msgpack.PackArraySize(w, uint16(count))
+	bpl.PackArraySize(w, uint16(count))
 
 		for _, abiValTypeAttr := range abiFields {
 			abiValKey   := abiValTypeAttr.Key
@@ -210,17 +234,17 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 
 			switch abiValType {
 				case "string":
-					msgpack.PackStr16(w, val.(string))
+					bpl.PackStr16(w, val.(string))
 				case "uint8":
-					msgpack.PackUint8(w, val.(uint8))
+					bpl.PackUint8(w, val.(uint8))
 				case "uint16":
-					msgpack.PackUint16(w, val.(uint16))
+					bpl.PackUint16(w, val.(uint16))
 				case "uint32":
-					msgpack.PackUint32(w, val.(uint32))
+					bpl.PackUint32(w, val.(uint32))
 				case "uint64":
-					msgpack.PackUint64(w, val.(uint64))
+					bpl.PackUint64(w, val.(uint64))
 				case "bytes":
-					msgpack.PackBin16(w, val.([]byte))
+					bpl.PackBin16(w, val.([]byte))
 				default:
 					if reflect.ValueOf(value[abiValKey]).Kind() == reflect.Struct {
 						EncodeAbiEx(contractName, method, w, value, abi, abiValKey)
@@ -281,7 +305,7 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 	}
 	
 	if len(abiFields) > 0 {
-		_, errs = msgpack.UnpackArraySize(r)
+		_, errs = bpl.UnpackArraySize(r)
 		if errs != nil {
 			return nil
 		}
@@ -295,42 +319,42 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 
 			switch abiValType {
 				case "string":
-					val, err := msgpack.UnpackStr16(r)
+					val, err := bpl.UnpackStr16(r)
 					if err != nil {
 						return nil
 					}
 					Setmapval(mapResult, abiValKey, val)
 					i++
 				case "uint8":
-					val, err := msgpack.UnpackUint8(r)
+					val, err := bpl.UnpackUint8(r)
 					if err != nil {
 						return nil
 					}
 					Setmapval(mapResult, abiValKey, val)
 					i++
 				case "uint16":
-					val, err := msgpack.UnpackUint16(r)
+					val, err := bpl.UnpackUint16(r)
 					if err != nil {
 						return nil
 					}
 					Setmapval(mapResult, abiValKey, val)
 					i++
 				case "uint32":
-					val, err := msgpack.UnpackUint32(r)
+					val, err := bpl.UnpackUint32(r)
 					if err != nil {
 						return nil
 					}
 					Setmapval(mapResult, abiValKey, val)
 					i++
 				case "uint64":
-					val, err := msgpack.UnpackUint64(r)
+					val, err := bpl.UnpackUint64(r)
 					if err != nil {
 						return nil
 					}
 					Setmapval(mapResult, abiValKey, val)
 					i++
 				case "bytes":
-					val, err := msgpack.UnpackBin16(r)
+					val, err := bpl.UnpackBin16(r)
 					if err != nil {
 						return nil
 					}
@@ -362,69 +386,4 @@ func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (
         }
 
 	return mapResult
-}
-
-var a  *ABI
-
-func GetAbi() *ABI {
-	if a != nil {
-		return a
-	}
-	
-	a = CreateNativeContractABI()
-	
-	return a
-}
-
-func CreateNativeContractABI() *ABI {
-
-	a = &ABI{}
-	a.Actions = append(a.Actions, ABIAction{ActionName: "newaccount", Type: "NewAccount"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "transfer", Type: "Transfer"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "setdelegate", Type: "SetDelegate"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "grantcredit", Type: "GrantCredit"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "cancelcredit", Type: "CancelCredit"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "transferfrom", Type: "TransferFrom"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "deploycode", Type: "DeployCode"})
-	a.Actions = append(a.Actions, ABIAction{ActionName: "deployabi", Type: "DeployABI"})
-
-	s := ABIStruct{Name: "NewAccount", Fields: New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("pubkey", "string")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "Transfer", Fields: New()}
-	s.Fields.Set("from", "string")
-	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "SetDelegate", Fields: New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("pubkey", "string")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "GrantCredit", Fields: New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("spender", "string")
-	s.Fields.Set("limit", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "CancelCredit", Fields: New()}
-	s.Fields.Set("name", "string")
-	s.Fields.Set("spender", "string")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "TransferFrom", Fields: New()}
-	s.Fields.Set("from", "string")
-	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "DeployCode", Fields: New()}
-	s.Fields.Set("contract", "string")
-	s.Fields.Set("vm_type", "uint8")
-	s.Fields.Set("vm_version", "uint8")
-	s.Fields.Set("contract_code", "bytes")
-	a.Structs = append(a.Structs, s)
-	s = ABIStruct{Name: "DeployABI", Fields: New()}
-	s.Fields.Set("contract", "string")
-	s.Fields.Set("contract_abi", "bytes")
-	a.Structs = append(a.Structs, s)
-
-	return a
 }

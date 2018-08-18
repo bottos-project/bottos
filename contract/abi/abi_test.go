@@ -30,8 +30,7 @@ import (
 	"testing"
 )
 
-func TestTransfer(t *testing.T) {
-	j := `
+var jsonabi = `
 	{
 		"types": [],
 		"structs": [
@@ -140,17 +139,35 @@ func TestTransfer(t *testing.T) {
 			}
 		],
 		"tables": []
-	}
-	`
-	a, err := ParseAbi([]byte(j))
+	}`
+
+func TestTransfer(t *testing.T) {
+
+	a, err := ParseAbi1([]byte(jsonabi))
 	fmt.Println(a)
 	if err != nil {
-		fmt.Printf("Abi Parse Error Str: %v", j)
+		fmt.Printf("Abi Parse Error Str: %v", jsonabi)
 		return
 	}
 
-	for i := range a.Structs {
-		fmt.Println(a.Structs[i].Fields.GetStringPair())
+	for i,v := range a.Methods {
+		fmt.Println(i, v.Fields.GetStringPair())
 	}
 
+}
+
+
+func TestABIPack(t *testing.T)  {
+	a, err := ParseAbi1([]byte(jsonabi))
+	if err != nil {
+		fmt.Printf("Abi Parse Error Str: %v", jsonabi)
+		return
+	}
+	b, err := a.Pack("newaccount", string("abcd"), string("1234"))
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
+
+	b, err = a.Pack("newaccount", string("abcd"))
+	fmt.Printf("%x\n", b)
+	fmt.Println(err)
 }

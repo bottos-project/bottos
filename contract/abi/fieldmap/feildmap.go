@@ -1,4 +1,4 @@
-package abi
+package fieldmap
 
 import (
 	"encoding/json"
@@ -61,7 +61,7 @@ type FeildMap struct {
 	values map[string]interface{}
 }
 
-//New new a FeildMap struct
+//NewFeildMap new a FeildMap struct
 func New() *FeildMap {
 	o := FeildMap{}
 	o.keys = []string{}
@@ -154,6 +154,12 @@ func (o *FeildMap) Sort(lessFunc func(a *Pair, b *Pair) bool) {
 //UnmarshalJSON function
 func (o *FeildMap) UnmarshalJSON(b []byte) error {
 	var err error
+	if o.keys == nil {
+		o.keys = []string{}
+	}
+	if o.values == nil {
+		o.values = map[string]interface{}{}
+	}
 	err = mapStringToFeildMap(string(b), o)
 	if err != nil {
 		return err

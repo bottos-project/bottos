@@ -16,33 +16,28 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  context definition
+ * file description:  abi method
  * @Author: Gong Zibin
- * @Date:   2017-01-15
+ * @Date:   2018-08-18
  * @Last Modified by:
  * @Last Modified time:
  */
 
-package contract
+package abi
 
 import (
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/contract/abi/fieldmap"
 )
 
-//Context for contracts
-type Context struct {
-	RoleIntf role.RoleInterface
-	Trx      *types.Transaction
+type Method struct {
+	Name    string
+	Fields  *fieldmap.FeildMap
 }
 
-//GetTrxParam for contracts
-func (ctx *Context) GetTrxParam() []byte {
-	return ctx.Trx.Param
+func (m Method) GetFieldNames() []string {
+	return m.Fields.Keys()
 }
 
-//GetTrxParamSize for contracts
-func (ctx *Context) GetTrxParamSize() uint32 {
-	size := len(ctx.Trx.Param)
-	return uint32(size)
+func (m Method) GetFieldType(name string) (string, bool) {
+	return m.Fields.GetStringVal(name)
 }

@@ -16,7 +16,7 @@
 // along with bottos.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
- * file description:  native contract
+ * file description:  native contract handler
  * @Author: Gong Zibin
  * @Date:   2017-01-15
  * @Last Modified by:
@@ -36,15 +36,14 @@ import (
 )
 
 func newAccount(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	newaccount := abi.UnmarshalAbiEx("bottos", Abi, "newaccount", ctx.Trx.Param)
-	if newaccount == nil || len(newaccount) <= 0 {
+	newaccount, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
-	NewaccountName   := newaccount["name"].(string)
+
+	NewaccountName := newaccount["name"].(string)
 	NewaccountPubKey := newaccount["pubkey"].(string)
-	
+
 	//check account
 	cerr := checkAccountName(NewaccountName)
 	if cerr != ERROR_NONE {
@@ -83,16 +82,15 @@ func newAccount(ctx *Context) ContractError {
 }
 
 func transfer(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
-	if transfer == nil || len(transfer) <= 0 {
+	transfer, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
+
 	FromWhom := transfer["from"].(string)
-	ToWhom   := transfer["to"].(string)
+	ToWhom := transfer["to"].(string)
 	TransValue := transfer["value"].(uint64)
-	
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, FromWhom)
 	if cerr != ERROR_NONE {
@@ -111,7 +109,7 @@ func transfer(ctx *Context) ContractError {
 	}
 	to, _ := ctx.RoleIntf.GetBalance(ToWhom)
 
-	err := from.SafeSub(TransValue)
+	err = from.SafeSub(TransValue)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
@@ -128,27 +126,26 @@ func transfer(ctx *Context) ContractError {
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
-	
+
 	return ERROR_NONE
 }
 
 func setDelegate(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "setdelegate", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
+	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
-	ParamName   := param["name"].(string)
-	ParamPubKey := param["pubkey"].(string)	
-	
+
+	ParamName := param["name"].(string)
+	ParamPubKey := param["pubkey"].(string)
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	_, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(ParamName)
 	if err != nil {
 		// new delegate
 		newdelegate := &role.Delegate{
@@ -179,15 +176,14 @@ func setDelegate(ctx *Context) ContractError {
 }
 
 func grantCredit(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "grantcredit", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
+	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
-	ParamName    := param["name"].(string)
+
+	ParamName := param["name"].(string)
 	ParamSpender := param["spender"].(string)
-	ParamLimit   := param["limit"].(uint64)
+	ParamLimit := param["limit"].(uint64)
 
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
@@ -230,15 +226,14 @@ func grantCredit(ctx *Context) ContractError {
 }
 
 func cancelCredit(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "cancelcredit", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
+	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamName    := param["name"].(string)
+	ParamName := param["name"].(string)
 	ParamSpender := param["spender"].(string)
-	
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != ERROR_NONE {
@@ -250,7 +245,7 @@ func cancelCredit(ctx *Context) ContractError {
 		return cerr
 	}
 
-	_, err := ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
+	_, err = ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
@@ -264,15 +259,14 @@ func cancelCredit(ctx *Context) ContractError {
 }
 
 func transferFrom(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
-	if transfer == nil || len(transfer) <= 0 {
+	transfer, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 	TransFrom := transfer["from"].(string)
 	TransTo := transfer["to"].(string)
 	TransValue := transfer["value"].(uint64)
-	
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, TransFrom)
 	if cerr != ERROR_NONE {
@@ -349,12 +343,11 @@ func checkCode(code []byte) error {
 }
 
 func deployCode(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
+	param , err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
+
 	ParamContract := param["contract"].(string)
 	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
 
@@ -365,7 +358,7 @@ func deployCode(ctx *Context) ContractError {
 	}
 
 	// check code
-	err := checkCode(ParamContractCode)
+	err = checkCode(ParamContractCode)
 	if err != nil {
 		return ERROR_CONT_CODE_INVALID
 	}
@@ -393,15 +386,14 @@ func checkAbi(abiRaw []byte) error {
 }
 
 func deployAbi(ctx *Context) ContractError {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "deployabi", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
+	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	
+
 	ParamContract := param["contract"].(string)
 	ParamContractAbi, _ := common.HexToBytes(param["contract_abi"].(string))
-	
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamContract)
 	if cerr != ERROR_NONE {
@@ -409,7 +401,7 @@ func deployAbi(ctx *Context) ContractError {
 	}
 
 	// check abi
-	err := checkAbi(ParamContractAbi)
+	err = checkAbi(ParamContractAbi)
 	if err != nil {
 		return ERROR_CONT_ABI_PARSE_FAIL
 	}

@@ -29,7 +29,7 @@ import (
 	//"fmt"
 	"testing"
 
-	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/bpl"
 	log "github.com/cihub/seelog"
 )
 
@@ -45,8 +45,8 @@ func TestTransfer(t *testing.T) {
 		To:    "delegate2",
 		Value: 100,
 	}
-	data, _ := msgpack.Marshal(param)
-	log.Infof("transfer struct: %v, msgpack: %x\n", param, data)
+	data, _ := bpl.Marshal(param)
+	log.Infof("transfer struct: %v, bpl: %x\n", param, data)
 }
 
 func TestNewAccount(t *testing.T) {
@@ -59,8 +59,8 @@ func TestNewAccount(t *testing.T) {
 		Name:   "testuser",
 		Pubkey: "7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF",
 	}
-	data, _ := msgpack.Marshal(param)
-	log.Infof("transfer struct: %v, msgpack: %x\n", param, data)
+	data, _ := bpl.Marshal(param)
+	log.Infof("transfer struct: %v, bpl: %x\n", param, data)
 }
 
 func TestGrantCredit(t *testing.T) {
@@ -86,22 +86,22 @@ func TestGrantCredit(t *testing.T) {
 		Spender: "bob",
 		Limit:   100,
 	}
-	data, _ := msgpack.Marshal(param)
-	log.Infof("grant credit struct: %v, msgpack: %x\n", param, data)
+	data, _ := bpl.Marshal(param)
+	log.Infof("grant credit struct: %v, bpl: %x\n", param, data)
 
 	param1 := CancelCreditParam{
 		Name:    "alice",
 		Spender: "bob",
 	}
-	data, _ = msgpack.Marshal(param1)
-	log.Infof("cancel credit struct: %v, msgpack: %x\n", param1, data)
+	data, _ = bpl.Marshal(param1)
+	log.Infof("cancel credit struct: %v, bpl: %x\n", param1, data)
 
 	param2 := TransferFromParam{
 		From:  "alice",
 		To:    "toliman",
 		Value: 150,
 	}
-	data, _ = msgpack.Marshal(param2)
-	log.Infof("transfer from credit struct: %v, msgpack: %x\n", param2, data)
+	data, _ = bpl.Marshal(param2)
+	log.Infof("transfer from credit struct: %v, bpl: %x\n", param2, data)
 
 }
