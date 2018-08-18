@@ -93,7 +93,7 @@ func UnpackBool(reader io.Reader) (v bool, err error) {
 			return false, nil
 		}
 
-		return false, errors.New("msgpack: unpack bool fail")
+		return false, errors.New("bpl: unpack bool fail")
 	}
 
 	return false, err

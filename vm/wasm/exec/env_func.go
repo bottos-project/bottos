@@ -539,7 +539,6 @@ func callTrx(vm *VM) (bool, error) {
 	method := BytesToString(methodByte)
 
 	var param []byte
-	//the bytes after msgpack.Marshal
 	if vm.sourceFile == CPP {
 		param = vm.memory[pPos:pPos + pLen]
 	} else if vm.sourceFile == JS {
@@ -563,7 +562,7 @@ func callTrx(vm *VM) (bool, error) {
 		Sender:      vm.contract.Trx.Contract,
 		Contract:    contrx,
 		Method:      method,
-		Param:       value, //the bytes after msgpack.Marshal
+		Param:       value,
 		SigAlg:      vm.contract.Trx.SigAlg,
 		Signature:   []byte{},
 	}

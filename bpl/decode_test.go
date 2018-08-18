@@ -44,7 +44,7 @@ var decTests = []decTest{
 	// booleans
 	{input: "C3", ptr: new(bool), value: true},
 	{input: "C2", ptr: new(bool), value: false},
-	{input: "C4", ptr: new(bool), error: "msgpack decode: unknown type identifier C4"},
+	{input: "C4", ptr: new(bool), error: "bpl decode: unknown type identifier C4"},
 
 	// integers
 	{input: "CC00", ptr: new(uint8), value: uint8(0)},

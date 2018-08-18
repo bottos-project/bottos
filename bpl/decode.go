@@ -54,16 +54,16 @@ var (
 //Decode decodes byte stream to struct, slice/array or other basic types
 func Decode(r io.Reader, v interface{}) error {
 	if v == nil {
-		return fmt.Errorf("msgpack decode: nil pointer")
+		return fmt.Errorf("bpl decode: nil pointer")
 	}
 
 	rv := reflect.ValueOf(v)
 	t := rv.Type()
 	if t.Kind() != reflect.Ptr {
-		return fmt.Errorf("msgpack decode: need a pointer")
+		return fmt.Errorf("bpl decode: need a pointer")
 	}
 	if rv.IsNil() {
-		return fmt.Errorf("msgpack decode: nil pointer")
+		return fmt.Errorf("bpl decode: nil pointer")
 	}
 
 	decoder, err := getDecoder(t.Elem())

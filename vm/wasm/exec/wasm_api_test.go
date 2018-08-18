@@ -3,7 +3,7 @@ package exec
 import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/contract"
-	"github.com/bottos-project/bottos/contract/msgpack"
+	"github.com/bottos-project/bottos/bpl"
 	"testing"
 	"fmt"
 	"time"
@@ -22,7 +22,7 @@ func TestCallSubTrx(t *testing.T) {
 		Amount: 1233,
 	}
 
-	bf, err := msgpack.Marshal(param)
+	bf, err := bpl.Marshal(param)
 	log.Infof(" TestCallSubTrx bf = ", bf, " , err = ", err)
 
 	trx := &types.Transaction{
@@ -49,7 +49,7 @@ func TestCallSubTrx(t *testing.T) {
 	//check sub trx
 	var tf transferparam
 	for _, sub_trx := range res {
-		msgpack.Unmarshal(sub_trx.Param, &tf)
+		bpl.Unmarshal(sub_trx.Param, &tf)
 		log.Infof("TestCallSubTrx sub_trx = ", sub_trx.Param, " , tf = ", tf)
 	}
 }
@@ -66,7 +66,7 @@ func TestSafeMath(t *testing.T) {
 		Amount : 1233,
 	}
 
-	_ , err :=  msgpack.Marshal(param)
+	_ , err :=  bpl.Marshal(param)
 
 	var p string    = "dc0004da00087465737466726f6dda000b646174616465616c6d6e67da000344544fcf0000000000000064"
 	var data []byte = []byte(p)
@@ -97,7 +97,7 @@ func TestSafeMath(t *testing.T) {
 	var tf transferparam
 	for _ , sub_trx := range res {
 		//var tf transferparam
-		msgpack.Unmarshal(sub_trx.Param , &tf)
+		bpl.Unmarshal(sub_trx.Param , &tf)
 	}
 	fmt.Println("end of testcase")
 
