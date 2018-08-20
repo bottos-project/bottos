@@ -13,6 +13,7 @@ import (
 	"log"
 	"fmt"
 	"regexp"
+	"strings"
 	//"encoding/hex"
 	//pack "github.com/bottos-project/msgpack-go"
 	//user_proto "github.com/bottos-project/magiccube/service/user/proto"
@@ -93,6 +94,77 @@ func (cli *CLI) BcliTransfer(ctx *cli.Context) error {
 
 	cli.transfer(from, to, amount)
 	
+	return nil
+}
+
+func (cli *CLI) BCLIGetTransaction(ctx *cli.Context) error {
+
+	trxhash := ctx.String("trxhash")
+
+	cli.BcliGetTransaction("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/get", trxhash)
+	
+	return nil
+}
+
+func (cli *CLI) BCLIPushTransaction(ctx *cli.Context) error {
+	
+	var pushtrx BcliPushTrxInfo
+        
+        pushtrx.sender   = ctx.String("sender")
+        pushtrx.contract = ctx.String("contract")
+        pushtrx.method   = ctx.String("method")
+	pushtrx.ParamMap = make(map[string]interface{})
+
+	param1 := ctx.String("param")
+	param1 = strings.Replace(param1, " ", "", -1)
+	param2 := strings.Split(param1, ",")
+	for _, item := range(param2) {
+		param3 := strings.Split(item, ":")
+		pushtrx.ParamMap[param3[0]] = param3[1]
+	}
+
+	cli.BcliPushTransaction("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", &pushtrx)
+	
+	return nil
+}
+
+func (cli *CLI) BCLIDeployCode(ctx *cli.Context) error {
+	name := ctx.String("name")
+	code := ctx.String("code")
+
+	cli.deploycode("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, code)
+
+	return nil
+}
+
+func (cli *CLI) BCLIDeployAbi(ctx *cli.Context) error {
+	name := ctx.String("name")
+	Abi := ctx.String("abi")
+
+	cli.deployabi("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, Abi)
+
+	return nil
+}
+
+func (cli *CLI) BCLIDeployBoth(ctx *cli.Context) error {
+	name := ctx.String("name")
+	Abi  := ctx.String("abi")
+	code := ctx.String("code")
+	
+	cli.deploycode("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, code)
+
+	cli.deployabi("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, Abi)
+
+	return nil
+}
+
+func (cli *CLI) BCLIGetContractCode(ctx *cli.Context) error {
+	name := ctx.String("name")
+	SaveToAbiPath  := ctx.String("abi")
+	SaveTocodePath := ctx.String("code")
+	
+	cli.BcliGetContractCode(name, SaveTocodePath, SaveToAbiPath)
+
 	return nil
 }
 
@@ -226,17 +298,7 @@ func (Cli *CLI) RunNewCLI() {
 							Name: "trxhash",
 						},
 					},
-					Action: func(c *cli.Context) error {
-
-						if !isNotEmpty(c.String("trxhash")){
-							return fmt.Errorf("参数错误")
-						}
-
-						// TODO
-						fmt.Println(c.String("trxhash"))
-
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIGetTransaction),
 				},
 				{
 					Name: "push",
@@ -263,15 +325,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage: "sign value",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						//fmt.Println(data.AccountInfo(c.String("sender")))
-						//fmt.Println(data.AccountInfo(c.String("contract")))
-						//fmt.Println(data.AccountInfo(c.String("method")))
-						//fmt.Println(data.AccountInfo(c.String("param")))
-						//fmt.Println(data.AccountInfo(c.String("sign")))
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIPushTransaction),
 				},
 			},
 		},
@@ -300,15 +354,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage:"",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("name"))
-						fmt.Println(c.String("code"))
-						fmt.Println(c.String("abi"))
-						fmt.Println(c.String("sign"))
-
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIDeployBoth),
 				},
 				{
 					Name: "deploycode",
@@ -326,14 +372,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage:"",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("name"))
-						fmt.Println(c.String("code"))
-						fmt.Println(c.String("sign"))
-
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIDeployCode),
 				},
 				{
 					Name: "deployabi",
@@ -351,14 +390,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage:"",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("name"))
-						fmt.Println(c.String("abi"))
-						fmt.Println(c.String("sign"))
-
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIDeployAbi),
 				},
 				{
 					Name: "get",
@@ -376,14 +408,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage:"",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("name"))
-						fmt.Println(c.String("code"))
-						fmt.Println(c.String("abi"))
-
-						return nil
-					},
+					Action: MigrateFlags(Cli.BCLIGetContractCode),
 				},
 			},
 		},
