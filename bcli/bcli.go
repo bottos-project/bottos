@@ -53,7 +53,7 @@ type CLI struct {
 //Transaction trx info
 type Transaction struct {
 	Version     uint32      `json:"version"`
-	CursorNum   uint32      `json:"cursor_num"`
+	CursorNum   uint64      `json:"cursor_num"`
 	CursorLabel uint32      `json:"cursor_label"`
 	Lifetime    uint64      `json:"lifetime"`
 	Sender      string      `json:"sender"`
@@ -121,6 +121,10 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 		if err != nil {
 		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
 		    return nil, errors.New("Error!")
+		} else if trxrespbody.Errcode != 0 {
+		    fmt.Println("Error! ",trxrespbody.Errcode, ":", trxrespbody.Msg)
+		    return nil, errors.New("Error!")
+			
 		}
 		
 		b, _ := json.Marshal(trxrespbody.Result)
@@ -131,7 +135,7 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 	return &chainInfo, nil
 }
 
-func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint32, block_hash string) (*chain.GetBlockResponse_Result, error) {
+func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_hash string) (*chain.GetBlockResponse_Result, error) {
 		var getinfo *chain.GetBlockRequest
 		if block_num >= 0 {
 			getinfo = &chain.GetBlockRequest{BlockNum:block_num}
@@ -156,6 +160,10 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint32, block_ha
 		if err != nil {
 		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
 		    return nil, errors.New("Error!")
+		} else if trxrespbody.Errcode != 0 {
+		    fmt.Println("Error! ",trxrespbody.Errcode, ":", trxrespbody.Msg)
+		    return nil, errors.New("Error!")
+			
 		}
 		
 		b, _ := json.Marshal(trxrespbody.Result)
@@ -164,6 +172,38 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint32, block_ha
 		json.Unmarshal(b, &blockInfo)
 		
 	return &blockInfo, nil
+}
+
+func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.GetAccountResponse_Result, error) {
+		
+		getinfo := &chain.GetAccountRequest{AccountName:name}
+		req, _ := json.Marshal(getinfo)
+		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+			return nil, errors.New("Error!")
+		}
+		
+		var respbody  TODO.Todo
+		
+		err = json.Unmarshal(httpRspBody, &respbody)
+		
+		if err != nil {
+		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		    return nil, errors.New("Error!")
+		} else if respbody.Errcode != 0 {
+		    fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		    return nil, errors.New("Error!")
+			
+		}
+		
+		b, _ := json.Marshal(respbody.Result)
+		//cli.jsonPrint(b)
+		var accountInfo chain.GetAccountResponse_Result
+		json.Unmarshal(b, &accountInfo)
+		
+	return &accountInfo, nil
 }
 
 func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
@@ -332,7 +372,11 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	return *Abi, nil
 }
 
-func (cli *CLI) newaccount(name string, pubkey string) {
+func (cli *CLI) newaccount(http_method string, name string, pubkey string) {
+	if http_method != "restful" && http_method != "" {
+		return
+	}
+
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
@@ -383,7 +427,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	trx.Signature = sign
 
-	rsp, err := cli.client.SendTransaction(context.TODO(), trx)
+	/*rsp, err := cli.client.SendTransaction(context.TODO(), trx)
 	if err != nil || rsp == nil {
 		fmt.Println(err)
 		return
@@ -393,7 +437,24 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		fmt.Printf("Newaccount error:\n")
 		fmt.Printf("    %v\n", rsp.Msg)
 		return
+	} */
+	
+	req, _ := json.Marshal(trx)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", "http://" + CONFIG.ChainAddr + "/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
 	}
+	
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		return 
+	}
+	rsp := &respbody
+	
 
 	fmt.Printf("Create account: %v Succeed\n", name)
 	fmt.Printf("Trx: \n")
@@ -418,17 +479,22 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 }
 
 func (cli *CLI) getaccount(name string) {
-	accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
-	if err != nil || accountRsp == nil {
+	//accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
+	
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/account/info"
+	account, err := cli.getAccountInfoOverHttp(name, infourl)
+	
+	if err != nil || account == nil {
 		return
 	}
 
-	if accountRsp.Errcode == 10204 {
+	/*if accountRsp.Errcode == 10204 {
 		fmt.Printf("Account: %s Not Exist\n", name)
 		return
 	}
 
 	account := accountRsp.GetResult()
+	*/
 	fmt.Printf("    Account: %s\n", account.AccountName)
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
@@ -526,6 +592,13 @@ func (cli *CLI) deploycode(http_method string, http_url string, name string, pat
 		}
 		var respbody chain.SendTransactionResponse
 		json.Unmarshal(httpRspBody, &respbody)
+		
+		if respbody.Errcode != 0 {
+		    fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		    return
+			
+		}
+
 		deployCodeRsp = &respbody
 	}
 	
@@ -656,6 +729,11 @@ func (cli *CLI) deployabi(http_method string, http_url string, name string, path
 		}
 		var respbody chain.SendTransactionResponse
 		json.Unmarshal(httpRspBody, &respbody)
+		if respbody.Errcode != 0 {
+		    fmt.Println("Error! ",respbody.Errcode, ":", respbody.Msg)
+		    return
+			
+		}
 		deployAbiRsp = &respbody
 	}
 
@@ -733,7 +811,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.newaccount(*newAccountName, *newAccountPubkey)
+		cli.newaccount("grpc", *newAccountName, *newAccountPubkey)
 	}
 
 	if GetAccountCmd.Parsed() {
