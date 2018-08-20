@@ -146,6 +146,17 @@ func (abi *ABI1) ToJson(beautify bool) string {
 }
 
 
+// MarshalStruct encodes struct based on its fields
+func MarshalStruct(v interface{}) ([]byte, error) {
+	return bpl.Marshal(v)
+}
+
+// UmarshalStruct decodes data based on struct fields
+func UmarshalStruct(data []byte, v interface{}) error {
+	return bpl.Unmarshal(data, v)
+}
+
+
 //AbiToJson parse abi to json for contracts
 func AbiToJson(abi *ABI) (string, error) {
 	data, err := json.Marshal(abi)

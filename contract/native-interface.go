@@ -31,6 +31,61 @@ import (
 	"github.com/bottos-project/bottos/role"
 )
 
+//NewAccountParam struct for name and pubkey
+type NewAccountParam struct {
+	Name   string
+	Pubkey string
+}
+
+//TransferParam struct for transfer
+type TransferParam struct {
+	From  string
+	To    string
+	Value uint64
+}
+
+//SetDelegateParam struct for delegate
+type SetDelegateParam struct {
+	Name   string
+	Pubkey string
+	// TODO CONFIG
+}
+
+//GrantCreditParam struct to grand credit
+type GrantCreditParam struct {
+	Name    string
+	Spender string
+	Limit   uint64
+}
+
+//CancelCreditParam struct to cancel credit
+type CancelCreditParam struct {
+	Name    string
+	Spender string
+}
+
+//TransferFromParam struct to transfer credit
+type TransferFromParam struct {
+	From  string
+	To    string
+	Value uint64
+}
+
+//DeployCodeParam struct to deploy code
+type DeployCodeParam struct {
+	Name         string
+	VMType       byte
+	VMVersion    byte
+	ContractCode []byte
+}
+
+//DeployABIParam struct to deploy abi
+type DeployABIParam struct {
+	Name        string
+	ContractAbi []byte
+}
+
+
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
 	NativeContractInit(role role.RoleInterface) ([]*types.Transaction, error)

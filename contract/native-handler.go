@@ -36,29 +36,29 @@ import (
 )
 
 func newAccount(ctx *Context) ContractError {
-	newaccount, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
+	param := &NewAccountParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+	pubkey, err := common.HexToBytes(param.Pubkey)
 	if err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	NewaccountName := newaccount["name"].(string)
-	NewaccountPubKey := newaccount["pubkey"].(string)
-
 	//check account
-	cerr := checkAccountName(NewaccountName)
+	cerr := checkAccountName(param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	if isAccountNameExist(ctx.RoleIntf, NewaccountName) {
+	if isAccountNameExist(ctx.RoleIntf, param.Name) {
 		return ERROR_CONT_ACCOUNT_ALREADY_EXIST
 	}
 
 	chainState, _ := ctx.RoleIntf.GetChainState()
 	// 1, create account
-	pubkey, _ := common.HexToBytes(NewaccountPubKey)
 	account := &role.Account{
-		AccountName: NewaccountName,
+		AccountName: param.Name,
 		PublicKey:   pubkey,
 		CreateTime:  chainState.LastBlockTime,
 	}
@@ -66,54 +66,51 @@ func newAccount(ctx *Context) ContractError {
 
 	// 2, create balance
 	balance := &role.Balance{
-		AccountName: NewaccountName,
+		AccountName: param.Name,
 		Balance:     0,
 	}
-	ctx.RoleIntf.SetBalance(NewaccountName, balance)
+	ctx.RoleIntf.SetBalance(param.Name, balance)
 
 	// 3, create staked_balance
 	stakedBalance := &role.StakedBalance{
-		AccountName:   NewaccountName,
+		AccountName:   param.Name,
 		StakedBalance: 0,
 	}
-	ctx.RoleIntf.SetStakedBalance(NewaccountName, stakedBalance)
+	ctx.RoleIntf.SetStakedBalance(param.Name, stakedBalance)
 
 	return ERROR_NONE
 }
 
 func transfer(ctx *Context) ContractError {
-	transfer, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &TransferParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	FromWhom := transfer["from"].(string)
-	ToWhom := transfer["to"].(string)
-	TransValue := transfer["value"].(uint64)
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, FromWhom)
+	cerr := checkAccount(ctx.RoleIntf, param.From)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ToWhom)
+	cerr = checkAccount(ctx.RoleIntf, param.To)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
 	// check funds
-	from, _ := ctx.RoleIntf.GetBalance(FromWhom)
-	if from.Balance < TransValue {
+	from, _ := ctx.RoleIntf.GetBalance(param.From)
+	if from.Balance < param.Value {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
-	to, _ := ctx.RoleIntf.GetBalance(ToWhom)
+	to, _ := ctx.RoleIntf.GetBalance(param.To)
 
-	err = from.SafeSub(TransValue)
+	err = from.SafeSub(param.Value)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
-	err = to.SafeAdd(TransValue)
+	err = to.SafeAdd(param.Value)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
@@ -131,26 +128,24 @@ func transfer(ctx *Context) ContractError {
 }
 
 func setDelegate(ctx *Context) ContractError {
-	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &SetDelegateParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamName := param["name"].(string)
-	ParamPubKey := param["pubkey"].(string)
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	_, err = ctx.RoleIntf.GetDelegateByAccountName(ParamName)
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(param.Name)
 	if err != nil {
 		// new delegate
 		newdelegate := &role.Delegate{
-			AccountName: ParamName,
-			ReportKey:   ParamPubKey,
+			AccountName: param.Name,
+			ReportKey:   param.Pubkey,
 		}
 		ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
 
@@ -176,22 +171,19 @@ func setDelegate(ctx *Context) ContractError {
 }
 
 func grantCredit(ctx *Context) ContractError {
-	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &GrantCreditParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamName := param["name"].(string)
-	ParamSpender := param["spender"].(string)
-	ParamLimit := param["limit"].(uint64)
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ParamSpender)
+	cerr = checkAccount(ctx.RoleIntf, param.Spender)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
@@ -202,20 +194,20 @@ func grantCredit(ctx *Context) ContractError {
 	}
 
 	// sender must be from
-	if ctx.Trx.Sender != ParamName {
+	if ctx.Trx.Sender != param.Name {
 		return ERROR_CONT_ACCOUNT_MISMATCH
 	}
 
 	// check limit
-	balance, err := ctx.RoleIntf.GetBalance(ParamName)
-	if balance.Balance < ParamLimit {
+	balance, err := ctx.RoleIntf.GetBalance(param.Name)
+	if balance.Balance < param.Limit {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 
 	credit := &role.TransferCredit{
-		Name:    ParamName,
-		Spender: ParamSpender,
-		Limit:   ParamLimit,
+		Name:    param.Name,
+		Spender: param.Spender,
+		Limit:   param.Limit,
 	}
 	err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
 	if err != nil {
@@ -226,31 +218,29 @@ func grantCredit(ctx *Context) ContractError {
 }
 
 func cancelCredit(ctx *Context) ContractError {
-	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &CancelCreditParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamName := param["name"].(string)
-	ParamSpender := param["spender"].(string)
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ParamSpender)
+	cerr = checkAccount(ctx.RoleIntf, param.Spender)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	_, err = ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
+	_, err = ctx.RoleIntf.GetTransferCredit(param.Name, param.Spender)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	err = ctx.RoleIntf.DeleteTransferCredit(ParamName, ParamSpender)
+	err = ctx.RoleIntf.DeleteTransferCredit(param.Name, param.Spender)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
@@ -259,21 +249,19 @@ func cancelCredit(ctx *Context) ContractError {
 }
 
 func transferFrom(ctx *Context) ContractError {
-	transfer, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &TransferFromParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
-	TransFrom := transfer["from"].(string)
-	TransTo := transfer["to"].(string)
-	TransValue := transfer["value"].(uint64)
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, TransFrom)
+	cerr := checkAccount(ctx.RoleIntf, param.From)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, TransTo)
+	cerr = checkAccount(ctx.RoleIntf, param.To)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
@@ -285,30 +273,30 @@ func transferFrom(ctx *Context) ContractError {
 
 	// Note: sender is the spender
 	// check limit
-	credit, err := ctx.RoleIntf.GetTransferCredit(TransFrom, ctx.Trx.Sender)
+	credit, err := ctx.RoleIntf.GetTransferCredit(param.From, ctx.Trx.Sender)
 	if err != nil {
 		return ERROR_CONT_INSUFFICIENT_CREDITS
 	}
-	if TransValue > credit.Limit {
+	if param.Value > credit.Limit {
 		return ERROR_CONT_INSUFFICIENT_CREDITS
 	}
 
 	// check funds
-	from, _ := ctx.RoleIntf.GetBalance(TransFrom)
-	if from.Balance < TransValue {
+	from, _ := ctx.RoleIntf.GetBalance(param.From)
+	if from.Balance < param.Value {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
-	to, _ := ctx.RoleIntf.GetBalance(TransTo)
+	to, _ := ctx.RoleIntf.GetBalance(param.To)
 
-	err = from.SafeSub(TransValue)
+	err = from.SafeSub(param.Value)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
-	err = credit.SafeSub(TransValue)
+	err = credit.SafeSub(param.Value)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
-	err = to.SafeAdd(TransValue)
+	err = to.SafeAdd(param.Value)
 	if err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
@@ -343,32 +331,32 @@ func checkCode(code []byte) error {
 }
 
 func deployCode(ctx *Context) ContractError {
-	param , err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &DeployCodeParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamContract := param["contract"].(string)
-	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamContract)
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
 	// check code
-	err = checkCode(ParamContractCode)
+	err = checkCode(param.ContractCode)
 	if err != nil {
 		return ERROR_CONT_CODE_INVALID
 	}
 
-	codeHash := common.Sha256(ParamContractCode)
+	codeHash := common.Sha256(param.ContractCode)
 
-	account, _ := ctx.RoleIntf.GetAccount(ParamContract)
+	account, _ := ctx.RoleIntf.GetAccount(param.Name)
+	account.VMType = param.VMType
+	account.VMVersion = param.VMVersion
 	account.CodeVersion = codeHash
-	account.ContractCode = make([]byte, len(ParamContractCode))
-	copy(account.ContractCode, ParamContractCode)
+	account.ContractCode = make([]byte, len(param.ContractCode))
+	copy(account.ContractCode, param.ContractCode)
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
@@ -386,29 +374,27 @@ func checkAbi(abiRaw []byte) error {
 }
 
 func deployAbi(ctx *Context) ContractError {
-	param, err := ParseParam(ctx.RoleIntf, ctx.Trx.Contract, ctx.Trx.Method, ctx.Trx.Param)
-	if err != nil {
+	var err error
+	param := &DeployABIParam{}
+	if err := abi.UmarshalStruct(ctx.Trx.Param, param); err != nil {
 		return ERROR_CONT_PARAM_PARSE_ERROR
 	}
 
-	ParamContract := param["contract"].(string)
-	ParamContractAbi, _ := common.HexToBytes(param["contract_abi"].(string))
-
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamContract)
+	cerr := checkAccount(ctx.RoleIntf, param.Name)
 	if cerr != ERROR_NONE {
 		return cerr
 	}
 
 	// check abi
-	err = checkAbi(ParamContractAbi)
+	err = checkAbi(param.ContractAbi)
 	if err != nil {
 		return ERROR_CONT_ABI_PARSE_FAIL
 	}
 
-	account, _ := ctx.RoleIntf.GetAccount(ParamContract)
-	account.ContractAbi = make([]byte, len(ParamContractAbi))
-	copy(account.ContractAbi, ParamContractAbi)
+	account, _ := ctx.RoleIntf.GetAccount(param.Name)
+	account.ContractAbi = make([]byte, len(param.ContractAbi))
+	copy(account.ContractAbi, param.ContractAbi)
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
