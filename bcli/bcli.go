@@ -494,10 +494,7 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
 
-func (cli *CLI) deploycode(http_method string, http_url string, name string, path string) {
-	if http_method != "restful" && http_method != "grpc" {
-		return
-	}
+func (cli *CLI) deploycode(name string, path string) {
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
@@ -565,6 +562,8 @@ func (cli *CLI) deploycode(http_method string, http_url string, name string, pat
 	trx.Signature = sign
 	var deployCodeRsp *chain.SendTransactionResponse
 	
+	http_method := "restful"
+
 	if http_method == "grpc" {
 		deployCodeRsp, err = cli.client.SendTransaction(context.TODO(), trx)
 		if err != nil {
@@ -578,6 +577,7 @@ func (cli *CLI) deploycode(http_method string, http_url string, name string, pat
 			return
 		}
 	} else {
+		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -642,7 +642,7 @@ func checkAbi(abiRaw []byte) error {
 	return nil
 }
 
-func (cli *CLI) deployabi(http_method string, http_url string, name string, path string) {
+func (cli *CLI) deployabi(name string, path string) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
@@ -704,11 +704,12 @@ func (cli *CLI) deployabi(http_method string, http_url string, name string, path
 	if err != nil {
 		return
 	}
-
+	
+	http_method := "restful"
 	trx1.Signature = sign
 	
 	var deployAbiRsp *chain.SendTransactionResponse
-
+	
 	if http_method == "grpc" {
 		deployAbiRsp, err = cli.client.SendTransaction(context.TODO(), trx1)
 		if err != nil {
@@ -716,6 +717,7 @@ func (cli *CLI) deployabi(http_method string, http_url string, name string, path
 			return
 		}
 	} else {
+		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx1)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -824,7 +826,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deploycode("grpc", CONFIG.ChainAddr+"/v1/transaction/send", *deployCodeName, *deployCodePath)
+		cli.deploycode(*deployCodeName, *deployCodePath)
 	}
 
 	if deployAbiCmd.Parsed() {
@@ -833,7 +835,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.deployabi("grpc", CONFIG.ChainAddr+"/v1/transaction/send", *deployAbiName, *deployAbiPath)
+		cli.deployabi(*deployAbiName, *deployAbiPath)
 	}
 }
 
