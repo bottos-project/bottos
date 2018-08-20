@@ -101,7 +101,7 @@ func (cli *CLI) BCLIGetTransaction(ctx *cli.Context) error {
 
 	trxhash := ctx.String("trxhash")
 
-	cli.BcliGetTransaction("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/get", trxhash)
+	cli.BcliGetTransaction(trxhash)
 	
 	return nil
 }
@@ -123,7 +123,7 @@ func (cli *CLI) BCLIPushTransaction(ctx *cli.Context) error {
 		pushtrx.ParamMap[param3[0]] = param3[1]
 	}
 
-	cli.BcliPushTransaction("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", &pushtrx)
+	cli.BcliPushTransaction(&pushtrx)
 	
 	return nil
 }
@@ -132,7 +132,7 @@ func (cli *CLI) BCLIDeployCode(ctx *cli.Context) error {
 	name := ctx.String("name")
 	code := ctx.String("code")
 
-	cli.deploycode("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, code)
+	cli.deploycode(name, code)
 
 	return nil
 }
@@ -141,7 +141,7 @@ func (cli *CLI) BCLIDeployAbi(ctx *cli.Context) error {
 	name := ctx.String("name")
 	Abi := ctx.String("abi")
 
-	cli.deployabi("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, Abi)
+	cli.deployabi(name, Abi)
 
 	return nil
 }
@@ -151,9 +151,9 @@ func (cli *CLI) BCLIDeployBoth(ctx *cli.Context) error {
 	Abi  := ctx.String("abi")
 	code := ctx.String("code")
 	
-	cli.deploycode("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, code)
+	cli.deploycode(name, code)
 
-	cli.deployabi("restful", "http://"+CONFIG.ChainAddr+ "/v1/transaction/send", name, Abi)
+	cli.deployabi(name, Abi)
 
 	return nil
 }
