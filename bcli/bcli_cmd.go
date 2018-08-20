@@ -87,10 +87,11 @@ func (cli *CLI) BcliGetAccount(ctx *cli.Context) error {
 
 func (cli *CLI) BcliTransfer(ctx *cli.Context) error {
 
-	//from := ctx.String("from")
-	//to   := ctx.String("to")
-	
-	//cli.transfer(from, to)
+	from := ctx.String("from")
+	to   := ctx.String("to")
+	amount := ctx.Int("amount")
+
+	cli.transfer(from, to, amount)
 	
 	return nil
 }
@@ -194,7 +195,7 @@ func (Cli *CLI) RunNewCLI() {
 			Category: "transfer",
 			Flags:[]cli.Flag {
 				cli.StringFlag{
-					Name: "form",
+					Name: "from",
 					Usage: "",
 				},
 				cli.StringFlag{
@@ -210,15 +211,7 @@ func (Cli *CLI) RunNewCLI() {
 					Usage: "",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				// TODO
-				fmt.Println(c.String("form"))
-				fmt.Println(c.String("to"))
-				fmt.Println(c.String("amount"))
-				fmt.Println(c.String("sign"))
-
-				return nil
-			},
+			Action: MigrateFlags(Cli.BcliTransfer),
 		},
 		{
 			Name: "transaction",
