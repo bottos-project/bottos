@@ -372,10 +372,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	return *Abi, nil
 }
 
-func (cli *CLI) newaccount(http_method string, name string, pubkey string) {
-	if http_method != "restful" && http_method != "" {
-		return
-	}
+func (cli *CLI) newaccount(name string, pubkey string) {
 
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
@@ -811,7 +808,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.newaccount("grpc", *newAccountName, *newAccountPubkey)
+		cli.newaccount(*newAccountName, *newAccountPubkey)
 	}
 
 	if GetAccountCmd.Parsed() {
