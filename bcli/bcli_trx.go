@@ -118,10 +118,14 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
+	   fmt.Println("\nPush Transaction fail due to get Abi failed.\n")
            return
         }
 	
-	chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -130,7 +134,7 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	mapstruct := make(map[string]interface{})
 	
 	for key, value := range(pushtrxinfo.ParamMap) {
-	
+		fmt.Println("mapstruct->key:[", key, "], value:[", value,"]")
         	abi.Setmapval(mapstruct, key, value)
 	}
 
@@ -150,6 +154,7 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	
 	sign, err := cli.signTrx(trx, param)
 	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
 		return
 	}
 	
@@ -160,11 +165,7 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), trx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
-			return
-		}
-		if newAccountRsp.Errcode != 0 {
-			fmt.Printf("Transfer error:\n")
-			fmt.Printf("    %s\n", newAccountRsp)
+	   		fmt.Println("Push Transaction fail due to get grpc response failed.")
 			return
 		}
 	} else {
@@ -179,9 +180,14 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 		json.Unmarshal(httpRspBody, &respbody)
 		newAccountRsp = &respbody
 	}
-	
 
-	fmt.Printf("Transfer Succeed\n")
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
 	fmt.Printf("Trx: \n")
 
 	printTrx := Transaction{
@@ -260,5 +266,8 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	fmt.Println("\n============ABI===============\n", req_new)
 	fmt.Println(trxrespbody.Result)
 	
+	writeFileToBinary(contractcode, save_to_wasm_path)
+        ioutil.WriteFile(save_to_abi_path, []byte(abivalue), 0644)
+
 	return contractcode, abivalue
 }
