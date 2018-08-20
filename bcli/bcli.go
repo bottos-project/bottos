@@ -341,8 +341,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	params := `service=bottos&method=Chain.GetAbi&request={
 			"contract":"%s"}`
 	s := fmt.Sprintf(params, contractname)
-	respBody, err := http.Post(addr, "application/x-www-form-urlencoded",
-		strings.NewReader(s))
+	respBody, err := http.Post(addr, "application/x-www-form-urlencoded", strings.NewReader(s))
 
 	if err != nil {
 		fmt.Println(err)
@@ -359,8 +358,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	jss, _ := simplejson.NewJson([]byte(body))
 	abistring = jss.Get("result").MustString()
 	if len(abistring) <= 0 {
-		fmt.Println(err)
-		return abi.ABI{}, err
+		return abi.ABI{}, errors.New("len(abistring) <= 0")
 	}
 
 	Abi, err := abi.ParseAbi([]byte(abistring))
@@ -679,6 +677,7 @@ func (cli *CLI) deployabi(http_method string, http_url string, name string, path
 
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
+	   fmt.Println("getAbibyContractName of bottos failed!")
            return
         }
 	
