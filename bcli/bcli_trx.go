@@ -58,14 +58,13 @@ type GetTransactionResponse struct {
 	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
-func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash string) {
-	if http_method != "restful" && http_method != "grpc" {
-		return
-	}
+func (cli *CLI) BcliGetTransaction (trxhash string) {
 	
 	var newAccountRsp *chain.GetTransactionResponse
 	var err error
 	
+	http_method := "restful"
+
 	if http_method == "grpc" {
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		newAccountRsp, err = cli.client.GetTransaction(context.TODO(), gettrx)
@@ -88,6 +87,7 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 		fmt.Printf("Trx: %v\n", newAccountRsp.Result)
 
 	} else {
+		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/get"
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		req, _ := json.Marshal(gettrx)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -111,14 +111,11 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 	}
 }
 
-func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtrxinfo *BcliPushTrxInfo) {
-	if http_method != "restful" && http_method != "grpc" {
-		return
-	}
+func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
-	   fmt.Println("\nPush Transaction fail due to get Abi failed.\n")
+	   fmt.Println("Push Transaction fail due to get Abi failed.")
            return
         }
 	
@@ -134,7 +131,6 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	mapstruct := make(map[string]interface{})
 	
 	for key, value := range(pushtrxinfo.ParamMap) {
-		fmt.Println("mapstruct->key:[", key, "], value:[", value,"]")
         	abi.Setmapval(mapstruct, key, value)
 	}
 
@@ -158,9 +154,10 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 		return
 	}
 	
+	http_method := "restful"
 	trx.Signature = sign
 	var newAccountRsp *chain.SendTransactionResponse
-
+	
 	if http_method == "grpc" {
 		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), trx)
 		if err != nil || newAccountRsp == nil {
@@ -169,6 +166,7 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 			return
 		}
 	} else {
+		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
