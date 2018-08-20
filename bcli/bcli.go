@@ -235,7 +235,7 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	return BytesToHex(signdata), err
 }
 
-func (cli *CLI) transfer(from, to string, amount int) {
+func (cli *CLI) transfer(from string, to string, amount int) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
@@ -729,7 +729,6 @@ func (cli *CLI) deployabi(http_method string, http_url string, name string, path
 		if respbody.Errcode != 0 {
 		    fmt.Println("Error! ",respbody.Errcode, ":", respbody.Msg)
 		    return
-			
 		}
 		deployAbiRsp = &respbody
 	}

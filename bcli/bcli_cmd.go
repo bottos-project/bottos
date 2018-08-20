@@ -15,7 +15,6 @@ import (
 	"regexp"
 	//"encoding/hex"
 	//pack "github.com/bottos-project/msgpack-go"
-	"github.com/bottos-project/magiccube/service/common/data"
 	//user_proto "github.com/bottos-project/magiccube/service/user/proto"
 	//push_sign "github.com/bottos-project/magiccube/service/common/signature/push"
 	//"github.com/protobuf/proto"
@@ -82,6 +81,16 @@ func (cli *CLI) BcliGetAccount(ctx *cli.Context) error {
 	username := ctx.String("username")
 	
 	cli.getaccount(username)
+	
+	return nil
+}
+
+func (cli *CLI) BcliTransfer(ctx *cli.Context) error {
+
+	//from := ctx.String("from")
+	//to   := ctx.String("to")
+	
+	//cli.transfer(from, to)
 	
 	return nil
 }
@@ -263,11 +272,11 @@ func (Cli *CLI) RunNewCLI() {
 					},
 					Action: func(c *cli.Context) error {
 						// TODO
-						fmt.Println(data.AccountInfo(c.String("sender")))
-						fmt.Println(data.AccountInfo(c.String("contract")))
-						fmt.Println(data.AccountInfo(c.String("method")))
-						fmt.Println(data.AccountInfo(c.String("param")))
-						fmt.Println(data.AccountInfo(c.String("sign")))
+						//fmt.Println(data.AccountInfo(c.String("sender")))
+						//fmt.Println(data.AccountInfo(c.String("contract")))
+						//fmt.Println(data.AccountInfo(c.String("method")))
+						//fmt.Println(data.AccountInfo(c.String("param")))
+						//fmt.Println(data.AccountInfo(c.String("sign")))
 						return nil
 					},
 				},
