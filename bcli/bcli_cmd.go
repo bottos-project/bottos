@@ -54,7 +54,7 @@ func (cli *CLI) BcliGetChainInfo(ctx *cli.Context) error {
 
 func (cli *CLI) BcliGetBlockInfo(ctx *cli.Context) error {
 
-	num := uint32(ctx.Uint("num"))
+	num := ctx.Uint64("num")
 	hash := ctx.String("hash")
 
 	blockInfo, err := cli.getBlockInfoOverHttp("http://"+CONFIG.ChainAddr+"/v1/block/detail", num, hash)
@@ -71,14 +71,18 @@ func (cli *CLI) BcliNewAccount(ctx *cli.Context) error {
 
 	username := ctx.String("username")
 	pubkey := ctx.String("pubkey")
+	
+	cli.newaccount(username, pubkey)
+	
+	return nil
+}
 
-	blockInfo, err := cli.newaccount("restful", "http://"+CONFIG.ChainAddr+"/v1/block/detail", username, pubkey)
-	if err != nil {
-		return nil
-	}
-	fmt.Printf("\n==Account Info==\n\n")
-	b, _ := json.Marshal(blockInfo)
-	cli.jsonPrint(b)
+func (cli *CLI) BcliGetAccount(ctx *cli.Context) error {
+
+	username := ctx.String("username")
+	
+	cli.getaccount(username)
+	
 	return nil
 }
 
@@ -100,7 +104,7 @@ func (Cli *CLI) RunNewCLI() {
 			Usage: "Geeter block info",
 			Category: "general",
 			Flags: []cli.Flag {
-				cli.UintFlag{
+				cli.Uint64Flag{
 					Name: "num",
 					Value: 100,
 					Usage: "get block by number",
@@ -159,23 +163,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage: "account public key",
 						},
 					},
-					Action: MigrateFlags(Cli.Bclinewaccount),
-					/*Action: func(c *cli.Context) error {
-
-						if _, err := validatorUsername(c.String("username")); err != nil {
-							return err
-						}
-						if !isNotEmpty(c.String("pubkey")){
-							return fmt.Errorf("Parameters wrong.")
-						}
-
-						// TODO
-						fmt.Println(c.String("username"))
-						fmt.Println(c.String("pubkey"))
-
-						//registerAccount(c.String("username"), c.String("pubkey"));
-						return nil
-					},*/
+					Action: MigrateFlags(Cli.BcliNewAccount),
 				},
 				{
 					Name: "get",
@@ -187,15 +175,7 @@ func (Cli *CLI) RunNewCLI() {
 							Usage: "acocunt name",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						if _, err := validatorUsername(c.String("username")); err != nil {
-							return err
-						}
-						// TODO
-
-						fmt.Println(data.AccountInfo(c.String("username")))
-						return nil
-					},
+					Action: MigrateFlags(Cli.BcliGetAccount),
 				},
 			},
 		},
