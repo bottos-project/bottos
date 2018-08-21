@@ -23,11 +23,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"flag"
-	"fmt"
+		"fmt"
 	"io/ioutil"
-	"log"
-	"os"
+		"os"
 
 	"golang.org/x/net/context"
 
@@ -36,19 +34,14 @@ import (
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/crypto-go/crypto"
-	"github.com/micro/go-micro"
-
-	"net/http"
+		"net/http"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
 	TODO "github.com/bottos-project/bottos/restful/handler"
 )
 
-// CLI responsible for processing command line arguments
-type CLI struct {
-	client chain.ChainService
-}
+
 
 //Transaction trx info
 type Transaction struct {
@@ -63,34 +56,6 @@ type Transaction struct {
 	ParamBin    string      `json:"param_bin"`
 	SigAlg      uint32      `json:"sig_alg"`
 	Signature   string      `json:"signature"`
-}
-
-func (cli *CLI) printUsage() {
-	fmt.Println("Usage:")
-	fmt.Println("  newaccount -name NAME -pubkey PUBKEY         - Create a New account")
-	fmt.Println("  getaccount -name NAME                        - Get account balance")
-	fmt.Println("  transfer -from FROM -to TO -amount AMOUNT    - Transfer BTO from FROM account to TO")
-	fmt.Println("  deploycode -contract NAME -wasm PATH         - Deploy contract NAME from .wasm file")
-	fmt.Println("  deployabi -contract NAME -abi PATH           - Deploy contract ABI from .abi file")
-	fmt.Println("")
-}
-
-//NewCLI new console client
-func NewCLI() *CLI {
-	cli := &CLI{}
-	service := micro.NewService()
-	//avoid parameters conflict with those of bcli
-	//service.Init()
-	cli.client = chain.NewChainService("bottos", service.Client())
-
-	return cli
-}
-
-func (cli *CLI) validateArgs() {
-	if len(os.Args) < 2 {
-		cli.printUsage()
-		os.Exit(1)
-	}
 }
 
 func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
@@ -736,107 +701,6 @@ func (cli *CLI) deployabi(name string, path string) {
 
 	b, _ := json.Marshal(deployAbiRsp)
 	cli.jsonPrint(b)
-}
-
-// Run parses command line arguments and processes commands
-func (cli *CLI) Run() {
-	cli.validateArgs()
-
-	transferCmd := flag.NewFlagSet("transfer", flag.ExitOnError)
-	sendfrom := transferCmd.String("from", "", "transfer from")
-	sendto := transferCmd.String("to", "", "transfer to")
-	sendamount := transferCmd.Int("amount", 0, "transfer amount")
-
-	NewAccountCmd := flag.NewFlagSet("newaccount", flag.ExitOnError)
-	newAccountName := NewAccountCmd.String("name", "", "account name")
-	newAccountPubkey := NewAccountCmd.String("pubkey", "", "pubkey")
-
-	GetAccountCmd := flag.NewFlagSet("getaccount", flag.ExitOnError)
-	getAccountName := GetAccountCmd.String("name", "", "account name")
-
-	deployCodeCmd := flag.NewFlagSet("deploycode", flag.ExitOnError)
-	deployCodeName := deployCodeCmd.String("contract", "", "contract name")
-	deployCodePath := deployCodeCmd.String("wasm", "", ".wasm file path")
-
-	deployAbiCmd := flag.NewFlagSet("deployabi", flag.ExitOnError)
-	deployAbiName := deployAbiCmd.String("contract", "", "contract name")
-	deployAbiPath := deployAbiCmd.String("abi", "", ".abi file path")
-
-	switch os.Args[1] {
-	case "transfer":
-		err := transferCmd.Parse(os.Args[2:])
-		if err != nil {
-			log.Panic(err)
-		}
-	case "newaccount":
-		err := NewAccountCmd.Parse(os.Args[2:])
-		if err != nil {
-			log.Panic(err)
-		}
-	case "getaccount":
-		err := GetAccountCmd.Parse(os.Args[2:])
-		if err != nil {
-			log.Panic(err)
-		}
-	case "deploycode":
-		err := deployCodeCmd.Parse(os.Args[2:])
-		if err != nil {
-			log.Panic(err)
-		}
-	case "deployabi":
-		err := deployAbiCmd.Parse(os.Args[2:])
-		if err != nil {
-			log.Panic(err)
-		}
-	default:
-		cli.printUsage()
-		os.Exit(1)
-	}
-
-	if transferCmd.Parsed() {
-		if *sendfrom == "" || *sendto == "" || *sendamount <= 0 {
-			transferCmd.Usage()
-			os.Exit(1)
-		}
-
-		cli.transfer(*sendfrom, *sendto, *sendamount)
-	}
-
-	if NewAccountCmd.Parsed() {
-		if *newAccountName == "" || *newAccountPubkey == "" {
-			NewAccountCmd.Usage()
-			os.Exit(1)
-		}
-
-		cli.newaccount(*newAccountName, *newAccountPubkey)
-	}
-
-	if GetAccountCmd.Parsed() {
-		if *getAccountName == "" {
-			GetAccountCmd.Usage()
-			os.Exit(1)
-		}
-
-		cli.getaccount(*getAccountName)
-	}
-
-	if deployCodeCmd.Parsed() {
-		if *deployCodeName == "" || *deployCodePath == "" {
-			deployCodeCmd.Usage()
-			os.Exit(1)
-		}
-
-		cli.deploycode(*deployCodeName, *deployCodePath)
-	}
-
-	if deployAbiCmd.Parsed() {
-		if *deployAbiName == "" || *deployAbiPath == "" {
-			deployAbiCmd.Usage()
-			os.Exit(1)
-		}
-
-		cli.deployabi(*deployAbiName, *deployAbiPath)
-	}
 }
 
 //BytesToHex hex encode

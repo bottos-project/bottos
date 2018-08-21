@@ -24,9 +24,27 @@ import (
 	//"github.com/bottos-project/crypto-go/crypto"
 	//"github.com/bottos-project/magiccube/config"
 	//"github.com/bottos-project/magiccube/service/common/util"
+	"github.com/micro/go-micro"
+	chain "github.com/bottos-project/bottos/api"
 )
 
 var ChainAddr string = "127.0.0.1:8689"
+
+// CLI responsible for processing command line arguments
+type CLI struct {
+	client chain.ChainService
+}
+
+//NewCLI new console client
+func NewCLI() *CLI {
+	cli := &CLI{}
+	service := micro.NewService()
+	//avoid parameters conflict with those of bcli
+	//service.Init()
+	cli.client = chain.NewChainService("bottos", service.Client())
+
+	return cli
+}
 
 func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
