@@ -1,11 +1,12 @@
 package stub
 
 import (
+	"sync"
+
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
-	"sync"
 )
 
 //type HandledBlockCallback func(*types.Block)
@@ -13,8 +14,8 @@ import (
 type BlockChainStub struct {
 	blocks []types.Block
 
-	beginNumber uint32
-	libNumber   uint32
+	beginNumber uint64
+	libNumber   uint64
 	l           sync.Mutex
 }
 
@@ -38,7 +39,7 @@ func (b *BlockChainStub) GetBlockByHash(hash common.Hash) *types.Block {
 	return nil
 
 }
-func (b *BlockChainStub) GetBlockByNumber(number uint32) *types.Block {
+func (b *BlockChainStub) GetBlockByNumber(number uint64) *types.Block {
 	b.l.Lock()
 	defer b.l.Unlock()
 
@@ -54,11 +55,11 @@ func (b *BlockChainStub) GetBlockByNumber(number uint32) *types.Block {
 func (b *BlockChainStub) HeadBlockTime() uint64 {
 	return 0
 }
-func (b *BlockChainStub) HeadBlockNum() uint32 {
+func (b *BlockChainStub) HeadBlockNum() uint64 {
 	b.l.Lock()
 	defer b.l.Unlock()
 
-	return uint32(len(b.blocks))
+	return uint64(len(b.blocks))
 
 }
 func (b *BlockChainStub) HeadBlockHash() common.Hash {
@@ -77,7 +78,7 @@ func (b *BlockChainStub) HeadBlockDelegate() string {
 	return ""
 }
 
-func (b *BlockChainStub) LastConsensusBlockNum() uint32 {
+func (b *BlockChainStub) LastConsensusBlockNum() uint64 {
 	return b.libNumber
 }
 
@@ -108,7 +109,7 @@ func (b *BlockChainStub) RegisterHandledBlockCallback(cb chain.HandledBlockCallb
 	return
 }
 
-func (b *BlockChainStub) GetHeaderByNumber(number uint32) *types.Header {
+func (b *BlockChainStub) GetHeaderByNumber(number uint64) *types.Header {
 	b.l.Lock()
 	defer b.l.Unlock()
 
@@ -124,10 +125,10 @@ func (b *BlockChainStub) GetHeaderByNumber(number uint32) *types.Header {
 func (b *BlockChainStub) SetBlocks(blocks []types.Block) {
 	b.blocks = blocks
 
-	b.beginNumber = uint32(len(b.blocks))
+	b.beginNumber = uint64(len(b.blocks))
 }
 
-func (b *BlockChainStub) SetLibNumber(number uint32) {
+func (b *BlockChainStub) SetLibNumber(number uint64) {
 	b.libNumber = number
 }
 
