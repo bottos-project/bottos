@@ -168,6 +168,16 @@ func (cli *CLI) BCLIGetContractCode(ctx *cli.Context) error {
 	return nil
 }
 
+func (cli *CLI) BCLIGetTableInfo(ctx *cli.Context) error {
+	contract := ctx.String("contract")
+	table := ctx.String("table")
+	key  := ctx.String("key")
+	
+	cli.BCliGetTableInfo(contract, table, key)
+
+	return nil
+}
+
 func (Cli *CLI) RunNewCLI() {
 	app := cli.NewApp()
 	app.Name = "Bottos Cmd"
@@ -218,12 +228,7 @@ func (Cli *CLI) RunNewCLI() {
 					Usage: "key value",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				fmt.Println(c.String("contract"))
-				fmt.Println(c.String("table"))
-				fmt.Println(c.String("key"))
-				return nil
-			},
+			Action: MigrateFlags(Cli.BCLIGetTableInfo),
 		},
 		{
 			Name: "account",
