@@ -87,7 +87,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 		fmt.Printf("Trx: %v\n", newAccountRsp.Result)
 
 	} else {
-		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/get"
+		http_url := "http://"+ChainAddr+ "/v1/transaction/get"
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		req, _ := json.Marshal(gettrx)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -120,7 +120,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
         }
 	
 	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	infourl := "http://" + ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	
 	if err != nil {
@@ -166,7 +166,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 			return
 		}
 	} else {
-		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
+		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -215,7 +215,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	
 	var err error
 	
-	httpurl_contractcode := "http://"+CONFIG.ChainAddr+"/v1/contract/code"
+	httpurl_contractcode := "http://"+ChainAddr+"/v1/contract/code"
 	getcontract := &GetContractCodeAbi{Contract: contract}
 	req, _ := json.Marshal(getcontract)
 	req_new := bytes.NewBuffer([]byte(req))
@@ -240,7 +240,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	b, _ := json.Marshal(trxrespbody.Result)
 	cli.jsonPrint(b)
 
-	http_urlAbi := "http://"+CONFIG.ChainAddr+ "/v1/contract/abi"
+	http_urlAbi := "http://"+ChainAddr+ "/v1/contract/abi"
 
 	getcontract = &GetContractCodeAbi{Contract: contract}
 	req, _ = json.Marshal(getcontract)
@@ -273,7 +273,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 
 func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
 
-		http_url := "http://"+CONFIG.ChainAddr+ "/v1/common/query"
+		http_url := "http://"+ChainAddr+ "/v1/common/query"
 		GetKeyReq := chain.GetKeyValueRequest{ Contract: contract, Object:table, Key: key }
 
 		req, _ := json.Marshal(GetKeyReq)
