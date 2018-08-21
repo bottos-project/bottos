@@ -26,6 +26,8 @@ import (
 	//"github.com/bottos-project/magiccube/service/common/util"
 )
 
+var ChainAddr string = "127.0.0.1:8689"
+
 func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		for _, name := range ctx.FlagNames() {
@@ -33,13 +35,15 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 				ctx.GlobalSet(name, ctx.String(name))
 			}
 		}
+		if ctx.GlobalIsSet("servaddr") {
+			ChainAddr = ctx.GlobalString("servaddr")
+		}
 		return action(ctx)
 	}
 }
 
 func (cli *CLI) BcliGetChainInfo(ctx *cli.Context) error {
-	
-	chainInfo, err := cli.getChainInfoOverHttp("http://"+CONFIG.ChainAddr+"/v1/block/height")
+	chainInfo, err := cli.getChainInfoOverHttp("http://"+ChainAddr+"/v1/block/height")
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return nil
@@ -57,7 +61,7 @@ func (cli *CLI) BcliGetBlockInfo(ctx *cli.Context) error {
 	num := ctx.Uint64("num")
 	hash := ctx.String("hash")
 
-	blockInfo, err := cli.getBlockInfoOverHttp("http://"+CONFIG.ChainAddr+"/v1/block/detail", num, hash)
+	blockInfo, err := cli.getBlockInfoOverHttp("http://"+ChainAddr+"/v1/block/detail", num, hash)
 	if err != nil {
 		return nil
 	}
@@ -183,6 +187,12 @@ func (Cli *CLI) RunNewCLI() {
 	app.Name = "Bottos Cmd"
 	app.Usage = "block chain bcli"
 	app.Version = "0.0.1"
+	app.Flags = []cli.Flag {
+			cli.StringFlag{
+				Name:  "servaddr",
+				Value: "127.0.0.1:8689",
+			},
+	}
 
 	app.Commands = []cli.Command {
 		{
@@ -559,53 +569,9 @@ func validatorUsername(str string) (bool,error) {
 	}
 
 	if !match {
-		return false, fmt.Errorf("参数错误！")
+		return false, fmt.Errorf("Error parameter!")
 	}
 
 	return true, nil
 }
-//
-//func registerAccount(username string, pubkey string)  {
-//	account := &user_proto.AccountInfo{
-//		Name: username,
-//		Pubkey: pubkey,
-//	}
-//	accountBuf, _ := pack.Marshal(account)
-//
-//	block, _:= data.BlockHeader()
-//
-//	txAccountSign := &push_sign.TransactionSign{
-//		Version: 1,
-//		CursorNum: block.HeadBlockNum,
-//		CursorLabel: block.CursorLabel,
-//		Lifetime: block.HeadBlockTime + 20,
-//		Sender: "delta",
-//		Contract: "bottos",
-//		Method: "newaccount",
-//		Param: accountBuf,
-//		SigAlg: 1,
-//	}
-//
-//	msg, _ := proto.Marshal(txAccountSign)
-//	seckey,_ := hex.DecodeString("b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45")
-//
-//	chainID,_:=hex.DecodeString(config.CHAIN_ID)
-//	msg = bytes.Join([][]byte{msg, chainID}, []byte{})
-//	sign, _ := crypto.Sign(util.Sha256(msg), seckey)
-//
-//
-//	txAccount := &bean.TxBean{
-//		Version:     1,
-//		CursorNum:   block.HeadBlockNum,
-//		CursorLabel: block.CursorLabel,
-//		Lifetime:    block.HeadBlockTime + 20,
-//		Sender:      "delta",
-//		Contract:    "bottos",
-//		Method:      "newaccount",
-//		Param:       hex.EncodeToString(accountBuf),
-//		SigAlg:      1,
-//		Signature:   hex.EncodeToString(sign),
-//	}
-//	data.PushTransaction(txAccount)
-//}
 
