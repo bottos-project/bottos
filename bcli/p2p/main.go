@@ -3,27 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"time"
+
 	"github.com/bottos-project/bottos/bcli/p2p/stub"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/protocol"
 	log "github.com/cihub/seelog"
-	"io/ioutil"
-	"time"
 )
 
 type p2pConfig struct {
 	ServAddr string
-	ServPort string
+	ServPort int
 	PeerLst  []string
 	ChainId  string
 	Producer bool
 }
 
 type chainConfig struct {
-	LibNumber   uint32
-	BlockNumber uint32
+	LibNumber   uint64
+	BlockNumber uint64
 	Blocks      []types.Block
 }
 
@@ -34,17 +35,16 @@ func main() {
 		return
 	}
 
-	param := config.Parameter{ServAddr: pc.ServAddr,
+	param := config.Parameter{P2PServAddr: pc.ServAddr,
 		P2PPort:  pc.ServPort,
 		PeerList: pc.PeerLst,
-		ChainId:  pc.ChainId,
 	}
 
 	bc := stub.MakeBlockChainStub()
 
 	chain := readChainConfig("chainconfig.json")
 	if chain != nil {
-		if chain.BlockNumber > uint32(len(chain.Blocks)) {
+		if chain.BlockNumber > uint64(len(chain.Blocks)) {
 			fmt.Printf("chain cfg number error")
 			return
 		}
