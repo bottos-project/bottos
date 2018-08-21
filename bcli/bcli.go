@@ -237,7 +237,7 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 
 func (cli *CLI) transfer(from string, to string, amount int) {
 	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	infourl := "http://" + ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	
 	if err != nil {
@@ -373,7 +373,7 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 func (cli *CLI) newaccount(name string, pubkey string) {
 
 	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	infourl := "http://" + ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	
 	if err != nil {
@@ -436,7 +436,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 	
 	req, _ := json.Marshal(trx)
 	req_new := bytes.NewBuffer([]byte(req))
-	httpRspBody, err := send_httpreq("POST", "http://" + CONFIG.ChainAddr + "/v1/transaction/send", req_new)
+	httpRspBody, err := send_httpreq("POST", "http://" + ChainAddr + "/v1/transaction/send", req_new)
 	if err != nil || httpRspBody == nil {
 		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 		return
@@ -476,7 +476,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 func (cli *CLI) getaccount(name string) {
 	//accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
 	
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/account/info"
+	infourl := "http://" + ChainAddr + "/v1/account/info"
 	account, err := cli.getAccountInfoOverHttp(name, infourl)
 	
 	if err != nil || account == nil {
@@ -497,7 +497,7 @@ func (cli *CLI) getaccount(name string) {
 func (cli *CLI) deploycode(name string, path string) {
 	
 	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	infourl := "http://" + ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	
 	if err != nil {
@@ -577,7 +577,7 @@ func (cli *CLI) deploycode(name string, path string) {
 			return
 		}
 	} else {
-		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
+		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -644,7 +644,7 @@ func checkAbi(abiRaw []byte) error {
 
 func (cli *CLI) deployabi(name string, path string) {
 	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + CONFIG.ChainAddr + "/v1/block/height"
+	infourl := "http://" + ChainAddr + "/v1/block/height"
 	chainInfo, err := cli.getChainInfoOverHttp(infourl)
 	
 	if err != nil {
@@ -717,7 +717,7 @@ func (cli *CLI) deployabi(name string, path string) {
 			return
 		}
 	} else {
-		http_url := "http://"+CONFIG.ChainAddr+ "/v1/transaction/send"
+		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx1)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
