@@ -269,3 +269,27 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 
 	return contractcode, abivalue
 }
+
+
+func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
+
+		http_url := "http://"+CONFIG.ChainAddr+ "/v1/common/query"
+		GetKeyReq := chain.GetKeyValueRequest{ Contract: contract, Object:table, Key: key }
+
+		req, _ := json.Marshal(GetKeyReq)
+    		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			return
+		}
+		var respbody chain.GetKeyValueResponse
+		json.Unmarshal(httpRspBody, &respbody)
+		newAccountRsp := &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("BCliGetTableInfo error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+}
