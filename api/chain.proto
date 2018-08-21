@@ -1,4 +1,4 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 
 import "github.com/bottos-project/bottos/api/transaction.proto";
 
@@ -75,6 +75,7 @@ message GetInfoResponse{
 		string 			head_block_delegate				= 4;
 		uint32			cursor_label					= 5;
 		uint64 			last_consensus_block_num		= 6;
+		string 			chain_id		                = 7;
 	}
 }
 
