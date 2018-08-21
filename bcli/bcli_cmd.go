@@ -193,7 +193,7 @@ func (Cli *CLI) RunNewCLI() {
 		},
 		{
 			Name: "getblock",
-			Usage: "Geeter block info",
+			Usage: "Get block info",
 			Category: "general",
 			Flags: []cli.Flag {
 				cli.Uint64Flag{
@@ -211,7 +211,7 @@ func (Cli *CLI) RunNewCLI() {
 		},
 		{
 			Name: "gettable",
-			Usage: "",
+			Usage: "get table info",
 			Category: "general",
 			Flags: []cli.Flag {
 				cli.StringFlag{
