@@ -274,8 +274,8 @@ func (a *ApiService) GetAccount(ctx context.Context, req *api.GetAccountRequest,
 	resp.Result = &api.GetAccountResponse_Result{}
 	resp.Result.AccountName = name
 	resp.Result.Pubkey = common.BytesToHex(account.PublicKey)
-	resp.Result.Balance = balance.Balance
-	resp.Result.StakedBalance = stakedBalance.StakedBalance
+	resp.Result.Balance = balance.Balance.String()
+	resp.Result.StakedBalance = stakedBalance.StakedBalance.String()
 	resp.Errcode = 0
 
 	return nil
@@ -336,7 +336,7 @@ func (a *ApiService) GetTransferCredit(ctx context.Context, req *api.GetTransfer
 	resp.Result = &api.GetTransferCreditResponse_Result{}
 	resp.Result.Name = credit.Name
 	resp.Result.Spender = credit.Spender
-	resp.Result.Limit = credit.Limit
+	resp.Result.Limit = credit.Limit.String()
 
 	return nil
 }
