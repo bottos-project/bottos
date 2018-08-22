@@ -50,6 +50,7 @@ type HandledBlockCallback func(*types.Block)
 
 //BlockChainInterface the interface of chain
 type BlockChainInterface interface {
+	Init() error
 	Close()
 
 	HasBlock(hash common.Hash) bool

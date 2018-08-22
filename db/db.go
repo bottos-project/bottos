@@ -38,11 +38,14 @@ import (
 type DBService struct {
 	kvRepo    kvdb.KvDBRepo
 	codeRepo  codedb.CodeDbRepo
+}
+
+type OptionDBService struct {
 	optDbRepo optiondb.OptionDbRepo
 }
 
 //NewDbService is to create a new db service with kv databse, codedb, and option db for optionally
-func NewDbService(path string, codedbPath string, optPath string) *DBService {
+func NewDbService(path string, codedbPath string) *DBService {
 	kv, err := kvdb.NewKVDatabase(path)
 	if err != nil {
 		return nil
@@ -52,12 +55,15 @@ func NewDbService(path string, codedbPath string, optPath string) *DBService {
 		log.Info(err)
 		return nil
 	}
+	return &DBService{kvRepo: kv, codeRepo: db}
+}
 
+func NewOptionDbService(optPath string) *OptionDBService {
 	if optPath == "" {
-		return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: nil}
+		return nil
 	}
 	optiondb := optiondb.NewOptionDbRepository(optPath)
-	return &DBService{kvRepo: kv, codeRepo: db, optDbRepo: optiondb}
+	return &OptionDBService{optDbRepo: optiondb}
 
 }
 
@@ -88,8 +94,9 @@ type DBApi interface {
 	Commit()
 	Rollback()
 	Reset() //TODO
+}
 
-	//optiondb interface
+type OptionDBApi interface {
 	IsOpDbConfigured() bool
 	Insert(collection string, value interface{}) error
 	Find(collection string, key string, value interface{}) (interface{}, error)
