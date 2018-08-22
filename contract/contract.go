@@ -98,7 +98,7 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		balance := big.NewInt(0)
 		balance, balanceResult := balance.SetString(config.Genesis.InitDelegates[i].Balance, 10)
 		if false == balanceResult {
-			log.Error("set from strint error")
+			log.Error("big Int set from string error")
 			continue
 		}
 		
