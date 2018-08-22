@@ -4,118 +4,118 @@
   "init_delegates": [{
     "name": "alpheratz",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "mirach",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "almach",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "delta",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "nembus",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "titawin",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "adhil",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "regor",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "alsephina",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "suhail",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "markeb",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "peregrini",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "marut",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "deneb",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "sadr",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "gienah",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "ruc",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "albireo",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "vega",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "sulafat",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "sheliak",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "satori",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "toliman",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "barnard",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "luhman16",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "sirius",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "lalande21185",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "ran",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   },{
     "name": "procyon",
     "public_key": "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f",
-    "balance": 1000000000000
+    "balance": "1000000000000"
   }]
 }
