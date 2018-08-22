@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"math/big"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/safemath"
@@ -45,8 +46,8 @@ import (
 type AccountInfo struct {
 	ID               bson.ObjectId `bson:"_id"`
 	AccountName      string        `bson:"account_name"`
-	Balance          uint64        `bson:"bto_balance"`
-	StakedBalance    uint64        `bson:"staked_balance"`
+	Balance          string        `bson:"bto_balance"`
+	StakedBalance    string        `bson:"staked_balance"`
 	UnstakingBalance string        `bson:"unstaking_balance"`
 	PublicKey        string        `bson:"public_key"`
 	CreateTime       time.Time     `bson:"create_time"`
@@ -215,17 +216,24 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 	bsonBytes, _ := bson.Marshal(value)
 	bson.Unmarshal(bsonBytes, &value2)
 
+
+	balance, errConvert := big.NewInt(0).SetString(value2.Balance, 10)
+
+	if (false == errConvert) {
+		return nil, errors.New("convert balance error")
+	}
+
 	res := &Balance{
 		AccountName: accountName,
-		Balance:     value2.Balance,
+		Balance:     balance,
 	}
 
 	return res, nil
 }
 
 // SetBalanceOp is to save account balance
-func SetBalanceOp(ldb *db.DBService, accountName string, balance uint64) error {
-	return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance)
+func SetBalanceOp(ldb *db.DBService, accountName string, balance *big.Int) error {
+	return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance.String())
 }
 
 func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
@@ -237,9 +245,10 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		return errors.New("Invalid contract param")
 	}
 
-	var initSupply uint64
+	var initSupply *big.Int = big.NewInt(0)
 	var err error
-	initSupply, err = safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
+	initSupply, err = safemath.U256Mul(initSupply, new(big.Int).SetUint64(config.BOTTOS_INIT_SUPPLY), new(big.Int).SetUint64(config.BOTTOS_SUPPLY_MUL))
+
 	if err != nil {
 		return err
 	}
@@ -252,13 +261,16 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		bto := &AccountInfo{
 			ID:               bson.NewObjectId(),
 			AccountName:      config.BOTTOS_CONTRACT_NAME,
-			Balance:          initSupply, //uint32        `bson:"bto_balance"`
-			StakedBalance:    0,          //uint64        `bson:"staked_balance"`
-			UnstakingBalance: "",         //             `bson:"unstaking_balance"`
+			//Balance:          initSupply, //uint32        `bson:"bto_balance"`
+			Balance:          initSupply.String(),
+			//StakedBalance:    0,          //uint64        `bson:"staked_balance"`
+			StakedBalance:    "0",
+			UnstakingBalance: "0",         //             `bson:"unstaking_balance"`
 			PublicKey:        config.Param.KeyPairs[0].PublicKey,
 			CreateTime:       time.Unix(int64(config.Genesis.GenesisTime), 0), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(),                                      //time.Time     `bson:"updated_time"`
 		}
+
 		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, bto)
 	}
 
@@ -271,7 +283,7 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 
 		FromAccountName := data["from"].(string)
 		ToAccountName := data["to"].(string)
-		DataVal := data["value"].(uint64)
+		DataVal := data["value"].(*big.Int)
 		
 		SrcBalanceInfo, err := GetBalanceOp(ldb, FromAccountName) //data.Value
 
@@ -285,12 +297,12 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 			return err
 		}
 		
-		if SrcBalanceInfo.Balance < DataVal {
+		if -1 == SrcBalanceInfo.Balance.Cmp(DataVal) {
 			return err
 		}
 
-		SrcBalanceInfo.Balance -= DataVal
-		DstBalanceInfo.Balance += DataVal
+		SrcBalanceInfo.SafeSub(DataVal)
+		DstBalanceInfo.SafeAdd(DataVal)
 
 		err = SetBalanceOp(ldb, FromAccountName, SrcBalanceInfo.Balance)
 		if err != nil {
@@ -319,9 +331,9 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		NewAccount := &AccountInfo{
 			ID:               oid,
 			AccountName:      DataName,
-			Balance:          0,  //uint32        `bson:"bto_balance"`
-			StakedBalance:    0,  //uint64        `bson:"staked_balance"`
-			UnstakingBalance: "", //             `bson:"unstaking_balance"`
+			Balance:          "0",  //uint32        `bson:"bto_balance"`
+			StakedBalance:    "0",  //uint64        `bson:"staked_balance"`
+			UnstakingBalance: "0", //             `bson:"unstaking_balance"`
 			PublicKey:        DataPubKey,
 			CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`

@@ -27,6 +27,7 @@ package role
 
 import (
 	"encoding/json"
+	"math/big"
 
 	"github.com/bottos-project/bottos/db"
 )
@@ -38,7 +39,7 @@ const TransferCreditObjectName string = "credit"
 type TransferCredit struct {
 	Name    string `json:"name"`
 	Spender string `json:"spender"`
-	Limit   uint64 `json:"limit"`
+	Limit   *big.Int `json:"limit"`
 }
 
 //CreateTransferCreditRole is create transfer credits
@@ -51,14 +52,15 @@ func generateKey(name string, spender string) string {
 }
 
 //SafeSub is safe sub
-func (credit *TransferCredit) SafeSub(amount uint64) error {
-	var a, c uint64
-	a = credit.Limit
-	c, err := safeSub(a, amount)
+func (credit *TransferCredit) SafeSub(amount *big.Int) error {
+	//var a, c uint64
+	result := big.NewInt(0)
+	//a = credit.Limit
+	result, err := safeSub(result, credit.Limit, amount)
 	if err != nil {
 		return err
 	}
-	credit.Limit = c
+	credit.Limit.Set(result)
 	return nil
 
 }
