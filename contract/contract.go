@@ -95,7 +95,7 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		mapstruct2 := make(map[string]interface{})
 		abi.Setmapval(mapstruct2, "from", config.BOTTOS_CONTRACT_NAME)
 		abi.Setmapval(mapstruct2, "to", name)
-		abi.Setmapval(mapstruct2, "value", uint64(config.Genesis.InitDelegates[i].Balance))
+		abi.Setmapval(mapstruct2, "value", config.Genesis.InitDelegates[i].Balance)
 		tparam, err3   := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
 		if err3 != nil {
 			log.Info("abi.MarshalAbiEx failed for transfer with account:", name)
@@ -150,8 +150,8 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	roleIntf.SetAccount(bto.AccountName, bto)
 
 	// balance
-	var initSupply uint64
-	initSupply, err = safemath.Uint64Mul(config.BOTTOS_INIT_SUPPLY, config.BOTTOS_SUPPLY_MUL)
+	var initSupply *big.Int = big.NewInt(0)
+	initSupply, err = safemath.U256Mul(initSupply, new(big.Int).SetUint64(config.BOTTOS_INIT_SUPPLY), new(big.Int).SetUint64(config.BOTTOS_SUPPLY_MUL))
 	if err != nil {
 		return err
 	}
@@ -165,6 +165,7 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	// staked_balance
 	stakedBalance := &role.StakedBalance{
 		AccountName: bto.AccountName,
+		StakedBalance : big.NewInt(0),
 	}
 	roleIntf.SetStakedBalance(bto.AccountName, stakedBalance)
 

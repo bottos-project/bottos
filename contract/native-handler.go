@@ -28,6 +28,7 @@ package contract
 import (
 	"fmt"
 	"regexp"
+	"math/big"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
@@ -68,14 +69,14 @@ func newAccount(ctx *Context) ContractError {
 	// 2, create balance
 	balance := &role.Balance{
 		AccountName: NewaccountName,
-		Balance:     0,
+		Balance:     big.NewInt(0),
 	}
 	ctx.RoleIntf.SetBalance(NewaccountName, balance)
 
 	// 3, create staked_balance
 	stakedBalance := &role.StakedBalance{
 		AccountName:   NewaccountName,
-		StakedBalance: 0,
+		StakedBalance: big.NewInt(0),
 	}
 	ctx.RoleIntf.SetStakedBalance(NewaccountName, stakedBalance)
 
@@ -91,7 +92,7 @@ func transfer(ctx *Context) ContractError {
 	
 	FromWhom := transfer["from"].(string)
 	ToWhom   := transfer["to"].(string)
-	TransValue := transfer["value"].(uint64)
+	TransValue := transfer["value"].(*big.Int)
 	
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, FromWhom)
@@ -106,7 +107,7 @@ func transfer(ctx *Context) ContractError {
 
 	// check funds
 	from, _ := ctx.RoleIntf.GetBalance(FromWhom)
-	if from.Balance < TransValue {
+	if -1 == from.Balance.Cmp(TransValue) {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 	to, _ := ctx.RoleIntf.GetBalance(ToWhom)
@@ -187,7 +188,7 @@ func grantCredit(ctx *Context) ContractError {
 	
 	ParamName    := param["name"].(string)
 	ParamSpender := param["spender"].(string)
-	ParamLimit   := param["limit"].(uint64)
+	ParamLimit   := param["limit"].(*big.Int)
 
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
@@ -212,14 +213,14 @@ func grantCredit(ctx *Context) ContractError {
 
 	// check limit
 	balance, err := ctx.RoleIntf.GetBalance(ParamName)
-	if balance.Balance < ParamLimit {
+	if -1 == balance.Balance.Cmp(ParamLimit) {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 
 	credit := &role.TransferCredit{
 		Name:    ParamName,
 		Spender: ParamSpender,
-		Limit:   ParamLimit,
+		Limit:   ParamLimit,  
 	}
 	err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
 	if err != nil {
@@ -271,7 +272,7 @@ func transferFrom(ctx *Context) ContractError {
 	}
 	TransFrom := transfer["from"].(string)
 	TransTo := transfer["to"].(string)
-	TransValue := transfer["value"].(uint64)
+	TransValue := transfer["value"].(*big.Int)
 	
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, TransFrom)
@@ -295,13 +296,13 @@ func transferFrom(ctx *Context) ContractError {
 	if err != nil {
 		return ERROR_CONT_INSUFFICIENT_CREDITS
 	}
-	if TransValue > credit.Limit {
+	if 1 == TransValue.Cmp(credit.Limit) {
 		return ERROR_CONT_INSUFFICIENT_CREDITS
 	}
 
 	// check funds
 	from, _ := ctx.RoleIntf.GetBalance(TransFrom)
-	if from.Balance < TransValue {
+	if -1 == from.Balance.Cmp(TransValue) {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
 	to, _ := ctx.RoleIntf.GetBalance(TransTo)
@@ -328,7 +329,7 @@ func transferFrom(ctx *Context) ContractError {
 		return ERROR_CONT_HANDLE_FAIL
 	}
 
-	if credit.Limit > 0 {
+	if 1 == credit.Limit.Cmp(big.NewInt(0)) {
 		err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
 		if err != nil {
 			return ERROR_CONT_HANDLE_FAIL

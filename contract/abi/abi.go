@@ -395,7 +395,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "Transfer", Fields: New()}
 	s.Fields.Set("from", "string")
 	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
+	s.Fields.Set("value", "uint256")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "SetDelegate", Fields: New()}
 	s.Fields.Set("name", "string")
@@ -404,7 +404,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "GrantCredit", Fields: New()}
 	s.Fields.Set("name", "string")
 	s.Fields.Set("spender", "string")
-	s.Fields.Set("limit", "uint64")
+	s.Fields.Set("limit", "uint256")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "CancelCredit", Fields: New()}
 	s.Fields.Set("name", "string")
@@ -413,7 +413,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "TransferFrom", Fields: New()}
 	s.Fields.Set("from", "string")
 	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint64")
+	s.Fields.Set("value", "uint256")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "DeployCode", Fields: New()}
 	s.Fields.Set("contract", "string")
