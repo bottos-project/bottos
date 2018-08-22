@@ -23,6 +23,7 @@ import (
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
 	"github.com/bottos-project/bottos/contract/abi"
+	"github.com/bottos-project/bottos/config"
 )
 
 //ApiService is actor service
@@ -117,6 +118,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	result.HeadBlockTime = response.HeadBlockTime
 	result.HeadBlockDelegate = response.HeadBlockDelegate
 	result.CursorLabel = response.HeadBlockHash.Label()
+	result.ChainId=common.BytesToHex(config.GetChainID())
 	resp.Result = result
 
 	resp.Errcode = 0
