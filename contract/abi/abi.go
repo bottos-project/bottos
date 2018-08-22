@@ -35,7 +35,11 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"math/big"
 )
+
+
+var u256BytesLen int = 32
 
 //ABIAction abi Action(Method)
 type ABIAction struct {
@@ -221,6 +225,22 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 					msgpack.PackUint64(w, val.(uint64))
 				case "bytes":
 					msgpack.PackBin16(w, val.([]byte))
+				case "Int":
+					bigIntVal := (val.(big.Int))
+					bigIntValBytes := bigIntVal.Bytes()
+
+					if(len(bigIntValBytes) > u256BytesLen) {
+						return fmt.Errorf("u256 is over flows")
+					}
+
+					buf := make([]byte, u256BytesLen)
+					i := u256BytesLen - len(bigIntValBytes)
+
+					for key, value := range bigIntValBytes {
+						buf[i+key] = value
+					}
+
+					msgpack.PackBin16(w, buf)
 				default:
 					if reflect.ValueOf(value[abiValKey]).Kind() == reflect.Struct {
 						EncodeAbiEx(contractName, method, w, value, abi, abiValKey)
@@ -336,6 +356,16 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 					}
 					Setmapval(mapResult, abiValKey, common.BytesToHex(val))
 					i++
+				case "Int":
+					val, err := msgpack.UnpackBin16(r)
+					if err != nil {
+						return nil
+					}
+					valueBigInt := big.NewInt(0)
+					valueBigInt = valueBigInt.SetBytes(val)
+
+					Setmapval(mapResult, abiValKey, valueBigInt)
+					i++
 				default:
 					DecodeAbiEx(contractName, method, r, abi, abiValType, abiValKey, &mapResult)
 				}
@@ -395,7 +425,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "Transfer", Fields: New()}
 	s.Fields.Set("from", "string")
 	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint256")
+	s.Fields.Set("value", "Int")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "SetDelegate", Fields: New()}
 	s.Fields.Set("name", "string")
@@ -404,7 +434,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "GrantCredit", Fields: New()}
 	s.Fields.Set("name", "string")
 	s.Fields.Set("spender", "string")
-	s.Fields.Set("limit", "uint256")
+	s.Fields.Set("limit", "Int")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "CancelCredit", Fields: New()}
 	s.Fields.Set("name", "string")
@@ -413,7 +443,7 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "TransferFrom", Fields: New()}
 	s.Fields.Set("from", "string")
 	s.Fields.Set("to", "string")
-	s.Fields.Set("value", "uint256")
+	s.Fields.Set("value", "Int")
 	a.Structs = append(a.Structs, s)
 	s = ABIStruct{Name: "DeployCode", Fields: New()}
 	s.Fields.Set("contract", "string")

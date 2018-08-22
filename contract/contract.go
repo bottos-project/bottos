@@ -95,10 +95,18 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		mapstruct2 := make(map[string]interface{})
 		abi.Setmapval(mapstruct2, "from", config.BOTTOS_CONTRACT_NAME)
 		abi.Setmapval(mapstruct2, "to", name)
-		abi.Setmapval(mapstruct2, "value", config.Genesis.InitDelegates[i].Balance)
+		balance := big.NewInt(0)
+		balance, balanceResult := balance.SetString(config.Genesis.InitDelegates[i].Balance, 10)
+		if false == balanceResult {
+			log.Error("set from strint error")
+			continue
+		}
+		
+		abi.Setmapval(mapstruct2, "value", *balance)
 		tparam, err3   := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
 		if err3 != nil {
 			log.Info("abi.MarshalAbiEx failed for transfer with account:", name)
+			log.Info("error is: ",err3)
 			continue
 		}
 
