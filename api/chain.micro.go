@@ -25,7 +25,7 @@ var _ server.Option
 
 // Client API for Chain service
 
-type ChainService interface {
+type ChainClient interface {
 	SendTransaction(ctx context.Context, in *Transaction, opts ...client.CallOption) (*SendTransactionResponse, error)
 	GetTransaction(ctx context.Context, in *GetTransactionRequest, opts ...client.CallOption) (*GetTransactionResponse, error)
 	GetBlock(ctx context.Context, in *GetBlockRequest, opts ...client.CallOption) (*GetBlockResponse, error)
@@ -36,26 +36,26 @@ type ChainService interface {
 	GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, opts ...client.CallOption) (*GetTransferCreditResponse, error)
 }
 
-type chainService struct {
-	c    client.Client
-	name string
+type chainClient struct {
+	c           client.Client
+	serviceName string
 }
 
-func NewChainService(name string, c client.Client) ChainService {
+func NewChainClient(serviceName string, c client.Client) ChainClient {
 	if c == nil {
 		c = client.NewClient()
 	}
-	if len(name) == 0 {
-		name = "api"
+	if len(serviceName) == 0 {
+		serviceName = "api"
 	}
-	return &chainService{
-		c:    c,
-		name: name,
+	return &chainClient{
+		c:           c,
+		serviceName: serviceName,
 	}
 }
 
-func (c *chainService) SendTransaction(ctx context.Context, in *Transaction, opts ...client.CallOption) (*SendTransactionResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.SendTransaction", in)
+func (c *chainClient) SendTransaction(ctx context.Context, in *Transaction, opts ...client.CallOption) (*SendTransactionResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.SendTransaction", in)
 	out := new(SendTransactionResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -64,8 +64,8 @@ func (c *chainService) SendTransaction(ctx context.Context, in *Transaction, opt
 	return out, nil
 }
 
-func (c *chainService) GetTransaction(ctx context.Context, in *GetTransactionRequest, opts ...client.CallOption) (*GetTransactionResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetTransaction", in)
+func (c *chainClient) GetTransaction(ctx context.Context, in *GetTransactionRequest, opts ...client.CallOption) (*GetTransactionResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetTransaction", in)
 	out := new(GetTransactionResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -74,8 +74,8 @@ func (c *chainService) GetTransaction(ctx context.Context, in *GetTransactionReq
 	return out, nil
 }
 
-func (c *chainService) GetBlock(ctx context.Context, in *GetBlockRequest, opts ...client.CallOption) (*GetBlockResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetBlock", in)
+func (c *chainClient) GetBlock(ctx context.Context, in *GetBlockRequest, opts ...client.CallOption) (*GetBlockResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetBlock", in)
 	out := new(GetBlockResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -84,8 +84,8 @@ func (c *chainService) GetBlock(ctx context.Context, in *GetBlockRequest, opts .
 	return out, nil
 }
 
-func (c *chainService) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...client.CallOption) (*GetInfoResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetInfo", in)
+func (c *chainClient) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...client.CallOption) (*GetInfoResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetInfo", in)
 	out := new(GetInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -94,8 +94,8 @@ func (c *chainService) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...
 	return out, nil
 }
 
-func (c *chainService) GetAccount(ctx context.Context, in *GetAccountRequest, opts ...client.CallOption) (*GetAccountResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetAccount", in)
+func (c *chainClient) GetAccount(ctx context.Context, in *GetAccountRequest, opts ...client.CallOption) (*GetAccountResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetAccount", in)
 	out := new(GetAccountResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -104,8 +104,8 @@ func (c *chainService) GetAccount(ctx context.Context, in *GetAccountRequest, op
 	return out, nil
 }
 
-func (c *chainService) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, opts ...client.CallOption) (*GetKeyValueResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetKeyValue", in)
+func (c *chainClient) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, opts ...client.CallOption) (*GetKeyValueResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetKeyValue", in)
 	out := new(GetKeyValueResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -114,8 +114,8 @@ func (c *chainService) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, 
 	return out, nil
 }
 
-func (c *chainService) GetAbi(ctx context.Context, in *GetAbiRequest, opts ...client.CallOption) (*GetAbiResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetAbi", in)
+func (c *chainClient) GetAbi(ctx context.Context, in *GetAbiRequest, opts ...client.CallOption) (*GetAbiResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetAbi", in)
 	out := new(GetAbiResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -124,8 +124,8 @@ func (c *chainService) GetAbi(ctx context.Context, in *GetAbiRequest, opts ...cl
 	return out, nil
 }
 
-func (c *chainService) GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, opts ...client.CallOption) (*GetTransferCreditResponse, error) {
-	req := c.c.NewRequest(c.name, "Chain.GetTransferCredit", in)
+func (c *chainClient) GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, opts ...client.CallOption) (*GetTransferCreditResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetTransferCredit", in)
 	out := new(GetTransferCreditResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -148,55 +148,41 @@ type ChainHandler interface {
 }
 
 func RegisterChainHandler(s server.Server, hdlr ChainHandler, opts ...server.HandlerOption) {
-	type chain interface {
-		SendTransaction(ctx context.Context, in *Transaction, out *SendTransactionResponse) error
-		GetTransaction(ctx context.Context, in *GetTransactionRequest, out *GetTransactionResponse) error
-		GetBlock(ctx context.Context, in *GetBlockRequest, out *GetBlockResponse) error
-		GetInfo(ctx context.Context, in *GetInfoRequest, out *GetInfoResponse) error
-		GetAccount(ctx context.Context, in *GetAccountRequest, out *GetAccountResponse) error
-		GetKeyValue(ctx context.Context, in *GetKeyValueRequest, out *GetKeyValueResponse) error
-		GetAbi(ctx context.Context, in *GetAbiRequest, out *GetAbiResponse) error
-		GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, out *GetTransferCreditResponse) error
-	}
-	type Chain struct {
-		chain
-	}
-	h := &chainHandler{hdlr}
-	s.Handle(s.NewHandler(&Chain{h}, opts...))
+	s.Handle(s.NewHandler(&Chain{hdlr}, opts...))
 }
 
-type chainHandler struct {
+type Chain struct {
 	ChainHandler
 }
 
-func (h *chainHandler) SendTransaction(ctx context.Context, in *Transaction, out *SendTransactionResponse) error {
+func (h *Chain) SendTransaction(ctx context.Context, in *Transaction, out *SendTransactionResponse) error {
 	return h.ChainHandler.SendTransaction(ctx, in, out)
 }
 
-func (h *chainHandler) GetTransaction(ctx context.Context, in *GetTransactionRequest, out *GetTransactionResponse) error {
+func (h *Chain) GetTransaction(ctx context.Context, in *GetTransactionRequest, out *GetTransactionResponse) error {
 	return h.ChainHandler.GetTransaction(ctx, in, out)
 }
 
-func (h *chainHandler) GetBlock(ctx context.Context, in *GetBlockRequest, out *GetBlockResponse) error {
+func (h *Chain) GetBlock(ctx context.Context, in *GetBlockRequest, out *GetBlockResponse) error {
 	return h.ChainHandler.GetBlock(ctx, in, out)
 }
 
-func (h *chainHandler) GetInfo(ctx context.Context, in *GetInfoRequest, out *GetInfoResponse) error {
+func (h *Chain) GetInfo(ctx context.Context, in *GetInfoRequest, out *GetInfoResponse) error {
 	return h.ChainHandler.GetInfo(ctx, in, out)
 }
 
-func (h *chainHandler) GetAccount(ctx context.Context, in *GetAccountRequest, out *GetAccountResponse) error {
+func (h *Chain) GetAccount(ctx context.Context, in *GetAccountRequest, out *GetAccountResponse) error {
 	return h.ChainHandler.GetAccount(ctx, in, out)
 }
 
-func (h *chainHandler) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, out *GetKeyValueResponse) error {
+func (h *Chain) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, out *GetKeyValueResponse) error {
 	return h.ChainHandler.GetKeyValue(ctx, in, out)
 }
 
-func (h *chainHandler) GetAbi(ctx context.Context, in *GetAbiRequest, out *GetAbiResponse) error {
+func (h *Chain) GetAbi(ctx context.Context, in *GetAbiRequest, out *GetAbiResponse) error {
 	return h.ChainHandler.GetAbi(ctx, in, out)
 }
 
-func (h *chainHandler) GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, out *GetTransferCreditResponse) error {
+func (h *Chain) GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, out *GetTransferCreditResponse) error {
 	return h.ChainHandler.GetTransferCredit(ctx, in, out)
 }
