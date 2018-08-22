@@ -1,4 +1,4 @@
-﻿// Copyright 2017~2022 The Bottos Authors
+// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -23,9 +23,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-		"fmt"
+	"fmt"
 	"io/ioutil"
-		"os"
+	"os"
 
 	"golang.org/x/net/context"
 
@@ -34,7 +34,7 @@ import (
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/crypto-go/crypto"
-		"net/http"
+	"net/http"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
@@ -58,8 +58,8 @@ type Transaction struct {
 	Signature   string      `json:"signature"`
 }
 
-func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
-	chainInfoRsp, err := cli.client.GetInfo(context.TODO(), &chain.GetInfoRequest{})
+func getChainInfo() (*chain.GetInfoResponse_Result, error) {
+	chainInfoRsp, err := client.GetInfo(context.TODO(), &chain.GetInfoRequest{})
 	if err != nil || chainInfoRsp == nil {
 		fmt.Println(err)
 		return nil, err
@@ -69,7 +69,7 @@ func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 	return chainInfo, nil
 }
 
-func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
+func getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
 		getinfo := &chain.GetInfoRequest{}
 		req, _ := json.Marshal(getinfo)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -79,7 +79,7 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 			return nil, errors.New("Error!")
 		}
 		
-		var trxrespbody  TODO.ResponseStruct
+		var trxrespbody  TODO.Todo
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -93,14 +93,14 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 		}
 		
 		b, _ := json.Marshal(trxrespbody.Result)
-		//cli.jsonPrint(b)
+		//jsonPrint(b)
 		var chainInfo chain.GetInfoResponse_Result
 		json.Unmarshal(b, &chainInfo)
 		
 	return &chainInfo, nil
 }
 
-func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_hash string) (*chain.GetBlockResponse_Result, error) {
+func getBlockInfoOverHttp(http_url string, block_num uint64, block_hash string) (*chain.GetBlockResponse_Result, error) {
 		var getinfo *chain.GetBlockRequest
 		if block_num >= 0 {
 			getinfo = &chain.GetBlockRequest{BlockNum:block_num}
@@ -118,7 +118,7 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_ha
 			return nil, errors.New("Error!")
 		}
 		
-		var trxrespbody  TODO.ResponseStruct
+		var trxrespbody  TODO.Todo
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -132,14 +132,14 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_ha
 		}
 		
 		b, _ := json.Marshal(trxrespbody.Result)
-		//cli.jsonPrint(b)
+		//jsonPrint(b)
 		var blockInfo chain.GetBlockResponse_Result
 		json.Unmarshal(b, &blockInfo)
 		
 	return &blockInfo, nil
 }
 
-func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.GetAccountResponse_Result, error) {
+func getAccountInfoOverHttp(name string, http_url string) (*chain.GetAccountResponse_Result, error) {
 		
 		getinfo := &chain.GetAccountRequest{AccountName:name}
 		req, _ := json.Marshal(getinfo)
@@ -150,7 +150,7 @@ func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.Get
 			return nil, errors.New("Error!")
 		}
 		
-		var respbody  TODO.ResponseStruct
+		var respbody  TODO.Todo
 		
 		err = json.Unmarshal(httpRspBody, &respbody)
 		
@@ -164,14 +164,14 @@ func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.Get
 		}
 		
 		b, _ := json.Marshal(respbody.Result)
-		//cli.jsonPrint(b)
+		//jsonPrint(b)
 		var accountInfo chain.GetAccountResponse_Result
 		json.Unmarshal(b, &accountInfo)
 		
 	return &accountInfo, nil
 }
 
-func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
+func signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	ctrx := &types.BasicTransaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -200,10 +200,10 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	return BytesToHex(signdata), err
 }
 
-func (cli *CLI) transfer(from string, to string, amount int) {
-	//chainInfo, err := cli.getChainInfo()
+func transfer(from string, to string, amount int) {
+	//chainInfo, err := getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := getChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -246,14 +246,14 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 		SigAlg:      1,
 	}
 
-	sign, err := cli.signTrx(trx, param)
+	sign, err := signTrx(trx, param)
 	if err != nil {
 		return
 	}
 
 	trx.Signature = sign
 
-	newAccountRsp, err := cli.client.SendTransaction(context.TODO(), trx)
+	newAccountRsp, err := client.SendTransaction(context.TODO(), trx)
 	if err != nil || newAccountRsp == nil {
 		fmt.Println(err)
 		return
@@ -287,11 +287,11 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
-func (cli *CLI) jsonPrint(data []byte) {
+func jsonPrint(data []byte) {
 	var out bytes.Buffer
 	json.Indent(&out, data, "", "    ")
 
@@ -335,11 +335,11 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	return *Abi, nil
 }
 
-func (cli *CLI) newaccount(name string, pubkey string) {
+func newaccount(name string, pubkey string) {
 
-	//chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := getChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -380,14 +380,14 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		SigAlg:      1,
 	}
 
-	sign, err := cli.signTrx(trx, param)
+	sign, err := signTrx(trx, param)
 	if err != nil {
 		return
 	}
 
 	trx.Signature = sign
 
-	/*rsp, err := cli.client.SendTransaction(context.TODO(), trx)
+	/*rsp, err := client.SendTransaction(context.TODO(), trx)
 	if err != nil || rsp == nil {
 		fmt.Println(err)
 		return
@@ -434,15 +434,15 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 	fmt.Printf("TrxHash: %v\n", rsp.Result.TrxHash)
 }
 
-func (cli *CLI) getaccount(name string) {
-	//accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
+func getaccount(name string) {
+	//accountRsp, err := client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
 	
 	infourl := "http://" + ChainAddr + "/v1/account/info"
-	account, err := cli.getAccountInfoOverHttp(name, infourl)
+	account, err := getAccountInfoOverHttp(name, infourl)
 	
 	if err != nil || account == nil {
 		return
@@ -459,11 +459,11 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
 }
 
-func (cli *CLI) deploycode(name string, path string) {
+func deploycode(name string, path string) {
 	
-	//chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := getChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -519,7 +519,7 @@ func (cli *CLI) deploycode(name string, path string) {
 		SigAlg:      1,
 	}
 
-	sign, err := cli.signTrx(trx, param)
+	sign, err := signTrx(trx, param)
 	if err != nil {
 		return
 	}
@@ -530,7 +530,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	http_method := "restful"
 
 	if http_method == "grpc" {
-		deployCodeRsp, err = cli.client.SendTransaction(context.TODO(), trx)
+		deployCodeRsp, err = client.SendTransaction(context.TODO(), trx)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -595,7 +595,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 	fmt.Printf("TrxHash: %v\n", deployCodeRsp.Result.TrxHash)
 }
 
@@ -607,10 +607,10 @@ func checkAbi(abiRaw []byte) error {
 	return nil
 }
 
-func (cli *CLI) deployabi(name string, path string) {
-	//chainInfo, err := cli.getChainInfo()
+func deployabi(name string, path string) {
+	//chainInfo, err := getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := getChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -665,7 +665,7 @@ func (cli *CLI) deployabi(name string, path string) {
 		SigAlg:      1,
 	}
 
-	sign, err := cli.signTrx(trx1, param)
+	sign, err := signTrx(trx1, param)
 	if err != nil {
 		return
 	}
@@ -676,7 +676,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	var deployAbiRsp *chain.SendTransactionResponse
 	
 	if http_method == "grpc" {
-		deployAbiRsp, err = cli.client.SendTransaction(context.TODO(), trx1)
+		deployAbiRsp, err = client.SendTransaction(context.TODO(), trx1)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -700,7 +700,7 @@ func (cli *CLI) deployabi(name string, path string) {
 	}
 
 	b, _ := json.Marshal(deployAbiRsp)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 }
 
 //BytesToHex hex encode

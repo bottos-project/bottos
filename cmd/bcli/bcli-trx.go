@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"encoding/json"
@@ -58,7 +58,7 @@ type GetTransactionResponse struct {
 	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
-func (cli *CLI) BcliGetTransaction (trxhash string) {
+func BcliGetTransaction (trxhash string) {
 	
 	var newAccountRsp *chain.GetTransactionResponse
 	var err error
@@ -67,7 +67,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 
 	if http_method == "grpc" {
 		gettrx := &chain.GetTransactionRequest{trxhash}
-		newAccountRsp, err = cli.client.GetTransaction(context.TODO(), gettrx)
+		newAccountRsp, err = client.GetTransaction(context.TODO(), gettrx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
 			return
@@ -82,7 +82,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 		fmt.Printf("GetTransaction Succeed\n")
 
 		b, _ := json.Marshal(newAccountRsp.Result)
-		cli.jsonPrint(b)
+		jsonPrint(b)
 
 		fmt.Printf("Trx: %v\n", newAccountRsp.Result)
 
@@ -97,7 +97,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 			return
 		}
 		
-		var trxrespbody TODO.ResponseStruct
+		var trxrespbody TODO.Todo
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -107,11 +107,11 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 		}
 		
 		b, _ := json.Marshal(trxrespbody.Result)
-		cli.jsonPrint(b)
+		jsonPrint(b)
 	}
 }
 
-func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
+func BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
@@ -119,9 +119,9 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
            return
         }
 	
-	//chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := getChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
@@ -148,7 +148,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 		SigAlg:      1,
 	}
 	
-	sign, err := cli.signTrx(trx, param)
+	sign, err := signTrx(trx, param)
 	if err != nil {
 	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
 		return
@@ -159,7 +159,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 	var newAccountRsp *chain.SendTransactionResponse
 	
 	if http_method == "grpc" {
-		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), trx)
+		newAccountRsp, err = client.SendTransaction(context.TODO(), trx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
 	   		fmt.Println("Push Transaction fail due to get grpc response failed.")
@@ -203,7 +203,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
@@ -211,7 +211,7 @@ type GetContractCodeAbi struct {
 	Contract string `json:"contract"`
 }
 
-func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, save_to_abi_path string) (string, string) {
+func BcliGetContractCode (contract string, save_to_wasm_path string, save_to_abi_path string) (string, string) {
 	
 	var err error
 	
@@ -225,7 +225,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 		return "", ""
 	}
 	
-	var trxrespbody TODO.ResponseStruct
+	var trxrespbody TODO.Todo
 	var contractcode string
 	var abivalue     string
 	
@@ -238,7 +238,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	
 	fmt.Println("\n============CONTRACTCODE===============\n", req_new)
 	b, _ := json.Marshal(trxrespbody.Result)
-	cli.jsonPrint(b)
+	jsonPrint(b)
 
 	http_urlAbi := "http://"+ChainAddr+ "/v1/contract/abi"
 
@@ -271,7 +271,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 }
 
 
-func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
+func BCliGetTableInfo (contract string, table string, key string) {
 
 		http_url := "http://"+ChainAddr+ "/v1/common/query"
 		GetKeyReq := chain.GetKeyValueRequest{ Contract: contract, Object:table, Key: key }
