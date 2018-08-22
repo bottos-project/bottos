@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -79,7 +79,7 @@ func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Re
 			return nil, errors.New("Error!")
 		}
 		
-		var trxrespbody  TODO.Todo
+		var trxrespbody  TODO.ResponseStruct
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -118,7 +118,7 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_ha
 			return nil, errors.New("Error!")
 		}
 		
-		var trxrespbody  TODO.Todo
+		var trxrespbody  TODO.ResponseStruct
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -150,7 +150,7 @@ func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.Get
 			return nil, errors.New("Error!")
 		}
 		
-		var respbody  TODO.Todo
+		var respbody  TODO.ResponseStruct
 		
 		err = json.Unmarshal(httpRspBody, &respbody)
 		

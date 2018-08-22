@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"encoding/json"
@@ -97,7 +97,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 			return
 		}
 		
-		var trxrespbody TODO.Todo
+		var trxrespbody TODO.ResponseStruct
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -225,7 +225,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 		return "", ""
 	}
 	
-	var trxrespbody TODO.Todo
+	var trxrespbody TODO.ResponseStruct
 	var contractcode string
 	var abivalue     string
 	

@@ -55,9 +55,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func TodoIndex(w http.ResponseWriter, r *http.Request) {
-	todos := Todos{
-		Todo{Msg: "Write presentation"},
-		Todo{Msg: "Host meetup"},
+	todos := ResponseStructs{
+		ResponseStruct{Msg: "Write presentation"},
+		ResponseStruct{Msg: "Host meetup"},
 	}
 
 	if err := json.NewEncoder(w).Encode(todos); err != nil {
@@ -90,7 +90,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	msgReq := &message.QueryChainInfoReq{}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
@@ -138,7 +138,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		msgReq.BlockNum}
 
 	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
@@ -207,7 +207,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
-	var resp Todo
+	var resp ResponseStruct
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
@@ -339,7 +339,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		TrxHash: common.HexToHash(req.TrxHash),
 }
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = 1
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -379,7 +379,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	name := msgReq.AccountName
 
 	account, err := roleIntf.GetAccount(name)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -435,7 +435,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 	object := req.Object
 	key := req.Key
 	value, err := roleIntf.GetBinValue(contract, object, key)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
@@ -468,7 +468,7 @@ func GetContractAbi(w http.ResponseWriter, r *http.Request) {
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -501,7 +501,7 @@ func GetContractCode(w http.ResponseWriter, r *http.Request) {
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -535,7 +535,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	name := req.Name
 	spender := req.Spender
 	credit, err := roleIntf.GetTransferCredit(name, spender)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrTransferCreditNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrTransferCreditNotFound)
