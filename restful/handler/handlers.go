@@ -412,8 +412,8 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	result := &api.GetAccountResponse_Result{}
 	result.AccountName = name
 	result.Pubkey = common.BytesToHex(account.PublicKey)
-	result.Balance = balance.Balance
-	result.StakedBalance = stakedBalance.StakedBalance
+	result.Balance = balance.Balance.String()
+	result.StakedBalance = stakedBalance.StakedBalance.String()
 	resp.Result=result
 	resp.Errcode = 0
 
@@ -548,7 +548,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	result := &api.GetTransferCreditResponse_Result{}
 	result.Name = credit.Name
 	result.Spender = credit.Spender
-	result.Limit = credit.Limit
+	result.Limit = credit.Limit.String()
 	resp.Result = result
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
