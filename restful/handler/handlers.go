@@ -24,6 +24,7 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/config"
+	"regexp"
 )
 
 //ApiService is actor service
@@ -186,13 +187,61 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 		return
 	}
-
-	if trx == nil {
-		//rsp.retCode = ??
-		if err := json.NewEncoder(w).Encode(trx); err != nil {
+	var resp ResponseStruct
+	if trx != nil {
+		//verity Sender
+		match, err := regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Sender)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				panic(err)
+			}
+			return
+		}
+		//verity Contract
+		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Contract)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
 		return
+	}
+		//verity Method
+		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Method)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				panic(err)
+			}
+			return
+		}
+	} else {
+		//rsp.retCode = ??
 	}
 
 	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
@@ -209,7 +258,6 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
-	var resp ResponseStruct
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
@@ -266,7 +314,6 @@ type Transaction struct {
 	Signature   string `json:"signature"`
 }
 
-
 func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
 	account, err := r.GetAccount(contract)
 	if err != nil {
@@ -280,7 +327,6 @@ func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
 
 	return Abi, nil
 }
-
 
 func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, Method string) (interface{}, error) {
 	var Abi *abi.ABI = nil
