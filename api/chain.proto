@@ -40,7 +40,7 @@ message GetTransactionResponse{
 
 
 message GetBlockRequest{
-	uint32				block_num			= 1;
+	uint64				block_num			= 1;
 	string 				block_hash			= 2;
 }
 
