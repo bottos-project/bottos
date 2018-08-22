@@ -99,7 +99,7 @@ type GenesisConfig struct {
 type InitDelegate struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"public_key"`
-	Balance   uint64 `json:"balance"`
+	Balance   string `json:"balance"`
 }
 
 func InitConfig() {
