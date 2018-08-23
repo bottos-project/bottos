@@ -100,13 +100,35 @@ func U256Mul(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
 		return result, errors.New("bigInt overflow3")
 	}
 
-	if 0 != a.Cmp(big.NewInt(0)) {			
+	if 0 != a.Cmp(big.NewInt(0)) {
 		d := big.NewInt(0)
 		//d = c / a
 		d = d.Div(result, a)
 		if 0 != b.Cmp(d) {
 			return result, errors.New("bigInt overflow4")
 		}
+	}
+
+	return result, nil
+}
+
+func U256Div(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c uint64
+	result = result.Div(a, b)
+
+	if 1 == result.Cmp(common.MaxUint256()) {
+		return result, errors.New("bigInt overflow3")
+	}
+
+	return result, nil
+}
+
+func U256Mod(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c uint64
+	result = result.Mod(a, b)
+
+	if 1 == result.Cmp(common.MaxUint256()) {
+		return result, errors.New("bigInt overflow3")
 	}
 
 	return result, nil
