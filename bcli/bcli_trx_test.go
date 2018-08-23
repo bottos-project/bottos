@@ -4,9 +4,15 @@ import (
 	"testing"
 	"time"
 	"io/ioutil"
+	"fmt"
 )
 
 func Test_PushTransaction(t *testing.T) {
+	/*var a []string
+	b := []string{}
+	fmt.Println("a:", a, ", b:", b, ", len a:", len(a), ", len(b):", len(b))
+	fmt.Println("a == nil", a == nil, ", b == nil", b == nil)
+	*/
 	cli := NewCLI()
 	CONFIG = &CLIConfig{}
 	CONFIG.KeyPairs = []KeyPair{{ PrivateKey: "b799ef616830cd7b8599ae7958fbee56d4c8168ffd5421a16025a398b8a4be45", PublicKey: "0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f"},}
