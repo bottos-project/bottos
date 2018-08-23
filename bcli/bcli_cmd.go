@@ -62,7 +62,7 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 }
 
 func (cli *CLI) BcliGetChainInfo(ctx *cli.Context) error {
-	chainInfo, err := cli.getChainInfoOverHttp("http://"+ChainAddr+"/v1/block/height")
+	chainInfo, err := cli.GetChainInfoOverHttp("http://"+ChainAddr+"/v1/block/height")
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return nil
