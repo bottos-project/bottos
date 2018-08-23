@@ -115,7 +115,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
-	   fmt.Println("Push Transaction fail due to get Abi failed.")
+	   fmt.Println("Push Transaction fail due to get Abi failed:", pushtrxinfo.contract)
            return
         }
 	

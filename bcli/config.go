@@ -30,7 +30,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
+	
 	"github.com/bottos-project/bottos/common"
 )
 
@@ -45,7 +45,6 @@ var CONFIG *CLIConfig
 //CLIConfig configure key pairs
 type CLIConfig struct {
 	KeyPairs []KeyPair `json:"key_pairs"`
-	ChainId  string `json:"chain_id"`
 }
 
 //KeyPair key pair
@@ -98,11 +97,18 @@ func GetDefaultKey() ([]byte, error) {
 //GetChainId get chain id
 func GetChainId() ([]byte, error) {
 	if CONFIG != nil {
-		return common.HexStringToBytes(CONFIG.ChainId), nil
+		infourl := "http://" + ChainAddr + "/v1/block/height"
+                cli := &CLI{}
+		chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+		if err != nil {
+			return []byte("00000000000000000000000000000000"), nil
+		}
+		return common.HexStringToBytes(chainInfo.ChainId), nil
 	}
 
 	return []byte{}, fmt.Errorf("Chain Id Not Found")
 }
+
 func loadConfigJson(fn string) ([]byte, error) {
 	file, e := ioutil.ReadFile(fn)
 	if e != nil {
