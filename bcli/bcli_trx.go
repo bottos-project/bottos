@@ -121,7 +121,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
