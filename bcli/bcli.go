@@ -70,7 +70,7 @@ func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 	return chainInfo, nil
 }
 
-func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
+func (cli *CLI) GetChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
 		getinfo := &chain.GetInfoRequest{}
 		req, _ := json.Marshal(getinfo)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -203,7 +203,7 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 func (cli *CLI) transfer(from string, to string, amount big.Int) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -359,7 +359,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -507,7 +507,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -654,7 +654,7 @@ func checkAbi(abiRaw []byte) error {
 func (cli *CLI) deployabi(name string, path string) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
