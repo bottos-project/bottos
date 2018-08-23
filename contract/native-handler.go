@@ -163,8 +163,6 @@ func setDelegate(ctx *Context) ContractError {
 		if err != nil {
 			return ERROR_CONT_HANDLE_FAIL
 		}
-		//create delegate vote role
-		ctx.RoleIntf.CreateDelegateVotes()
 
 		newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
 		newDelegateVotes.OwnerAccount = newdelegate.AccountName
