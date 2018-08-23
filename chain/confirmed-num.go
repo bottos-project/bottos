@@ -26,7 +26,7 @@
 package chain
 
 //ConfirmedNum confirm array
-type ConfirmedNum []uint32
+type ConfirmedNum []uint64
 
 func (c ConfirmedNum) Len() int {
 	return len(c)

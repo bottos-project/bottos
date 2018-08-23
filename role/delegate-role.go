@@ -46,7 +46,7 @@ type Delegate struct {
 	LastSlot              uint64 `json:"last_slot"`
 	ReportKey             string `json:"report_key"`
 	TotalMissed           int64  `json:"total_missed"`
-	LastConfirmedBlockNum uint32 `json:"last_confirmed_block_num"`
+	LastConfirmedBlockNum uint64 `json:"last_confirmed_block_num"`
 }
 
 // CreateDelegateRole is to save initial delegate

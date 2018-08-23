@@ -26,7 +26,7 @@
 package transaction
 
 import (
-	"encoding/json"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	bottosErr "github.com/bottos-project/bottos/common/errors"
@@ -66,7 +66,7 @@ func (t *Transaction) SendNewTrx(notify *message.NotifyTrx) {
 }
 
 func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint16) {
-	buf, err := json.Marshal(data)
+	buf, err := bpl.Marshal(data)
 	if err != nil {
 		log.Errorf("Transaction send marshal error")
 	}
@@ -93,7 +93,7 @@ func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint1
 func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
 	var trx types.Transaction
 
-	err := json.Unmarshal(p.Data, &trx)
+	err := bpl.Unmarshal(p.Data, &trx)
 	if err != nil {
 		log.Errorf("processTrxInfo Unmarshal error")
 		return

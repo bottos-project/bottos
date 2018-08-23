@@ -30,6 +30,7 @@ import (
 
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/db"
+	"math/big"
 )
 
 // BalanceObjectName is definition of object name of balance
@@ -41,13 +42,13 @@ const StakedBalanceObjectName string = "staked_balance"
 // Balance is definition of balance
 type Balance struct {
 	AccountName string `json:"account_name"`
-	Balance     uint64 `json:"balance"`
+	Balance     *big.Int `json:"balance"`
 }
 
 // StakedBalance is definition of stake balance
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
-	StakedBalance uint64 `json:"staked_balance"`
+	StakedBalance *big.Int `json:"staked_balance"`
 }
 
 // CreateBalanceRole is to create balance role
@@ -73,7 +74,7 @@ func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 		return nil, err
 	}
 
-	res := &Balance{}
+	res := &Balance{Balance:big.NewInt(0)}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
 		return nil, err
@@ -82,48 +83,47 @@ func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 	return res, nil
 }
 
-func safeAdd(a uint64, b uint64) (uint64, error) {
-	var c uint64
-	c, err := safemath.Uint64Add(a, b)
+func safeAdd(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c uint64
+	result, err := safemath.U256Add(result, a, b)
 	if err != nil {
-		return 0, err
+		return result, err
 	}
-	return c, nil
+	return result, nil
 }
 
-func safeSub(a uint64, b uint64) (uint64, error) {
-	var c uint64
-	c, err := safemath.Uint64Sub(a, b)
+func safeSub(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	result, err := safemath.U256Sub(result, a, b)
 	if err != nil {
-		return 0, err
+		return result, err
 	}
-	return c, nil
+	return result, nil
 }
 
 // SafeAdd is safe function to add balance
-func (balance *Balance) SafeAdd(amount uint64) error {
-	var a, c uint64
-	a = balance.Balance
-	c, err := safeAdd(a, amount)
+func (balance *Balance) SafeAdd(amount *big.Int) error {
+	//var a, c uint64
+	result := big.NewInt(0)
+	result, err := safeAdd(result, balance.Balance, amount)
 	if err != nil {
 		return err
 	}
 
-	balance.Balance = c
+	balance.Balance.Set(result)
 	return nil
-
 }
 
 // SafeSub is safe function to sub balance
-func (balance *Balance) SafeSub(amount uint64) error {
-	var a, c uint64
-	a = balance.Balance
-	c, err := safeSub(a, amount)
+//var a, c big.Int
+func (balance *Balance) SafeSub(amount *big.Int) error {
+	result := big.NewInt(0)
+	//a = 
+	result, err := safeSub(result, balance.Balance, amount)
 	if err != nil {
 		return err
 	}
 
-	balance.Balance = c
+	balance.Balance.Set(result)
 	return nil
 }
 
@@ -161,27 +161,28 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 }
 
 // SafeAdd is safe function to add  stake balance
-func (balance *StakedBalance) SafeAdd(amount uint64) error {
-	var a, c uint64
-	a = balance.StakedBalance
-	c, err := safeAdd(a, amount)
+func (balance *StakedBalance) SafeAdd(amount *big.Int) error {
+	//var a, c uint64
+	result := big.NewInt(0)
+	//a = balance.StakedBalance
+	result, err := safeAdd(result, balance.StakedBalance, amount)
 	if err != nil {
 		return err
 	}
 
-	balance.StakedBalance = c
+	balance.StakedBalance.Set(result)
 	return nil
 }
 
 // SafeSub is safe function to sub stake balance
-func (balance *StakedBalance) SafeSub(amount uint64) error {
-	var a, c uint64
-	a = balance.StakedBalance
-	c, err := safeSub(a, amount)
+func (balance *StakedBalance) SafeSub(amount *big.Int) error {
+	//var a, c uint64
+	result := big.NewInt(0)
+	result, err := safeSub(result, balance.StakedBalance, amount)
 	if err != nil {
 		return err
 	}
 
-	balance.StakedBalance = c
+	balance.StakedBalance.Set(result)
 	return nil
 }

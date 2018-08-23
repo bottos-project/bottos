@@ -54,14 +54,14 @@ type BlockChainInterface interface {
 
 	HasBlock(hash common.Hash) bool
 	GetBlockByHash(hash common.Hash) *types.Block
-	GetBlockByNumber(number uint32) *types.Block
-	GetHeaderByNumber(number uint32) *types.Header
+	GetBlockByNumber(number uint64) *types.Block
+	GetHeaderByNumber(number uint64) *types.Header
 
 	HeadBlockTime() uint64
-	HeadBlockNum() uint32
+	HeadBlockNum() uint64
 	HeadBlockHash() common.Hash
 	HeadBlockDelegate() string
-	LastConsensusBlockNum() uint32
+	LastConsensusBlockNum() uint64
 	GenesisTimestamp() uint64
 
 	ValidateBlock(block *types.Block) uint32

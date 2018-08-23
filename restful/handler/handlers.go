@@ -23,6 +23,8 @@ import (
 	service "github.com/bottos-project/bottos/action/actor/api"
 	log "github.com/cihub/seelog"
 	"github.com/bottos-project/bottos/contract/abi"
+	"github.com/bottos-project/bottos/config"
+	"regexp"
 )
 
 //ApiService is actor service
@@ -55,9 +57,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func TodoIndex(w http.ResponseWriter, r *http.Request) {
-	todos := Todos{
-		Todo{Msg: "Write presentation"},
-		Todo{Msg: "Host meetup"},
+	todos := ResponseStructs{
+		ResponseStruct{Msg: "Write presentation"},
+		ResponseStruct{Msg: "Host meetup"},
 	}
 
 	if err := json.NewEncoder(w).Encode(todos); err != nil {
@@ -90,7 +92,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	msgReq := &message.QueryChainInfoReq{}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
@@ -117,6 +119,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	result.HeadBlockTime = response.HeadBlockTime
 	result.HeadBlockDelegate = response.HeadBlockDelegate
 	result.CursorLabel = response.HeadBlockHash.Label()
+	result.ChainId=common.BytesToHex(config.GetChainID())
 	resp.Result = result
 
 	resp.Errcode = 0
@@ -138,7 +141,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 		msgReq.BlockNum}
 
 	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
@@ -184,13 +187,61 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 		return
 	}
-
-	if trx == nil {
-		//rsp.retCode = ??
-		if err := json.NewEncoder(w).Encode(trx); err != nil {
+	var resp ResponseStruct
+	if trx != nil {
+		//verity Sender
+		match, err := regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Sender)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				panic(err)
+			}
+			return
+		}
+		//verity Contract
+		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Contract)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)
 		}
 		return
+	}
+		//verity Method
+		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Method)
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				//panic(err)
+				log.Error(err)
+			}
+			return
+		}
+		if !match {
+			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				panic(err)
+			}
+			return
+		}
+	} else {
+		//rsp.retCode = ??
 	}
 
 	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
@@ -207,7 +258,6 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 
 	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
-	var resp Todo
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
@@ -253,7 +303,7 @@ type reqStruct struct {
 
 type Transaction struct {
 	Version     uint32 `json:"version"`
-	CursorNum   uint32 `json:"cursor_num"`
+	CursorNum   uint64 `json:"cursor_num"`
 	CursorLabel uint32 `json:"cursor_label"`
 	Lifetime    uint64 `json:"lifetime"`
 	Sender      string `json:"sender"`
@@ -263,7 +313,6 @@ type Transaction struct {
 	SigAlg      uint32 `json:"sig_alg"`
 	Signature   string `json:"signature"`
 }
-
 
 func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
 	account, err := r.GetAccount(contract)
@@ -278,7 +327,6 @@ func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
 
 	return Abi, nil
 }
-
 
 func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, Method string) (interface{}, error) {
 	var Abi *abi.ABI = nil
@@ -339,7 +387,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		TrxHash: common.HexToHash(req.TrxHash),
 }
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = 1
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -379,7 +427,7 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	name := msgReq.AccountName
 
 	account, err := roleIntf.GetAccount(name)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -412,8 +460,8 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	result := &api.GetAccountResponse_Result{}
 	result.AccountName = name
 	result.Pubkey = common.BytesToHex(account.PublicKey)
-	result.Balance = balance.Balance
-	result.StakedBalance = stakedBalance.StakedBalance
+	result.Balance = balance.Balance.String()
+	result.StakedBalance = stakedBalance.StakedBalance.String()
 	resp.Result=result
 	resp.Errcode = 0
 
@@ -435,7 +483,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request) {
 	object := req.Object
 	key := req.Key
 	value, err := roleIntf.GetBinValue(contract, object, key)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiObjectNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiObjectNotFound)
@@ -468,7 +516,7 @@ func GetContractAbi(w http.ResponseWriter, r *http.Request) {
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -501,7 +549,7 @@ func GetContractCode(w http.ResponseWriter, r *http.Request) {
 	}
 	//contract := req.Contract
 	account, err := roleIntf.GetAccount(req.Contract)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
@@ -535,7 +583,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	name := req.Name
 	spender := req.Spender
 	credit, err := roleIntf.GetTransferCredit(name, spender)
-	var resp Todo
+	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrTransferCreditNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrTransferCreditNotFound)
@@ -548,7 +596,7 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	result := &api.GetTransferCreditResponse_Result{}
 	result.Name = credit.Name
 	result.Spender = credit.Spender
-	result.Limit = credit.Limit
+	result.Limit = credit.Limit.String()
 	resp.Result = result
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {

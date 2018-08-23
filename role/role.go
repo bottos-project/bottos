@@ -67,8 +67,8 @@ type RoleInterface interface {
 	SetDelegateVotes(key string, value *DelegateVotes) error
 	GetAllDelegateVotes() ([]*DelegateVotes, error)
 
-	SetBlockHistory(blockNumber uint32, blockHash common.Hash) error
-	GetBlockHistory(blockNumber uint32) (*BlockHistory, error)
+	SetBlockHistory(blockNumber uint64, blockHash common.Hash) error
+	GetBlockHistory(blockNumber uint64) (*BlockHistory, error)
 	AddTransactionHistory(txHash common.Hash, blockHash common.Hash) error
 	GetTransactionHistory(txHash common.Hash) (common.Hash, error)
 	SetTransactionExpiration(txHash common.Hash, value *TransactionExpiration) error
@@ -228,12 +228,12 @@ func (r *Role) GetCandidateBySlot(slotNum uint64) (string, error) {
 }
 
 //SetBlockHistory is setting block history
-func (r *Role) SetBlockHistory(blockNumber uint32, blockHash common.Hash) error {
+func (r *Role) SetBlockHistory(blockNumber uint64, blockHash common.Hash) error {
 	return SetBlockHistoryRole(r.Db, blockNumber, blockHash)
 }
 
 //GetBlockHistory is getting block history
-func (r *Role) GetBlockHistory(blockNumber uint32) (*BlockHistory, error) {
+func (r *Role) GetBlockHistory(blockNumber uint64) (*BlockHistory, error) {
 	return GetBlockHistoryRole(r.Db, blockNumber)
 }
 

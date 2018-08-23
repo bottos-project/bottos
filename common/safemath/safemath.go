@@ -27,6 +27,9 @@ package safemath
 
 import (
 	"errors"
+	"math/big"
+
+	"github.com/bottos-project/bottos/common"
 )
 
 //Uint64Add safe add
@@ -64,4 +67,47 @@ func Uint64Mul(a uint64, b uint64) (uint64, error) {
 	}
 
 	return c, nil
+}
+
+//U256IntAdd safe add
+func U256Add(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c uint64
+	result = result.Add(a, b)
+	if 1 != result.Cmp(common.MaxUint256()) {
+		return result, nil
+	}
+
+	return result, errors.New("bigInt overflow1")
+}
+
+//U256Sub safe sub
+func U256Sub(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c big.Int
+	if 1 != b.Cmp(a) {
+		result = result.Sub(a, b)
+		return result, nil
+	}
+
+	return result, errors.New("bigInt overflow2")
+}
+
+//U256Mul safe mul
+func U256Mul(result *big.Int, a *big.Int, b *big.Int) (*big.Int, error) {
+	//var c uint64
+	result = result.Mul(a, b)
+
+	if 1 == result.Cmp(common.MaxUint256()) {
+		return result, errors.New("bigInt overflow3")
+	}
+
+	if 0 != a.Cmp(big.NewInt(0)) {			
+		d := big.NewInt(0)
+		//d = c / a
+		d = d.Div(result, a)
+		if 0 != b.Cmp(d) {
+			return result, errors.New("bigInt overflow4")
+		}
+	}
+
+	return result, nil
 }

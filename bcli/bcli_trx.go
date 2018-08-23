@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"encoding/json"
@@ -58,14 +58,13 @@ type GetTransactionResponse struct {
 	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
-func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash string) {
-	if http_method != "restful" && http_method != "grpc" {
-		return
-	}
+func (cli *CLI) BcliGetTransaction (trxhash string) {
 	
 	var newAccountRsp *chain.GetTransactionResponse
 	var err error
 	
+	http_method := "restful"
+
 	if http_method == "grpc" {
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		newAccountRsp, err = cli.client.GetTransaction(context.TODO(), gettrx)
@@ -88,6 +87,7 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 		fmt.Printf("Trx: %v\n", newAccountRsp.Result)
 
 	} else {
+		http_url := "http://"+ChainAddr+ "/v1/transaction/get"
 		gettrx := &chain.GetTransactionRequest{trxhash}
 		req, _ := json.Marshal(gettrx)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -97,7 +97,7 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 			return
 		}
 		
-		var trxrespbody TODO.Todo
+		var trxrespbody TODO.ResponseStruct
 		
 		err = json.Unmarshal(httpRspBody, &trxrespbody)
 		
@@ -111,17 +111,18 @@ func (cli *CLI) BcliGetTransaction (http_method string, http_url string, trxhash
 	}
 }
 
-func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtrxinfo *BcliPushTrxInfo) {
-	if http_method != "restful" && http_method != "grpc" {
-		return
-	}
+func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed.")
            return
         }
 	
-	chainInfo, err := cli.getChainInfo()
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)
 		return
@@ -130,7 +131,6 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	mapstruct := make(map[string]interface{})
 	
 	for key, value := range(pushtrxinfo.ParamMap) {
-	
         	abi.Setmapval(mapstruct, key, value)
 	}
 
@@ -150,24 +150,23 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 	
 	sign, err := cli.signTrx(trx, param)
 	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
 		return
 	}
 	
+	http_method := "restful"
 	trx.Signature = sign
 	var newAccountRsp *chain.SendTransactionResponse
-
+	
 	if http_method == "grpc" {
 		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), trx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
-			return
-		}
-		if newAccountRsp.Errcode != 0 {
-			fmt.Printf("Transfer error:\n")
-			fmt.Printf("    %s\n", newAccountRsp)
+	   		fmt.Println("Push Transaction fail due to get grpc response failed.")
 			return
 		}
 	} else {
+		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -179,9 +178,14 @@ func (cli *CLI) BcliPushTransaction (http_method string, http_url string, pushtr
 		json.Unmarshal(httpRspBody, &respbody)
 		newAccountRsp = &respbody
 	}
-	
 
-	fmt.Printf("Transfer Succeed\n")
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
 	fmt.Printf("Trx: \n")
 
 	printTrx := Transaction{
@@ -211,7 +215,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	
 	var err error
 	
-	httpurl_contractcode := "http://"+CONFIG.ChainAddr+"/v1/contract/code"
+	httpurl_contractcode := "http://"+ChainAddr+"/v1/contract/code"
 	getcontract := &GetContractCodeAbi{Contract: contract}
 	req, _ := json.Marshal(getcontract)
 	req_new := bytes.NewBuffer([]byte(req))
@@ -221,7 +225,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 		return "", ""
 	}
 	
-	var trxrespbody TODO.Todo
+	var trxrespbody TODO.ResponseStruct
 	var contractcode string
 	var abivalue     string
 	
@@ -236,7 +240,7 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	b, _ := json.Marshal(trxrespbody.Result)
 	cli.jsonPrint(b)
 
-	http_urlAbi := "http://"+CONFIG.ChainAddr+ "/v1/contract/abi"
+	http_urlAbi := "http://"+ChainAddr+ "/v1/contract/abi"
 
 	getcontract = &GetContractCodeAbi{Contract: contract}
 	req, _ = json.Marshal(getcontract)
@@ -260,5 +264,32 @@ func (cli *CLI) BcliGetContractCode (contract string, save_to_wasm_path string, 
 	fmt.Println("\n============ABI===============\n", req_new)
 	fmt.Println(trxrespbody.Result)
 	
+	writeFileToBinary(contractcode, save_to_wasm_path)
+        ioutil.WriteFile(save_to_abi_path, []byte(abivalue), 0644)
+
 	return contractcode, abivalue
+}
+
+
+func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
+
+		http_url := "http://"+ChainAddr+ "/v1/common/query"
+		GetKeyReq := chain.GetKeyValueRequest{ Contract: contract, Object:table, Key: key }
+
+		req, _ := json.Marshal(GetKeyReq)
+    		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			return
+		}
+		var respbody chain.GetKeyValueResponse
+		json.Unmarshal(httpRspBody, &respbody)
+		newAccountRsp := &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("BCliGetTableInfo error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
 }

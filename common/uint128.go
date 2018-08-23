@@ -27,11 +27,18 @@ package common
 
 import (
 	"math/big"
+	
 )
 
 //MaxUint128 return max value of 128 bit
 func MaxUint128() *big.Int {
 	maxValue := bigpow(2, 128)
+	return maxValue
+}
+
+//MaxUint256 return max value of 128 bit
+func MaxUint256() *big.Int {
+	maxValue := bigpow(2, 256)
 	return maxValue
 }
 

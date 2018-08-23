@@ -165,7 +165,7 @@ func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 }
 
 //GetBlockByNumber get block from cache and chain by number
-func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
+func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
 	block := bc.blockCache.GetBlockByNum(number)
 	if block != nil {
 		return block
@@ -178,7 +178,7 @@ func (bc *BlockChain) GetBlockByNumber(number uint32) *types.Block {
 	return bc.GetBlock(hash)
 }
 
-func (bc *BlockChain) GetHeaderByNumber(number uint32) *types.Header {
+func (bc *BlockChain) GetHeaderByNumber(number uint64) *types.Header {
 	block := bc.GetBlockByNumber(number)
 	if block != nil {
 		return block.Header
@@ -188,7 +188,7 @@ func (bc *BlockChain) GetHeaderByNumber(number uint32) *types.Header {
 }
 
 //GetBlockHashByNumber get block hash from chain by number
-func (bc *BlockChain) GetBlockHashByNumber(number uint32) common.Hash {
+func (bc *BlockChain) GetBlockHashByNumber(number uint64) common.Hash {
 	return GetBlockHashByNumber(bc.blockDb, number)
 }
 
@@ -204,7 +204,7 @@ func (bc *BlockChain) HeadBlockTime() uint64 {
 }
 
 //HeadBlockNum get lastest block number
-func (bc *BlockChain) HeadBlockNum() uint32 {
+func (bc *BlockChain) HeadBlockNum() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockNum
 }
@@ -222,7 +222,7 @@ func (bc *BlockChain) HeadBlockDelegate() string {
 }
 
 //LastConsensusBlockNum get lastest consensus block numnber
-func (bc *BlockChain) LastConsensusBlockNum() uint32 {
+func (bc *BlockChain) LastConsensusBlockNum() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastConsensusBlockNum
 }
@@ -268,7 +268,7 @@ func (bc *BlockChain) LoadBlockDb() error {
 }
 
 func (bc *BlockChain) updateCoreState(block *types.Block) {
-	if block.Header.Number%config.BLOCKS_PER_ROUND == 0 {
+	if block.Header.Number%uint64(config.BLOCKS_PER_ROUND) == 0 {
 		schedule, err := bc.roleIntf.ShuffleEelectCandidateList(block)
 		if err != nil {
 			return
@@ -381,7 +381,7 @@ func (bc *BlockChain) updateConsensusBlock(block *types.Block) {
 	bc.roleIntf.SetChainState(chainSate)
 
 	// write LCB to blockDb
-	lastBlockNum := uint32(0)
+	lastBlockNum := uint64(0)
 	lastBlock := bc.getBlockDbLastBlock()
 	if lastBlock != nil {
 		lastBlockNum = lastBlock.GetNumber()

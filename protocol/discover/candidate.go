@@ -27,7 +27,7 @@ package discover
 
 import (
 	"container/list"
-	"encoding/json"
+	"github.com/bottos-project/bottos/bpl"
 	"errors"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/p2p"
@@ -202,7 +202,7 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 	candi := e.Value.(*candidate)
 
 	var rsp PeerInfoRsp
-	err := json.Unmarshal(date, &rsp)
+	err := bpl.Unmarshal(date, &rsp)
 	if err != nil {
 		log.Error("ProcessPeerInfoRsp Unmarshal error")
 		return
@@ -373,7 +373,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 		Info: info,
 	}
 
-	data, err := json.Marshal(rsp)
+	data, err := bpl.Marshal(rsp)
 	if err != nil {
 		log.Error("sendPeerInfoRsp Marshal data error ")
 		return

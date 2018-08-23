@@ -46,8 +46,8 @@ const (
 )
 
 type chainNumber struct {
-	LibNumber   uint32
-	BlockNumber uint32
+	LibNumber   uint64
+	BlockNumber uint64
 }
 
 type headerReq struct {
@@ -56,8 +56,8 @@ type headerReq struct {
 }
 
 type blockHeaderReq struct {
-	Begin uint32
-	End   uint32
+	Begin uint64
+	End   uint64
 }
 
 type blockHeaderRsp struct {

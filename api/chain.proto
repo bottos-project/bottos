@@ -1,4 +1,4 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 
 import "github.com/bottos-project/bottos/api/transaction.proto";
 
@@ -40,7 +40,7 @@ message GetTransactionResponse{
 
 
 message GetBlockRequest{
-	uint32				block_num			= 1;
+	uint64				block_num			= 1;
 	string 				block_hash			= 2;
 }
 
@@ -50,7 +50,7 @@ message GetBlockResponse{
 	Result				result 				= 3;
 	message Result{
 		string          prev_block_hash     = 1;
-        uint32			block_num			= 2;
+        uint64			block_num			= 2;
 		string			block_hash      	= 3;
 		uint32			cursor_block_label	= 4;
         uint64          block_time          = 5;
@@ -69,12 +69,13 @@ message GetInfoResponse{
 	string 				msg								= 2;
 	Result 				result							= 3;
 	message Result {
-		uint32 			head_block_num					= 1;
+		uint64 			head_block_num					= 1;
 		string 			head_block_hash					= 2;
 		uint64 			head_block_time					= 3;
 		string 			head_block_delegate				= 4;
 		uint32			cursor_label					= 5;
-		uint32 			last_consensus_block_num		= 6;
+		uint64 			last_consensus_block_num		= 6;
+		string 			chain_id		                = 7;
 	}
 }
 
@@ -90,8 +91,8 @@ message GetAccountResponse{
 	message Result {
 		string 			account_name		= 1;
 		string			pubkey				= 2;
-		uint64 			balance				= 3;
-		uint64 			staked_balance		= 4;
+		string 			balance				= 3;
+		string 			staked_balance		= 4;
 	}
 }
 
@@ -135,7 +136,7 @@ message GetTransferCreditResponse{
 	message Result {
 		string 			name				= 1;
 		string			spender				= 2;
-		uint64 			limit				= 3;
+		string 			limit				= 3;
 	}
 }
 
