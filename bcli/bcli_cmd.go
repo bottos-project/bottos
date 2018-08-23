@@ -307,14 +307,17 @@ func (Cli *CLI) RunNewCLI() {
 				cli.StringFlag{
 					Name: "from",
 					Usage: "",
+					Value: "bottos",
 				},
 				cli.StringFlag{
 					Name: "to",
 					Usage: "",
+					Value: "bottos",
 				},
 				cli.StringFlag{
 					Name: "amount",
 					Usage: "",
+					Value: "0",
 				},
 				cli.StringFlag{
 					Name: "sign",
