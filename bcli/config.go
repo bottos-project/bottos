@@ -97,6 +97,11 @@ func GetDefaultKey() ([]byte, error) {
 //GetChainId get chain id
 func GetChainId() ([]byte, error) {
 	if CONFIG != nil {
+
+		if len(ChainId) > 0 {
+			return common.HexStringToBytes(ChainId), nil
+		}
+
 		infourl := "http://" + ChainAddr + "/v1/block/height"
                 cli := &CLI{}
 		chainInfo, err := cli.GetChainInfoOverHttp(infourl)
