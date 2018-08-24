@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"math/big"
 	//"encoding/hex"
 	//pack "github.com/bottos-project/msgpack-go"
 	//user_proto "github.com/bottos-project/magiccube/service/user/proto"
@@ -32,7 +33,7 @@ var ChainAddr string = "127.0.0.1:8689"
 
 // CLI responsible for processing command line arguments
 type CLI struct {
-	client chain.ChainService
+	client chain.ChainClient
 }
 
 //NewCLI new console client
@@ -41,7 +42,7 @@ func NewCLI() *CLI {
 	service := micro.NewService()
 	//avoid parameters conflict with those of bcli
 	//service.Init()
-	cli.client = chain.NewChainService("bottos", service.Client())
+	cli.client = chain.NewChainClient("bottos", service.Client())
 
 	return cli
 }
@@ -61,7 +62,7 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 }
 
 func (cli *CLI) BcliGetChainInfo(ctx *cli.Context) error {
-	chainInfo, err := cli.getChainInfoOverHttp("http://"+ChainAddr+"/v1/block/height")
+	chainInfo, err := cli.GetChainInfoOverHttp("http://"+ChainAddr+"/v1/block/height")
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
 		return nil
@@ -112,9 +113,13 @@ func (cli *CLI) BcliTransfer(ctx *cli.Context) error {
 
 	from := ctx.String("from")
 	to   := ctx.String("to")
-	amount := ctx.Int("amount")
+	amounttmp := ctx.String("amount")
+	
+	amount := big.NewInt(0)
 
-	cli.transfer(from, to, amount)
+	amount, _ = amount.SetString(amounttmp, 10)
+
+	cli.transfer(from, to, *amount)
 	
 	return nil
 }
@@ -302,14 +307,17 @@ func (Cli *CLI) RunNewCLI() {
 				cli.StringFlag{
 					Name: "from",
 					Usage: "",
+					Value: "bottos",
 				},
 				cli.StringFlag{
 					Name: "to",
 					Usage: "",
+					Value: "bottos",
 				},
 				cli.StringFlag{
 					Name: "amount",
 					Usage: "",
+					Value: "0",
 				},
 				cli.StringFlag{
 					Name: "sign",

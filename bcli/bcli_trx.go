@@ -115,13 +115,13 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 
 	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
         if abierr != nil {
-	   fmt.Println("Push Transaction fail due to get Abi failed.")
+	   fmt.Println("Push Transaction fail due to get Abi failed:", pushtrxinfo.contract)
            return
         }
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("QueryChainInfo error: ", err)

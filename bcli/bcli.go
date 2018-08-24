@@ -36,7 +36,8 @@ import (
 	"github.com/bottos-project/crypto-go/crypto"
 		"net/http"
 	"strings"
-
+	"math/big"
+	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bitly/go-simplejson"
 	TODO "github.com/bottos-project/bottos/restful/handler"
 )
@@ -69,7 +70,7 @@ func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 	return chainInfo, nil
 }
 
-func (cli *CLI) getChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
+func (cli *CLI) GetChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
 		getinfo := &chain.GetInfoRequest{}
 		req, _ := json.Marshal(getinfo)
 		req_new := bytes.NewBuffer([]byte(req))
@@ -159,8 +160,7 @@ func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.Get
 		    return nil, errors.New("Error!")
 		} else if respbody.Errcode != 0 {
 		    fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
-		    return nil, errors.New("Error!")
-			
+		    return nil, errors.New("Error!") 
 		}
 		
 		b, _ := json.Marshal(respbody.Result)
@@ -200,10 +200,10 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	return BytesToHex(signdata), err
 }
 
-func (cli *CLI) transfer(from string, to string, amount int) {
+func (cli *CLI) transfer(from string, to string, amount big.Int) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -213,14 +213,17 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 	type TransferParam struct {
 		From   string `json:"from"`
 		To     string `json:"to"`
-		Amount uint64 `json:"value"`
+		Amount big.Int `json:"value"`
 	}
-	var value uint64
-	value = uint64(amount) * uint64(100000000)
+
+	value := big.NewInt(100000000)
+	value2 := big.NewInt(0)
+
+	value2, _ = safemath.U256Mul(value2, &amount, value)
 	tp := &TransferParam{
 		From:   from,
 		To:     to,
-		Amount: value,
+		Amount: *value2,
 	}
 
 	Abi, abierr := getAbibyContractName("bottos")
@@ -231,7 +234,7 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 	mapstruct := make(map[string]interface{})
 	abi.Setmapval(mapstruct, "from", from)
 	abi.Setmapval(mapstruct, "to", to)
-	abi.Setmapval(mapstruct, "value", value)
+	abi.Setmapval(mapstruct, "value", *value2)
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "transfer")
 
 	trx := &chain.Transaction{
@@ -253,7 +256,7 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 
 	trx.Signature = sign
 
-	newAccountRsp, err := cli.client.SendTransaction(context.TODO(), trx)
+	/*newAccountRsp, err := cli.client.SendTransaction(context.TODO(), trx)
 	if err != nil || newAccountRsp == nil {
 		fmt.Println(err)
 		return
@@ -263,15 +266,32 @@ func (cli *CLI) transfer(from string, to string, amount int) {
 		fmt.Printf("Transfer error:\n")
 		fmt.Printf("    %v\n", newAccountRsp.Msg)
 		return
+	}*/
+	
+	req, _ := json.Marshal(trx)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", "http://" + ChainAddr + "/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
 	}
+	
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		return 
+	}
+	newAccountRsp := &respbody
+
 
 	fmt.Printf("Transfer Succeed\n")
 	fmt.Printf("    From: %v\n", from)
 	fmt.Printf("    To: %v\n", to)
-	fmt.Printf("    Amount: %v\n", amount)
+	fmt.Println("    Amount:", value2)
 	fmt.Printf("Trx: \n")
 
-	tp.Amount = uint64(amount)
+	tp.Amount = amount
 	printTrx := Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -339,7 +359,7 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -455,15 +475,39 @@ func (cli *CLI) getaccount(name string) {
 
 	account := accountRsp.GetResult()
 	*/
+	balance := big.NewInt(0)
+	mulval  := big.NewInt(100000000)
+
+	balanceResult, result := balance.SetString(account.Balance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString failed. account: ", account)
+		return
+	}
+	
+	var mulrestlt *big.Int = big.NewInt(0)
+	var modrestlt *big.Int = big.NewInt(0)
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval) 
+
+	if err != nil {
+		return
+	}
+	
+	mulval2  := big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
 	fmt.Printf("    Account: %s\n", account.AccountName)
-	fmt.Printf("    Balance: %d.%08d BTO\n", account.Balance/100000000, account.Balance%100000000)
-}
+	fmt.Printf("    Balance: %d.%08d BTO\n", mulrestlt, modrestlt)
+  }
 
 func (cli *CLI) deploycode(name string, path string) {
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -610,7 +654,7 @@ func checkAbi(abiRaw []byte) error {
 func (cli *CLI) deployabi(name string, path string) {
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.getChainInfoOverHttp(infourl)
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
