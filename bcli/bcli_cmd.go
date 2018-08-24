@@ -30,6 +30,7 @@ import (
 )
 
 var ChainAddr string = "127.0.0.1:8689"
+var ChainId   string = ""
 
 // CLI responsible for processing command line arguments
 type CLI struct {
@@ -56,6 +57,9 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 		}
 		if ctx.GlobalIsSet("servaddr") {
 			ChainAddr = ctx.GlobalString("servaddr")
+		}
+		if ctx.GlobalIsSet("chainid") {
+			ChainId = ctx.GlobalString("chainid")
 		}
 		return action(ctx)
 	}
@@ -214,6 +218,10 @@ func (Cli *CLI) RunNewCLI() {
 			cli.StringFlag{
 				Name:  "servaddr",
 				Value: "127.0.0.1:8689",
+			},
+			cli.StringFlag{
+				Name:  "chainid",
+				Value: "000000000000000000",
 			},
 	}
 
