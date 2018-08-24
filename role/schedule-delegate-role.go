@@ -169,7 +169,7 @@ func ElectNextTermDelegatesRole(ldb *db.DBService, writeState bool) []string {
 	copy(returnList, reporterList)
 
 	if writeState == true {
-	newCandidates, err := GetDelegateVotesRoleByAccountName(ldb, lastTermUp)
+	newCandidates, err := GetDelegateVotesRole(ldb, lastTermUp)
 	if err != nil {
 		return nil
 	}

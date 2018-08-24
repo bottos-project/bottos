@@ -59,11 +59,14 @@ type RoleInterface interface {
 	GetDelegateBySignKey(key string) (*Delegate, error)
 	GetCandidateBySlot(slotNum uint64) (string, error)
 	GetDelegateParticipationRate() uint64
+	SetVoter(name string, value *Voter) error
+	GetVoter(name string) (*Voter, error)
 
 	SetScheduleDelegate(value *ScheduleDelegate) error
 	GetScheduleDelegate() (*ScheduleDelegate, error)
 
 	CreateDelegateVotes() error
+	GetDelegateVotes(key string) (*DelegateVotes, error)
 	SetDelegateVotes(key string, value *DelegateVotes) error
 	GetAllDelegateVotes() ([]*DelegateVotes, error)
 
@@ -197,6 +200,16 @@ func (r *Role) GetDelegateParticipationRate() uint64 {
 	return 10000 * rate.RecentSlotFilled / 64
 }
 
+//SetVoter
+func (r *Role) SetVoter(name string, value *Voter) error {
+	return SetVoterRole(r.Db, name, value)
+}
+
+//GetVoter
+func (r *Role) GetVoter(name string) (*Voter, error) {
+	return GetVoterRole(r.Db, name)
+}
+
 //SetScheduleDelegate is setting schedule delegate
 func (r *Role) SetScheduleDelegate(value *ScheduleDelegate) error {
 	return SetScheduleDelegateRole(r.Db, value)
@@ -212,7 +225,12 @@ func (r *Role) CreateDelegateVotes() error {
 	return CreateDelegateVotesRole(r.Db)
 }
 
-//SetDelegateVotes is setting delegate votes
+//GetDelegateVotes get delegate votes role
+func (r *Role) GetDelegateVotes(key string) (*DelegateVotes, error) {
+	return GetDelegateVotesRole(r.Db, key)
+}
+
+//SetDelegateVotes set delegate votes role
 func (r *Role) SetDelegateVotes(key string, value *DelegateVotes) error {
 	return SetDelegateVotesRole(r.Db, key, value)
 }
@@ -305,6 +323,7 @@ func (r *Role) initRole() {
 	CreateDelegateRole(r.Db)
 	CreateDelegateVotesRole(r.Db)
 	CreateScheduleDelegateRole(r.Db)
+	CreateVoterRole(r.Db)
 
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)

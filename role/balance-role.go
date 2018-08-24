@@ -35,7 +35,6 @@ import (
 
 // BalanceObjectName is definition of object name of balance
 const BalanceObjectName string = "balance"
-
 // StakedBalanceObjectName is definition of object name of stake balance
 const StakedBalanceObjectName string = "staked_balance"
 
@@ -49,6 +48,15 @@ type Balance struct {
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
 	StakedBalance *big.Int `json:"staked_balance"`
+	UnstakingBalance *big.Int `json:"unstaking_balance"`
+	LastUnstakingTime uint64 `json:"unstaking_time"`
+}
+
+// UnstakingBalance is definition of unstaking balance
+type UnstakingBalance struct {
+	AccountName   string `json:"account_name"`
+	UnstakingBalance *big.Int `json:"unstaking_balance"`
+	UnstakingTime uint64 `json:"unstaking_time"`
 }
 
 // CreateBalanceRole is to create balance role
@@ -184,5 +192,33 @@ func (balance *StakedBalance) SafeSub(amount *big.Int) error {
 	}
 
 	balance.StakedBalance.Set(result)
+	return nil
+}
+
+// UnstakingAmount
+func (balance *StakedBalance) UnstakingAmount(amount *big.Int) error {
+	result := big.NewInt(0)
+	result, err := safeSub(result, balance.StakedBalance, amount)
+	if err != nil {
+		return err
+	}
+	result1 := big.NewInt(0)
+	result1, err = safeAdd(result1, balance.UnstakingBalance, amount)
+	if err != nil {
+		return err
+	}
+	balance.StakedBalance.Set(result)
+	balance.UnstakingBalance.Set(result1)
+	return nil
+}
+
+// UnstakingAmount
+func (balance *StakedBalance) Claim(amount *big.Int) error {
+	result := big.NewInt(0)
+	result, err := safeSub(result, balance.UnstakingBalance, amount)
+	if err != nil {
+		return err
+	}
+	balance.UnstakingBalance.Set(result)
 	return nil
 }

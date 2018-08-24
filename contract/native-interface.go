@@ -27,6 +27,7 @@ package contract
 
 import (
 	"github.com/bottos-project/bottos/config"
+	"math/big"
 )
 
 //NewAccountParam struct for name and pubkey
@@ -83,6 +84,11 @@ type DeployABIParam struct {
 	ContractAbi []byte `json:"contract_abi"`
 }
 
+//StakeParam for stake, unstke and claim contract
+type StakeParam struct {
+	Amount *big.Int `json:"amount"`
+}
+
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
 	IsNativeContract(contract string, method string) bool
@@ -111,6 +117,12 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 	nc.Handler["transferfrom"] = transferFrom
 	nc.Handler["deploycode"] = deployCode
 	nc.Handler["deployabi"] = deployAbi
+	nc.Handler["stake"] = stake
+	nc.Handler["unstake"] = unstake
+	nc.Handler["claim"] = claim
+	nc.Handler["regdelegate"] = regDelegate
+	nc.Handler["unregdelegate"] = unregDelegate
+	nc.Handler["votedelegate"] = voteDelegate
 
 	return nc, nil
 }

@@ -417,6 +417,13 @@ func CreateNativeContractABI() *ABI {
 	a.Actions = append(a.Actions, ABIAction{ActionName: "transferfrom", Type: "TransferFrom"})
 	a.Actions = append(a.Actions, ABIAction{ActionName: "deploycode", Type: "DeployCode"})
 	a.Actions = append(a.Actions, ABIAction{ActionName: "deployabi", Type: "DeployABI"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "regdelegate", Type: "RegDelegate"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "unregdelegate", Type: "UnregDelegate"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "votedelegate", Type: "VoteDelegate"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "stake", Type: "Stake"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "unstake", Type: "Unstake"})
+	a.Actions = append(a.Actions, ABIAction{ActionName: "claim", Type: "Claim"})
+
 
 	s := ABIStruct{Name: "NewAccount", Fields: New()}
 	s.Fields.Set("name", "string")
@@ -454,6 +461,27 @@ func CreateNativeContractABI() *ABI {
 	s = ABIStruct{Name: "DeployABI", Fields: New()}
 	s.Fields.Set("contract", "string")
 	s.Fields.Set("contract_abi", "bytes")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "RegDelegate", Fields: New()}
+	s.Fields.Set("name", "string")
+	s.Fields.Set("pubkey", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "UnregDelegate", Fields: New()}
+	s.Fields.Set("name", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "VoteDelegate", Fields: New()}
+	s.Fields.Set("voteop", "uint8")
+	s.Fields.Set("voter", "string")
+	s.Fields.Set("delegate", "string")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "Stake", Fields: New()}
+	s.Fields.Set("amount", "Int")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "Unstake", Fields: New()}
+	s.Fields.Set("amount", "Int")
+	a.Structs = append(a.Structs, s)
+	s = ABIStruct{Name: "Claim", Fields: New()}
+	s.Fields.Set("amount", "Int")
 	a.Structs = append(a.Structs, s)
 
 	return a

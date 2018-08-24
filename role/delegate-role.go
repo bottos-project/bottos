@@ -29,7 +29,7 @@ import (
 	"encoding/json"
 
 	"github.com/bottos-project/bottos/db"
-)
+	)
 
 // DelegateObjectName is definition of delegate object name
 const DelegateObjectName string = "delegate"
@@ -47,6 +47,7 @@ type Delegate struct {
 	ReportKey             string `json:"report_key"`
 	TotalMissed           int64  `json:"total_missed"`
 	LastConfirmedBlockNum uint64 `json:"last_confirmed_block_num"`
+	Active                bool   `json:"active"`
 }
 
 // CreateDelegateRole is to save initial delegate
