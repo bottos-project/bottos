@@ -10,7 +10,7 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
 	log "github.com/cihub/seelog"
-)
+	)
 
 // DelegateVotesObjectName is definition of delegate vote object name
 const DelegateVotesObjectName string = "delegatevotes"
@@ -28,7 +28,7 @@ const DelegateVotesObjectIndexFinishTimeJSON string = "serve.term_finish_time"
 
 // Serve is definition of serve
 type Serve struct {
-	Votes          uint64   `json:"votes"`
+	Votes          *big.Int `json:"votes"`
 	Position       *big.Int `json:"position"`
 	TermUpdateTime *big.Int `json:"term_update_time"`
 	TermFinishTime *big.Int `json:"term_finish_time"`
@@ -67,8 +67,8 @@ func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) e
 	return ldb.SetObject(DelegateVotesObjectName, key, string(jsonvalue))
 }
 
-// GetDelegateVotesRoleByAccountName is to get delegate votes by account name
-func GetDelegateVotesRoleByAccountName(ldb *db.DBService, key string) (*DelegateVotes, error) {
+// GetDelegateVotesRole is to get delegate votes by account name
+func GetDelegateVotesRole(ldb *db.DBService, key string) (*DelegateVotes, error) {
 
 	value, err := ldb.GetObject(DelegateVotesObjectName, key)
 	if err != nil {
@@ -117,14 +117,14 @@ func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*Delegat
 }
 
 // update is to update delegate
-func (d *DelegateVotes) update(currentVotes uint64, currentPosition *big.Int, currentTermTime *big.Int) {
+func (d *DelegateVotes) update(currentVotes *big.Int, currentPosition *big.Int, currentTermTime *big.Int) {
 	if currentTermTime.Cmp(big.NewInt(0)) == -1 || currentTermTime.Cmp(big.NewInt(0)) == -1 {
 		return
 	}
 	termTimeToFinish := new(big.Int)
 	remaining := termTimeToFinish.Sub(common.MaxUint128(), currentPosition)
-	if currentVotes > 0 {
-		termTimeToFinish = termTimeToFinish.Div(remaining, new(big.Int).SetUint64(currentVotes))
+	if  1 == currentVotes.Cmp(big.NewInt(0)) {
+		termTimeToFinish = termTimeToFinish.Div(remaining, currentVotes)
 	} else {
 		termTimeToFinish = common.MaxUint128()
 	}
@@ -162,7 +162,6 @@ func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 
 // ResetAllDelegateNewTerm is to reset all delegate
 func ResetAllDelegateNewTerm(ldb *db.DBService) {
-
 	voteDelegates, err := GetAllDelegateVotesRole(ldb)
 	if err != nil {
 		return
@@ -180,7 +179,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 	var mylists = make([]string, len(lists))
 	copy(mylists, lists)
 	for _, accountName := range mylists {
-		delegate, err := GetDelegateVotesRoleByAccountName(ldb, accountName)
+		delegate, err := GetDelegateVotesRole(ldb, accountName)
 		if err != nil {
 			return
 		}
@@ -207,11 +206,11 @@ func (d *DelegateVotes) StartNewTerm(currentTermTime *big.Int) *DelegateVotes {
 }
 
 // UpdateVotes is to update votes
-func (d *DelegateVotes) UpdateVotes(votes uint64, currentTermTime *big.Int) {
+func (d *DelegateVotes) UpdateVotes(votes *big.Int, currentTermTime *big.Int) {
 	timeSinceLastUpdate := new(big.Int).Sub(currentTermTime, d.Serve.TermUpdateTime)
-	myVotes := new(big.Int).Mul(new(big.Int).SetUint64(d.Serve.Votes), timeSinceLastUpdate)
+	myVotes := new(big.Int).Mul(d.Serve.Votes, timeSinceLastUpdate)
 	newPosition := new(big.Int).Add(d.Serve.Position, myVotes)
-	newSpeed := d.Serve.Votes + votes
+	newSpeed := d.Serve.Votes.Add(d.Serve.Votes, votes)
 
 	d.update(newSpeed, newPosition, currentTermTime)
 }

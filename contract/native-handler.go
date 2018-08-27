@@ -45,7 +45,7 @@ func newAccount(ctx *Context) ContractError {
 	
 	NewaccountName   := newaccount["name"].(string)
 	NewaccountPubKey := newaccount["pubkey"].(string)
-	
+
 	//check account
 	cerr := checkAccountName(NewaccountName)
 	if cerr != ERROR_NONE {
@@ -77,6 +77,8 @@ func newAccount(ctx *Context) ContractError {
 	stakedBalance := &role.StakedBalance{
 		AccountName:   NewaccountName,
 		StakedBalance: big.NewInt(0),
+		UnstakingBalance: big.NewInt(0),
+		LastUnstakingTime: 0,
 	}
 	ctx.RoleIntf.SetStakedBalance(NewaccountName, stakedBalance)
 
@@ -164,9 +166,18 @@ func setDelegate(ctx *Context) ContractError {
 			return ERROR_CONT_HANDLE_FAIL
 		}
 
-		newDelegateVotes := new(role.DelegateVotes).StartNewTerm(scheduleDelegate.CurrentTermTime)
-		newDelegateVotes.OwnerAccount = newdelegate.AccountName
-		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, newDelegateVotes)
+		delegateVote := &role.DelegateVotes{
+			OwnerAccount: newdelegate.AccountName,
+			Serve : role.Serve{
+				Votes: big.NewInt(0),
+				Position: big.NewInt(0),
+				TermUpdateTime: big.NewInt(0),
+				TermFinishTime: big.NewInt(0),
+			},
+		}
+		delegateVote.OwnerAccount = newdelegate.AccountName
+		delegateVote.StartNewTerm(scheduleDelegate.CurrentTermTime)
+		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, delegateVote)
 		if err != nil {
 			return ERROR_CONT_HANDLE_FAIL
 		}
@@ -419,6 +430,374 @@ func deployAbi(ctx *Context) ContractError {
 	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
 	if err != nil {
 		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	return ERROR_NONE
+}
+
+func stake(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	transfer := abi.UnmarshalAbiEx("bottos", Abi, "stake", ctx.Trx.Param)
+	if transfer == nil || len(transfer) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	amount := transfer["amount"].(*big.Int)
+
+	// check account
+	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != ERROR_NONE {
+		return errcode
+	}
+
+	// amount should more than 0
+	if 1 != amount.Cmp(big.NewInt(0)) {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	// check funds
+	balance, _ := ctx.RoleIntf.GetBalance(ctx.Trx.Sender)
+	if -1 == balance.Balance.Cmp(amount) {
+		return ERROR_CONT_INSUFFICIENT_FUNDS
+	}
+	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
+	oldStakeAmount := sb.StakedBalance
+
+	if err := balance.SafeSub(amount); err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	if err := sb.SafeAdd(amount); err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+
+	if err := ctx.RoleIntf.SetBalance(balance.AccountName, balance); err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	voter, _ := ctx.RoleIntf.GetVoter(ctx.Trx.Sender)
+	if voter == nil {
+		voter := &role.Voter{
+			Owner: ctx.Trx.Sender,
+			Delegate: string(""),
+		}
+		if err := ctx.RoleIntf.SetVoter(voter.Owner, voter); err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else {
+		if voter.Delegate != "" {
+			delegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			sd, err := ctx.RoleIntf.GetScheduleDelegate()
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			delta := big.NewInt(0)
+			delta.Sub(sb.StakedBalance, oldStakeAmount)
+			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
+
+			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+		}
+	}
+
+	return ERROR_NONE
+}
+
+func unstake(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	transfer := abi.UnmarshalAbiEx("bottos", Abi, "unstake", ctx.Trx.Param)
+	if transfer == nil || len(transfer) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	amount := transfer["amount"].(*big.Int)
+
+	// check account
+	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != ERROR_NONE {
+		return errcode
+	}
+
+	// amount should more than 0
+	if 1 != amount.Cmp(big.NewInt(0)) {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	// check funds
+	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
+	if -1 == sb.StakedBalance.Cmp(amount) {
+		return ERROR_CONT_INSUFFICIENT_FUNDS
+	}
+	oldStakeAmount := sb.StakedBalance
+
+	if err := sb.UnstakingAmount(amount); err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+
+	chainState, _ := ctx.RoleIntf.GetChainState()
+	sb.LastUnstakingTime = chainState.LastBlockTime
+	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	voter, _ := ctx.RoleIntf.GetVoter(ctx.Trx.Sender)
+	if voter != nil {
+		if voter.Delegate != "" {
+			delegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			sd, err := ctx.RoleIntf.GetScheduleDelegate()
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			delta := big.NewInt(0)
+			delta.Sub(sb.StakedBalance, oldStakeAmount)
+			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
+
+			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+		}
+	}
+
+	return ERROR_NONE
+}
+
+func claim(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	transfer := abi.UnmarshalAbiEx("bottos", Abi, "claim", ctx.Trx.Param)
+	if transfer == nil || len(transfer) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	amount := transfer["amount"].(*big.Int)
+
+	// check account
+	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != ERROR_NONE {
+		return errcode
+	}
+
+	// check funds
+	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
+	releaseTime := sb.LastUnstakingTime + config.UNSTAKING_BALANCE_DURATION
+	chainState, _ := ctx.RoleIntf.GetChainState()
+	if chainState.LastBlockTime < releaseTime {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	if -1 == sb.UnstakingBalance.Cmp(amount) {
+		return ERROR_CONT_INSUFFICIENT_FUNDS
+	}
+
+	balance, _ := ctx.RoleIntf.GetBalance(ctx.Trx.Sender)
+	if err := balance.SafeAdd(amount); err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+	if err := sb.Claim(amount); err != nil {
+		return ERROR_CONT_TRANSFER_OVERFLOW
+	}
+
+	if err := ctx.RoleIntf.SetBalance(balance.AccountName, balance); err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	return ERROR_NONE
+}
+
+func regDelegate(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	param := abi.UnmarshalAbiEx("bottos", Abi, "regdelegate", ctx.Trx.Param)
+	if param == nil || len(param) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	ParamName   := param["name"].(string)
+	ParamPubKey := param["pubkey"].(string)
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	delegate, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
+	if err != nil {
+		// new delegate
+		newdelegate := &role.Delegate{
+			AccountName: ParamName,
+			ReportKey:   ParamPubKey,
+			Active: true,
+		}
+		if err := ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate); err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+
+		//create schedule delegate vote role
+		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
+		if err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+
+		delegateVote := &role.DelegateVotes{
+			OwnerAccount: newdelegate.AccountName,
+			Serve : role.Serve{
+				Votes: big.NewInt(0),
+				Position: big.NewInt(0),
+				TermUpdateTime: big.NewInt(0),
+				TermFinishTime: big.NewInt(0),
+			},
+		}
+		delegateVote.StartNewTerm(scheduleDelegate.CurrentTermTime)
+		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, delegateVote)
+		if err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else {
+		delegate.ReportKey = ParamPubKey
+		delegate.Active = true
+		ctx.RoleIntf.SetDelegate(delegate.AccountName, delegate)
+	}
+
+	return ERROR_NONE
+}
+
+func unregDelegate(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	param := abi.UnmarshalAbiEx("bottos", Abi, "unregdelegate", ctx.Trx.Param)
+	if param == nil || len(param) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	ParamName   := param["name"].(string)
+
+	// check account
+	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	if cerr != ERROR_NONE {
+		return cerr
+	}
+
+	delegate, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
+	if err == nil {
+		// new delegate
+		delegate.Active = false
+		if err := ctx.RoleIntf.SetDelegate(delegate.AccountName, delegate); err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	return ERROR_NONE
+}
+
+func voteDelegate(ctx *Context) ContractError {
+	Abi := abi.GetAbi()
+	param := abi.UnmarshalAbiEx("bottos", Abi, "votedelegate", ctx.Trx.Param)
+	if param == nil || len(param) <= 0 {
+		return ERROR_CONT_PARAM_PARSE_ERROR
+	}
+
+	voteop := param["voteop"].(uint8)
+	voterName := param["voter"].(string)
+	delegateName := param["delegate"].(string)
+
+	if voterName != ctx.Trx.Sender {
+		return ERROR_CONT_ACCOUNT_MISMATCH
+	}
+
+	if errcode := checkAccount(ctx.RoleIntf, voterName); errcode != ERROR_NONE {
+		return errcode
+	}
+
+	voter, err := ctx.RoleIntf.GetVoter(voterName)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	sb, err := ctx.RoleIntf.GetStakedBalance(voterName)
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	sd, err := ctx.RoleIntf.GetScheduleDelegate()
+	if err != nil {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	if voteop == 1 {
+		// vote
+		if errcode := checkAccount(ctx.RoleIntf, delegateName); errcode != ERROR_NONE {
+			return errcode
+		}
+
+		// staked balance should more than 0
+		if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
+			return ERROR_CONT_INSUFFICIENT_FUNDS
+		}
+
+		if voter.Delegate != "" {
+			oldDelegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			voteStake := big.NewInt(0).Set(sb.StakedBalance)
+			voteStake.Mul(voteStake, big.NewInt(-1))
+			oldDelegateVote.UpdateVotes(voteStake, sd.CurrentTermTime)
+
+			if err := ctx.RoleIntf.SetDelegateVotes(oldDelegateVote.OwnerAccount, oldDelegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+		}
+
+		delegateVote, err := ctx.RoleIntf.GetDelegateVotes(delegateName)
+		if err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+		delegateVote.UpdateVotes(sb.StakedBalance, sd.CurrentTermTime)
+
+		voter.Delegate = delegateName
+		if err := ctx.RoleIntf.SetVoter(voterName, voter); err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+
+		if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
+			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else if voteop == 0 {
+		// cancel vote
+		// staked balance should more than 0
+		if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
+			return ERROR_CONT_INSUFFICIENT_FUNDS
+		}
+
+		if voter.Delegate != "" {
+			oldDelegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			voteStake := big.NewInt(0).Set(sb.StakedBalance)
+			voteStake.Mul(voteStake, big.NewInt(-1))
+			oldDelegateVote.UpdateVotes(voteStake, sd.CurrentTermTime)
+
+			voter.Delegate = ""
+			if err := ctx.RoleIntf.SetVoter(voterName, voter); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+
+			if err := ctx.RoleIntf.SetDelegateVotes(oldDelegateVote.OwnerAccount, oldDelegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+		} else {
+			return ERROR_CONT_HANDLE_FAIL
+		}
 	}
 
 	return ERROR_NONE

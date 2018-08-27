@@ -89,3 +89,6 @@ const DEFAUL_MAX_CONTRACT_DEPTH uint32 = 10
 
 // DEFAUL_MAX_SUB_CONTRACT_NUM define max sub contract num
 const DEFAUL_MAX_SUB_CONTRACT_NUM uint32 = 10
+
+// UNSTAKING_BALANCE_DURATION lock time duration after unstaking
+const UNSTAKING_BALANCE_DURATION uint64 = 3*24*60*60
