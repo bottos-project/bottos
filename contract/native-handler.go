@@ -449,24 +449,30 @@ func stake(ctx *Context) ContractError {
 		return errcode
 	}
 
+	// amount should more than 0
+	if 1 != amount.Cmp(big.NewInt(0)) {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
 	// check funds
 	balance, _ := ctx.RoleIntf.GetBalance(ctx.Trx.Sender)
 	if -1 == balance.Balance.Cmp(amount) {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
-	stakedBalance, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
+	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
+	oldStakeAmount := sb.StakedBalance
 
 	if err := balance.SafeSub(amount); err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
-	if err := stakedBalance.SafeAdd(amount); err != nil {
+	if err := sb.SafeAdd(amount); err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
 	}
 
 	if err := ctx.RoleIntf.SetBalance(balance.AccountName, balance); err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
-	if err := ctx.RoleIntf.SetStakedBalance(stakedBalance.AccountName, stakedBalance); err != nil {
+	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
 		return ERROR_CONT_HANDLE_FAIL
 	}
 
@@ -478,6 +484,24 @@ func stake(ctx *Context) ContractError {
 		}
 		if err := ctx.RoleIntf.SetVoter(voter.Owner, voter); err != nil {
 			return ERROR_CONT_HANDLE_FAIL
+		}
+	} else {
+		if voter.Delegate != "" {
+			delegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			sd, err := ctx.RoleIntf.GetScheduleDelegate()
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			delta := big.NewInt(0)
+			delta.Sub(sb.StakedBalance, oldStakeAmount)
+			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
+
+			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
 		}
 	}
 
@@ -498,11 +522,17 @@ func unstake(ctx *Context) ContractError {
 		return errcode
 	}
 
+	// amount should more than 0
+	if 1 != amount.Cmp(big.NewInt(0)) {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
 	// check funds
 	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
 	if -1 == sb.StakedBalance.Cmp(amount) {
 		return ERROR_CONT_INSUFFICIENT_FUNDS
 	}
+	oldStakeAmount := sb.StakedBalance
 
 	if err := sb.UnstakingAmount(amount); err != nil {
 		return ERROR_CONT_TRANSFER_OVERFLOW
@@ -512,6 +542,27 @@ func unstake(ctx *Context) ContractError {
 	sb.LastUnstakingTime = chainState.LastBlockTime
 	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
 		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	voter, _ := ctx.RoleIntf.GetVoter(ctx.Trx.Sender)
+	if voter != nil {
+		if voter.Delegate != "" {
+			delegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			sd, err := ctx.RoleIntf.GetScheduleDelegate()
+			if err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+			delta := big.NewInt(0)
+			delta.Sub(sb.StakedBalance, oldStakeAmount)
+			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
+
+			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
+				return ERROR_CONT_HANDLE_FAIL
+			}
+		}
 	}
 
 	return ERROR_NONE
