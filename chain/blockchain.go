@@ -38,6 +38,7 @@ import (
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
+	"fmt"
 )
 
 //BlockChain the chain info
@@ -47,7 +48,7 @@ type BlockChain struct {
 	blockCache *BlockChainCache
 	nc         contract.NativeContractInterface
 
-	handledBlockCB HandledBlockCallback
+	handledBlockCB []HandledBlockCallback
 
 	genesisBlock *types.Block
 
@@ -66,22 +67,26 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 		blockCache: blockCache,
 		roleIntf:   roleIntf,
 		nc:         nc,
+		handledBlockCB: []HandledBlockCallback{},
 	}
-
-	err = bc.initChain()
-	if err != nil {
-		return nil, err
-	}
-
-	err = bc.LoadBlockDb()
-	if err != nil {
-		return nil, err
-	}
-
-	// init block cache
-	bc.initBlockCache()
 
 	return bc, nil
+	}
+
+func (bc *BlockChain) Init() error {
+	if err := bc.initChain(); err != nil {
+		return err
+	}
+
+	if err := bc.LoadBlockDb(); err != nil {
+		return err
+	}
+
+	if err := bc.initBlockCache(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 //Close close chain cache
@@ -113,8 +118,8 @@ func (bc *BlockChain) initChain() error {
 		ctx := &contract.Context{RoleIntf: bc.roleIntf, Trx: trx}
 		err := bc.nc.ExecuteNativeContract(ctx)
 		if err != contract.ERROR_NONE {
-			log.Infof("NativeContractInitChain Error: ", trx, err)
-			break
+			log.Infof("NativeContractInit Error: ", trx, err)
+			return fmt.Errorf("genesis block execute fail")
 		}
 	}
 
@@ -122,16 +127,15 @@ func (bc *BlockChain) initChain() error {
 	if err != nil {
 		return err
 	}
-
 	bc.genesisBlock = block
-	bc.roleIntf.ApplyPersistance(block)
 
+	bc.handledBlockCallback(block)
 	return nil
 }
 
 //RegisterHandledBlockCallback call back register
 func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
-	bc.handledBlockCB = cb
+	bc.handledBlockCB = append(bc.handledBlockCB, cb)
 }
 
 //GetGenesisBlock get the first block
@@ -426,13 +430,17 @@ func (bc *BlockChain) HandleBlock(block *types.Block) error {
 
 	bc.addBlockHistory(block)
 
-	// block handled callback
-	if bc.handledBlockCB != nil {
-		bc.handledBlockCB(block)
-	}
 	bc.WriteBlock(block)
-	bc.roleIntf.ApplyPersistance(block)
+	bc.handledBlockCallback(block)
 	return nil
+}
+
+func (bc *BlockChain) handledBlockCallback(block *types.Block) {
+	for _, cb := range bc.handledBlockCB {
+		if cb != nil {
+			cb(block)
+		}
+	}
 }
 
 //ValidateBlock verify a block
