@@ -143,12 +143,22 @@ func setDelegate(ctx *Context) ContractError {
 	}
 	
 	ParamName   := param["name"].(string)
-	ParamPubKey := param["pubkey"].(string)	
-	
+	ParamPubKey := param["pubkey"].(string)
+	location := param["location"].(string)
+	description := param["description"].(string)
+
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != ERROR_NONE {
 		return cerr
+	}
+
+	if len(location) > MaxDelegateLocationLen {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	if len(description) > MaxDelegateDescriptionLen {
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
 	_, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
@@ -621,11 +631,21 @@ func regDelegate(ctx *Context) ContractError {
 
 	ParamName   := param["name"].(string)
 	ParamPubKey := param["pubkey"].(string)
+	location := param["location"].(string)
+	description := param["description"].(string)
 
 	// check account
 	cerr := checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != ERROR_NONE {
 		return cerr
+	}
+
+	if len(location) > MaxDelegateLocationLen {
+		return ERROR_CONT_HANDLE_FAIL
+	}
+
+	if len(description) > MaxDelegateDescriptionLen {
+		return ERROR_CONT_HANDLE_FAIL
 	}
 
 	delegate, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
@@ -634,6 +654,8 @@ func regDelegate(ctx *Context) ContractError {
 		newdelegate := &role.Delegate{
 			AccountName: ParamName,
 			ReportKey:   ParamPubKey,
+			Location: location,
+			Description: description,
 			Active: true,
 		}
 		if err := ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate); err != nil {

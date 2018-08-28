@@ -118,6 +118,8 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		mapstruct3 := make(map[string]interface{})
 		abi.Setmapval(mapstruct3, "name", name)
 		abi.Setmapval(mapstruct3, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
+		abi.Setmapval(mapstruct3, "location", string(""))
+		abi.Setmapval(mapstruct3, "description", string(""))
 		sparam, err4   := abi.MarshalAbiEx(mapstruct3, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
 		if err4 != nil {
 			log.Info("abi.MarshalAbiEx failed for setdegelage with account:", name)

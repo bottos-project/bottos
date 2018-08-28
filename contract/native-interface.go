@@ -30,6 +30,12 @@ import (
 	"math/big"
 )
 
+const MaxDelegateLocationLen int = 32
+const MaxDelegateDescriptionLen int = 128
+
+// BLOCKS_PER_ROUND define block num per round
+const BLOCKS_PER_ROUND uint32 = 29
+
 //NewAccountParam struct for name and pubkey
 type NewAccountParam struct {
 	Name   string `json:"name"`
