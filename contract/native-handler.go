@@ -27,8 +27,7 @@ package contract
 
 import (
 	"fmt"
-	"regexp"
-	"math/big"
+		"math/big"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
@@ -37,7 +36,7 @@ import (
 	berr "github.com/bottos-project/bottos/common/errors"
 	)
 
-func newAccount(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	newaccount := abi.UnmarshalAbiEx("bottos", Abi, "newaccount", ctx.Trx.Param)
 	if newaccount == nil || len(newaccount) <= 0 {
@@ -48,12 +47,12 @@ func newAccount(ctx *Context) berr.ErrCode {
 	NewaccountPubKey := newaccount["pubkey"].(string)
 
 	//check account
-	cerr := checkAccountName(NewaccountName)
+	cerr := nc.checkAccountName(NewaccountName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	if isAccountNameExist(ctx.RoleIntf, NewaccountName) {
+	if nc.isAccountNameExist(ctx.RoleIntf, NewaccountName) {
 		return berr.ErrContractAccountAlreadyExist
 	}
 
@@ -86,7 +85,7 @@ func newAccount(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func transfer(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
@@ -98,12 +97,12 @@ func transfer(ctx *Context) berr.ErrCode {
 	TransValue := transfer["value"].(*big.Int)
 	
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, FromWhom)
+	cerr := nc.checkAccount(ctx.RoleIntf, FromWhom)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ToWhom)
+	cerr = nc.checkAccount(ctx.RoleIntf, ToWhom)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -136,7 +135,7 @@ func transfer(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func setDelegate(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) setDelegate(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "setdelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -149,7 +148,7 @@ func setDelegate(ctx *Context) berr.ErrCode {
 	description := param["description"].(string)
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -199,7 +198,7 @@ func setDelegate(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func grantCredit(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "grantcredit", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -211,17 +210,17 @@ func grantCredit(ctx *Context) berr.ErrCode {
 	ParamLimit   := param["limit"].(*big.Int)
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ParamSpender)
+	cerr = nc.checkAccount(ctx.RoleIntf, ParamSpender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
+	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -250,7 +249,7 @@ func grantCredit(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func cancelCredit(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) cancelCredit(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "cancelcredit", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -261,12 +260,12 @@ func cancelCredit(ctx *Context) berr.ErrCode {
 	ParamSpender := param["spender"].(string)
 	
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ParamSpender)
+	cerr = nc.checkAccount(ctx.RoleIntf, ParamSpender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -284,7 +283,7 @@ func cancelCredit(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func transferFrom(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) transferFrom(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
@@ -295,17 +294,17 @@ func transferFrom(ctx *Context) berr.ErrCode {
 	TransValue := transfer["value"].(*big.Int)
 	
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, TransFrom)
+	cerr := nc.checkAccount(ctx.RoleIntf, TransFrom)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, TransTo)
+	cerr = nc.checkAccount(ctx.RoleIntf, TransTo)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
+	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -364,12 +363,12 @@ func transferFrom(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func checkCode(code []byte) error {
+func (nc *NativeContract) checkCode(code []byte) error {
 	// TODO
 	return nil
 }
 
-func deployCode(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -380,13 +379,13 @@ func deployCode(ctx *Context) berr.ErrCode {
 	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamContract)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamContract)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
 	// check code
-	err := checkCode(ParamContractCode)
+	err := nc.checkCode(ParamContractCode)
 	if err != nil {
 		return berr.ErrContractInvalidContractCode
 	}
@@ -405,7 +404,7 @@ func deployCode(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func checkAbi(abiRaw []byte) error {
+func (nc *NativeContract) checkAbi(abiRaw []byte) error {
 	_, err := abi.ParseAbi(abiRaw)
 	if err != nil {
 		return fmt.Errorf("ABI Parse error: %v", err)
@@ -413,7 +412,7 @@ func checkAbi(abiRaw []byte) error {
 	return nil
 }
 
-func deployAbi(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) deployAbi(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deployabi", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -424,13 +423,13 @@ func deployAbi(ctx *Context) berr.ErrCode {
 	ParamContractAbi, _ := common.HexToBytes(param["contract_abi"].(string))
 	
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamContract)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamContract)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
 	// check abi
-	err := checkAbi(ParamContractAbi)
+	err := nc.checkAbi(ParamContractAbi)
 	if err != nil {
 		return berr.ErrContractInvalidContractAbi
 	}
@@ -446,7 +445,7 @@ func deployAbi(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func stake(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "stake", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
@@ -456,7 +455,7 @@ func stake(ctx *Context) berr.ErrCode {
 	amount := transfer["amount"].(*big.Int)
 
 	// check account
-	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
+	if errcode := nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
 		return errcode
 	}
 
@@ -519,7 +518,7 @@ func stake(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func unstake(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) unstake(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "unstake", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
@@ -529,7 +528,7 @@ func unstake(ctx *Context) berr.ErrCode {
 	amount := transfer["amount"].(*big.Int)
 
 	// check account
-	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
+	if errcode := nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
 		return errcode
 	}
 
@@ -579,7 +578,7 @@ func unstake(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func claim(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) claim(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "claim", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
@@ -589,7 +588,7 @@ func claim(ctx *Context) berr.ErrCode {
 	amount := transfer["amount"].(*big.Int)
 
 	// check account
-	if errcode := checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
+	if errcode := nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
 		return errcode
 	}
 
@@ -623,7 +622,7 @@ func claim(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func regDelegate(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) regDelegate(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "regdelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -636,7 +635,7 @@ func regDelegate(ctx *Context) berr.ErrCode {
 	description := param["description"].(string)
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -692,7 +691,7 @@ func regDelegate(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func unregDelegate(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) unregDelegate(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "unregdelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -702,7 +701,7 @@ func unregDelegate(ctx *Context) berr.ErrCode {
 	ParamName   := param["name"].(string)
 
 	// check account
-	cerr := checkAccount(ctx.RoleIntf, ParamName)
+	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -721,7 +720,7 @@ func unregDelegate(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func voteDelegate(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "votedelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
@@ -736,7 +735,7 @@ func voteDelegate(ctx *Context) berr.ErrCode {
 		return berr.ErrContractAccountMismatch
 	}
 
-	if errcode := checkAccount(ctx.RoleIntf, voterName); errcode != berr.ErrNoError {
+	if errcode := nc.checkAccount(ctx.RoleIntf, voterName); errcode != berr.ErrNoError {
 		return errcode
 	}
 
@@ -757,7 +756,7 @@ func voteDelegate(ctx *Context) berr.ErrCode {
 
 	if voteop == 1 {
 		// vote
-		if errcode := checkAccount(ctx.RoleIntf, delegateName); errcode != berr.ErrNoError {
+		if errcode := nc.checkAccount(ctx.RoleIntf, delegateName); errcode != berr.ErrNoError {
 			return errcode
 		}
 
@@ -826,35 +825,27 @@ func voteDelegate(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
-func checkAccountName(name string) berr.ErrCode {
+func (nc *NativeContract) checkAccountName(name string) berr.ErrCode {
 	if len(name) == 0 {
 		return berr.ErrContractAccountNameIllegal
 	}
 
-	if len(name) > config.MAX_ACCOUNT_NAME_LENGTH {
+	if len(name) > common.MaxNameLength {
 		return berr.ErrContractAccountNameIllegal
 	}
 
-	if !checkAccountNameContent(name) {
+	if !nc.checkAccountNameContent(name) {
 		return berr.ErrContractAccountNameIllegal
 	}
 
 	return berr.ErrNoError
 }
 
-func checkAccountNameContent(name string) bool {
-	match, err := regexp.MatchString(config.ACCOUNT_NAME_REGEXP, name)
-	if err != nil {
-		return false
-	}
-	if !match {
-		return false
-	}
-
-	return true
+func (nc *NativeContract) checkAccountNameContent(name string) bool {
+	return nc.re.MatchString(name)
 }
 
-func isAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
+func (nc *NativeContract) isAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
 	account, err := RoleIntf.GetAccount(name)
 	if err == nil {
 		if account != nil && account.AccountName == name {
@@ -864,13 +855,13 @@ func isAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
 	return false
 }
 
-func checkAccount(RoleIntf role.RoleInterface, name string) berr.ErrCode {
-	cerr := checkAccountName(name)
+func (nc *NativeContract) checkAccount(RoleIntf role.RoleInterface, name string) berr.ErrCode {
+	cerr := nc.checkAccountName(name)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	if !isAccountNameExist(RoleIntf, name) {
+	if !nc.isAccountNameExist(RoleIntf, name) {
 		return berr.ErrContractAccountNotFound
 	}
 

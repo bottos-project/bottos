@@ -29,6 +29,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 	berr "github.com/bottos-project/bottos/common/errors"
 	"math/big"
+	"regexp"
 )
 
 const MaxDelegateLocationLen int = 32
@@ -108,6 +109,7 @@ type NativeContractMethod func(*Context) berr.ErrCode
 //NativeContract is native contract handler
 type NativeContract struct {
 	Handler map[string]NativeContractMethod
+	re *regexp.Regexp
 }
 
 //NewNativeContractHandler is native contract handler to handle different contracts
@@ -115,21 +117,22 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 	nc := &NativeContract{
 		Handler: make(map[string]NativeContractMethod),
 	}
+	nc.re = regexp.MustCompile(config.ACCOUNT_NAME_REGEXP)
 
-	nc.Handler["newaccount"] = newAccount
-	nc.Handler["transfer"] = transfer
-	nc.Handler["setdelegate"] = setDelegate
-	nc.Handler["grantcredit"] = grantCredit
-	nc.Handler["cancelcredit"] = cancelCredit
-	nc.Handler["transferfrom"] = transferFrom
-	nc.Handler["deploycode"] = deployCode
-	nc.Handler["deployabi"] = deployAbi
-	nc.Handler["stake"] = stake
-	nc.Handler["unstake"] = unstake
-	nc.Handler["claim"] = claim
-	nc.Handler["regdelegate"] = regDelegate
-	nc.Handler["unregdelegate"] = unregDelegate
-	nc.Handler["votedelegate"] = voteDelegate
+	nc.Handler["newaccount"] = nc.newAccount
+	nc.Handler["transfer"] = nc.transfer
+	nc.Handler["setdelegate"] = nc.setDelegate
+	nc.Handler["grantcredit"] = nc.grantCredit
+	nc.Handler["cancelcredit"] = nc.cancelCredit
+	nc.Handler["transferfrom"] = nc.transferFrom
+	nc.Handler["deploycode"] = nc.deployCode
+	nc.Handler["deployabi"] = nc.deployAbi
+	nc.Handler["stake"] = nc.stake
+	nc.Handler["unstake"] = nc.unstake
+	nc.Handler["claim"] = nc.claim
+	nc.Handler["regdelegate"] = nc.regDelegate
+	nc.Handler["unregdelegate"] = nc.unregDelegate
+	nc.Handler["votedelegate"] = nc.voteDelegate
 
 	return nc, nil
 }
@@ -154,7 +157,6 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) berr.ErrCode {
 			return contErr
 		}
 		return berr.ErrContractUnknownMethod
-
 	}
 	return berr.ErrContractUnknownContract
 

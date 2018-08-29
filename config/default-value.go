@@ -57,11 +57,8 @@ const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 // BOTTOS_SUPPLY_MUL define dot num of bto
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
-// MAX_ACCOUNT_NAME_LENGTH define max account name length
-const MAX_ACCOUNT_NAME_LENGTH int = 16
-
 // ACCOUNT_NAME_REGEXP define account name format
-const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
+const ACCOUNT_NAME_REGEXP string = "^[a-z1-9][a-z1-9.-]{2,20}$"
 
 // DEFAULT_BLOCK_TIME_LIMIT define default block time limit when producing block
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
