@@ -27,6 +27,7 @@ package contract
 
 import (
 	"github.com/bottos-project/bottos/config"
+	berr "github.com/bottos-project/bottos/common/errors"
 	"math/big"
 )
 
@@ -98,11 +99,11 @@ type StakeParam struct {
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
 	IsNativeContract(contract string, method string) bool
-	ExecuteNativeContract(*Context) ContractError
+	ExecuteNativeContract(*Context) berr.ErrCode
 }
 
 //NativeContractMethod is native contract method
-type NativeContractMethod func(*Context) ContractError
+type NativeContractMethod func(*Context) berr.ErrCode
 
 //NativeContract is native contract handler
 type NativeContract struct {
@@ -144,7 +145,7 @@ func (nc *NativeContract) IsNativeContract(contract string, method string) bool 
 }
 
 //ExecuteNativeContract is to call native contract
-func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
+func (nc *NativeContract) ExecuteNativeContract(ctx *Context) berr.ErrCode {
 	contract := ctx.Trx.Contract
 	method := ctx.Trx.Method
 	if nc.IsNativeContract(contract, method) {
@@ -152,9 +153,9 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
 			contErr := handler(ctx)
 			return contErr
 		}
-		return ERROR_CONT_UNKNOWN_METHOD
+		return berr.ErrContractUnknownMethod
 
 	}
-	return ERROR_CONT_UNKNOWN_CONTARCT
+	return berr.ErrContractUnknownContract
 
 }

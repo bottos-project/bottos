@@ -169,8 +169,7 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 	applyContext := &contract.Context{RoleIntf: trxApplyService.roleIntf, Trx: trx}
 
 	if trxApplyService.ncIntf.IsNativeContract(trx.Contract, trx.Method) {
-		contErr := trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
-		bottoserr = contract.ConvertErrorCode(contErr)
+		bottoserr = trxApplyService.ncIntf.ExecuteNativeContract(applyContext)
 		if bottosErr.ErrNoError == bottoserr {
 			return true, bottosErr.ErrNoError, nil
 		}
