@@ -27,7 +27,16 @@ package contract
 
 import (
 	"github.com/bottos-project/bottos/config"
+	berr "github.com/bottos-project/bottos/common/errors"
+	"math/big"
+	"regexp"
 )
+
+const MaxDelegateLocationLen int = 32
+const MaxDelegateDescriptionLen int = 128
+
+// BLOCKS_PER_ROUND define block num per round
+const BLOCKS_PER_ROUND uint32 = 29
 
 //NewAccountParam struct for name and pubkey
 type NewAccountParam struct {
@@ -83,18 +92,24 @@ type DeployABIParam struct {
 	ContractAbi []byte `json:"contract_abi"`
 }
 
+//StakeParam for stake, unstke and claim contract
+type StakeParam struct {
+	Amount *big.Int `json:"amount"`
+}
+
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
 	IsNativeContract(contract string, method string) bool
-	ExecuteNativeContract(*Context) ContractError
+	ExecuteNativeContract(*Context) berr.ErrCode
 }
 
 //NativeContractMethod is native contract method
-type NativeContractMethod func(*Context) ContractError
+type NativeContractMethod func(*Context) berr.ErrCode
 
 //NativeContract is native contract handler
 type NativeContract struct {
 	Handler map[string]NativeContractMethod
+	re *regexp.Regexp
 }
 
 //NewNativeContractHandler is native contract handler to handle different contracts
@@ -102,15 +117,22 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 	nc := &NativeContract{
 		Handler: make(map[string]NativeContractMethod),
 	}
+	nc.re = regexp.MustCompile(config.ACCOUNT_NAME_REGEXP)
 
-	nc.Handler["newaccount"] = newAccount
-	nc.Handler["transfer"] = transfer
-	nc.Handler["setdelegate"] = setDelegate
-	nc.Handler["grantcredit"] = grantCredit
-	nc.Handler["cancelcredit"] = cancelCredit
-	nc.Handler["transferfrom"] = transferFrom
-	nc.Handler["deploycode"] = deployCode
-	nc.Handler["deployabi"] = deployAbi
+	nc.Handler["newaccount"] = nc.newAccount
+	nc.Handler["transfer"] = nc.transfer
+	nc.Handler["setdelegate"] = nc.setDelegate
+	nc.Handler["grantcredit"] = nc.grantCredit
+	nc.Handler["cancelcredit"] = nc.cancelCredit
+	nc.Handler["transferfrom"] = nc.transferFrom
+	nc.Handler["deploycode"] = nc.deployCode
+	nc.Handler["deployabi"] = nc.deployAbi
+	nc.Handler["stake"] = nc.stake
+	nc.Handler["unstake"] = nc.unstake
+	nc.Handler["claim"] = nc.claim
+	nc.Handler["regdelegate"] = nc.regDelegate
+	nc.Handler["unregdelegate"] = nc.unregDelegate
+	nc.Handler["votedelegate"] = nc.voteDelegate
 
 	return nc, nil
 }
@@ -126,7 +148,7 @@ func (nc *NativeContract) IsNativeContract(contract string, method string) bool 
 }
 
 //ExecuteNativeContract is to call native contract
-func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
+func (nc *NativeContract) ExecuteNativeContract(ctx *Context) berr.ErrCode {
 	contract := ctx.Trx.Contract
 	method := ctx.Trx.Method
 	if nc.IsNativeContract(contract, method) {
@@ -134,9 +156,8 @@ func (nc *NativeContract) ExecuteNativeContract(ctx *Context) ContractError {
 			contErr := handler(ctx)
 			return contErr
 		}
-		return ERROR_CONT_UNKNOWN_METHOD
-
+		return berr.ErrContractUnknownMethod
 	}
-	return ERROR_CONT_UNKNOWN_CONTARCT
+	return berr.ErrContractUnknownContract
 
 }

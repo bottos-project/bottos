@@ -23,24 +23,28 @@
  * @Last Modified time:
  */
 
-package role
+package mongodb
 
 import (
 	"errors"
 	log "github.com/cihub/seelog"
-	"io/ioutil"
-	"net/http"
 	"time"
-	"math/big"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
-	abi "github.com/bottos-project/bottos/contract/abi"
+	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/role"
 	"gopkg.in/mgo.v2/bson"
+	"math/big"
 )
+
+type MongoDBPlugin struct {
+	Role role.RoleInterface
+	Db   *db.OptionDBService
+}
 
 // AccountInfo is definition of account
 type AccountInfo struct {
@@ -56,71 +60,66 @@ type AccountInfo struct {
 
 // BlockInfo is definition of block
 type BlockInfo struct {
-	ID              bson.ObjectId          `bson:"_id"`
-	BlockHash       string /*common.Hash*/ `bson:"block_hash"`
-	PrevBlockHash   string /*[]byte*/      `bson:"prev_block_hash"`
-	BlockNumber     uint64                 `bson:"block_number"`
-	Timestamp       uint64                 `bson:"timestamp"`
-	MerkleRoot      string /*[]byte*/      `bson:"merkle_root"`
-	DelegateAccount string                 `bson:"delegate"`
-	DelegateSign    string                 `bson:"delegate_sign"`
-	Transactions    []bson.ObjectId        `bson:"transactions"`
-	CreateTime      time.Time              `bson:"create_time"`
+	ID              bson.ObjectId `bson:"_id"`
+	BlockHash       string/*common.Hash*/ `bson:"block_hash"`
+	PrevBlockHash   string/*[]byte*/ `bson:"prev_block_hash"`
+	BlockNumber     uint64 `bson:"block_number"`
+	Timestamp       uint64 `bson:"timestamp"`
+	MerkleRoot      string/*[]byte*/ `bson:"merkle_root"`
+	DelegateAccount string          `bson:"delegate"`
+	DelegateSign    string          `bson:"delegate_sign"`
+	Transactions    []bson.ObjectId `bson:"transactions"`
+	CreateTime      time.Time       `bson:"create_time"`
 }
 
 // TxInfo is definition of tx
 type TxInfo struct {
-	ID            bson.ObjectId          `bson:"_id"`
-	BlockNum      uint64                 `bson:"block_number"`
-	TransactionID string /*common.Hash*/ `bson:"transaction_id"`
-	SequenceNum   uint32                 `bson:"sequence_num"`
-	BlockHash     string /*common.Hash*/ `bson:"block_hash"`
-	CursorNum     uint64                 `bson:"cursor_num"`
-	CursorLabel   uint32                 `bson:"cursor_label"`
-	Lifetime      uint64                 `bson:"lifetime"`
-	Sender        string                 `bson:"sender"`
-	Contract      string                 `bson:"contract"`
-	Method        string                 `bson:"method"`
-	Param         TParam                 `bson:"param"`
-	SigAlg        uint32                 `bson:"sig_alg"`
-	Signature     string /*[]byte*/      `bson:"signature"`
-	CreateTime    time.Time              `bson:"create_time"`
+	ID            bson.ObjectId `bson:"_id"`
+	BlockNum      uint64        `bson:"block_number"`
+	TransactionID string/*common.Hash*/ `bson:"transaction_id"`
+	SequenceNum   uint32 `bson:"sequence_num"`
+	BlockHash     string/*common.Hash*/ `bson:"block_hash"`
+	CursorNum     uint64      `bson:"cursor_num"`
+	CursorLabel   uint32      `bson:"cursor_label"`
+	Lifetime      uint64      `bson:"lifetime"`
+	Sender        string      `bson:"sender"`
+	Contract      string      `bson:"contract"`
+	Method        string      `bson:"method"`
+	Param         interface{} `bson:"param"`
+	SigAlg        uint32      `bson:"sig_alg"`
+	Signature     string/*[]byte*/ `bson:"signature"`
+	CreateTime    time.Time `bson:"create_time"`
 }
 
-// TParam is interface definition
-type TParam interface {
-	//Accountparam
-	//Transferparam transferpa
-	//Reguser       reguser{}
-	//DeployCodeParam
+func NewMongoDBPlugin(role role.RoleInterface, db *db.OptionDBService) *MongoDBPlugin {
+	return &MongoDBPlugin{Role: role, Db: db}
 }
 
-func findAcountInfo(ldb *db.DBService, accountName string) (interface{}, error) {
-	return ldb.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
-}
-
-//getMyPublicIPaddr function
-func getMyPublicIPaddr() (string, error) {
-	resp, err1 := http.Get("http://members.3322.org/dyndns/getip")
-	if err1 != nil {
-		return "", err1
+func (mdb *MongoDBPlugin) ApplyBlock(block *types.Block) error {
+	if !mdb.Db.IsOpDbConfigured() {
+		return nil
 	}
-	defer resp.Body.Close()
-	body, err2 := ioutil.ReadAll(resp.Body)
-	if err2 != nil {
-		return "", err2
+	oids := make([]bson.ObjectId, len(block.Transactions))
+	for i := range block.Transactions {
+		oids[i] = bson.NewObjectId()
 	}
-	//log.Info("getMyPublicIPaddr"+ string(body))
-	return string(body), nil
+	mdb.insertBlockInfoRole(block, oids)
+	mdb.insertTxInfoRole(block, oids)
+
+	return nil
+}
+
+func (mdb *MongoDBPlugin) findAcountInfo(accountName string) (interface{}, error) {
+	return mdb.Db.Find(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName)
 }
 
 // ParseParam is to parase param by method
-func ParseParam(r *Role, Param []byte, Contract string, Method string) (interface{}, error) {
+func (mdb *MongoDBPlugin) ParseParam(Contract string, Method string, Param []byte) (map[string]interface{}, error) {
 	var Abi *abi.ABI = nil
 	if Contract != "bottos" {
 		var err error
-		Abi, err = GetAbiForExternalContract(r, Contract)
-		if  err != nil {
+		Abi, err = mdb.getAbiForExternalContract(Contract)
+		if err != nil {
 			return nil, errors.New("External Abi is empty!")
 		}
 	} else {
@@ -139,9 +138,8 @@ func ParseParam(r *Role, Param []byte, Contract string, Method string) (interfac
 	return decodedParam, nil
 }
 
-func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
-
-	if ldb == nil || block == nil {
+func (mdb *MongoDBPlugin) insertTxInfoRole(block *types.Block, oids []bson.ObjectId) error {
+	if block == nil {
 		return errors.New("Error Invalid param")
 	}
 	if len(oids) != len(block.Transactions) {
@@ -166,25 +164,23 @@ func insertTxInfoRole(r *Role, ldb *db.DBService, block *types.Block, oids []bso
 			CreateTime: time.Now(),
 		}
 
-		decodedParam, err := ParseParam(r, trx.Param, newtrx.Contract, newtrx.Method)
-
+		decodedParam, err := mdb.ParseParam(newtrx.Contract, newtrx.Method, trx.Param)
 		if err != nil {
 			continue
 		}
-
 		newtrx.Param = decodedParam
 
-		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
+		mdb.Db.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
 		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
-			insertAccountInfoRole(r, ldb, block, trx, oids[i])
+			mdb.insertAccountInfoRole(block, trx, oids[i])
 		}
 	}
 
 	return nil
 }
 
-func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.ObjectId) error {
-	if ldb == nil || block == nil {
+func (mdb *MongoDBPlugin) insertBlockInfoRole(block *types.Block, oids []bson.ObjectId) error {
+	if block == nil {
 		return errors.New("Error Invalid param")
 	}
 
@@ -200,13 +196,13 @@ func insertBlockInfoRole(ldb *db.DBService, block *types.Block, oids []bson.Obje
 		oids,
 		time.Now(),
 	}
-	return ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_BLOCK_NAME, newBlockInfo)
+	return mdb.Db.Insert(config.DEFAULT_OPTIONDB_TABLE_BLOCK_NAME, newBlockInfo)
 }
 
 // GetBalanceOp is to get account balance
-func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
+func (mdb *MongoDBPlugin) GetBalanceOp(accountName string) (*role.Balance, error) {
 	var value2 AccountInfo
-	value, err := findAcountInfo(ldb, accountName)
+	value, err := mdb.findAcountInfo(accountName)
 
 	if value == nil || err != nil {
 		return nil, err
@@ -216,14 +212,13 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 	bsonBytes, _ := bson.Marshal(value)
 	bson.Unmarshal(bsonBytes, &value2)
 
-
 	balance, errConvert := big.NewInt(0).SetString(value2.Balance, 10)
 
-	if (false == errConvert) {
+	if false == errConvert {
 		return nil, errors.New("convert balance error")
 	}
 
-	res := &Balance{
+	res := &role.Balance{
 		AccountName: accountName,
 		Balance:     balance,
 	}
@@ -232,12 +227,12 @@ func GetBalanceOp(ldb *db.DBService, accountName string) (*Balance, error) {
 }
 
 // SetBalanceOp is to save account balance
-func SetBalanceOp(ldb *db.DBService, accountName string, balance *big.Int) error {
-	return ldb.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance.String())
+func (mdb *MongoDBPlugin) SetBalanceOp(accountName string, balance *big.Int) error {
+	return mdb.Db.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance)
 }
 
-func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
-	if ldb == nil || block == nil {
+func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
+	if block == nil {
 		return errors.New("Error Invalid param")
 	}
 
@@ -252,30 +247,26 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 	if err != nil {
 		return err
 	}
-	
+
 	Abi := abi.GetAbi()
 
-	_, err = findAcountInfo(ldb, config.BOTTOS_CONTRACT_NAME)
+	_, err = mdb.findAcountInfo(config.BOTTOS_CONTRACT_NAME)
 	if err != nil {
 
 		bto := &AccountInfo{
 			ID:               bson.NewObjectId(),
 			AccountName:      config.BOTTOS_CONTRACT_NAME,
-			//Balance:          initSupply, //uint32        `bson:"bto_balance"`
 			Balance:          initSupply.String(),
-			//StakedBalance:    0,          //uint64        `bson:"staked_balance"`
 			StakedBalance:    "0",
-			UnstakingBalance: "0",         //             `bson:"unstaking_balance"`
+			UnstakingBalance: "0",
 			PublicKey:        config.Param.KeyPairs[0].PublicKey,
 			CreateTime:       time.Unix(int64(config.Genesis.GenesisTime), 0), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(),                                      //time.Time     `bson:"updated_time"`
 		}
-
-		ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, bto)
+		mdb.Db.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, bto)
 	}
 
 	if trx.Method == "transfer" {
-
 		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
 		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
@@ -284,19 +275,17 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		FromAccountName := data["from"].(string)
 		ToAccountName := data["to"].(string)
 		DataVal := data["value"].(*big.Int)
-		
-		SrcBalanceInfo, err := GetBalanceOp(ldb, FromAccountName) //data.Value
 
+		SrcBalanceInfo, err := mdb.GetBalanceOp(FromAccountName) //data.Value
 		if err != nil {
 			return err
 		}
 
-		DstBalanceInfo, err := GetBalanceOp(ldb, ToAccountName)
-
+		DstBalanceInfo, err := mdb.GetBalanceOp(ToAccountName)
 		if err != nil {
 			return err
 		}
-		
+
 		if -1 == SrcBalanceInfo.Balance.Cmp(DataVal) {
 			return err
 		}
@@ -304,25 +293,24 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		SrcBalanceInfo.SafeSub(DataVal)
 		DstBalanceInfo.SafeAdd(DataVal)
 
-		err = SetBalanceOp(ldb, FromAccountName, SrcBalanceInfo.Balance)
+		err = mdb.SetBalanceOp(FromAccountName, SrcBalanceInfo.Balance)
 		if err != nil {
 			return err
 		}
-		err = SetBalanceOp(ldb, ToAccountName, DstBalanceInfo.Balance)
+		err = mdb.SetBalanceOp(ToAccountName, DstBalanceInfo.Balance)
 		if err != nil {
 			return err
 		}
 	} else if trx.Method == "newaccount" {
-
 		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
 		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
 		}
-		DataName   := data["name"].(string)
+		DataName := data["name"].(string)
 		DataPubKey := data["pubkey"].(string)
 
-		mesgs, err := findAcountInfo(ldb, DataName)
+		mesgs, err := mdb.findAcountInfo(DataName)
 		if mesgs != nil {
 			return nil /* Do not allow insert same account */
 		}
@@ -331,72 +319,50 @@ func insertAccountInfoRole(r *Role, ldb *db.DBService, block *types.Block, trx *
 		NewAccount := &AccountInfo{
 			ID:               oid,
 			AccountName:      DataName,
-			Balance:          "0",  //uint32        `bson:"bto_balance"`
-			StakedBalance:    "0",  //uint64        `bson:"staked_balance"`
+			Balance:          "0", //uint32        `bson:"bto_balance"`
+			StakedBalance:    "0", //uint64        `bson:"staked_balance"`
 			UnstakingBalance: "0", //             `bson:"unstaking_balance"`
 			PublicKey:        DataPubKey,
 			CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(), //time.Time     `bson:"updated_time"`
 		}
 
-		return ldb.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, NewAccount)
+		return mdb.Db.Insert(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, NewAccount)
 	}
 
 	return nil
-}
-
-// ApplyPersistanceRole is to apply persistence
-func ApplyPersistanceRole(r *Role, ldb *db.DBService, block *types.Block) error {
-	if !ldb.IsOpDbConfigured() {
-		return nil
-	}
-	oids := make([]bson.ObjectId, len(block.Transactions))
-	for i := range block.Transactions {
-		oids[i] = bson.NewObjectId()
-	}
-	insertBlockInfoRole(ldb, block, oids)
-	insertTxInfoRole(r, ldb, block, oids)
-
-	//fmt.Printf("apply to mongodb block hash %x, block number %d", block.Hash(), block.Header.Number)
-	return nil
-}
-
-// StartRetroBlock is to do: start retro block when core start
-func StartRetroBlock(ldb *db.DBService) {
-
 }
 
 //GetAbi function
 var ExternalAbiMap map[string]interface{}
 
-func GetAbiForExternalContract(r *Role, contract string) (*abi.ABI, error) {
-	
+func (mdb *MongoDBPlugin) getAbiForExternalContract(contract string) (*abi.ABI, error) {
+
 	if len(ExternalAbiMap) <= 0 {
 		ExternalAbiMap = make(map[string]interface{})
 	}
-	
+
 	if _, ok := ExternalAbiMap[contract]; ok {
-		return ExternalAbiMap[contract].(*abi.ABI), nil	
+		return ExternalAbiMap[contract].(*abi.ABI), nil
 	}
-	
-	account, err := r.GetAccount(contract)
+
+	account, err := mdb.Role.GetAccount(contract)
 	if err != nil {
 		return nil, errors.New("Get account fail")
 	}
 
 	if len(account.ContractAbi) > 0 {
-		
+
 		Abi, err := abi.ParseAbi(account.ContractAbi)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		ExternalAbiMap[contract] = Abi
 
 		return Abi, nil
 	}
-	
+
 	// TODO
 	return nil, errors.New("Get Abi failed!")
 }
-

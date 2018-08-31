@@ -8,8 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/bottos-project/bottos/action/env"
-	//"../error"
-	//"github.com/bottos-project/bottos/restful/error"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
 

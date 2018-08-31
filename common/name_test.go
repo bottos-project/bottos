@@ -28,8 +28,7 @@ package common
 import (
 	"encoding/hex"
 	"fmt"
-	"os"
-	"strings"
+		"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,10 +36,7 @@ import (
 
 func TestNameEncoding(t *testing.T) {
 	name, err := NewName("bottos")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
+	assert.Nil(t, err)
 	assert.Equal(t, name.Bytes(), fromHex("000000000000000000000002d875d61c"))
 	raw := name.ToString()
 	assert.Equal(t, raw, "bottos")
@@ -53,6 +49,11 @@ func TestErrorEncoding(t *testing.T) {
 
 func TestErrorEncoding1(t *testing.T) {
 	_, err := NewName("L")
+	assert.NotNil(t, err)
+}
+
+func TestLongName(t *testing.T) {
+	_, err := NewName("bottos-1234-bottos-2345-bottos")
 	assert.NotNil(t, err)
 }
 

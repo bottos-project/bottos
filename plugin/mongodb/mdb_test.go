@@ -1,4 +1,4 @@
-package role
+package mongodb
 
 import (
 	log "github.com/cihub/seelog"

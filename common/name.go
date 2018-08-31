@@ -28,24 +28,27 @@ package common
 import (
 	"fmt"
 	"math/big"
-)
+	)
 
 const (
-	// NAME_BYTE_LENGTH is byte length of Name type
-	NAME_BYTE_LENGTH = 16
-	// ENCODE_RADIX
-	ENCODE_RADIX = 38
-	// ENCODE_BIT_LEN
-	ENCODE_BIT_LEN = 6
+	// MaxNameLength define max account name length
+	MaxNameLength int = 21
+
+	nameByteLen = 16
+	encodeRadix = 38
+	encodeBitLen = 6
 )
 
 // Name basic type for account name, method and contract
-type Name [NAME_BYTE_LENGTH]byte
+type Name [nameByteLen]byte
 
 var defaultEncoding = encoding([]byte("0123456789abcdefghijklmnopqrstuvwxyz-."))
 
 // NewName encode a string name to Name type
 func NewName(s string) (Name, error) {
+	if len(s) > MaxNameLength {
+		return Name{}, fmt.Errorf("Name too long, length: %v", len(s))
+	}
 	encoded, err := defaultEncoding.encode([]byte(s))
 	if err != nil {
 		return Name{}, err
@@ -73,7 +76,7 @@ func (n Name) Bytes() []byte {
 
 // EncodingStruct is a radix 58 encoding/decoding scheme.
 type EncodingStruct struct {
-	alphabet  [ENCODE_RADIX]byte
+	alphabet  [encodeRadix]byte
 	decodeMap map[byte]int64
 }
 
@@ -99,7 +102,7 @@ func (encoding *EncodingStruct) encode(src []byte) (Name, error) {
 	bigname := big.NewInt(0)
 	for _, c := range src {
 		if idx, ok := encoding.decodeMap[c]; ok {
-			bigname.Lsh(bigname, ENCODE_BIT_LEN)
+			bigname.Lsh(bigname, encodeBitLen)
 			bigname.Add(bigname, big.NewInt(idx))
 		} else {
 			return Name{}, fmt.Errorf("invalid character '%c' in decoding the string \"%s\"", c, src)
@@ -121,11 +124,11 @@ func (encoding *EncodingStruct) decode(name Name) ([]byte, error) {
 		switch bigname.Cmp(zero) {
 		case 1:
 			val := bigname.Int64() & 0x3F
-			if val >= ENCODE_RADIX {
+			if val >= encodeRadix {
 				return []byte{}, fmt.Errorf("invalid encoded value %v", val)
 			}
 			decoded = append(decoded, encoding.alphabet[val])
-			bigname.Rsh(bigname, ENCODE_BIT_LEN)
+			bigname.Rsh(bigname, encodeBitLen)
 		case 0:
 			reverse(decoded)
 			return decoded, nil
@@ -137,7 +140,7 @@ func (encoding *EncodingStruct) decode(name Name) ([]byte, error) {
 
 func (n *Name) setBytes(b []byte) {
 	if len(b) > len(n) {
-		b = b[len(b)-NAME_BYTE_LENGTH:]
+		b = b[len(b)-nameByteLen:]
 	}
-	copy(n[NAME_BYTE_LENGTH-len(b):], b)
+	copy(n[nameByteLen-len(b):], b)
 }

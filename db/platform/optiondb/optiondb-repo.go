@@ -55,6 +55,7 @@ type MongoContext struct {
 //GetSession is to create session to mongodb
 func GetSession(url string) (*MongoContext, error) {
 	if url == "" {
+		log.Error("Error! GetSession failed ! Url is empty")
 		return nil, errors.New("invalid para url")
 	}
 	var err error

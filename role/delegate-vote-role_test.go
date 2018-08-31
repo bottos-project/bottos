@@ -53,9 +53,9 @@ func TestDelegateVotes_writedb(t *testing.T) {
 		log.Error("SetDelegateVotesRole", err)
 	}
 
-	value, err = GetDelegateVotesRoleByAccountName(ins, value.OwnerAccount)
+	value, err = GetDelegateVotesRole(ins, value.OwnerAccount)
 	if err != nil {
-		log.Error("GetDelegateVotesRoleByAccountName", err)
+		log.Error("GetDelegateVotesRole", err)
 	}
 	log.Info(value)
 

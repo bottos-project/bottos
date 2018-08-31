@@ -59,11 +59,14 @@ type RoleInterface interface {
 	GetDelegateBySignKey(key string) (*Delegate, error)
 	GetCandidateBySlot(slotNum uint64) (string, error)
 	GetDelegateParticipationRate() uint64
+	SetVoter(name string, value *Voter) error
+	GetVoter(name string) (*Voter, error)
 
 	SetScheduleDelegate(value *ScheduleDelegate) error
 	GetScheduleDelegate() (*ScheduleDelegate, error)
 
 	CreateDelegateVotes() error
+	GetDelegateVotes(key string) (*DelegateVotes, error)
 	SetDelegateVotes(key string, value *DelegateVotes) error
 	GetAllDelegateVotes() ([]*DelegateVotes, error)
 
@@ -85,8 +88,6 @@ type RoleInterface interface {
 	SetBinValue(contract string, object string, key string, value []byte) error
 	GetBinValue(contract string, object string, key string) ([]byte, error)
 	RemoveKeyValue(contract string, object string, key string) error
-
-	ApplyPersistance(block *types.Block) error
 }
 
 //NewRole is creating new role
@@ -197,6 +198,16 @@ func (r *Role) GetDelegateParticipationRate() uint64 {
 	return 10000 * rate.RecentSlotFilled / 64
 }
 
+//SetVoter
+func (r *Role) SetVoter(name string, value *Voter) error {
+	return SetVoterRole(r.Db, name, value)
+}
+
+//GetVoter
+func (r *Role) GetVoter(name string) (*Voter, error) {
+	return GetVoterRole(r.Db, name)
+}
+
 //SetScheduleDelegate is setting schedule delegate
 func (r *Role) SetScheduleDelegate(value *ScheduleDelegate) error {
 	return SetScheduleDelegateRole(r.Db, value)
@@ -212,7 +223,12 @@ func (r *Role) CreateDelegateVotes() error {
 	return CreateDelegateVotesRole(r.Db)
 }
 
-//SetDelegateVotes is setting delegate votes
+//GetDelegateVotes get delegate votes role
+func (r *Role) GetDelegateVotes(key string) (*DelegateVotes, error) {
+	return GetDelegateVotesRole(r.Db, key)
+}
+
+//SetDelegateVotes set delegate votes role
 func (r *Role) SetDelegateVotes(key string, value *DelegateVotes) error {
 	return SetDelegateVotesRole(r.Db, key, value)
 }
@@ -287,11 +303,6 @@ func (r *Role) RemoveKeyValue(contract string, object string, key string) error 
 	return RemoveKeyValue(r.Db, contract, object, key)
 }
 
-//ApplyPersistance is to apply persistence blocks to option db
-func (r *Role) ApplyPersistance(block *types.Block) error {
-	return ApplyPersistanceRole(r, r.Db, block)
-}
-
 //initRole is to init role
 func (r *Role) initRole() {
 	CreateChainStateRole(r.Db)
@@ -305,6 +316,7 @@ func (r *Role) initRole() {
 	CreateDelegateRole(r.Db)
 	CreateDelegateVotesRole(r.Db)
 	CreateScheduleDelegateRole(r.Db)
+	CreateVoterRole(r.Db)
 
 	CreateBlockHistoryRole(r.Db)
 	CreateTransactionHistoryObjectRole(r.Db)

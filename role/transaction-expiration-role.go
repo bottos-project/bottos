@@ -46,7 +46,7 @@ func CreateTransactionExpirationRole(ldb *db.DBService) error {
 }
 
 func hashToKey(hash common.Hash) string {
-	return hash.ToString()
+	return hash.ToHexString()
 }
 
 //SetTransactionExpirationRole is setting transaction expiration role

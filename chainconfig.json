@@ -50,6 +50,6 @@
     "rpc_service_name": "bottos",
     "rpc_service_version": "3.0.0",
     "enable_stale_report": true,
-    "option_db":"127.0.0.1:27017",
+    "option_db":"mongodb://bottos:bottos@127.0.0.1:27017/bottos",
     "log_config":"./corelog.xml"
 }
