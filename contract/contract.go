@@ -176,6 +176,8 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 	stakedBalance := &role.StakedBalance{
 		AccountName: bto.AccountName,
 		StakedBalance : big.NewInt(0),
+		UnstakingBalance: big.NewInt(0),
+		LastUnstakingTime: 0,
 	}
 	roleIntf.SetStakedBalance(bto.AccountName, stakedBalance)
 
