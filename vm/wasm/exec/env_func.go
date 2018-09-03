@@ -58,7 +58,6 @@ func NewEnvFunc() *EnvFunc {
 
 	//env function for C/C++
 	envFunc.Register("printi",           printi)
-	envFunc.Register("printi64",         printi)
 	envFunc.Register("prints",           prints)
 	envFunc.Register("getStrValue",      getStrValue)
 	envFunc.Register("setStrValue",      setStrValue)
