@@ -34,11 +34,11 @@ import (
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/crypto-go/crypto"
-		"net/http"
-	"strings"
+	//"net/http"
+	//"strings"
 	"math/big"
 	"github.com/bottos-project/bottos/common/safemath"
-	"github.com/bitly/go-simplejson"
+	//"github.com/bitly/go-simplejson"
 	TODO "github.com/bottos-project/bottos/restful/handler"
 )
 
@@ -321,17 +321,18 @@ func (cli *CLI) jsonPrint(data []byte) {
 //getAbibyContractName function
 func getAbibyContractName(contractname string) (abi.ABI, error) {
 	var abistring string
-	NodeIp := "127.0.0.1"
+	/*NodeIp := "127.0.0.1"
 	addr := "http://" + NodeIp + ":8080/rpc"
 	params := `service=bottos&method=Chain.GetAbi&request={
 			"contract":"%s"}`
 	s := fmt.Sprintf(params, contractname)
 	respBody, err := http.Post(addr, "application/x-www-form-urlencoded", strings.NewReader(s))
-
+	
 	if err != nil {
 		fmt.Println(err)
 		return abi.ABI{}, err
 	}
+	
 
 	defer respBody.Body.Close()
 	body, err := ioutil.ReadAll(respBody.Body)
@@ -343,6 +344,13 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	jss, _ := simplejson.NewJson([]byte(body))
 	abistring = jss.Get("result").MustString()
 	if len(abistring) <= 0 {
+		return abi.ABI{}, errors.New("len(abistring) <= 0")
+	}
+	
+	*/
+	http_url := "http://" + ChainAddr + "/v1/contract/abi"
+	abistring, err := GetAbiOverHttp(http_url, contractname)
+	if len(abistring) <= 0 || err != nil {
 		return abi.ABI{}, errors.New("len(abistring) <= 0")
 	}
 
@@ -745,6 +753,37 @@ func (cli *CLI) deployabi(name string, path string) {
 
 	b, _ := json.Marshal(deployAbiRsp)
 	cli.jsonPrint(b)
+}
+
+func GetAbiOverHttp(http_url string, contract string) (/**chain.GetInfoResponse_Result*/string, error) {
+		getinfo := &chain.GetAbiRequest{Contract: contract}
+		req, _ := json.Marshal(getinfo)
+		req_new := bytes.NewBuffer([]byte(req))
+		httpRspBody, err := send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+			return "", errors.New("Error!")
+		}
+		
+		var trxrespbody  TODO.ResponseStruct
+		
+		err = json.Unmarshal(httpRspBody, &trxrespbody)
+		
+		if err != nil {
+		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		    return "", errors.New("Error!")
+		} else if trxrespbody.Errcode != 0 {
+		    fmt.Println("Error! ",trxrespbody.Errcode, ":", trxrespbody.Msg)
+		    return "", errors.New("Error!")
+			
+		}
+		
+		//b, _ := json.Marshal(trxrespbody.Result)
+		//cli.jsonPrint(b)
+		//var abiInfo chain.GetAbiResponse
+		//json.Unmarshal(b, &abiInfo)
+		
+	return trxrespbody.Result.(string), nil 
 }
 
 //BytesToHex hex encode
