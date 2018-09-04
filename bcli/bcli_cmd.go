@@ -263,9 +263,29 @@ func (cli *CLI) BcliVote(ctx *cli.Context) error {
 
 func (cli *CLI) BcliCancelVote(ctx *cli.Context) error {
 	vouter := ctx.String("vouter")
+	delegate  := ctx.String("delegate")
 	signer  := ctx.String("signer")
 	
-	cli.BCliCancelVoteInfo(vouter, signer)
+	cli.BCliCancelVoteInfo(vouter, delegate, signer)
+
+	return nil
+}
+
+func (cli *CLI) BcliDelegateReg(ctx *cli.Context) error {
+	account := ctx.String("account")
+	signkey  := ctx.String("signkey")
+	location := ctx.String("location")
+	description := ctx.String("description")
+
+	cli.BCliDelegateRegInfo(account, signkey, location, description)
+
+	return nil
+}
+
+func (cli *CLI) BcliDelegateUnReg(ctx *cli.Context) error {
+	account := ctx.String("account")
+	
+	cli.BCliDelegateUnRegInfo(account)
 
 	return nil
 }
@@ -444,7 +464,7 @@ func (Cli *CLI) RunNewCLI() {
 						cli.StringFlag{
 							Name: "delegate",
 							Value:"",
-							Usage: "amount",
+							Usage: "delegate",
 						},
 						cli.StringFlag{
 							Name: "signer",
@@ -462,6 +482,11 @@ func (Cli *CLI) RunNewCLI() {
 							Name: "voter",
 							Value:"",
 							Usage: "vouter",
+						},
+						cli.StringFlag{
+							Name: "delegate",
+							Value:"",
+							Usage: "delegate",
 						},
 						cli.StringFlag{
 							Name: "signer",
@@ -695,16 +720,13 @@ func (Cli *CLI) RunNewCLI() {
 							Usage:"sign key",
 						},
 						cli.StringFlag{
-							Name: "url",
+							Name: "location",
+						},
+						cli.StringFlag{
+							Name: "description",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("account"))
-						fmt.Println(c.String("signkey"))
-						fmt.Println(c.String("url"))
-						return nil
-					},
+					Action: MigrateFlags(Cli.BcliDelegateReg),
 				},
 				{
 					Name:  "unreg",
@@ -713,11 +735,7 @@ func (Cli *CLI) RunNewCLI() {
 							Name: "account",
 						},
 					},
-					Action: func(c *cli.Context) error {
-						// TODO
-						fmt.Println(c.String("account"))
-						return nil
-					},
+					Action: MigrateFlags(Cli.BcliDelegateUnReg),
 				},
 				{
 					Name:  "list",
