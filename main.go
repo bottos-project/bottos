@@ -58,6 +58,8 @@ func init() {
 		cmd.EnableMongoDBFlag,
 		cmd.MongoDBFlag,
 		cmd.LogConfigFlag,
+		cmd.WalletDirFlag,
+		cmd.EnableWalletFlag,
 	}
 	app.Action = startBottos
 	app.Before = func(ctx *cli.Context) error {

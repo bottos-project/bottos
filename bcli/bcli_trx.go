@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math/big"
 	"golang.org/x/net/context"
 	"github.com/bottos-project/bottos/contract/abi"
 	chain "github.com/bottos-project/bottos/api"
@@ -292,4 +293,428 @@ func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
 		fmt.Printf("    %s\n", newAccountRsp)
 		return
 	}
+}
+
+func (cli *CLI) BCliAccountStakeInfo(account string, amount big.Int, signer string) {
+	
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed:", "bottos")
+           return
+        }
+	
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+	
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "amount", amount)
+
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "stake")
+
+	trx := &chain.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "stake",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
+	}
+	
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+		return
+	}
+	
+	trx.Signature = sign
+	var newAccountRsp *chain.SendTransactionResponse
+	
+	http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+    	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	newAccountRsp = &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
+	fmt.Printf("Trx: \n")
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       BytesToHex(param),
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
+	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+}
+
+func (cli *CLI) BCliAccountUnStakeInfo(account string, amount big.Int, signer string) {
+	
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed:", "bottos")
+           return
+        }
+	
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+	
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "amount", amount)
+
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "unstake")
+
+	trx := &chain.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "unstake",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
+	}
+	
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+		return
+	}
+	
+	trx.Signature = sign
+	var newAccountRsp *chain.SendTransactionResponse
+	
+	http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+    	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	newAccountRsp = &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
+	fmt.Printf("Trx: \n")
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       BytesToHex(param),
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
+	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+}
+
+func (cli *CLI) BCliAccountClaimInfo(account string, amount big.Int, signer string) {
+	
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed:", "bottos")
+           return
+        }
+	
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+	
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "amount", amount)
+
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "claim")
+
+	trx := &chain.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "claim",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
+	}
+	
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+		return
+	}
+	
+	trx.Signature = sign
+	var newAccountRsp *chain.SendTransactionResponse
+	
+	http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+    	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	newAccountRsp = &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
+	fmt.Printf("Trx: \n")
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       BytesToHex(param),
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
+	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+}
+
+func (cli *CLI) BCliVoteInfo(vouter string, delegate string, signer string) {
+	
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed:", "bottos")
+           return
+        }
+	
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+	
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "voteop", 1)
+        abi.Setmapval(mapstruct, "vouter", vouter)
+        abi.Setmapval(mapstruct, "delegate", delegate)
+	
+
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "voute")
+
+	trx := &chain.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "voute",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
+	}
+	
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+		return
+	}
+	
+	trx.Signature = sign
+	var newAccountRsp *chain.SendTransactionResponse
+	
+	http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+    	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	newAccountRsp = &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
+	fmt.Printf("Trx: \n")
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       BytesToHex(param),
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
+	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+}
+
+func (cli *CLI) BCliCancelVoteInfo(vouter string, signer string) {
+	
+	Abi, abierr := getAbibyContractName("bottos")
+        if abierr != nil {
+	   fmt.Println("Push Transaction fail due to get Abi failed:", "bottos")
+           return
+        }
+	
+	//chainInfo, err := cli.getChainInfo()
+	infourl := "http://" + ChainAddr + "/v1/block/height"
+	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+	
+	if err != nil {
+		fmt.Println("QueryChainInfo error: ", err)
+		return
+	}
+	
+	mapstruct := make(map[string]interface{})
+	
+        abi.Setmapval(mapstruct, "voteop", 1)
+        abi.Setmapval(mapstruct, "vouter", vouter)
+
+	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "cancelvoute")
+
+	trx := &chain.Transaction{
+		Version:     1,
+		CursorNum:   chainInfo.HeadBlockNum,
+		CursorLabel: chainInfo.CursorLabel,
+		Lifetime:    chainInfo.HeadBlockTime + 100,
+		Sender:      "delta",
+		Contract:    "bottos",
+		Method:      "cancelvoute",
+		Param:       BytesToHex(param),
+		SigAlg:      1,
+	}
+	
+	sign, err := cli.signTrx(trx, param)
+	if err != nil {
+	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+		return
+	}
+	
+	trx.Signature = sign
+	var newAccountRsp *chain.SendTransactionResponse
+	
+	http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+    	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	newAccountRsp = &respbody
+
+	if newAccountRsp.Errcode != 0 {
+		fmt.Printf("Transfer error:\n")
+		fmt.Printf("    %s\n", newAccountRsp)
+		return
+	}
+
+	fmt.Printf("Transfer Succeed:\n")
+	fmt.Printf("Trx: \n")
+
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       BytesToHex(param),
+		ParamBin:    trx.Param,
+		SigAlg:      trx.SigAlg,
+		Signature:   trx.Signature,
+	}
+
+	b, _ := json.Marshal(printTrx)
+	cli.jsonPrint(b)
+	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }

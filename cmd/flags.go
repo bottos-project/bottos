@@ -100,4 +100,12 @@ var (
 		Name: "logconfig",
 		Usage: "Log config file path",
 	}
+	WalletDirFlag = cli.StringFlag{
+		Name: "walletdir",
+		Usage: "wallet directory",
+	}
+	EnableWalletFlag = cli.StringFlag{
+		Name: "enable-wallet",
+		Usage: "enable wallet",
+	}
 )
