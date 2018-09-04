@@ -295,7 +295,7 @@ func (cli *CLI) BCliGetTableInfo (contract string, table string, key string) {
 	}
 }
 
-func (cli *CLI) BCliAccountStakeInfo(account string, amount big.Int, signer string) {
+func (cli *CLI) BCliAccountStakeInfo(account string, amount big.Int) {
 	
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
@@ -379,7 +379,7 @@ func (cli *CLI) BCliAccountStakeInfo(account string, amount big.Int, signer stri
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
-func (cli *CLI) BCliAccountUnStakeInfo(account string, amount big.Int, signer string) {
+func (cli *CLI) BCliAccountUnStakeInfo(account string, amount big.Int) {
 	
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
@@ -463,7 +463,7 @@ func (cli *CLI) BCliAccountUnStakeInfo(account string, amount big.Int, signer st
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
-func (cli *CLI) BCliAccountClaimInfo(account string, amount big.Int, signer string) {
+func (cli *CLI) BCliAccountClaimInfo(account string, amount big.Int) {
 	
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
@@ -547,7 +547,7 @@ func (cli *CLI) BCliAccountClaimInfo(account string, amount big.Int, signer stri
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
-func (cli *CLI) BCliVoteInfo(vouter string, delegate string, signer string) {
+func (cli *CLI) BCliVoteInfo(vouter string, delegate string) {
 	
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {
@@ -634,7 +634,7 @@ func (cli *CLI) BCliVoteInfo(vouter string, delegate string, signer string) {
 	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
 }
 
-func (cli *CLI) BCliCancelVoteInfo(vouter string, delegate string, signer string) {
+func (cli *CLI) BCliCancelVoteInfo(vouter string, delegate string) {
 	
 	Abi, abierr := getAbibyContractName("bottos")
         if abierr != nil {

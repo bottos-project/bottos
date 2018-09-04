@@ -212,13 +212,12 @@ func (cli *CLI) BCLIGetTableInfo(ctx *cli.Context) error {
 func (cli *CLI) BcliAccountStake(ctx *cli.Context) error {
 	account := ctx.String("account")
 	amounttmp  := ctx.String("amount")
-	signer  := ctx.String("signer")
 	
 	amount := big.NewInt(0)
 
 	amount, _ = amount.SetString(amounttmp, 10)
 	
-	cli.BCliAccountStakeInfo(account, *amount, signer)
+	cli.BCliAccountStakeInfo(account, *amount)
 
 	return nil
 }
@@ -226,13 +225,12 @@ func (cli *CLI) BcliAccountStake(ctx *cli.Context) error {
 func (cli *CLI) BcliAccountUnStake(ctx *cli.Context) error {
 	account := ctx.String("account")
 	amounttmp  := ctx.String("amount")
-	signer  := ctx.String("signer")
 	
 	amount := big.NewInt(0)
 
 	amount, _ = amount.SetString(amounttmp, 10)
 	
-	cli.BCliAccountUnStakeInfo(account, *amount, signer)
+	cli.BCliAccountUnStakeInfo(account, *amount)
 
 	return nil
 }
@@ -240,13 +238,12 @@ func (cli *CLI) BcliAccountUnStake(ctx *cli.Context) error {
 func (cli *CLI) BcliAccountClaim(ctx *cli.Context) error {
 	account := ctx.String("account")
 	amounttmp  := ctx.String("amount")
-	signer  := ctx.String("signer")
 	
 	amount := big.NewInt(0)
 
 	amount, _ = amount.SetString(amounttmp, 10)
 	
-	cli.BCliAccountClaimInfo(account, *amount, signer)
+	cli.BCliAccountClaimInfo(account, *amount)
 
 	return nil
 }
@@ -254,9 +251,8 @@ func (cli *CLI) BcliAccountClaim(ctx *cli.Context) error {
 func (cli *CLI) BcliVote(ctx *cli.Context) error {
 	vouter := ctx.String("vouter")
 	delegate  := ctx.String("delegate")
-	signer  := ctx.String("signer")
 	
-	cli.BCliVoteInfo(vouter, delegate, signer)
+	cli.BCliVoteInfo(vouter, delegate)
 
 	return nil
 }
@@ -264,9 +260,8 @@ func (cli *CLI) BcliVote(ctx *cli.Context) error {
 func (cli *CLI) BcliCancelVote(ctx *cli.Context) error {
 	vouter := ctx.String("vouter")
 	delegate  := ctx.String("delegate")
-	signer  := ctx.String("signer")
 	
-	cli.BCliCancelVoteInfo(vouter, delegate, signer)
+	cli.BCliCancelVoteInfo(vouter, delegate)
 
 	return nil
 }
@@ -400,11 +395,6 @@ func (Cli *CLI) RunNewCLI() {
 							Value:"",
 							Usage: "amount",
 						},
-						cli.StringFlag{
-							Name: "signer",
-							Value:"",
-							Usage: "acocunt name",
-						},
 					},
 					Action: MigrateFlags(Cli.BcliAccountStake),
 				},
@@ -421,11 +411,6 @@ func (Cli *CLI) RunNewCLI() {
 							Name: "ammount",
 							Value:"",
 							Usage: "amount",
-						},
-						cli.StringFlag{
-							Name: "signer",
-							Value:"",
-							Usage: "acocunt name",
 						},
 					},
 					Action: MigrateFlags(Cli.BcliAccountUnStake),
@@ -444,11 +429,6 @@ func (Cli *CLI) RunNewCLI() {
 							Value:"",
 							Usage: "amount",
 						},
-						cli.StringFlag{
-							Name: "signer",
-							Value:"",
-							Usage: "acocunt name",
-						},
 					},
 					Action: MigrateFlags(Cli.BcliAccountClaim),
 				},
@@ -466,11 +446,6 @@ func (Cli *CLI) RunNewCLI() {
 							Value:"",
 							Usage: "delegate",
 						},
-						cli.StringFlag{
-							Name: "signer",
-							Value:"",
-							Usage: "acocunt name",
-						},
 					},
 					Action: MigrateFlags(Cli.BcliVote),
 				},
@@ -487,11 +462,6 @@ func (Cli *CLI) RunNewCLI() {
 							Name: "delegate",
 							Value:"",
 							Usage: "delegate",
-						},
-						cli.StringFlag{
-							Name: "signer",
-							Value:"",
-							Usage: "acocunt name",
 						},
 					},
 					Action: MigrateFlags(Cli.BcliCancelVote),
