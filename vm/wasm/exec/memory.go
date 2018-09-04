@@ -34,6 +34,7 @@ import (
 	"errors"
 	"math"
 	"reflect"
+	"github.com/bottos-project/bottos/common"
 )
 
 // Type define one variable type
@@ -310,10 +311,17 @@ func (vm *VM) StorageData(data interface{}) (uint64, error) {
 				copy(byteArray[i*4:(i+1)*4], array)
 			}
 			return vm.storageMemory(byteArray, Int32)
-
 		default:
 			return 0, ERR_UNSUPPORT_TYPE
 		}
+	case reflect.Array:
+		byteArray := make([]byte, len(data.(common.Name)))
+		for i , v := range data.(common.Name) {
+			array := make([]byte, 1)
+			array = append(array , v)
+			copy(byteArray[i:(i+1)], array[1:])
+		}
+		return vm.storageMemory(byteArray, Int8)
 	default:
 		return 0, ERR_UNSUPPORT_TYPE
 	}
