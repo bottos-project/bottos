@@ -432,40 +432,6 @@ func (Cli *CLI) RunNewCLI() {
 					},
 					Action: MigrateFlags(Cli.BcliAccountClaim),
 				},
-				{
-					Name: "vote",
-					Usage: "vote for producers",
-					Flags:[]cli.Flag {
-						cli.StringFlag{
-							Name: "voter",
-							Value:"",
-							Usage: "vouter",
-						},
-						cli.StringFlag{
-							Name: "delegate",
-							Value:"",
-							Usage: "delegate",
-						},
-					},
-					Action: MigrateFlags(Cli.BcliVote),
-				},
-				{
-					Name: "cancelvote",
-					Usage: "cancel vote for producers",
-					Flags:[]cli.Flag {
-						cli.StringFlag{
-							Name: "voter",
-							Value:"",
-							Usage: "vouter",
-						},
-						cli.StringFlag{
-							Name: "delegate",
-							Value:"",
-							Usage: "delegate",
-						},
-					},
-					Action: MigrateFlags(Cli.BcliCancelVote),
-				},
 			},
 		},
 		{
@@ -726,6 +692,40 @@ func (Cli *CLI) RunNewCLI() {
 						fmt.Println(c.String("start"))
 						return nil
 					},
+				},
+				{
+					Name: "vote",
+					Usage: "vote for producers",
+					Flags:[]cli.Flag {
+						cli.StringFlag{
+							Name: "voter",
+							Value:"",
+							Usage: "vouter",
+						},
+						cli.StringFlag{
+							Name: "delegate",
+							Value:"",
+							Usage: "delegate",
+						},
+					},
+					Action: MigrateFlags(Cli.BcliVote),
+				},
+				{
+					Name: "cancelvote",
+					Usage: "cancel vote for producers",
+					Flags:[]cli.Flag {
+						cli.StringFlag{
+							Name: "voter",
+							Value:"",
+							Usage: "vouter",
+						},
+						cli.StringFlag{
+							Name: "delegate",
+							Value:"",
+							Usage: "delegate",
+						},
+					},
+					Action: MigrateFlags(Cli.BcliCancelVote),
 				},
 			},
 		},
