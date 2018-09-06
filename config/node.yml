@@ -1,0 +1,95 @@
+node-description:"bottos node defined" 
+version: "1.0"
+author:"bottos"
+
+---
+#node 
+node-view:
+     # nodeid=  sha256(string(node-view except id ))
+     nodeID: 
+     nodeName:
+     kind: chain|application
+     updateTime:
+     signInfo:
+     nodePath:
+     
+---
+#creator infomation
+Owner:
+    accountName:
+    keystore:{}
+    officeurl:"https://www.bo.org"
+    
+        
+  
+#service information
+---
+serviceInfo:
+   - chain-service:
+        serviceName:chainservice
+        chainID:1
+        endpoint: /chain/..
+   - storages-service
+        serviceName: mystorageservice
+        capacity:
+        sla:99
+        storageType: cloud|nas|raid
+   - 
+        
+#deployment infomation
+---
+deployment:
+    ---
+   apiVersion: extensions/v1beta1
+   kind: Deployment
+   metadata:
+   name: kube100-site
+   spec:
+     replicas: 2
+   template:
+      metadata:
+         labels:
+         app: web
+   spec:
+      containers:
+        - name: front-end
+          image: nginx
+          ports:
+            - containerPort: 80
+        - name: flaskapp-demo
+          image: jcdemo/flaskapp
+          ports:
+            - containerPort: 5000
+     VMs:
+        -vmID:
+         cpu: intel 4 core
+         mem: 16G
+         bandwith: 20m
+         
+
+
+# p2p configuration
+---
+ p2p:
+      outerIp:
+      outerPort:
+      NAT:
+          ip:
+          port:
+      maxtriveTimes: 20
+      quality:
+          timedelay:
+          lossrate: 
+      maxPeerNum:
+      
+        
+---
+#security configuration
+ node-security:
+     nodeVisiable: true|false
+     authRequied: true|false
+     connectionPermition:true|false
+     sslEnable:true|false
+     self-pubkey:{}
+---
+ 
