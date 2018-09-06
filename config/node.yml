@@ -1,9 +1,9 @@
-node-description:"bottos node defined" 
-version: "1.0"
-author:"bottos"
+node-description: bottos node defined
+version: 1.0
+author: bottos
 
----
 #node 
+
 node-view:
      # nodeid=  sha256(string(node-view except id ))
      nodeID: 
@@ -12,40 +12,41 @@ node-view:
      updateTime:
      signInfo:
      nodePath:
-     
----
+    
+
 #creator infomation
+
 Owner:
     accountName:
-    keystore:{}
-    officeurl:"https://www.bo.org"
-    
-        
-  
+    keystore: {}
+    officeurl: https://www.bo.org
+   
 #service information
----
+
 serviceInfo:
    - chain-service:
-        serviceName:chainservice
-        chainID:1
+        serviceName: chainservice
+        chainID:  1
         endpoint: /chain/..
-   - storages-service
-        serviceName: mystorageservice
-        capacity:
-        sla:99
-        storageType: cloud|nas|raid
+        #to do more info
+        
+        
+   - storages-service:
+        serviceName: xxx
+        capacity: 100
+        sla: 99
+        storageType:  cloud|nas|raid
+        endpoint:  
    - 
         
 #deployment infomation
----
+
 deployment:
-    ---
-   apiVersion: extensions/v1beta1
+    
+   apiVersion: 
    kind: Deployment
    metadata:
    name: kube100-site
-   spec:
-     replicas: 2
    template:
       metadata:
          labels:
@@ -59,18 +60,17 @@ deployment:
         - name: flaskapp-demo
           image: jcdemo/flaskapp
           ports:
-            - containerPort: 5000
-     VMs:
-        -vmID:
-         cpu: intel 4 core
-         mem: 16G
-         bandwith: 20m
-         
+           - containerPort: 5000
+      VMs:
+        -  vmID: 
+            cpu: intel 4 core
+            mem: 16G
+            bandwith: 20m 
 
 
 # p2p configuration
----
- p2p:
+
+p2p:
       outerIp:
       outerPort:
       NAT:
@@ -81,15 +81,13 @@ deployment:
           timedelay:
           lossrate: 
       maxPeerNum:
-      
-        
----
+         
+
 #security configuration
- node-security:
-     nodeVisiable: true|false
-     authRequied: true|false
-     connectionPermition:true|false
-     sslEnable:true|false
-     self-pubkey:{}
----
- 
+
+node-security:
+     nodeVisiable:  true|false
+     authRequied:  true|false
+     connectionPermmtion: true|false
+     sslEnable: true|false
+     self-pubkey: xxxx
