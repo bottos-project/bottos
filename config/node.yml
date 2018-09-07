@@ -8,7 +8,7 @@ node-view:
      # nodeid=  sha256(string(node-view except id ))
      nodeID: 
      nodeName:
-     kind: chain|application
+     kind: producer|chain|application
      updateTime:
      signInfo:
      nodePath:
@@ -28,6 +28,8 @@ serviceInfo:
         serviceName: chainservice
         chainID:  1
         endpoint: /chain/..
+        
+           
         #to do more info
         
         
@@ -81,8 +83,9 @@ p2p:
           timedelay:
           lossrate: 
       maxPeerNum:
+      seedNodeList:
          
-
+        
 #security configuration
 
 node-security:
