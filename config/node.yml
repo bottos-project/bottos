@@ -18,7 +18,7 @@ node-view:
 
 Owner:
     accountName:
-    keystore: {}
+    keystoreDir:  /path/mywallet
     officeurl: https://www.bo.org
    
 #service information
