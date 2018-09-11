@@ -362,6 +362,7 @@ func setBinValue(vm *VM) (bool, error) {
 	return true, nil
 }
 
+//uint32_t removeBinValue(char* object, uint32_t objLen, char* key, uint32_t keyLen);
 func removeBinValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
@@ -385,7 +386,7 @@ func removeBinValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	value, err := contractCtx.RoleIntf.GetBinValue(string(contract), string(object), string(key))
+	value, err := contractCtx.RoleIntf.GetBinValue(string(contractCtx.Trx.Contract), string(object), string(key))
 	if err != nil {
 		log.Infof("*ERROR* Failed to find data from the chain !!!")
 		vm.ctx = envFunc.envFuncCtx
