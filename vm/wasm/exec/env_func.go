@@ -84,6 +84,8 @@ func NewEnvFunc() *EnvFunc {
  	envFunc.Register("setBinValue",      setBinValue)
 	envFunc.Register("removeBinValue",   removeBinValue)
 
+	envFunc.Register("compare" ,         compare)
+
 	return &envFunc
 }
 
@@ -221,7 +223,7 @@ func removeStrValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 4 {
 		return false, ERR_PARAM_COUNT
 	}
@@ -261,7 +263,7 @@ func getBinValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 8 {
 		return false, ERR_PARAM_COUNT
 	}
@@ -316,7 +318,7 @@ func setBinValue(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 
 	envFunc := vm.envFunc
-	params := envFunc.envFuncParam
+	params  := envFunc.envFuncParam
 	if len(params) != 6 {
 		return false, ERR_PARAM_COUNT
 	}
@@ -343,7 +345,7 @@ func setBinValue(vm *VM) (bool, error) {
 	log.Infof(string(object), len(object), string(key), len(key), string(value), len(value))
 	err = contractCtx.RoleIntf.SetBinValue(contractCtx.Trx.Contract, string(object), string(key), value)
 
-	result := 1
+	result := valueLen
 	if err != nil {
 		result = 0
 	}
@@ -383,9 +385,17 @@ func removeBinValue(vm *VM) (bool, error) {
 	}
 
 	log.Infof(string(object), len(object), string(key), len(key))
-	err = contractCtx.RoleIntf.RemoveKeyValue(contractCtx.Trx.Contract, string(object), string(key))
+	value, err := contractCtx.RoleIntf.GetBinValue(string(contract), string(object), string(key))
+	if err != nil {
+		log.Infof("*ERROR* Failed to find data from the chain !!!")
+		vm.ctx = envFunc.envFuncCtx
+		if envFunc.envFuncRtn {
+			vm.pushUint64(uint64(0))
+		}
+	}
+	result := len(value)
 
-	result := 1
+	err = contractCtx.RoleIntf.RemoveKeyValue(contractCtx.Trx.Contract, string(object), string(key))
 	if err != nil {
 		result = 0
 	}
@@ -404,18 +414,9 @@ func removeBinValue(vm *VM) (bool, error) {
 func printi(vm *VM) (bool, error) {
 	contractCtx := vm.GetContract()
 	value       := vm.envFunc.envFuncParam[0]
-	//fmt.Println("VM::printi vm.ctx.locals: ",vm.ctx.locals)
+
 	fmt.Printf("VM: from contract: %v, method: %v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 	log.Infof("VM: from contract:%v, method:%v, func printi: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
-
-	return true, nil
-}
-
-func printi64(vm *VM) (bool, error) {
-	contractCtx := vm.GetContract()
-	value       := vm.envFunc.envFuncParam[0]
-	fmt.Printf("VM: from contract: %v, method: %v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
-	log.Infof("VM: from contract:%v, method:%v, func printi64: %v\n", contractCtx.Trx.Contract, contractCtx.Trx.Method, value)
 
 	return true, nil
 }
@@ -431,10 +432,6 @@ func prints(vm *VM) (bool, error) {
 		log.Infof("*ERROR* vm::prints failed to convert parameter in prints , err: ", err)
 		return true, nil
 	}
-
-	//fmt.Println("<----------- before VM::prints value: ",value," , len(value): ",len(value))
-	//val , _ := UnConvertStr(value , 0 , uint64(len(value)))
-	//fmt.Println("<----------- after  VM::prints val:   ",val," , len(val): ",len(val))
 
 	param := string(value)
 	fmt.Println("VM: func prints: ", param)
@@ -515,7 +512,7 @@ func getParam(vm *VM) (bool, error) {
 	return true, nil
 }
 
-//uint32_t callTrx(unsigned char * contract , unsigned char * method , unsigned char * buf , uint32_t buf_len );
+//bool callTrx(char *contract , uint32_t contractLen, char *method , uint32_t methodLen, char *buf , uint32_t bufLen );
 func callTrx(vm *VM) (bool, error) {
 
 	envFunc := vm.envFunc
@@ -526,15 +523,19 @@ func callTrx(vm *VM) (bool, error) {
 	}
 
 	cPos := params[0]
-	mPos := params[1]
-	pPos := params[2]
-	pLen := params[3]
+	cLen := params[1]
+	mPos := params[2]
+	mLen := params[3]
+	pPos := params[4]
+	pLen := params[5]
 
-	contrxByte, err := Convert(vm, cPos, vm.StrLen(cPos))
+	//contrxByte, err := Convert(vm, cPos, vm.StrLen(cPos))
+	contrxByte, err := Convert(vm, cPos, cLen)
 	if err != nil {
 		return true, nil
 	}
-	methodByte, err := Convert(vm, mPos, vm.StrLen(mPos))
+	//methodByte, err := Convert(vm, mPos, vm.StrLen(mPos))
+	methodByte, err := Convert(vm, mPos, mLen)
 	if err != nil {
 		return true, nil
 	}
@@ -551,7 +552,6 @@ func callTrx(vm *VM) (bool, error) {
 		if err != nil {
 			return true, nil
 		}
-		fmt.Println("VM::callTrx contrx: ",contrx," , method: ",method," , pLen: ",pLen," , param: ",vm.memory[pPos:pPos + 120])
 	} else if vm.sourceFile == PY {
 		//Todo some special operation for python
 	}
@@ -580,7 +580,7 @@ func callTrx(vm *VM) (bool, error) {
 	vm.subTrxLst = append(vm.subTrxLst, trx)
 
 	if vm.envFunc.envFuncRtn {
-		vm.pushUint32(uint32(VM_NOERROR))
+		vm.pushUint32(uint32(VM_TRUE))
 	}
 
 	return true, nil
@@ -845,7 +845,7 @@ func strcpy_s(vm *VM) (bool, error) {
 	return true, nil
 }
 
-//bool     isAccountExist(unsigned char * account);
+//bool isAccountExist(char *name， uint32_t nameLen)
 func isAccountExist(vm *VM) (bool, error) {
 	params := vm.envFunc.envFuncParam
 	if len(params) != 1 {
@@ -854,7 +854,7 @@ func isAccountExist(vm *VM) (bool, error) {
 
 	contractCtx := vm.GetContract()
 	pos         := uint64(params[0])
-	length      := vm.StrLen(pos)
+	length      := uint64(params[1])
 	accountNameByte , err := Convert(vm , uint64(pos) , uint64(length))
 	if err != nil {
 		return true, nil
@@ -944,3 +944,21 @@ func getMethodJs(vm *VM) (bool, error) {
 
 	return true, nil
 }
+
+//bool compare(const char *method , uint8_t array[]);
+func compare(vm *VM) (bool, error) {
+	params := vm.envFunc.envFuncParam
+	if len(params) != 2 {
+		return false, ERR_PARAM_COUNT
+	}
+
+	methodPos         := uint64(params[0])
+	//arrayPos          := uint64(params[1])
+	//fmt.Println("VM::compare params: ",params)
+	srcLen    := vm.StrLen(methodPos)
+	fmt.Println("VM::compare str: ",string(vm.memory[methodPos:methodPos+srcLen]))
+
+	return true, nil
+}
+
+
