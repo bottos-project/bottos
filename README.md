@@ -14,7 +14,7 @@ https://gitter.im/bottos-project/bottos
 ## Develop Doc
 https://www.bottos.org 
 
-## Deveplopers Forum
+
 
 ## Features of Bottos chain
 On Bottos blockchain, you have the newly designed basic blockchain services
