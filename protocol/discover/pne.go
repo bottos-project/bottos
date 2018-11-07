@@ -249,7 +249,7 @@ func makeNeighbors() *neighbors {
 //AddNeighbor add new neighbor
 func (n *neighbors) addNeighbor(peers []p2p.PeerInfo) {
 	n.lock.Lock()
-	n.lock.Unlock()
+	defer n.lock.Unlock()
 
 	//filter neighbor which is exist
 	for j := range peers {
@@ -283,7 +283,7 @@ func (n *neighbors) addNeighbor(peers []p2p.PeerInfo) {
 //DelNeighbor delete neighbor
 func (n *neighbors) delNeighbor(peer p2p.PeerInfo) {
 	n.lock.Lock()
-	n.lock.Unlock()
+	defer n.lock.Unlock()
 
 	//find addr and remove
 	var count uint16
@@ -305,7 +305,7 @@ func (n *neighbors) delNeighbor(peer p2p.PeerInfo) {
 //NextPneNeighbors get neighbors to discover
 func (n *neighbors) nextPneNeighbors() []p2p.PeerInfo {
 	n.lock.Lock()
-	n.lock.Unlock()
+	defer n.lock.Unlock()
 
 	len := n.neighbor.Len()
 	if len <= 0 {

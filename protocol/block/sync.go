@@ -417,7 +417,7 @@ func (s *synchronizes) syncBlockNumberCheck() {
 
 func (s *synchronizes) recordPeerSyncTimeout(index uint16) {
 	s.lock.Lock()
-	s.lock.Unlock()
+	defer s.lock.Unlock()
 
 	peer, ok := s.peers[index]
 	if ok {
@@ -427,7 +427,7 @@ func (s *synchronizes) recordPeerSyncTimeout(index uint16) {
 
 func (s *synchronizes) resetPeerSyncTimeout() {
 	s.lock.Lock()
-	s.lock.Unlock()
+	defer s.lock.Unlock()
 
 	for _, info := range s.peers {
 		info.syncTimeoutCounter = 0
@@ -436,7 +436,7 @@ func (s *synchronizes) resetPeerSyncTimeout() {
 
 func (s *synchronizes) getPeers() syncset {
 	s.lock.Lock()
-	s.lock.Unlock()
+	defer s.lock.Unlock()
 
 	var peerset syncset
 	for _, info := range s.peers {
