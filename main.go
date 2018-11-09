@@ -1,16 +1,9 @@
 ﻿package main
 
 import (
-	"fmt"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"runtime"
-	"syscall"
-	"time"
-
 	cactor "github.com/bottos-project/bottos/action/actor"
 	caapi "github.com/bottos-project/bottos/action/actor/api"
+	"github.com/bottos-project/bottos/action/actor/transaction"
 	actionenv "github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/api"
 	"github.com/bottos-project/bottos/chain"
@@ -22,22 +15,22 @@ import (
 	"github.com/bottos-project/bottos/restful/handler"
 	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/transaction"
-	"github.com/bottos-project/bottos/action/actor/transaction/trxhandleactor"
-	"github.com/bottos-project/bottos/action/actor/transaction/trxpoolactor"
 	"github.com/bottos-project/bottos/action/actor/transaction/trxprehandleactor"
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/plugin/mongodb"
-
 	log "github.com/cihub/seelog"
 	"github.com/micro/go-micro"
-	"gopkg.in/urfave/cli.v1"
-
 	"net/http"
-	_ "net/http/pprof"
-	"runtime/pprof"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+
+	"fmt"
+	"gopkg.in/urfave/cli.v1"
+	"runtime"
 	"strconv"
-	"github.com/bottos-project/bottos/restful/wallet"
+	"github.com/bottos-project/bottos/plugin/mongodb"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 var (
@@ -54,38 +47,24 @@ func init() {
 		cmd.DataDirFlag,
 		cmd.DisableRESTFlag,
 		cmd.RESTPortFlag,
-		cmd.EnableRPCFlag,
+		cmd.RESTServerAddrFlag,
+		cmd.DisableRPCFlag,
 		cmd.RPCPortFlag,
 		cmd.P2PPortFlag,
 		cmd.P2PServerAddrFlag,
-		cmd.RESTServerAddrFlag,
 		cmd.PeerListFlag,
 		cmd.DelegateSignkeyFlag,
 		cmd.DelegateFlag,
-		cmd.DelegatePrateFlag,
+		cmd.EnableStaleReportFlag,
 		cmd.EnableMongoDBFlag,
 		cmd.MongoDBFlag,
 		cmd.LogConfigFlag,
 		cmd.WalletDirFlag,
 		cmd.EnableWalletFlag,
-		cmd.WalletRESTPortFlag,
-		cmd.WalletRESTServerAddrFlag,
-		cmd.DebugFlag,
 	}
 	app.Action = startBottos
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
-		if ctx.GlobalBool(cmd.DebugFlag.Name) {
-			go func() {
-				http.ListenAndServe("0.0.0.0:6060", nil)
-			}()
-		}
-		return nil
-	}
-	app.After = func(ctx *cli.Context) error {
-		if ctx.GlobalBool(cmd.DebugFlag.Name) {
-			saveHeapProfile()
-		}
 		return nil
 	}
 }
@@ -100,92 +79,81 @@ func main() {
 func loadConfig(ctx *cli.Context) {
 	config.InitConfig()
 
-	if err := config.LoadConfig(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	if err := config.InitLogConfig(ctx); err != nil {
 		os.Exit(1)
 	}
 
-	if err := config.InitLogConfig(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	if err := config.LoadConfig(ctx); err != nil {
+		log.Errorf("%v", err)
 		os.Exit(1)
 	}
+
+	log.Infof("Bottos ChainID: %x", config.GetChainID())
 }
 
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
-	blockDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/block/")
-	stateDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/state.db")
+	blockDBPath := filepath.Join(config.Param.DataDir, "block/")
+	stateDBPath := filepath.Join(config.Param.DataDir, "state.db")
 	dbInst := db.NewDbService(blockDBPath, stateDBPath)
 	if dbInst == nil {
 		log.Critical("Create DB service fail")
-		log.Flush()
 		os.Exit(1)
 	}
 
-	dbInst.LoadStateDB()
 	roleIntf := role.NewRole(dbInst)
+
+	var mdbActor *actor.PID = nil
+	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
+		mdbActor = startMangoDB(roleIntf)
+		if mdbActor == nil {
+			log.Critical("Start MongoDB service fail")
+			os.Exit(1)
+		}
+	}
+
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
 		log.Critical("Create Native Contract error: ", err)
-		log.Flush()
 		os.Exit(1)
 	}
 
 	chain, err := chain.CreateBlockChain(dbInst, roleIntf, nc)
 	if err != nil {
 		log.Critical("Create BlockChain error: ", err)
-		log.Flush()
 		os.Exit(1)
 	}
 
 	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
-		var mdbActor *actor.PID = nil
-		if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
-			mdbActor = startMangoDB(roleIntf)
-			if mdbActor == nil {
-				log.Critical("Start MongoDB service fail")
-				log.Flush()
-				os.Exit(1)
-			}
-		}
-		chain.RegisterCommittedBlockCallback(func (block *types.Block) {
+		chain.RegisterHandledBlockCallback(func (block *types.Block) {
 			mdbActor.Tell(block)
 		})
 	}
 
-	if err := chain.Init(ctx); err != nil {
+	if err := chain.Init(); err != nil {
 		log.Critical("Initialize BlockChain error: ", err)
-		log.Flush()
 		os.Exit(1)
 	}
 
 	txStore := txstore.NewTransactionStore(chain, roleIntf)
 
 	actorenv := &actionenv.ActorEnv{
-		RoleIntf:         roleIntf,
-		Chain:            chain,
-		TxStore:          txStore,
-		NcIntf:           nc,
-		Db:               dbInst,
-		PendingTxSession: nil,
+		RoleIntf:   roleIntf,
+		Chain:      chain,
+		TxStore:    txStore,
+		NcIntf:     nc,
 	}
 	multiActors := cactor.InitActors(actorenv)
 
-	var trxPool = transaction.InitTrxPool(dbInst, roleIntf, nc, actorenv.Protocol, multiActors.GetNetActor())
+	var trxPool = transaction.InitTrxPool(dbInst, roleIntf, nc, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
-	trxpoolactor.SetTrxPool(trxPool)
 	trxprehandleactor.SetTrxPool(trxPool)
 	trxprehandleactor.SetTrxActor(multiActors.GetTrxActor())
 
 	//start RESTful Api
 	if !ctx.GlobalBool(cmd.DisableRESTFlag.Name) {
-		go startRestApi(roleIntf, actorenv)
-	}
-
-	//start Wallet RESTful Api
-	if ctx.GlobalBool(cmd.EnableWalletFlag.Name) {
-		go startWalletRestApi(roleIntf)
+		go startRestApi(roleIntf)
 	}
 
 	//enable Rpc Api
@@ -193,28 +161,13 @@ func startBottos(ctx *cli.Context) error {
 		go startRPCService(actorenv)
 	}
 
-	WaitSystemDown(dbInst, chain, multiActors)
+	WaitSystemDown(chain, multiActors)
 	return nil
 }
 
-func saveHeapProfile() {
-	log.Infof("begin save memory")
-	runtime.GC()
-	f, err := os.Create(fmt.Sprintf("heap_%s_%d_%s.prof", "bottos", 112233, time.Now().Format("2006_01_02_03_04_05")))
-	if err != nil {
-		log.Infof("error save memory")
-		return
-	}
-	defer f.Close()
-	pprof.Lookup("heap").WriteTo(f, 1)
-
-	log.Infof("end save memory")
-}
-
 //WaitSystemDown is to handle ctrl+C
-func WaitSystemDown(db *db.DBService, chain chain.BlockChainInterface, actors *cactor.MultiActor) {
+func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) {
 	exit := make(chan bool, 0)
-
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGKILL)
 
@@ -222,36 +175,22 @@ func WaitSystemDown(db *db.DBService, chain chain.BlockChainInterface, actors *c
 		for sig := range sigc {
 			actors.ActorsStop()
 			chain.Close()
-			db.Close()
 			log.Infof("System shutdown, signal: %v", sig.String())
 			log.Flush()
 			close(exit)
-			break
 		}
 	}()
 
 	<-exit
 }
 
-func startRestApi(roleIntf role.RoleInterface, actorenv *actionenv.ActorEnv) {
+func startRestApi(roleIntf role.RoleInterface) {
 	router := handler.NewRouter()
 	//transfer to restful handler
-	handler.SetRoleIntf(roleIntf, actorenv)
-	err := http.ListenAndServe(config.BtoConfig.Rest.RESTHost+":"+strconv.Itoa(config.BtoConfig.Rest.RESTPort), router)
+	handler.SetRoleIntf(roleIntf)
+	err := http.ListenAndServe(config.Param.RESTServAddr+":"+strconv.Itoa(config.Param.RESTPort), router)
 	if err != nil {
 		log.Critical("RESTful server fail: ", err)
-		os.Exit(1)
-	}
-}
-
-func startWalletRestApi(roleIntf role.RoleInterface) {
-	router := wallet.NewRouter()
-	//transfer to restful handler
-	wallet.SetRoleIntf(roleIntf)
-	err := http.ListenAndServe(config.BtoConfig.Plugin.Wallet.WalletRESTHost+":"+strconv.Itoa(config.BtoConfig.Plugin.Wallet.WalletRESTPort), router)
-	if err != nil {
-		fmt.Println("Start wallet REST service Failed: ", err)
-		log.Critical("Start wallet REST service Failed: ", err)
 		os.Exit(1)
 	}
 }
@@ -260,8 +199,8 @@ func startRPCService(actorenv *actionenv.ActorEnv) {
 	repo := caapi.NewApiService(actorenv)
 
 	service := micro.NewService(
-		micro.Name(config.DefaultRPCServiceName),
-		micro.Version(config.DefaultRPCServiceVer),
+		micro.Name(config.Param.RpcServiceName),
+		micro.Version(config.Param.RpcServiceVersion),
 	)
 
 	api.RegisterChainHandler(service.Server(), repo)
@@ -271,7 +210,7 @@ func startRPCService(actorenv *actionenv.ActorEnv) {
 }
 
 func startMangoDB(roleIntf role.RoleInterface) *actor.PID {
-	optiondb := db.NewOptionDbService(config.BtoConfig.Plugin.MongoDB.URL)
+	optiondb := db.NewOptionDbService(config.Param.OptionDb)
 	if optiondb == nil {
 		log.Errorf("Start optional db fail")
 		return nil
