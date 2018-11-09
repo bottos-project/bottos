@@ -216,18 +216,23 @@ func (s *synchronizes) checkRoutine() {
 
 	for {
 		select {
-		case number := <-s.updatec:
-			s.updateLocalLib(number.LibNumber)
+		case number := <-s.updateLibc:
 			s.updateLocalNumber(number.BlockNumber)
+			s.updateLocalLib(number.LibNumber)
 			if s.state == STATE_SYNCING {
 				log.Debugf("protocol local lib update in sync status : %d", s.libLocal)
-				s.set.endc <- s.libLocal
+				s.set.beginc <- s.libLocal
 			}
+		case number := <-s.updateHeadc:
+			s.updateLocalNumber(number)
 		case block := <-s.blockc:
 			s.recvBlock(block)
 		case <-checkTimer.C:
-			s.syncStateCheck()
-			checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
+			if s.syncStateCheck(){
+				checkTimer.Reset(TIMER_SYNC_STATE_CHECK1 * time.Second)
+			}else{
+				checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
+			}
 		case header := <-s.headerc:
 			s.recvBlockHeader(header)
 		case <-s.headercTimer.C:
