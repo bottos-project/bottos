@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -99,7 +99,7 @@ func (p *protocol) SetChainActor(tpid *actor.PID) {
 	p.b.SetActor(tpid)
 }
 
-func (p *protocol) SetTrxActor(tpid *actor.PID) {
+func (p *protocol) SetTrxPreHandleActor(tpid *actor.PID) {
 	p.t.SetActor(tpid)
 }
 
