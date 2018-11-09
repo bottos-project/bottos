@@ -26,7 +26,7 @@ package cmd
 
 import (
 	"gopkg.in/urfave/cli.v1"
-	)
+)
 
 var (
 	ConfigFileFlag = cli.StringFlag{
@@ -54,9 +54,9 @@ var (
 		Name: "rest-servaddr",
 		Usage: "RESTful API server address",
 	}
-	DisableRPCFlag = cli.BoolFlag{
-		Name: "disable-rpc",
-		Usage: "Disable RPC server",
+	EnableRPCFlag = cli.BoolFlag{
+		Name: "enable-rpc",
+		Usage: "Enable RPC server",
 	}
 	RPCPortFlag = cli.IntFlag{
 		Name: "rpcport",
@@ -84,9 +84,10 @@ var (
 		Name: "delegate",
 		Usage: "Producer account name",
 	}
-	EnableStaleReportFlag = cli.BoolFlag{
-		Name: "enable-stale-report",
-		Usage: "Enable stale block production",
+	DelegatePrateFlag = cli.IntFlag{
+		Name: "delegate-prate",
+		Usage: "Config delegate participate threshold",
+		Value: 33,
 	}
 	EnableMongoDBFlag = cli.BoolFlag{
 		Name: "enable-mongodb",
@@ -104,8 +105,22 @@ var (
 		Name: "walletdir",
 		Usage: "wallet directory",
 	}
-	EnableWalletFlag = cli.StringFlag{
+	EnableWalletFlag = cli.BoolFlag{
 		Name: "enable-wallet",
 		Usage: "enable wallet",
+	}
+	WalletRESTPortFlag = cli.IntFlag{
+		Name: "wallet-rest-port",
+		Usage: "Wallet RESTful API server listening port",
+		Value: 6869,
+	}
+	WalletRESTServerAddrFlag = cli.StringFlag{
+		Name: "wallet-rest-servaddr",
+		Usage: "Wallet RESTful API server address",
+		Value: "localhost",
+	}
+	DebugFlag = cli.BoolFlag{
+		Name: "debug",
+		Usage: "Enable debug mode",
 	}
 )
