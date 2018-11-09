@@ -103,6 +103,14 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 	}
 }
 
+func (trxPool *TrxPool) isTransactionExist(trx *types.Transaction) {
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
+	_, ok := trxPool[trx.Hash()]
+	return ok
+}
+
 func (trxPool *TrxPool) addTransaction(trx *types.Transaction) {
 
 	trxPool.mu.Lock()
@@ -122,7 +130,9 @@ func (trxPool *TrxPool) Stop() {
 
 // CheckTransactionBaseCondition is checking trx
 func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
-
+	if isTransactionExist(trx) {
+		return false, bottos.ErrTrxAlreadyInPool
+	}
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
 		log.Errorf("trx %x pending num over", trx.Hash())
 		return false, bottosErr.ErrTrxPendingNumLimit
