@@ -26,12 +26,12 @@
 package chain
 
 import (
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/db"
-	"github.com/bottos-project/bottos/bpl"
-
-	)
+	log "github.com/cihub/seelog"
+)
 
 var (
 	//BlockHashPrefix prefix of block hash
@@ -110,6 +110,7 @@ func writeHead(db *db.DBService, block *types.Block) error {
 
 //WriteBlock write block in db
 func WriteBlock(db *db.DBService, block *types.Block) error {
+	start := common.MeasureStart()
 	key := append(BlockHashPrefix, block.Hash().Bytes()...)
 	data, _ := bpl.Marshal(block)
 
@@ -117,5 +118,7 @@ func WriteBlock(db *db.DBService, block *types.Block) error {
 	if err != nil {
 		return err
 	}
+	span := common.Elapsed(start)
+	log.Infof("WriteBlock span:%v", span)
 	return writeHead(db, block)
 }
