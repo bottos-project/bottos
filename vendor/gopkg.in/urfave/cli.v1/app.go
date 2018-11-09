@@ -253,6 +253,9 @@ func (a *App) Run(arguments []string) (err error) {
 		c := a.Command(name)
 		if c != nil {
 			return c.Run(context)
+		} else {
+			ShowAppHelp(context)
+			return nil
 		}
 	}
 
