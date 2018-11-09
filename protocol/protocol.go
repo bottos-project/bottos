@@ -113,4 +113,6 @@ func (p *protocol) SendNewTrx(notify *message.NotifyTrx) {
 
 func (p *protocol) SendNewBlock(notify *message.NotifyBlock) {
 	p.b.SendNewBlock(notify)
+	p.b.UpdateHeadNumber()
+	p.b.UpdateNumber()
 }
