@@ -50,7 +50,7 @@ func GetAllPendingTrx() []*types.Transaction {
 
 	if nil == getTrxsErr {
 	} else {
-		log.Info("get all trx req exec error")
+		log.Error("get all trx req exec error", getTrxsErr)
 	}
 
 	if nil == getTrxsResult {
@@ -71,11 +71,11 @@ func GetAllPendingTrx() []*types.Transaction {
 
 // VerifyTransactions is to verify local and received transactons
 func verifyTransactions(trx *types.Transaction) (bool, error) {
-		log.Info("start apply transaction trx one by one")
-		trxApply := transaction.NewTrxApplyService()
-		pass, _, _ := trxApply.ApplyTransaction(trx)
+	log.Info("start apply transaction trx one by one")
+	trxApply := transaction.NewTrxApplyService()
+	pass, _, _ := trxApply.ApplyTransaction(trx)
 
-		log.Info("verify result ", pass)
+	log.Info("verify result ", pass)
 	return pass, nil
 }
 
