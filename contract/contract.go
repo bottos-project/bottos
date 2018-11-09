@@ -28,7 +28,7 @@ package contract
 import (
 	"math/big"
 
-		"github.com/bottos-project/bottos/common/safemath"
+	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
@@ -36,8 +36,6 @@ import (
 	"github.com/bottos-project/bottos/role"
 	log "github.com/cihub/seelog"
 )
-
-
 
 //NewNativeContract is to create a new native contract
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
@@ -73,17 +71,17 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 	// construct trxs
 	var i int
 	Abi := abi.GetAbi()
-	
+
 	for i = 0; i < len(config.Genesis.InitDelegates); i++ {
 		name := config.Genesis.InitDelegates[i].Name
-		
+
 		// 1, new account trx
 		mapstruct := make(map[string]interface{})
 		abi.Setmapval(mapstruct, "name", name)
 		abi.Setmapval(mapstruct, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
-		nparam, err2   := abi.MarshalAbiEx(mapstruct, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
+		nparam, err2 := abi.MarshalAbiEx(mapstruct, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
 		if err2 != nil {
-			log.Info("abi.MarshalAbiEx failed for new account:", name)
+			log.Error("abi.MarshalAbiEx failed for new account:", name)
 			continue
 		}
 
@@ -101,12 +99,12 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 			log.Error("big Int set from string error")
 			continue
 		}
-		
+
 		abi.Setmapval(mapstruct2, "value", *balance)
-		tparam, err3   := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
+		tparam, err3 := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
 		if err3 != nil {
-			log.Info("abi.MarshalAbiEx failed for transfer with account:", name)
-			log.Info("error is: ",err3)
+			log.Error("abi.MarshalAbiEx failed for transfer with account:", name)
+			log.Error("error is: ", err3)
 			continue
 		}
 
@@ -120,7 +118,7 @@ func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncI
 		abi.Setmapval(mapstruct3, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
 		abi.Setmapval(mapstruct3, "location", string(""))
 		abi.Setmapval(mapstruct3, "description", string(""))
-		sparam, err4   := abi.MarshalAbiEx(mapstruct3, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
+		sparam, err4 := abi.MarshalAbiEx(mapstruct3, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
 		if err4 != nil {
 			log.Info("abi.MarshalAbiEx failed for setdegelage with account:", name)
 			continue
@@ -174,9 +172,9 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 
 	// staked_balance
 	stakedBalance := &role.StakedBalance{
-		AccountName: bto.AccountName,
-		StakedBalance : big.NewInt(0),
-		UnstakingBalance: big.NewInt(0),
+		AccountName:       bto.AccountName,
+		StakedBalance:     big.NewInt(0),
+		UnstakingBalance:  big.NewInt(0),
 		LastUnstakingTime: 0,
 	}
 	roleIntf.SetStakedBalance(bto.AccountName, stakedBalance)
