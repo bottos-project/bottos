@@ -156,8 +156,8 @@ func startBottos(ctx *cli.Context) error {
 		go startRestApi(roleIntf)
 	}
 
-	//start Rpc Api
-	if !ctx.GlobalBool(cmd.DisableRPCFlag.Name) {
+	//enable Rpc Api
+	if ctx.GlobalBool(cmd.EnableRPCFlag.Name) {
 		go startRPCService(actorenv)
 	}
 
