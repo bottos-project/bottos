@@ -146,34 +146,45 @@ func (p *ProducerActor) working() uint32 {
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
-			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT ||
-				pendingBlockSize > coreStat.Config.MaxBlockSize {
-				pendingTrx = append(pendingTrx, dtag)
-				log.Info("Warning reach max size")
+			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT {
+				log.Info("Warning producing block is too slow", common.Elapsed(start))
 				continue
 			}
+			p.db.BeginUndo(config.SUB_TRX_SESSION)
+			applyStart := common.MeasureStart()
 			pass, _ := verifyTransactions(trx)
 			if pass == false {
 				log.Info("ApplyTransaction failed")
+				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
+			log.Info("apply start elapse", common.Elapsed(applyStart))
 			data, _ := bpl.Marshal(trx)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
+			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
+				p.db.ResetSubSession()
 				log.Info("Warning pending block size reach MaxBlockSize")
-				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
+			p.db.Squash()
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
+			log.Info("pack apply elapse", common.Elapsed(applyStart))
 		}
+
 		removeTransaction(removeTrx)
 		block = p.ins.Woker(pendingBlockTrx)
+		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
 			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
 			ApplyBlock(block)
 		}
+
+		}
+		return p.ins.CalcNextReportTime()
 	}
+	return config.PRODUCER_TIME_OUT
 }
