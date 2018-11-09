@@ -72,7 +72,7 @@ func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error
 
 // GetAccountRole is common func to get role for account
 func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
-	if acct, ok = acctountMap[account]; ok {
+	if acct, ok = acctountMap[accountName]; ok {
 		return acct, nil
 	}
 	key := accountNameToKey(accountName)
