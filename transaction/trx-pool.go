@@ -27,13 +27,13 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-	"github.com/bottos-project/bottos/bpl"
 
 	"crypto/sha256"
 	"encoding/hex"
@@ -57,8 +57,8 @@ type TrxPool struct {
 	netActorPid *actor.PID
 
 	dbInst *db.DBService
-	mu   sync.RWMutex
-	quit chan struct{}
+	mu     sync.RWMutex
+	quit   chan struct{}
 }
 
 // InitTrxPool is init trx pool process when system start
@@ -151,11 +151,13 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 	trxPool.addTransaction(trx)
 
-	notify := &message.NotifyTrx{
-		Trx: trx,
+	switch context.Message().(type) {
+	case *message.PushTrxReq:
+		notify := &message.NotifyTrx{
+			Trx: trx,
+		}
+		trxPool.netActorPid.Tell(notify)
 	}
-	trxPool.netActorPid.Tell(notify)
-
 	context.Respond(bottosErr.ErrNoError)
 }
 
@@ -198,13 +200,12 @@ func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 
 // RemoveSingleTransaction is interface to remove single trx in trx pool
 func (trxPool *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
-	
+
 	trxPool.mu.Lock()
 	defer trxPool.mu.Unlock()
 
 	delete(trxPool.pending, trx.Hash())
 }
-
 
 // RemoveSingleTransactionbyHash is interface to remove single trx in trx pool
 func (trxPool *TrxPool) RemoveSingleTransactionbyHash(trxHash common.Hash) {
