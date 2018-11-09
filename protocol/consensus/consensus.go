@@ -28,6 +28,7 @@ package consensus
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/p2p"
+	"github.com/prometheus/common/log"
 )
 
 type Consensus struct {
@@ -63,6 +64,27 @@ func (c *Consensus) SendPrevote(notify *message.SendPrevote) {
 
 	head := p2p.Head{ProtocolType: pcommon.CONSENSUS_PACKET,
 		PacketType: ConsensusPreVote,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: nil,
+		P: packet}
+	p2p.Runner.SendBroadcast(msg)
+
+}
+
+func (c *Consensus) SendPrecommit(notify *message.SendPrecommit) {
+	buf, err := bpl.Marshal(notify.BlockState)
+	if err != nil {
+		log.Errorf("protocol block send marshal error")
+		return
+	}
+
+	head := p2p.Head{ProtocolType: pcommon.CONSENSUS_PACKET,
+		PacketType: ConsensusPreCommit,
 	}
 
 	packet := p2p.Packet{H: head,
