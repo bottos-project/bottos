@@ -67,7 +67,7 @@ const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 const DEFAULT_MAX_LIFE_TIME uint64 = 10000 //unit: second
 
 // DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
+const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 5000
 
 // DEFAULT_OPTIONDB_NAME define default option db name
 const DEFAULT_OPTIONDB_NAME string = "bottos"
@@ -88,4 +88,4 @@ const DEFAUL_MAX_CONTRACT_DEPTH uint32 = 10
 const DEFAUL_MAX_SUB_CONTRACT_NUM uint32 = 10
 
 // UNSTAKING_BALANCE_DURATION lock time duration after unstaking
-const UNSTAKING_BALANCE_DURATION uint64 = 3*24*60*60
+const UNSTAKING_BALANCE_DURATION uint64 = 3 * 24 * 60 * 60
