@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	cactor "github.com/bottos-project/bottos/action/actor"
@@ -15,6 +15,7 @@ import (
 	"github.com/bottos-project/bottos/restful/handler"
 	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/transaction"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxprehandleactor"
 	log "github.com/cihub/seelog"
 	"github.com/micro/go-micro"
 	"net/http"
@@ -147,6 +148,8 @@ func startBottos(ctx *cli.Context) error {
 
 	var trxPool = transaction.InitTrxPool(dbInst, roleIntf, nc, multiActors.GetNetActor())
 	trxactor.SetTrxPool(trxPool)
+	trxprehandleactor.SetTrxPool(trxPool)
+	trxprehandleactor.SetTrxActor(multiActors.GetTrxActor())
 
 	//start RESTful Api
 	if !ctx.GlobalBool(cmd.DisableRESTFlag.Name) {
