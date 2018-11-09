@@ -119,3 +119,7 @@ func (p *protocol) SendNewBlock(notify *message.NotifyBlock) {
 func (p *protocol) SendPrevote(notify *message.SendPrevote) {
 	p.c.SendPrevote(notify)
 }
+func (p *protocol) SendPrecommit(notify *message.SendPrecommit) {
+	p.b.UpdateHeadNumber()
+	p.c.SendPrecommit(notify)
+}
