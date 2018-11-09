@@ -33,6 +33,7 @@ import (
 	produceractor "github.com/bottos-project/bottos/action/actor/producer"
 	"github.com/bottos-project/bottos/action/actor/transaction/trxpoolactor"
 	"github.com/bottos-project/bottos/action/actor/transaction/trxhandleactor"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxprehandleactor"
 	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/action/env"
@@ -50,6 +51,7 @@ type MultiActor struct {
 	netActorPid      *actor.PID
 	trxActorPid      *actor.PID
 	trxPoolActorPid      *actor.PID
+	trxPreHandleActor *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 }
@@ -57,6 +59,11 @@ type MultiActor struct {
 func (m *MultiActor) GetTrxActor() *actor.PID {
 	return m.trxActorPid
 }
+
+func (m *MultiActor) GetTrxPreHandleActor() *actor.PID {
+	return m.trxPreHandleActor
+}
+
 
 //GetNetActor get net actor PID
 func (m *MultiActor) GetNetActor() *actor.PID {
@@ -71,6 +78,7 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 		netactor.NewNetActor(env),
 		trxactor.NewTrxActor(),
 		trxpoolactor.NewTrxPoolActor(),
+		trxprehandleactor.NewTrxPreHandleActor(),
 		chainactor.NewChainActor(env),
 		produceractor.NewProducerActor(env),
 	}
@@ -81,8 +89,8 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 func registerActorMsgTbl(m *MultiActor) {
 
 	log.Info("RegisterActorMsgTbl")
-	apiactor.SetTrxActorPid(m.trxActorPid) // api --> trx
-	restactor.SetTrxActorPid(m.trxActorPid) // api --> trx
+	apiactor.SetTrxPreHandleActorPid(m.trxPreHandleActor) // api --> trx
+	restactor.SetTrxPreHandleActorPid(m.trxPreHandleActor) // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid) // api --> chain
 	restactor.SetChainActorPid(m.chainActorPid)	// restapi --> chain
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
@@ -92,7 +100,7 @@ func registerActorMsgTbl(m *MultiActor) {
 	chainactor.SetTrxPoolActorPid(m.trxPoolActorPid)        // chain --> trx
 	chainactor.SetNetActorPid(m.netActorPid)        // chain --> net
 
-	netactor.SetTrxActorPid(m.trxActorPid)     //p2p --> trx
+	netactor.SetTrxPreHandleActorPid(m.trxPreHandleActor)     //p2p --> trx
 	netactor.SetChainActorPid(m.chainActorPid) //p2p --> chain
 }
 
