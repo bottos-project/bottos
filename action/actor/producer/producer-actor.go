@@ -148,7 +148,7 @@ func (p *ProducerActor) working() uint32 {
 			dtag = trx
 			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT {
 				log.Info("Warning producing block is too slow", common.Elapsed(start))
-				continue
+				break
 			}
 			p.db.BeginUndo(config.SUB_TRX_SESSION)
 			applyStart := common.MeasureStart()
@@ -167,7 +167,7 @@ func (p *ProducerActor) working() uint32 {
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				p.db.ResetSubSession()
 				log.Info("Warning pending block size reach MaxBlockSize")
-				continue
+				break
 			}
 			p.db.Squash()
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
