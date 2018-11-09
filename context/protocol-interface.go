@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -34,7 +34,7 @@ type ProtocolInstance interface {
 	ProtocolInterface
 	Start()
 	SetChainActor(tpid *actor.PID)
-	SetTrxActor(tpid *actor.PID)
+	SetTrxPreHandleActor(tpid *actor.PID)
 	SetConsensusActor(tpid *actor.PID)
 
 	SendNewTrx(notify *message.NotifyTrx)
