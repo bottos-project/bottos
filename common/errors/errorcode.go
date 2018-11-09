@@ -50,6 +50,8 @@ const (
 	ErrTrxContractDepthError ErrCode = 10008
 	// ErrTrxSubContractNumError handle trx sub contract num error
 	ErrTrxSubContractNumError ErrCode = 10009
+	//ErrTrxAlreadyInPool trx already in pool
+	ErrTrxAlreadyInPool ErrCode = 10010
 
 	// ErrContractAccountNameIllegal invalid contract account name
 	ErrContractAccountNameIllegal ErrCode = 10101
