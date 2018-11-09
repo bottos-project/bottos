@@ -42,9 +42,18 @@ func (c *Consensus) SetActor(tid *actor.PID) {
 	c.actor = tid
 }
 
-func (c *Consensus) Dispatch(index uint16, p *p2p.Packet) {
 
+func (c *Consensus) Dispatch(index uint16, p *p2p.Packet) {
+	switch p.H.PacketType {
+	case ConsensusPreVote:
+		c.processPrevote(index, p.Data)
+	case ConsensusPreCommit:
+		c.processPrecommit(index, p.Data)
+	case ConsensusCommit:
+		c.processCommit(index, p.Data)
+	}
 }
+
 
 func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
 
