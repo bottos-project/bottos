@@ -45,8 +45,8 @@ import (
 
 // ProducerActor is to define actor for producer
 type ProducerActor struct {
-	roleIntf role.RoleInterface
-	ins      producer.ReporterRepo
+	roleIntf         role.RoleInterface
+	ins              producer.ReporterRepo
 	db               *db.DBService
 	pendingTxSession *codedb.UndoSession
 }
@@ -179,12 +179,13 @@ func (p *ProducerActor) working() uint32 {
 		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v, pendingTrxn:%v, blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			pendingTrxn := len(block.Transactions) - len(removeTrx)
+			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v, pendingTrxn:%v, blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), pendingTrxn, time.Unix(int64(block.Header.Timestamp), 0))
 			if config.BtoConfig.Delegate.Solo == false {
 				ConsensusProducedBlock(block)
 			} else {
-			ApplyBlock(block)
-		}
+				ApplyBlock(block)
+			}
 
 		}
 		return p.ins.CalcNextReportTime()
