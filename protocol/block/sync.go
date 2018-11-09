@@ -898,7 +898,8 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 		if rsp.ErrorNo != chain.InsertBlockSuccess {
 			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
-
+		s.updateLocalNumber(block.Header.Number)
+		s.updateLocalLib(block.Header.Number)
 		log.Debugf("elapsed time 1 %d ", common.Elapsed(start))
 
 		return rsp.ErrorNo
