@@ -49,8 +49,6 @@ type Account struct {
 	ContractAbi  []byte      `json:"abi"`
 }
 
-var acctountMap map[string]*Account = make(map[string]*Account)
-
 // CreateAccountRole is create account role
 func CreateAccountRole(ldb *db.DBService) error {
 	return nil
@@ -72,9 +70,6 @@ func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error
 
 // GetAccountRole is common func to get role for account
 func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
-	if acct, ok = acctountMap[accountName]; ok {
-		return acct, nil
-	}
 	key := accountNameToKey(accountName)
 	value, err := ldb.GetObject(AccountObjectName, key)
 	if err != nil {
@@ -86,6 +81,5 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	acctountMap[accountName] = res
 	return res, nil
 }
