@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -27,19 +27,20 @@ package trxprehandleactor
 
 import (
 	log "github.com/cihub/seelog"
-
+	
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/router"
 	"github.com/bottos-project/bottos/action/message"
-	bottosErr "github.com/bottos-project/bottos/common/errors"
-	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/transaction"
+	bottosErr "github.com/bottos-project/bottos/common/errors"
 )
 
 //TrxPreHandleActorPid trx actor pid
 var TrxPreHandleActorPid *actor.PID
 
 var trxActorPid *actor.PID
+
 
 const maxConcurrency = 100
 
@@ -54,6 +55,7 @@ var trxPool *transaction.TrxPool
 // func ContructTrxActor() *TrxActor {
 // 	return &TrxActor{}
 // }
+
 
 func handleSystemMsg(context actor.Context) bool {
 	switch context.Message().(type) {
@@ -72,10 +74,8 @@ func handleSystemMsg(context actor.Context) bool {
 	return true
 }
 
-func preHandleCommon(trx *types.Transaction) (bool, bottosErr.ErrCode) {
-	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
-		return false, err
-	}
+func preHandleCommon (trx *types.Transaction) (bool, bottosErr.ErrCode) {
+
 	if !trxPool.VerifySignature(trx) {
 		log.Errorf("trx %v VerifySignature error\n", trx.Hash())
 		return false, bottosErr.ErrTrxSignError
@@ -84,11 +84,12 @@ func preHandleCommon(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 	return true, bottosErr.ErrNoError
 }
 
+
 func preHandlePushTrxReq(msg *message.PushTrxReq, ctx actor.Context) {
 
 	preHandleResult, err := preHandleCommon(msg.Trx)
-
-	if !preHandleResult {
+	
+	if !preHandleResult {			
 		ctx.Respond(err)
 	} else {
 		trxActorPid.Tell(msg)
@@ -96,16 +97,17 @@ func preHandlePushTrxReq(msg *message.PushTrxReq, ctx actor.Context) {
 	}
 }
 
+
 func preHandleReceiveTrx(msg *message.ReceiveTrx, ctx actor.Context) {
 
 	preHandleResult, err := preHandleCommon(msg.Trx)
-
-	if !preHandleResult {
+	
+	if !preHandleResult {			
 		ctx.Respond(err)
 	} else {
 		trxActorPid.Tell(msg)
 		ctx.Respond(bottosErr.ErrNoError)
-	}
+	}	
 }
 
 func doWork(ctx actor.Context) {
@@ -120,18 +122,20 @@ func doWork(ctx actor.Context) {
 		log.Infof("rcv trx %x in PushTrxReq\n", msg.Trx.Hash())
 
 		preHandlePushTrxReq(msg, ctx)
-
+		
 	case *message.ReceiveTrx:
 
 		log.Infof("rcv trx %x in ReceiveTrx\n", msg.Trx.Hash())
 
-		preHandleReceiveTrx(msg, ctx)
+		preHandleReceiveTrx(msg, ctx)		
 
 	default:
 		log.Info("trx actor: Unknown msg")
 	}
 
 }
+
+
 
 //NewTrxPreHandleActor spawn a named actor
 func NewTrxPreHandleActor() *actor.PID {
@@ -160,6 +164,7 @@ func SetTrxPool(pool *transaction.TrxPool) {
 func SetTrxActor(trxactorPid *actor.PID) {
 	trxActorPid = trxactorPid
 }
+
 
 // func handleSystemMsg(context actor.Context) bool {
 // 	switch context.Message().(type) {
