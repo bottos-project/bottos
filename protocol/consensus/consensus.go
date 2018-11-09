@@ -128,6 +128,17 @@ func (c *Consensus) processPrevote(index uint16, data []byte) {
 	prevote := &message.RcvPrevoteReq{BlockState: &block}
 	c.actor.Tell(prevote)
 }
+func (c *Consensus) processCommit(index uint16, data []byte) {
+	var head types.ConsensusHeaderState
+	err := bpl.Unmarshal(data, &head)
+	if err != nil {
+		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		return
+	}
+
+	commit := &message.RcvCommitReq{BftHeaderState: &head}
+	c.actor.Tell(commit)
+}
 
 
 func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
