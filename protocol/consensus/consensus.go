@@ -156,4 +156,6 @@ func (c *Consensus) processCommit(index uint16, data []byte) {
 		return
 	}
 
+	commit := &message.RcvCommitReq{BftHeaderState: &head}
+	c.actor.Tell(commit)
 }
