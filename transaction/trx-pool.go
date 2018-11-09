@@ -161,14 +161,10 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 
 	trxPool.addTransaction(trx)
 
-	switch context.Message().(type) {
-	case *message.PushTrxReq:
-		notify := &message.NotifyTrx{
-			Trx: trx,
-		}
-		trxPool.netActorPid.Tell(notify)
+	notify := &message.NotifyTrx{
+		Trx: trx,
 	}
-	context.Respond(bottosErr.ErrNoError)
+	trxPool.netActorPid.Tell(notify)
 }
 
 // HandleTransactionFromFront is handling trx from front
