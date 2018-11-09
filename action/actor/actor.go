@@ -31,7 +31,8 @@ import (
 	chainactor "github.com/bottos-project/bottos/action/actor/chain"
 	netactor "github.com/bottos-project/bottos/action/actor/net"
 	produceractor "github.com/bottos-project/bottos/action/actor/producer"
-	trxactor "github.com/bottos-project/bottos/action/actor/transaction"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxpoolactor"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxhandleactor"
 	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/action/env"
@@ -48,6 +49,7 @@ type MultiActor struct {
 	apiActorPid      *actor.PID
 	netActorPid      *actor.PID
 	trxActorPid      *actor.PID
+	trxPoolActorPid      *actor.PID
 	chainActorPid    *actor.PID
 	producerActorPid *actor.PID
 }
@@ -68,6 +70,7 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 		apiactor.NewApiActor(),
 		netactor.NewNetActor(env),
 		trxactor.NewTrxActor(),
+		trxpoolactor.NewTrxPoolActor(),
 		chainactor.NewChainActor(env),
 		produceractor.NewProducerActor(env),
 	}
@@ -84,9 +87,9 @@ func registerActorMsgTbl(m *MultiActor) {
 	restactor.SetChainActorPid(m.chainActorPid)	// restapi --> chain
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
-	produceractor.SetTrxActorPid(m.trxActorPid)     // producer --> trx
+	produceractor.SetTrxPoolActorPid(m.trxPoolActorPid)     // producer --> trx
 	produceractor.SetNetActorPid(m.netActorPid)     // producer --> chain
-	chainactor.SetTrxActorPid(m.trxActorPid)        // chain --> trx
+	chainactor.SetTrxPoolActorPid(m.trxPoolActorPid)        // chain --> trx
 	chainactor.SetNetActorPid(m.netActorPid)        // chain --> net
 
 	netactor.SetTrxActorPid(m.trxActorPid)     //p2p --> trx
@@ -105,5 +108,6 @@ func (m *MultiActor) ActorsStop() {
 	m.apiActorPid.Stop()
 	m.netActorPid.Stop()
 	m.trxActorPid.Stop()
+	m.trxPoolActorPid.Stop()
 
 }
