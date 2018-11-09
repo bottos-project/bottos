@@ -117,6 +117,18 @@ func (c *Consensus) SendCommit(notify *message.SendCommit) {
 	p2p.Runner.SendBroadcast(msg)
 }
 
+func (c *Consensus) processPrevote(index uint16, data []byte) {
+	var block types.ConsensusBlockState
+	err := bpl.Unmarshal(data, &block)
+	if err != nil {
+		log.Errorf("protocol consensus block Unmarshal error:%s", err)
+		return
+	}
+
+	prevote := &message.RcvPrevoteReq{BlockState: &block}
+	c.actor.Tell(prevote)
+}
+
 
 func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
 
