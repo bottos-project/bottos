@@ -27,19 +27,21 @@ package block
 
 import (
 	"bytes"
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/chain"
-	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/common/types"
-	"github.com/bottos-project/bottos/p2p"
-	"github.com/bottos-project/bottos/bpl"
-	pcommon "github.com/bottos-project/bottos/protocol/common"
-	log "github.com/cihub/seelog"
 	"math"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/p2p"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
+	log "github.com/cihub/seelog"
 )
 
 //DO NOT EDIT
@@ -49,6 +51,7 @@ const (
 	TIMER_CHECK_SYNC_LAST_BLOCK_NUMBER  = 20
 
 	TIMER_SYNC_STATE_CHECK = 5
+	TIMER_SYNC_STATE_CHECK1 = 1
 
 	TIMER_HEADER_SYNC = 2
 	TIMER_BLOCK_SYNC  = 2
@@ -137,7 +140,8 @@ type synchronizes struct {
 	once       bool //have synchronized one time or not when start up
 
 	infoc        chan *peerBlockInfo
-	updatec      chan chainNumber
+	updateLibc   chan *chainNumber
+	updateHeadc  chan uint64
 	blockc       chan *blockUpdate
 	headerc      chan *headerUpdate
 	headercTimer *time.Timer
@@ -155,7 +159,8 @@ func makeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchro
 	return &synchronizes{
 		peers:   make(map[uint16]*peerBlockInfo),
 		infoc:   make(chan *peerBlockInfo),
-		updatec: make(chan chainNumber),
+		updateLibc:  make(chan *chainNumber),
+		updateHeadc: make(chan uint64),
 		blockc:  make(chan *blockUpdate),
 		headerc: make(chan *headerUpdate),
 		state:   STATE_SYNCING,
@@ -201,11 +206,8 @@ func (s *synchronizes) exchangeRoutine() {
 		case info := <-s.infoc:
 			s.recvBlockNumberInfo(info)
 		case <-checkTimer.C:
-			if s.syncStateCheck(){
-				checkTimer.Reset(TIMER_SYNC_STATE_CHECK1 * time.Second)
-			}else{
-				checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
-			}
+			s.syncBlockNumberCheck()
+			checkTimer.Reset(TIMER_CHECK_SYNC_LAST_BLOCK_NUMBER * time.Second)
 		}
 	}
 }
@@ -300,15 +302,13 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			return
 		}
 
-		if s.sendupBlock(update.block) == chain.InsertBlockSuccess {
+		if s.sendupBlock(update.block) == berr.ErrNoError {
 			s.broadcastRcvNewBlock(update)
 
-			libNumber := s.chainIf.LastConsensusBlockNum()
-			s.updateLocalLib(libNumber)
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
 
-			log.Debugf("protocol sendup block success in normal, lib: %d head: %d", libNumber, blocknumber)
+			log.Debugf("protocol sendup block success in normal, head: %d", blocknumber)
 		}
 		return
 	} else if s.state == STATE_CATCHUP {
@@ -317,15 +317,13 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 			return
 		}
 
-		if s.sendupBlock(update.block) == chain.InsertBlockSuccess {
+		if s.sendupBlock(update.block) == berr.ErrNoError {
 			s.broadcastRcvNewBlock(update)
 
-			libNumber := s.chainIf.LastConsensusBlockNum()
-			s.updateLocalLib(libNumber)
 			blocknumber := s.chainIf.HeadBlockNum()
 			s.updateLocalNumber(blocknumber)
 
-			log.Debugf("protocol sendup block success in catch up, lib: %d head: %d", libNumber, blocknumber)
+			log.Debugf("protocol sendup block success in catch up, head: %d", blocknumber)
 		}
 		return
 	} else if s.state == STATE_SYNCING {
@@ -454,7 +452,7 @@ func (s *synchronizes) getPeers() syncset {
 	return peerset
 }
 
-func (s *synchronizes) syncStateCheck() {
+func (s *synchronizes) syncStateCheck()(syncFlag bool) {
 	var remoteLib uint64
 	var remoteNumber uint64
 	var index uint16
@@ -513,10 +511,11 @@ func (s *synchronizes) syncStateCheck() {
 		s.updateRemoteNumber(remoteNumber, false)
 	}
 
-	s.syncStateJudge(index)
+	flag :=s.syncStateJudge(index)
+	return flag
 }
 
-func (s *synchronizes) syncStateJudge(index uint16) {
+func (s *synchronizes) syncStateJudge(index uint16)(syncFlag bool) {
 	if s.libLocal < s.libRemote {
 		log.Debugf("protocol syncStateJudge lib small than remote, need sync")
 
@@ -524,12 +523,12 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 			s.state = STATE_SYNCING
 			s.syncBlockHeader()
 			s.once = true
-			return
+			return true
 		}
 
 		if s.lastLocal >= s.lastRemote {
 			log.Debugf("protocol syncStateJudge head bigger than remote, sync wait")
-			return
+			return   true
 		}
 
 		if s.state == STATE_NORMAL ||
@@ -553,8 +552,10 @@ func (s *synchronizes) syncStateJudge(index uint16) {
 			s.catchupWithPeer(index, s.lastRemote)
 		} else {
 			s.state = STATE_NORMAL
+			return false
 		}
 	}
+	return true
 
 }
 
@@ -575,6 +576,7 @@ func (s *synchronizes) updateLocalNumber(number uint64) {
 		log.Errorf("protocol update local block number error now:%d update:%d", s.lastLocal, number)
 		return
 	} else if number == s.lastLocal {
+		log.Debugf("protocol update head number same %d", number)
 		return
 	}
 
@@ -630,6 +632,8 @@ func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
+
+	log.Debugf("protocol sendGetLastRsp lib:%d head: %d", s.libLocal, s.lastLocal)
 
 	p2p.Runner.SendUnicast(msg)
 }
@@ -857,7 +861,7 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	j := 0
 	for i := s.set.begin; i <= s.set.end; i++ {
-		if s.sendupBlock(s.set.blocks[j]) != chain.InsertBlockSuccess {
+		if s.sendupBlock(s.set.blocks[j]) != berr.ErrNoError {
 			s.set.blocks[j] = nil
 			return
 		}
@@ -878,7 +882,7 @@ func (s *synchronizes) sendupBundleBlock() {
 	}
 }
 
-func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
+func (s *synchronizes) sendupBlock(block *types.Block) berr.ErrCode {
 
 	start := common.MeasureStart()
 	log.Debugf("protocol send up block :%d", block.Header.Number)
@@ -895,7 +899,7 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 
 		rsp := result.(*message.ReceiveBlockResp)
 
-		if rsp.ErrorNo != chain.InsertBlockSuccess {
+		if rsp.ErrorNo != berr.ErrNoError {
 			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
 		}
 		s.updateLocalNumber(block.Header.Number)
@@ -908,7 +912,8 @@ func (s *synchronizes) sendupBlock(block *types.Block) uint32 {
 	log.Error("protocol block insert timeout with five times")
 
 	log.Debugf("elapsed time 2 %d", common.Elapsed(start))
-	return 0xff
+
+	return berr.ErrNoError
 }
 
 //if node is super node , only broadcast block hearder to some peer
@@ -1054,7 +1059,7 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 	}
 
 	result := s.sendupBlock(update.block)
-	if result == chain.InsertBlockSuccess {
+	if result == berr.ErrNoError {
 		s.c.current++
 		s.c.counter = 0
 
@@ -1063,7 +1068,7 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 		log.Debugf("protocol catchup get next block: %d", s.c.current)
 
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
-	} else if result == chain.InsertBlockErrorNotLinked {
+	} else if result == berr.ErrBlockInsertErrorNotLinked {
 		if s.c.current > s.c.begin {
 			log.Errorf("protocol catchup no link, start catchup from begin: %d", s.lastLocal)
 			s.c.current = s.c.begin
@@ -1198,7 +1203,7 @@ func (set *syncSet) begincCheck(number uint64) {
 		return
 	}
 
-	//remote lib change small , we should reset and wait for sync judge
+	//local lib change bigger , we should reset and wait for sync judge
 	if number >= set.begin {
 		log.Debugf("protocol begincCheck reset begin: %d, lib: %d", set.begin, number)
 		set.reset()
