@@ -27,7 +27,6 @@ package common
 
 import (
 	"math/big"
-	
 )
 
 //MaxUint128 return max value of 128 bit

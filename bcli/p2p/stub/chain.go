@@ -129,10 +129,10 @@ func (b *BlockChainStub) GetHeaderByNumber(number uint64) *types.Header {
 func (b *BlockChainStub) SetBlocks(blocks []types.Block) {
 	b.blocks = blocks
 
-	b.beginNumber = uint64(len(b.blocks))
+	b.beginNumber = uint32(len(b.blocks))
 }
 
-func (b *BlockChainStub) SetLibNumber(number uint64) {
+func (b *BlockChainStub) SetLibNumber(number uint32) {
 	b.libNumber = number
 }
 
