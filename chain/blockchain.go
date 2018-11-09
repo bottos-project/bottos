@@ -32,14 +32,15 @@ import (
 
 	log "github.com/cihub/seelog"
 
+	"fmt"
+
 	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/common/types"
 	berr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-	"fmt"
 )
 
 //BlockChain the chain info
@@ -64,15 +65,15 @@ func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc 
 	}
 
 	bc := &BlockChain{
-		blockDb:    dbInstance,
-		blockCache: blockCache,
-		roleIntf:   roleIntf,
-		nc:         nc,
+		blockDb:        dbInstance,
+		blockCache:     blockCache,
+		roleIntf:       roleIntf,
+		nc:             nc,
 		handledBlockCB: []HandledBlockCallback{},
 	}
 
 	return bc, nil
-	}
+}
 
 func (bc *BlockChain) Init() error {
 	if err := bc.initChain(); err != nil {
@@ -482,6 +483,7 @@ func (bc *BlockChain) checkConsensusedBlock(block *types.Block) uint32 {
 
 //InsertBlock write a new block
 func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
+	start := common.MeasureStart()
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
@@ -506,8 +508,8 @@ func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 		log.Infof("InsertBlock error: ", err)
 		return InsertBlockErrorGeneral
 	}
-
-	log.Infof("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash())
+	span := common.Elapsed(start)
+	log.Infof("Insert block: block num:%v, trxn:%v, delegate: %v, hash:%x, span:%v\n\n", block.GetNumber(), len(block.Transactions), string(block.GetDelegate()), block.Hash(), span)
 
 	return InsertBlockSuccess
 }
