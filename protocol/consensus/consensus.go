@@ -27,8 +27,12 @@ package consensus
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
-	"github.com/prometheus/common/log"
+	"github.com/bottos-project/bottos/bpl"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
+	log "github.com/cihub/seelog"
 )
 
 type Consensus struct {
@@ -43,6 +47,9 @@ func (c *Consensus) SetActor(tid *actor.PID) {
 	c.actor = tid
 }
 
+func (c *Consensus) Start() {
+
+}
 
 func (c *Consensus) Dispatch(index uint16, p *p2p.Packet) {
 	switch p.H.PacketType {
@@ -128,6 +135,7 @@ func (c *Consensus) processPrevote(index uint16, data []byte) {
 	prevote := &message.RcvPrevoteReq{BlockState: &block}
 	c.actor.Tell(prevote)
 }
+
 func (c *Consensus) processPrecommit(index uint16, data []byte) {
 	var block types.ConsensusBlockState
 	err := bpl.Unmarshal(data, &block)
@@ -147,14 +155,5 @@ func (c *Consensus) processCommit(index uint16, data []byte) {
 		log.Errorf("protocol consensus head Unmarshal error:%s", err)
 		return
 	}
-
-	commit := &message.RcvCommitReq{BftHeaderState: &head}
-	c.actor.Tell(commit)
-}
-
-
-
-
-func (c *Consensus) Start() {
 
 }
