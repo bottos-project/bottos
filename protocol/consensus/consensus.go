@@ -141,9 +141,7 @@ func (c *Consensus) processCommit(index uint16, data []byte) {
 }
 
 
-func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
 
-}
 
 func (c *Consensus) Start() {
 
