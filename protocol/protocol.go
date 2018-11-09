@@ -123,3 +123,7 @@ func (p *protocol) SendPrecommit(notify *message.SendPrecommit) {
 	p.b.UpdateHeadNumber()
 	p.c.SendPrecommit(notify)
 }
+func (p *protocol) SendCommit(notify *message.SendCommit) {
+	p.b.UpdateNumber()
+	p.c.SendCommit(notify)
+}
