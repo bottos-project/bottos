@@ -179,7 +179,10 @@ func (p *ProducerActor) working() uint32 {
 		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v, pendingTrxn:%v, blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			if config.BtoConfig.Delegate.Solo == false {
+				ConsensusProducedBlock(block)
+			} else {
 			ApplyBlock(block)
 		}
 
