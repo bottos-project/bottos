@@ -201,8 +201,11 @@ func (s *synchronizes) exchangeRoutine() {
 		case info := <-s.infoc:
 			s.recvBlockNumberInfo(info)
 		case <-checkTimer.C:
-			s.syncBlockNumberCheck()
-			checkTimer.Reset(TIMER_CHECK_SYNC_LAST_BLOCK_NUMBER * time.Second)
+			if s.syncStateCheck(){
+				checkTimer.Reset(TIMER_SYNC_STATE_CHECK1 * time.Second)
+			}else{
+				checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
+			}
 		}
 	}
 }
