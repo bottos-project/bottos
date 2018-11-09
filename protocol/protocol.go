@@ -116,3 +116,6 @@ func (p *protocol) SendNewBlock(notify *message.NotifyBlock) {
 	p.b.UpdateHeadNumber()
 	p.b.UpdateNumber()
 }
+func (p *protocol) SendPrevote(notify *message.SendPrevote) {
+	p.c.SendPrevote(notify)
+}
