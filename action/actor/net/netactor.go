@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -108,8 +108,8 @@ func (n *NetActor) setChainActor(tpid *actor.PID) {
 	n.protocol.SetChainActor(tpid)
 }
 
-func (n *NetActor) setTrxActor(tpid *actor.PID) {
-	n.protocol.SetTrxActor(tpid)
+func (n *NetActor) setTrxPreHandleActor(tpid *actor.PID) {
+	n.protocol.SetTrxPreHandleActor(tpid)
 }
 
 func (n *NetActor) setConsensusActor(tpid *actor.PID) {
@@ -120,8 +120,8 @@ func SetChainActorPid(tpid *actor.PID) {
 	netactor.setChainActor(tpid)
 }
 
-func SetTrxActorPid(tpid *actor.PID) {
-	netactor.setTrxActor(tpid)
+func SetTrxPreHandleActorPid(tpid *actor.PID) {
+	netactor.setTrxPreHandleActor(tpid)
 }
 
 func SetConsensusActorPid(tpid *actor.PID) {

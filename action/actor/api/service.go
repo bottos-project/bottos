@@ -58,11 +58,11 @@ func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
-var trxactorPid *actor.PID
+var trxPreHandleActorPid *actor.PID
 
 //SetTrxActorPid set trx actor pid
-func SetTrxActorPid(tpid *actor.PID) {
-	trxactorPid = tpid
+func SetTrxPreHandleActorPid(tpid *actor.PID) {
+	trxPreHandleActorPid = tpid
 }
 
 
@@ -126,7 +126,7 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		Trx: intTrx,
 	}
 
-	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)

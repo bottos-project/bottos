@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/bottos-project/bottos/action/actor/transaction"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxhandleactor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/db"
