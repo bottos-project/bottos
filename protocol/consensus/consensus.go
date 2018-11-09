@@ -97,6 +97,26 @@ func (c *Consensus) SendPrecommit(notify *message.SendPrecommit) {
 
 }
 
+func (c *Consensus) SendCommit(notify *message.SendCommit) {
+	buf, err := bpl.Marshal(notify.BftHeaderState)
+	if err != nil {
+		log.Errorf("protocol block send marshal error")
+		return
+	}
+
+	head := p2p.Head{ProtocolType: pcommon.CONSENSUS_PACKET,
+		PacketType: ConsensusCommit,
+	}
+
+	packet := p2p.Packet{H: head,
+		Data: buf,
+	}
+
+	msg := p2p.BcastMsgPacket{Indexs: nil,
+		P: packet}
+	p2p.Runner.SendBroadcast(msg)
+}
+
 
 func (c *Consensus) Send(broadcast bool, m interface{}, peers []uint16) {
 
