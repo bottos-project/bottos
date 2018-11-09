@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -40,7 +40,7 @@ import (
 //ChainActorPid is chain actor pid
 var ChainActorPid *actor.PID
 var actorEnv *env.ActorEnv
-var trxactorPid *actor.PID
+var trxPoolActorPid *actor.PID
 var NetActorPid *actor.PID
 
 //ChainActor is actor props
@@ -54,8 +54,8 @@ func ContructChainActor() *ChainActor {
 }
 
 //SetTrxActorPid set trx actor pid
-func SetTrxActorPid(tpid *actor.PID) {
-	trxactorPid = tpid
+func SetTrxPoolActorPid(tpid *actor.PID) {
+	trxPoolActorPid = tpid
 }
 
 //SetNetActorPid set trx actor pid
@@ -136,7 +136,7 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 	}
 	if errcode == chain.InsertBlockSuccess {
 		r := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
-		trxactorPid.Tell(r)
+		trxPoolActorPid.Tell(r)
 
 		log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", req.Block.GetNumber(), len(req.Block.Transactions), req.Block.Header.Delegate, req.Block.Hash())
 		BroadCastBlock(req.Block)
@@ -157,7 +157,7 @@ func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveB
 
 	if errcode == chain.InsertBlockSuccess {
 		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
-		trxactorPid.Tell(req)
+		trxPoolActorPid.Tell(req)
 	}
 }
 
