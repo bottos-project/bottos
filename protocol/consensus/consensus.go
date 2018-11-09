@@ -124,5 +124,38 @@ func (c *Consensus) SendCommit(notify *message.SendCommit) {
 	p2p.Runner.SendBroadcast(msg)
 }
 
+func (c *Consensus) processPrevote(index uint16, data []byte) {
+	var block types.ConsensusBlockState
+	err := bpl.Unmarshal(data, &block)
+	if err != nil {
+		log.Errorf("protocol consensus block Unmarshal error:%s", err)
+		return
+	}
 
+	prevote := &message.RcvPrevoteReq{BlockState: &block}
+	c.actor.Tell(prevote)
+}
 
+func (c *Consensus) processPrecommit(index uint16, data []byte) {
+	var block types.ConsensusBlockState
+	err := bpl.Unmarshal(data, &block)
+	if err != nil {
+		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		return
+	}
+
+	precommit := &message.RcvPrecommitReq{BlockState: &block}
+	c.actor.Tell(precommit)
+}
+
+func (c *Consensus) processCommit(index uint16, data []byte) {
+	var head types.ConsensusHeaderState
+	err := bpl.Unmarshal(data, &head)
+	if err != nil {
+		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		return
+	}
+
+	commit := &message.RcvCommitReq{BftHeaderState: &head}
+	c.actor.Tell(commit)
+}
