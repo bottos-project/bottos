@@ -31,6 +31,7 @@ import (
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/db/platform/codedb"
 	"github.com/bottos-project/bottos/role"
 )
 
@@ -42,4 +43,5 @@ type ActorEnv struct {
 	NcIntf     contract.NativeContractInterface
 	Protocol   context.ProtocolInterface
 	Db               *db.DBService
+	PendingTxSession *codedb.UndoSession
 }

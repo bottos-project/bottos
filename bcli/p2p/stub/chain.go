@@ -6,7 +6,9 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
+	"gopkg.in/urfave/cli.v1"
 )
 
 //type HandledBlockCallback func(*types.Block)
@@ -14,8 +16,8 @@ import (
 type BlockChainStub struct {
 	blocks []types.Block
 
-	beginNumber uint64
-	libNumber   uint64
+	beginNumber uint32
+	libNumber   uint32
 	l           sync.Mutex
 }
 
@@ -79,14 +81,14 @@ func (b *BlockChainStub) HeadBlockDelegate() string {
 }
 
 func (b *BlockChainStub) LastConsensusBlockNum() uint64 {
-	return b.libNumber
+	return uint64(b.libNumber)
 }
 
 func (b *BlockChainStub) GenesisTimestamp() uint64 {
 	return 0
 }
 
-func (b *BlockChainStub) InsertBlock(new *types.Block) uint32 {
+func (b *BlockChainStub) InsertBlock(new *types.Block) errors.ErrCode {
 	b.l.Lock()
 	defer b.l.Unlock()
 
@@ -105,10 +107,12 @@ func (b *BlockChainStub) InsertBlock(new *types.Block) uint32 {
 	return 0
 }
 
-func (b *BlockChainStub) RegisterHandledBlockCallback(cb chain.HandledBlockCallback) {
+func (b *BlockChainStub) RegisterHandledBlockCallback(cb chain.BlockCallback) {
 	return
 }
-
+func (b *BlockChainStub) RegisterCommittedBlockCallback(cb chain.BlockCallback) {
+	return
+}
 func (b *BlockChainStub) GetHeaderByNumber(number uint64) *types.Header {
 	b.l.Lock()
 	defer b.l.Unlock()
@@ -125,10 +129,10 @@ func (b *BlockChainStub) GetHeaderByNumber(number uint64) *types.Header {
 func (b *BlockChainStub) SetBlocks(blocks []types.Block) {
 	b.blocks = blocks
 
-	b.beginNumber = uint64(len(b.blocks))
+	b.beginNumber = uint32(len(b.blocks))
 }
 
-func (b *BlockChainStub) SetLibNumber(number uint64) {
+func (b *BlockChainStub) SetLibNumber(number uint32) {
 	b.libNumber = number
 }
 

@@ -33,20 +33,20 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/common/types"
-	//"github.com/bottos-project/bottos/transaction"
+	"github.com/bottos-project/bottos/transaction"
 )
 
-var trxActorPid *actor.PID
+var trxPoolActorPid *actor.PID
 
-// SetTrxActorPid is to set transaction actor PID for use
-func SetTrxActorPid(tpid *actor.PID) {
-	trxActorPid = tpid
+// SetTrxPoolActorPid is to set transaction actor PID for use
+func SetTrxPoolActorPid(tpid *actor.PID) {
+	trxPoolActorPid = tpid
 }
 
 // GetAllPendingTrx is to retrieve the pending transactions
 func GetAllPendingTrx() []*types.Transaction {
 	getTrxsReq := &message.GetAllPendingTrxReq{}
-	getTrxsResult, getTrxsErr := trxActorPid.RequestFuture(getTrxsReq, 500*time.Millisecond).Result()
+	getTrxsResult, getTrxsErr := trxPoolActorPid.RequestFuture(getTrxsReq, 900*time.Millisecond).Result()
 
 	if nil == getTrxsErr {
 	} else {
@@ -71,18 +71,16 @@ func GetAllPendingTrx() []*types.Transaction {
 
 // VerifyTransactions is to verify local and received transactons
 func verifyTransactions(trx *types.Transaction) (bool, error) {
-	return true, nil
-	/*
 		log.Info("start apply transaction trx one by one")
 		trxApply := transaction.NewTrxApplyService()
 		pass, _, _ := trxApply.ApplyTransaction(trx)
 
 		log.Info("verify result ", pass)
-		return pass, nil*/
+	return pass, nil
 }
 
 func removeTransaction(trxs []*types.Transaction) {
 	log.Info("start remove transactions ", len(trxs))
 	removeTrxs := &message.RemovePendingTrxsReq{Trxs: trxs}
-	trxActorPid.Tell(removeTrxs)
+	trxPoolActorPid.Tell(removeTrxs)
 }

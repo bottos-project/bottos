@@ -33,18 +33,22 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/db"
+	"github.com/bottos-project/bottos/db/platform/codedb"
 	"github.com/bottos-project/bottos/producer"
 	"github.com/bottos-project/bottos/role"
-	"github.com/bottos-project/bottos/bpl"
 )
 
 // ProducerActor is to define actor for producer
 type ProducerActor struct {
 	roleIntf role.RoleInterface
 	ins      producer.ReporterRepo
+	db               *db.DBService
+	pendingTxSession *codedb.UndoSession
 }
 
 // NewProducerActor is to create actor for producer
@@ -52,7 +56,12 @@ func NewProducerActor(env *env.ActorEnv) *actor.PID {
 
 	ins := producer.New(env.Chain, env.RoleIntf, env.Protocol)
 	props := actor.FromProducer(func() actor.Actor {
-		return &ProducerActor{env.RoleIntf, ins}
+		return &ProducerActor{
+			env.RoleIntf,
+			ins,
+			env.Db,
+			env.PendingTxSession,
+		}
 	})
 
 	pid, err := actor.SpawnNamed(props, "ProducerActor")
@@ -69,11 +78,12 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 
 	case *actor.Started:
 		log.Infof("ProducerActor received started msg: %s", msg)
-		context.SetReceiveTimeout(500 * time.Millisecond)
+
+		context.SetReceiveTimeout(time.Duration(config.PRODUCER_TIME_OUT) * time.Millisecond)
 
 	case *actor.ReceiveTimeout:
-		p.working()
-		context.SetReceiveTimeout(500 * time.Millisecond)
+		elapse := p.working()
+		context.SetReceiveTimeout(time.Duration(elapse) * time.Millisecond)
 
 	case *actor.Stopping:
 		log.Info("ProducerActor received stopping msg")
@@ -106,53 +116,78 @@ func (p *ProducerActor) Receive(context actor.Context) {
 
 	log.Error("ProducerActor received Unknown msg")
 }
-
-func (p *ProducerActor) working() {
+func (p *ProducerActor) working() uint32 {
 
 	if p.ins.IsReady() {
+		p.db.Lock()
+		defer p.db.UnLock()
 		start := common.MeasureStart()
+		log.Infof("begin to producer block ")
+		p.pendingTxSession = p.db.GetSession()
+		if p.pendingTxSession != nil {
+			log.Infof("p.pendingTxSession need to reset ")
+			p.db.ResetSession()
+		}
+		log.Infof("begin session......... ")
+		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
+
 		trxs := GetAllPendingTrx()
+		log.Info("get trx times", common.Elapsed(start))
 		block := &types.Block{}
 		pendingBlockSize := uint32(unsafe.Sizeof(block))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			log.Info("GetGlobalPropertyRole failed")
-			return
+			p.db.ResetSession()
+			return config.PRODUCER_TIME_OUT
 		}
-		var pendingTrx = []*types.Transaction{}
 		var pendingBlockTrx = []*types.Transaction{}
 		var removeTrx = []*types.Transaction{}
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
-			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT ||
-				pendingBlockSize > coreStat.Config.MaxBlockSize {
-				pendingTrx = append(pendingTrx, dtag)
-				log.Info("Warning reach max size")
+			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT {
+				log.Info("Warning producing block is too slow", common.Elapsed(start))
 				continue
 			}
+			p.db.BeginUndo(config.SUB_TRX_SESSION)
+			applyStart := common.MeasureStart()
 			pass, _ := verifyTransactions(trx)
 			if pass == false {
 				log.Info("ApplyTransaction failed")
+				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
+			log.Info("apply start elapse", common.Elapsed(applyStart))
 			data, _ := bpl.Marshal(trx)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
+			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
+				p.db.ResetSubSession()
 				log.Info("Warning pending block size reach MaxBlockSize")
-				pendingTrx = append(pendingTrx, dtag)
 				continue
 			}
+			p.db.Squash()
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
+			log.Info("pack apply elapse", common.Elapsed(applyStart))
 		}
+
 		removeTransaction(removeTrx)
 		block = p.ins.Woker(pendingBlockTrx)
+		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v, pendingTrxn:%v, blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			if config.BtoConfig.Delegate.Solo == false {
+				ConsensusProducedBlock(block)
+			} else {
 			ApplyBlock(block)
 		}
+
+		}
+		return p.ins.CalcNextReportTime()
 	}
+	return config.PRODUCER_TIME_OUT
 }

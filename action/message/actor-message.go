@@ -27,6 +27,7 @@ package message
 
 import (
 	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
 )
 
