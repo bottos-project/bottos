@@ -23,8 +23,6 @@ func NewDumActor(bc *BlockChainStub) *actor.PID {
 	} else {
 		return nil
 	}
-
-	return nil
 }
 
 func (n *DumActor) Receive(context actor.Context) {
