@@ -85,6 +85,10 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+func (nc *NativeContract) checkSigner(account string, expected string) bool {
+	return account == expected
+}
+
 func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
@@ -105,6 +109,14 @@ func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	cerr = nc.checkAccount(ctx.RoleIntf, ToWhom)
 	if cerr != berr.ErrNoError {
 		return cerr
+	}
+
+	if FromWhom == ToWhom {
+		return berr.ErrContractTransferToSelf
+	}
+
+	if !nc.checkSigner(FromWhom, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
 	}
 
 	// check funds
@@ -220,13 +232,17 @@ func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if ParamName == ParamSpender {
+		return berr.ErrContractGrantToSelf
+	}
+
 	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
 	// sender must be from
-	if ctx.Trx.Sender != ParamName {
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
 		return berr.ErrContractAccountMismatch
 	}
 
@@ -270,6 +286,10 @@ func (nc *NativeContract) cancelCredit(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
+	}
+
 	_, err := ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
@@ -302,6 +322,10 @@ func (nc *NativeContract) transferFrom(ctx *Context) berr.ErrCode {
 	cerr = nc.checkAccount(ctx.RoleIntf, TransTo)
 	if cerr != berr.ErrNoError {
 		return cerr
+	}
+
+	if TransFrom == TransTo {
+		return berr.ErrContractTransferToSelf
 	}
 
 	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
@@ -377,6 +401,7 @@ func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	
 	ParamContract := param["contract"].(string)
 	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
+	ParamVmType := param["vm_type"].(byte)
 
 	// check account
 	cerr := nc.checkAccount(ctx.RoleIntf, ParamContract)
@@ -393,6 +418,7 @@ func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	codeHash := common.Sha256(ParamContractCode)
 
 	account, _ := ctx.RoleIntf.GetAccount(ParamContract)
+	account.VMType = byte(ParamVmType)
 	account.CodeVersion = codeHash
 	account.ContractCode = make([]byte, len(ParamContractCode))
 	copy(account.ContractCode, ParamContractCode)
@@ -702,6 +728,10 @@ func (nc *NativeContract) unregDelegate(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
+	}
+
 	delegate, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
 	if err == nil {
 		// new delegate
@@ -727,7 +757,7 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	voterName := param["voter"].(string)
 	delegateName := param["delegate"].(string)
 
-	if voterName != ctx.Trx.Sender {
+	if !nc.checkSigner(voterName, ctx.Trx.Sender) {
 		return berr.ErrContractAccountMismatch
 	}
 
