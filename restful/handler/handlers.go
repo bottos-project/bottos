@@ -11,6 +11,7 @@ import (
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/AsynkronIT/protoactor-go/actor"
 
+
 	"time"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
@@ -23,6 +24,7 @@ import (
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/config"
 	"regexp"
+	"runtime"
 )
 
 //ApiService is actor service
@@ -43,11 +45,11 @@ func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
-var trxPreHandleActorPid *actor.PID
+var trxactorPid *actor.PID
 
 //SetTrxActorPid set trx actor pid
-func SetTrxPreHandleActorPid(tpid *actor.PID) {
-	trxPreHandleActorPid = tpid
+func SetTrxActorPid(tpid *actor.PID) {
+	trxactorPid = tpid
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -94,9 +96,12 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
+		encoderRestResponse(w, resp)
+		return
 		}
+
+	if resp := checkNil(res, 1); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -104,9 +109,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	if response.Error != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -118,10 +121,30 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	result.HeadBlockDelegate = response.HeadBlockDelegate
 	result.CursorLabel = response.HeadBlockHash.Label()
 	result.ChainId=common.BytesToHex(config.GetChainID())
-	resp.Result = result
 
-	resp.Errcode = 0
-	json.NewEncoder(w).Encode(resp)
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+}
+func checkNil(req interface{}, flag int8) (ResponseStruct) {
+	var resp ResponseStruct
+
+	if req == nil {
+		if flag == 0 {
+			resp.Errcode = uint32(bottosErr.RestErrReqNil)
+			resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrReqNil)
+		} else {
+			resp.Errcode = uint32(bottosErr.RestErrResultNil)
+			resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrResultNil)
+		}
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d checkNil error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, resp.Msg)
+		//encoderRestResponse(w, resp)
+		return resp
+	}
+	return resp
 }
 
 //GetBlock query block
@@ -254,7 +277,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		Trx: intTrx,
 	}
 
-	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
@@ -600,4 +623,55 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		panic(err)
 	}
+}
+
+
+
+func encoderRestResponse(w http.ResponseWriter, resp ResponseStruct) (http.ResponseWriter) {
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("content-type", "application/json;charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Credentials", "true")
+	//w.Header().Set("Access-Control-Expose-Headers", "application/json")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
+	//w.Header().Set("Access-Control-Allow-Methods", "POST")
+
+	//w.WriteHeader(404)
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+	}
+
+	return w
+}
+
+func encoderRestRequest(r *http.Request, req interface{}) (interface{}, error) {
+	var resp ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("request error: %s", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+
+		return resp, err
+	}
+
+	if req == nil {
+		resp.Errcode = uint32(bottosErr.RestErrReqNil)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrReqNil)
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+		return resp, errors.New("request is nil")
+	}
+
+	return req, nil
 }
