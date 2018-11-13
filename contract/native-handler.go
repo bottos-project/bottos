@@ -470,7 +470,6 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 		return berr.ErrContractInsufficientFunds
 	}
 	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
-	oldStakeAmount := sb.StakedBalance
 
 	if err := balance.SafeSub(amount); err != nil {
 		return berr.ErrContractTransferOverflow
@@ -505,10 +504,7 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 			if err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
-			delta := big.NewInt(0)
-			delta.Sub(sb.StakedBalance, oldStakeAmount)
-			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
-
+			delegateVote.UpdateVotes(amount, sd.CurrentTermTime)
 			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
@@ -749,6 +745,11 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 		return berr.ErrTrxContractHanldeError
 	}
 
+	// staked balance should more than 0
+	if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
+		return berr.ErrContractInsufficientFunds
+	}
+
 	sd, err := ctx.RoleIntf.GetScheduleDelegate()
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
@@ -758,11 +759,6 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 		// vote
 		if errcode := nc.checkAccount(ctx.RoleIntf, delegateName); errcode != berr.ErrNoError {
 			return errcode
-		}
-
-		// staked balance should more than 0
-		if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
-			return berr.ErrContractInsufficientFunds
 		}
 
 		if voter.Delegate != "" {
