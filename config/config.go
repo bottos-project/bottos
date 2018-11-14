@@ -241,6 +241,9 @@ func LoadConfig(ctx *cli.Context) error {
 
 	if ctx.GlobalIsSet(cmd.RESTPortFlag.Name) {
 		Param.RESTPort = ctx.GlobalInt(cmd.RESTPortFlag.Name)
+		if _, err := PortValidate(Param.RESTPort); err != nil {
+			return err
+		}
 	}
 
 	if ctx.GlobalIsSet(cmd.RESTServerAddrFlag.Name) {
@@ -249,10 +252,16 @@ func LoadConfig(ctx *cli.Context) error {
 
 	if ctx.GlobalIsSet(cmd.P2PPortFlag.Name) {
 		Param.P2PPort = ctx.GlobalInt(cmd.P2PPortFlag.Name)
+		if _, err := PortValidate(Param.P2PPort); err != nil {
+			return err
+		}
 	}
 
 	if ctx.GlobalIsSet(cmd.P2PServerAddrFlag.Name) {
 		Param.P2PServAddr = ctx.GlobalString(cmd.P2PServerAddrFlag.Name)
+		if _, err :=IpValidate(Param.P2PServAddr); err != nil {
+			return err
+		}
 	}
 
 	if ctx.GlobalIsSet(cmd.RPCPortFlag.Name) {
@@ -266,6 +275,9 @@ func LoadConfig(ctx *cli.Context) error {
 
 	if ctx.GlobalIsSet(cmd.MongoDBFlag.Name) {
 		Param.OptionDb = ctx.GlobalString(cmd.MongoDBFlag.Name)
+		if _, err := MongoUrlValidate(Param.OptionDb); err != nil {
+			return err
+		}
 	}
 
 	if ctx.GlobalIsSet(cmd.EnableStaleReportFlag.Name) {
@@ -280,6 +292,9 @@ func LoadConfig(ctx *cli.Context) error {
 		}
 		Param.PeerList = make([]string, len(peerList))
 		copy(Param.PeerList, peerList)
+		if _, err :=IpValidateAll(Param.PeerList); err != nil {
+			return err
+		}
 	}
 
 	if ctx.GlobalIsSet(cmd.DelegateSignkeyFlag.Name) {
@@ -289,6 +304,9 @@ func LoadConfig(ctx *cli.Context) error {
 			return err
 		}
 		Param.DelegateSignKey = keypair
+		if _, err := SignKeyValidate(Param.DelegateSignKey.PrivateKey, Param.DelegateSignKey.PublicKey); err != nil {
+			return err
+		}
 	}
 
 	return nil
