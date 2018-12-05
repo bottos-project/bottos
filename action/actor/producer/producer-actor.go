@@ -122,17 +122,15 @@ func (p *ProducerActor) working() uint32 {
 		p.db.Lock()
 		defer p.db.UnLock()
 		start := common.MeasureStart()
-		log.Infof("begin to producer block ")
 		p.pendingTxSession = p.db.GetSession()
 		if p.pendingTxSession != nil {
 			log.Infof("p.pendingTxSession need to reset ")
 			p.db.ResetSession()
 		}
-		log.Infof("begin session......... ")
 		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
 
 		trxs := GetAllPendingTrx()
-		log.Info("get trx times", common.Elapsed(start))
+		log.Debug("get trx times", common.Elapsed(start))
 		block := &types.Block{}
 		pendingBlockSize := uint32(unsafe.Sizeof(block))
 		coreStat, err := p.roleIntf.GetCoreState()
@@ -154,7 +152,7 @@ func (p *ProducerActor) working() uint32 {
 			applyStart := common.MeasureStart()
 			pass, _ := verifyTransactions(trx)
 			if pass == false {
-				log.Info("ApplyTransaction failed")
+				log.Error("PRODUCER verify transactions failed, trx %x", trx.Hash())
 				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
@@ -184,11 +182,13 @@ func (p *ProducerActor) working() uint32 {
 			if config.BtoConfig.Delegate.Solo == false {
 				ConsensusProducedBlock(block)
 			} else {
-				ApplyBlock(block)
+				AddBlock(block)
 			}
 
+		} else {
+			return config.PRODUCER_TIME_OUT
 		}
-		return p.ins.CalcNextReportTime()
+		return p.ins.CalcNextReportTime(block)
 	}
 	return config.PRODUCER_TIME_OUT
 }

@@ -39,7 +39,7 @@ func SetChainActorPid(tpid *actor.PID) {
 }
 
 // ApplyBlock is to receive and handle blocks
-func ApplyBlock(block *types.Block) {
+func AddBlock(block *types.Block) {
 	applyBlock := &message.InsertBlockReq{Block: block}
 	chainActorPid.Tell(applyBlock)
 	return
