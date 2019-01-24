@@ -48,14 +48,16 @@ type OptionDBService struct {
 func NewDbService(path string, codedbPath string) *DBService {
 	kv, err := kvdb.NewKVDatabase(path)
 	if err != nil {
+		log.Errorf("DB load key value database failed ", path)
 		return nil
 	}
-	db, err := codedb.NewCodeDbRepository(codedbPath)
+	db, err := codedb.NewMultindexDB(codedbPath)
 	if err != nil {
-		log.Info(err)
+		log.Errorf("DB load code database failed ", codedbPath)
 		return nil
 	}
 	return &DBService{kvRepo: kv, codeRepo: db}
+
 }
 
 func NewOptionDbService(optPath string) *OptionDBService {
@@ -75,8 +77,12 @@ type DBApi interface {
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
 	Delete(key []byte) error
-	Close()
 	Flush() error
+	Seek(prefixKey []byte) ([]string, error)
+	NewBatch()
+	BatchPut(key []byte, value []byte)
+	BatchDelete(key []byte)
+	BatchCommit() error
 	//code db interface can rollback
 	StartUndoSession()
 	CreatObjectIndex(objectName string, indexName string, indexJson string) error
@@ -90,6 +96,7 @@ type DBApi interface {
 	GetAllObjectKeys(objectName string) ([]string, error)
 	GetAllObjects(keyName string) ([]string, error)
 	GetAllObjectsSortByIndex(indexName string) ([]string, error)
+	GetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greater string) ([]string, error)
 	DeleteObject(objectName string, key string) (string, error)
 	Commit()
 	Rollback()
