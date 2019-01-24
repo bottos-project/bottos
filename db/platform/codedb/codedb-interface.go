@@ -27,7 +27,6 @@ package codedb
 
 //CodeDbRepo is the interface for code db
 type CodeDbRepo interface {
-	CallStartUndoSession(bool)
 	CallCreatObjectIndex(objectName string, indexName string, indexJson string) error
 	CallCreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error
 	CallSetObject(objectName string, key string, objectValue string) error
@@ -36,7 +35,9 @@ type CodeDbRepo interface {
 	CallDeleteObject(objectName string, key string) (string, error)
 	CallGetAllObjectKeys(objectName string) ([]string, error)
 	CallGetAllObjects(keyName string) ([]string, error)
+	CallGetAllObjectsFilter(keyName string) ([]string, error)
 	CallGetAllObjectsSortByIndex(indexName string) ([]string, error)
+	CallGetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greaterThan string) ([]string, error)
         CallGlobalLock()
 	CallGlobalUnLock()
 	CallCommit() error
