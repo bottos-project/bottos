@@ -44,6 +44,9 @@ func GenerateKey() (pubkey, seckey []byte) {
 
 func Sign(msg, seckey []byte) ([]byte, error) {
 	sign, err := secp256k1.Sign(msg, seckey)
+	if err != nil {
+		return sign[:], err
+	}
 	return sign[:len(sign)-1], err
 }
 
