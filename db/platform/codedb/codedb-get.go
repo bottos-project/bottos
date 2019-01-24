@@ -28,12 +28,13 @@ package codedb
 import (
 	//"fmt"
 
-	"github.com/tidwall/buntdb"
+	"strings"
+
 	log "github.com/cihub/seelog"
 )
 
 //CallGetObject is to get object by key
-func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string, error) {
+func (k *MultindexDB) CallGetObject(objectName string, key string) (string, error) {
 	var objectValue string
 	var err error
 
@@ -47,7 +48,7 @@ func (k *CodeDbRepository) CallGetObject(objectName string, key string) (string,
 }
 
 //CallGetAllObjectKeys is to get all objects by objectName
-func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, error) {
+func (k *MultindexDB) CallGetAllObjectKeys(objectName string) ([]string, error) {
 	var objectValue = make([]string, 0, 500)
 	var err error
 
@@ -64,7 +65,7 @@ func (k *CodeDbRepository) CallGetAllObjectKeys(objectName string) ([]string, er
 }
 
 //CallGetAllObjects is to get all objects by keyName which is indexname
-func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
+func (k *MultindexDB) CallGetAllObjects(keyName string) ([]string, error) {
 	var objectValue = make([]string, 0, 500)
 	var err error
 	k.db.View(func(tx *buntdb.Tx) error {
@@ -79,8 +80,29 @@ func (k *CodeDbRepository) CallGetAllObjects(keyName string) ([]string, error) {
 
 }
 
+//CallGetAllObjectsFilter is to get all objects by keyName which is indexname by Filter
+func (k *MultindexDB) CallGetAllObjectsFilter(keyName string) ([]string, error) {
+	var objectValue = make([]string, 0, 500)
+	var err error
+	k.db.View(func(tx *buntdb.Tx) error {
+		err = tx.Ascend(keyName, func(key, value string) bool {
+			objectValue = append(objectValue, value)
+			return true
+		})
+		return err
+	})
+	var accountRtn = []string{}
+	for _, object := range objectValue {
+		if strings.Contains(object, "account_name") {
+			accountRtn = append(accountRtn, object)
+		}
+	}
+
+	return accountRtn, nil
+}
+
 //CallGetObjectByIndex is to get object by one indexName
-func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
+func (k *MultindexDB) CallGetObjectByIndex(objectName string, indexName string, indexValue string) (string, error) {
 	var objectValue string
 
 	log.Info(`{` + indexName + ":" + indexValue + `}`)
@@ -96,17 +118,36 @@ func (k *CodeDbRepository) CallGetObjectByIndex(objectName string, indexName str
 }
 
 //CallGetAllObjectsSortByIndex is to get all objects by sort indexName
-func (k *CodeDbRepository) CallGetAllObjectsSortByIndex(indexName string) ([]string, error) {
+func (k *MultindexDB) CallGetAllObjectsSortByIndex(indexName string) ([]string, error) {
 	var objectValue = make([]string, 0, 500)
 	var tag string
 	var err error
 
 	err = k.db.View(func(tx *buntdb.Tx) error {
-		return tx.Ascend(indexName, func(key, value string) bool {
+		return tx.Descend(indexName, func(key, value string) bool {
 			tag = value
 			objectValue = append(objectValue, tag)
 			return true
 		})
 	})
+	return objectValue, err
+}
+
+//CallGetObjectsWithinRangeByIndex is to get all objects by sort indexName
+func (k *MultindexDB) CallGetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greaterThan string) ([]string, error) {
+	var objectValue = make([]string, 0, 500)
+	var tag string
+	var err error
+
+	log.Debugf("ROLE index %v, lessOrEqual %v, greaterThan %v", indexName, lessOrEqual, greaterThan)
+
+	err = k.db.View(func(tx *buntdb.Tx) error {
+		return tx.DescendRange(indexName, `{"`+indexName+`":`+lessOrEqual+`}`, `{"`+indexName+`":`+greaterThan+`}`, func(key, value string) bool {
+			tag = value
+			objectValue = append(objectValue, tag)
+			return true
+		})
+	})
+	log.Debugf("ROLE objectValue", objectValue)
 	return objectValue, err
 }
