@@ -76,18 +76,17 @@ func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName str
 
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
 }
+func (m *MultindexDB) CallClose() {
+	m.db.Close()
+	m.undoList = nil
+	m.session = nil
+	m.subsession = nil
+	m.sessionEx = nil
+	m.revision = uint64(0)
+	m.commitRevision = uint64(0)
+	m.ai = nil
 
-//CallCreatObjectMultiIndex is to create object index
-func (k *CodeDbRepository) CallCreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error {
-
-	if k.tx == nil {
-
-		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson), buntdb.IndexJSON(secKey))
-	}
-
-	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson), buntdb.IndexJSON(secKey))
 }
-
 func (m *MultindexDB) CallGlobalLock() {
 	m.globalSignal.Lock()
 }
