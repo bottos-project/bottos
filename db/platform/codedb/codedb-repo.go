@@ -27,7 +27,6 @@ package codedb
 
 import (
 	"errors"
-	"fmt"
         "sync"
 
 	log "github.com/cihub/seelog"
@@ -89,48 +88,18 @@ func (k *CodeDbRepository) CallCreatObjectMultiIndex(objectName string, indexNam
 	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson), buntdb.IndexJSON(secKey))
 }
 
-//CallSetObject is to set object
-func (k *CodeDbRepository) CallSetObject(objectName string, key string, objectValue string) error {
-	strValue := fmt.Sprintf("%v", objectValue)
-	if k.tx == nil {
-		return k.db.Update(func(tx *buntdb.Tx) error {
-
-			_, _, err := tx.Set(objectName+key, strValue, nil)
-			return err
-		})
-	}
-	_, _, err := k.tx.Set(objectName+key, strValue, nil)
-	return err
+func (m *MultindexDB) CallGlobalLock() {
+	m.globalSignal.Lock()
 }
 
-//CallDeleteObject is to delete object
-func (k *CodeDbRepository) CallDeleteObject(objectName string, key string) (string, error) {
-	var objectValue string
-	var err error
-
-	k.db.Update(func(tx *buntdb.Tx) error {
-		objectValue, err = tx.Delete(objectName + key)
-		return err
-	})
-
-	return objectValue, err
-
+func (m *MultindexDB) CallGlobalUnLock() {
+	m.globalSignal.Unlock()
 }
 
-//CallCommit is to call commit
-func (k *CodeDbRepository) CallCommit() error {
-	if k.tx == nil {
-		log.Info("tx is not start undo session")
-		return errors.New("tx is not start undo session")
-	}
-	return k.tx.Commit()
+func (m *MultindexDB) CallLock() {
+	m.signal.Lock()
 }
 
-//CallRollback is to call rollback
-func (k *CodeDbRepository) CallRollback() error {
-	if k.tx == nil {
-		log.Info("tx is not start undo session")
-		return errors.New("tx is not start undo session")
-	}
-	return k.tx.Rollback()
+func (m *MultindexDB) CallUnLock() {
+	m.signal.Unlock()
 }
