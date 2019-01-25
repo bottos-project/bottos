@@ -28,15 +28,18 @@ package producer
 import (
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/signature"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/version"
 	log "github.com/cihub/seelog"
 )
 
 //Reporter is the producer
 type Reporter struct {
+	version  uint32
 	core     chain.BlockChainInterface
 	roleIntf role.RoleInterface
 	state    ReportState
@@ -50,7 +53,7 @@ type ReporterRepo interface {
 
 //New is to create new reporter
 func New(b chain.BlockChainInterface, roleIntf role.RoleInterface, protocolInterface context.ProtocolInterface) ReporterRepo {
-	stat := ReportState{0, "", "", false, 0, false, protocolInterface}
+	stat := ReportState{0, "", "", false, 0, protocolInterface}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 
@@ -84,5 +87,13 @@ func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*typ
 		}
 		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
 	}
+	}
+
+	signature, err := signature.SignByDelegate(block.Hash().Bytes(), p.state.PubKey)
+	if err != nil {
+		log.Errorf("PRODUCER SignByDelegate failed %v,%x,%x", err, block.Hash().Bytes(), p.state.PubKey)
+		return nil, err
+	}
+	block.Header.DelegateSign = signature
 	return block, nil
 }
