@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -100,7 +100,7 @@ const (
 
 var (
 	aaa = map[ErrCode]string{
-		ErrTrxPendingNumLimit:     "push trx: " + "check Pending pool max num error",
+		ErrTrxPendingNumLimit:     "push trx: " + "trx pool busy",
 		ErrTrxSignError:           "push trx: " + "check signature error",
 		ErrTrxAccountError:        "push trx: " + "check account valid error",
 		ErrTrxLifeTimeError:       "push trx: " + "check life time error",
