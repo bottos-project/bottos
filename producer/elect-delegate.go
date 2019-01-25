@@ -27,9 +27,10 @@ package producer
 
 import (
 	"errors"
-	log "github.com/cihub/seelog"
 	"math/rand"
 	"reflect"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
@@ -42,15 +43,23 @@ func StringSliceReflectEqual(a, b []string) bool {
 
 //ShuffleEelectCandidateList is to shuffle the candidates in one round
 func (r *Reporter) ShuffleEelectCandidateList(block types.Block) ([]string, error) {
-	newSchedule := r.roleIntf.ElectNextTermDelegates(&block, true)
+	var newSchedule []string
+	if r.roleIntf.IsTransitPeriod(block.Header.Number) == true {
+		newSchedule = r.roleIntf.ElectTransitPeriodDelegates(&block, false)
+
+	} else {
+		newSchedule = r.roleIntf.ElectNextTermDelegates(&block, false)
+
+	}
 	currentState, err := r.roleIntf.GetCoreState()
 	if err != nil {
+		log.Errorf("PRODUCER GetCoreState failed %v", err)
 		return nil, err
 	}
 	changes := common.Filter(currentState.CurrentDelegates, newSchedule)
 	equal := reflect.DeepEqual(block.Header.DelegateChanges, changes)
 	if equal == false {
-		log.Info("invalid block changes")
+		log.Errorf("PRODUCER invalid block changes %v, %v", block.Header.DelegateChanges, changes)
 		return nil, errors.New("Unexpected round changes in new block header")
 	}
 
