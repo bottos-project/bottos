@@ -1,4 +1,4 @@
-//it under the terms of the GNU General Public License as published by
+﻿//it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 
@@ -33,6 +33,9 @@ import (
 	"github.com/bottos-project/bottos/role"
 	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
 	log "github.com/cihub/seelog"
+
+	"github.com/bottos-project/bottos/vm/duktape"
+	"github.com/bottos-project/bottos/common/vm"
 )
 
 // TrxApplyService is to define a service for apply a transaction
@@ -49,6 +52,8 @@ func CreateTrxApplyService(roleIntf role.RoleInterface, nc contract.NativeContra
 	once.Do(func() {
 		trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf, ncIntf: nc}
 	})
+
+	duktape.InitDuktapeVm(roleIntf)
 
 	return trxApplyServiceInst
 }
@@ -143,7 +148,7 @@ func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction)
 	result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
 
 	if false == result {
-		log.Errorf("process trx error, trx: %x", trx.Hash())
+		log.Errorf("process trx error: %v trx: %x", bottosError, trx.Hash())
 		return false, bottosError, nil
 	}
 
@@ -178,6 +183,35 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 		return false, bottoserr, nil
 
 	}
+
+
+	account, _ := trxApplyService.roleIntf.GetAccount(trx.Contract)
+	if (vm.VmTypeJS == vm.VmType(account.VMType)) {
+
+		exeErr, trxList := duktape.Process(trx.Contract, account.ContractCode, trx.Method, trx.Param, trx)
+
+		if nil != exeErr {
+			log.Error("process trx failed, error: ", exeErr)
+			return false, bottosErr.ErrTrxContractHanldeError, nil
+		}
+
+		for i, subTrx:= range trxList {
+			log.Infof("go in trx apply sub trx:slice[%d] = %v", i, subTrx)
+
+			result, bottosErr, subDerivedTrx := trxApplyService.ProcessTransaction(subTrx, deepLimit+1)
+			if false == result {
+				return false, bottosErr, nil
+			}
+
+			handleTrx := &types.DerivedTransaction{
+				Transaction: subTrx,
+				DerivedTrx:  subDerivedTrx,
+			}
+			derivedTrx = append(derivedTrx, handleTrx)
+		}
+
+		return true, bottosErr.ErrNoError ,derivedTrx
+	} else {	
 	// else branch
 	trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
 	if nil != exeErr {
@@ -208,4 +242,46 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 	}
 	return true, bottosErr.ErrNoError, derivedTrx
 
+}
+
+func (trxApplyService *TrxApplyService) AddTrxErrorCode(trxHash common.Hash, errCode bottosErr.ErrCode) {
+
+	trxApplyService.mu.Lock()
+	defer trxApplyService.mu.Unlock()
+
+	var nextTrxErrorCodeIndex = (trxApplyService.curTrxErrorCodeIndex + 1)%config.DEFAULT_MAX_TRX_ERROR_CODE_NUM
+	delete(trxApplyService.trxHashErrorMap, trxApplyService.trxHashErrorList[nextTrxErrorCodeIndex])
+	trxApplyService.trxHashErrorMap[trxHash] = errCode
+
+	trxApplyService.trxHashErrorList[nextTrxErrorCodeIndex] = trxHash	
+
+	trxApplyService.curTrxErrorCodeIndex = nextTrxErrorCodeIndex
+}
+
+
+func (trxApplyService *TrxApplyService) GetTrxErrorCode(trxHash common.Hash) bottosErr.ErrCode {
+
+	trxApplyService.mu.Lock()
+	defer trxApplyService.mu.Unlock()
+
+	errCode, ok := trxApplyService.trxHashErrorMap[trxHash]
+	if ok { 
+		return errCode
+	}else {
+		return bottosErr.ErrNoError
+	}
+}
+
+
+
+func (trxApplyService *TrxApplyService) IsTrxInPendingPool(trxHash common.Hash) bool {
+	TrxPoolInst.mu.Lock()
+	defer TrxPoolInst.mu.Unlock()	
+
+	_, ok := TrxPoolInst.pending[trxHash]
+	if ok { 
+		return true
+	}else {
+		return false
+	}
 }
