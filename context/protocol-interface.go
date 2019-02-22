@@ -43,4 +43,5 @@ type ProtocolInstance interface {
 
 type ProtocolInterface interface {
 	GetBlockSyncState() bool
+	GetPeerInfo()(uint64,[]*PeersInfo)
 }
