@@ -25,6 +25,8 @@
 
 package errors
 
+import "strconv"
+
 // ErrCode define the type of error
 type ErrCode uint32
 
@@ -136,5 +138,13 @@ var (
 
 // GetCodeString get code string
 func GetCodeString(errorCode ErrCode) string {
+	if (ContractExecStart == errorCode&0xFF0000) {
+		if (0 == errorCode&0xf000) {
+			return aaa[ContractExecStart] + strconv.Itoa(int(errorCode&0xfff))
+		} else {
 	return aaa[errorCode]
+}
+	} else {
+		return aaa[errorCode]
+	}
 }
