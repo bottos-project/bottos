@@ -26,10 +26,11 @@
 package contract
 
 import (
-	"fmt"
 		"math/big"
-
+	"fmt"
 	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/vm"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/role"
@@ -45,6 +46,13 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	
 	NewaccountName   := newaccount["name"].(string)
 	NewaccountPubKey := newaccount["pubkey"].(string)
+
+	if len(NewaccountPubKey) != config.PUBKEY_LEN {
+
+		return berr.ErrAccountPubkeyLenIllegal
+	}
+
+	//log.Errorf("test new account %s, len is %d, stand len is %d\n", NewaccountPubKey, len(NewaccountPubKey), config.PUBKEY_LEN)
 
 	//check account
 	cerr := nc.checkAccountName(NewaccountName)
