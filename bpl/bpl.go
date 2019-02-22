@@ -27,7 +27,17 @@ package bpl
 
 import (
 	"bytes"
+	"reflect"
 )
+
+//ignore field rule, params:field, index of field in struct, cur struct value(e.g. Header), top struct value(e.g. Block)
+type IgnoreRule func(reflect.StructField, int, interface{}, interface{}) bool
+
+var ignoreRuleMap map[string]IgnoreRule = make(map[string]IgnoreRule)
+
+func SetIgnoreRule(structName string, rule IgnoreRule) {
+	ignoreRuleMap[structName] = rule
+}
 
 //Marshal is to serialize the message
 func Marshal(v interface{}) ([]byte, error) {

@@ -93,7 +93,7 @@ func UnpackBool(reader io.Reader) (v bool, err error) {
 			return false, nil
 		}
 
-		return false, errors.New("msgpack: unpack bool fail")
+		return false, errors.New("bpl: unpack bool fail")
 	}
 
 	return false, err
@@ -187,7 +187,7 @@ func UnpackArraySize(reader io.Reader) (size uint16, err error) {
 
 	header := uint16(c)
 	if header != ARRAY16 {
-		return 0, fmt.Errorf("Not Array 16")
+		return 0, fmt.Errorf("bpl: not array 16")
 	}
 
 	size, _, e = ReadUint16(reader)
