@@ -35,7 +35,10 @@ import (
 type PushTrxReq struct {
 	Trx *types.Transaction
 }
-
+//PushTrxForP2PReq trx request info
+type PushTrxForP2PReq struct {
+	P2PTrx *types.P2PTransaction
+}
 //QueryTrxReq the key of trx query
 type QueryTrxReq struct {
 	TrxHash common.Hash
@@ -44,6 +47,12 @@ type QueryTrxReq struct {
 //QueryTrxResp the response of trx query
 type QueryTrxResp struct {
 	Trx   *types.Transaction
+	Error error
+}
+
+//QueryBlockTrxResp the response of trx query
+type QueryBlockTrxResp struct {
+	Trx   *types.BlockTransaction
 	Error error
 }
 
@@ -65,6 +74,7 @@ type QueryChainInfoReq struct {
 
 //QueryChainInfoResp the response of chain info query
 type QueryChainInfoResp struct {
+	HeadBlockVersion      uint32
 	HeadBlockNum          uint64
 	LastConsensusBlockNum uint64
 	HeadBlockHash         common.Hash
