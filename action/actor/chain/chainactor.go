@@ -27,13 +27,13 @@ package chainactor
 
 import (
 	"fmt"
-
 	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
 )
 
@@ -83,17 +83,17 @@ func handleSystemMsg(context actor.Context) bool {
 
 	switch context.Message().(type) {
 	case *actor.Started:
-		log.Info("BlockActor received started msg")
+		log.Info("ChainActor received started msg")
 	case *actor.Stopping:
-		log.Info("BlockActor received stopping msg")
+		log.Error("ChainActor received stopping msg")
 	case *actor.Restart:
-		log.Info("BlockActor received restart msg")
+		log.Error("ChainActor received restart msg")
 	case *actor.Restarting:
-		log.Info("BlockActor received restarting msg")
+		log.Error("ChainActor received restarting msg")
 	case *actor.Stop:
-		log.Info("BlockActor received Stop msg")
+		log.Error("ChainActor received Stop msg")
 	case *actor.Stopped:
-		log.Info("BlockActor received Stopped msg")
+		log.Error("ChainActor received Stopped msg")
 	default:
 		return false
 	}
@@ -120,13 +120,15 @@ func (c *ChainActor) Receive(context actor.Context) {
 	case *message.QueryChainInfoReq:
 		c.HandleQueryChainInfoReq(context, msg)
 	default:
-		log.Error("BlockActor received Unknown msg")
+		log.Error("ChainActor received Unknown msg")
 	}
 }
 
 //HandleNewProducedBlock new block msg
 func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
 	errcode := actorEnv.Chain.InsertBlock(req.Block)
+	log.Errorf("Insert New Produced Block, errorcode:%v, number:%v, time:%v, delegate:%v, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+		errcode, req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
 			Hash:  req.Block.Hash(),
@@ -134,19 +136,21 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
-	if errcode == chain.InsertBlockSuccess {
-		r := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+	if errcode == berr.ErrNoError {
+		r := &message.RemovePendingBlockTrxsReq{Trxs: req.Block.BlockTransactions}
 		trxPoolActorPid.Tell(r)
 
-		log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", req.Block.GetNumber(), len(req.Block.Transactions), req.Block.Header.Delegate, req.Block.Hash())
 		BroadCastBlock(req.Block)
+		log.Infof("Broadcast block: number:%v, time:%v, delegate:%s, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+			req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	}
 }
 
 //HandleReceiveBlock receive block
 func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	errcode := actorEnv.Chain.InsertBlock(req.Block)
-
+	log.Errorf("InsertBlock, errorcode:%v, number:%v, time:%v, delegate:%v, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+		errcode, req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	if ctx.Sender() != nil {
 		resp := &message.ReceiveBlockResp{
 			BlockNum: req.Block.GetNumber(),
@@ -155,17 +159,17 @@ func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveB
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 
-	if errcode == chain.InsertBlockSuccess {
-		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+	if errcode == berr.ErrNoError {
+		req := &message.RemovePendingBlockTrxsReq{Trxs: req.Block.BlockTransactions}
 		trxPoolActorPid.Tell(req)
 	}
 }
 
 //HandleQueryTrxReq query trx
 func (c *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
-	tx := actorEnv.TxStore.GetTransaction(req.TrxHash)
+	tx := actorEnv.Chain.GetTransaction(req.TrxHash)
 	if ctx.Sender() != nil {
-		resp := &message.QueryTrxResp{}
+		resp := &message.QueryBlockTrxResp{}
 		if tx == nil {
 			resp.Error = log.Errorf("Transaction not found")
 		} else {
