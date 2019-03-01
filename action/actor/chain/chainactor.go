@@ -200,6 +200,7 @@ func (c *ChainActor) HandleQueryBlockReq(ctx actor.Context, req *message.QueryBl
 func (c *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.QueryChainInfoReq) {
 	if ctx.Sender() != nil {
 		resp := &message.QueryChainInfoResp{}
+		resp.HeadBlockVersion = 1
 		resp.HeadBlockNum = actorEnv.Chain.HeadBlockNum()
 		resp.HeadBlockHash = actorEnv.Chain.HeadBlockHash()
 		resp.HeadBlockTime = actorEnv.Chain.HeadBlockTime()
