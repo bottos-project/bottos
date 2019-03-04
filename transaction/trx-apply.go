@@ -42,6 +42,12 @@ import (
 type TrxApplyService struct {
 	roleIntf   role.RoleInterface
 	ncIntf     contract.NativeContractInterface
+
+	trxHashErrorList     [config.DEFAULT_MAX_TRX_ERROR_CODE_NUM]common.Hash
+	curTrxErrorCodeIndex uint64
+	trxHashErrorMap      map[common.Hash]bottosErr.ErrCode
+
+	mu sync.RWMutex
 }
 
 var trxApplyServiceInst *TrxApplyService
@@ -50,11 +56,17 @@ var once sync.Once
 // CreateTrxApplyService is to new a TrxApplyService
 func CreateTrxApplyService(roleIntf role.RoleInterface, nc contract.NativeContractInterface) *TrxApplyService {
 	once.Do(func() {
-		trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf, ncIntf: nc}
+		trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf, ncIntf: nc, curTrxErrorCodeIndex: 0, trxHashErrorMap: make(map[common.Hash]bottosErr.ErrCode)}
 	})
 
 	duktape.InitDuktapeVm(roleIntf)
 
+	return trxApplyServiceInst
+}
+
+func CreateTempTrxApplyService(roleIntf role.RoleInterface, nc contract.NativeContractInterface) *TrxApplyService {
+	trxApplyServiceInst = &TrxApplyService{roleIntf: roleIntf, ncIntf: nc, curTrxErrorCodeIndex: 0, trxHashErrorMap: make(map[common.Hash]bottosErr.ErrCode)}
+	duktape.InitDuktapeVm(roleIntf)
 	return trxApplyServiceInst
 }
 
@@ -284,4 +296,64 @@ func (trxApplyService *TrxApplyService) IsTrxInPendingPool(trxHash common.Hash) 
 	}else {
 		return false
 	}
+}
+
+//GetAvailableSpace
+func (trxApplyService *TrxApplyService) GetAvailableSpace(acc string) (Limit, Limit, error) {
+	/*cs, _ := trxApplyService.roleIntf.GetChainState()
+	now := cs.LastBlockNum + 1
+
+	var limit Limit
+	ufsl, err := GetUserFreeSpaceLimit(trxApplyService.roleIntf, acc, now)
+	if err != nil {
+		log.Errorf("GetUserFreeSpaceLimit error:%v\n", err)
+		return limit, limit, err
+	}
+	log.Infof("Account:%v, now:%v, userFreeSpaceLimit:%+v", acc, now, ufsl)
+
+	usl, err := GetUserSpaceLimit(trxApplyService.roleIntf, acc, now)
+	if err != nil {
+		log.Errorf("GetUserFreeSpaceLimit error:%v\n", err)
+		return limit, limit, err
+	}
+	log.Infof("Account:%v, now:%v, userSpaceLimit:%+v", acc, now, usl)
+
+	return ufsl, usl, nil*/
+	resService := CreateResProcessorService(trxApplyService.roleIntf)
+	f, err := checkMinBalance(resService, acc)
+	if err != nil {
+		log.Warnf("RESOURCE:checkMinBalance failed:%v", err)
+		//return limit, limit, err
+	}
+	return MaxAvailableSpace(CreateResProcessorService(trxApplyService.roleIntf), acc, f)
+}
+
+//GetAvailableTime
+func (trxApplyService *TrxApplyService) GetAvailableTime(acc string) (Limit, Limit, error) {
+	/*	cs, _ := trxApplyService.roleIntf.GetChainState()
+	now := cs.LastBlockNum + 1
+
+	var limit Limit
+	ufsl, err := GetUserFreeTimeLimit(trxApplyService.roleIntf, acc, now)
+	if err != nil {
+		log.Errorf("GetUserFreeTimeLimit error:%v\n", err)
+		return limit, limit, err
+	}
+	log.Infof("Account:%v, now:%v, userFreeTimeLimit:%+v", acc, now, ufsl)
+
+	usl, err := GetUserTimeLimit(trxApplyService.roleIntf, acc, now)
+	if err != nil {
+		log.Errorf("GetUserTimeLimit error:%v\n", err)
+		return limit, limit, err
+	}
+		log.Infof("Account:%v, now:%v, userTimeLimit:%+v", acc, now, usl)*/
+
+	//return ufsl, usl, nil
+	resService := CreateResProcessorService(trxApplyService.roleIntf)
+	f, err := checkMinBalance(resService, acc)
+	if err != nil {
+		log.Warnf("RESOURCE:checkMinBalance failed:%v", err)
+		//return limit, limit, err
+	}
+	return MaxAvailableTime(resService, acc, f)
 }
