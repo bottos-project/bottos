@@ -14,6 +14,7 @@ const (
 	// Transaction
 	SEND_TRANSACTION = "/v1/transaction/send"
 	GET_TRANSACTION  = "/v1/transaction/get"
+	GET_TRANSACTION_STATUS = "/v1/transaction/status"
 
 	//Account
 	GET_ACCOUNT = "/v1/account/info"

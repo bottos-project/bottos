@@ -431,9 +431,140 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	resp.Result = convertIntTrxToApiTrxInter(response.Trx, roleIntf)
 
 	resp.Errcode = uint32(bottosErr.ErrNoError)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		panic(err)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	encoderRestResponse(w, resp)
+}
+
+type TransactionStatus struct {
+	Status string `json:"status"`
+}
+
+func GetTransactionStatus(w http.ResponseWriter, r *http.Request) {
+	var req *reqStruct
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
 	}
+
+	if resp := checkNil(req, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	tx := actorenv.Chain.GetCommittedTransaction(common.HexToHash(req.TrxHash))
+	if tx != nil {
+		resp.Errcode = uint32(bottosErr.ErrNoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+		resp.Result = &TransactionStatus{Status: "committed"}
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	tx = actorenv.Chain.GetTransaction(common.HexToHash(req.TrxHash))
+	if tx != nil {
+		resp.Errcode = uint32(bottosErr.RestErrTxPacked)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTxPacked)
+		resp.Result = &TransactionStatus{Status: "packed"}
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	trxApply := transaction.NewTrxApplyService()
+	errCode := trxApply.GetTrxErrorCode(common.HexToHash(req.TrxHash))
+	if bottosErr.ErrNoError != errCode {
+
+		resp.Errcode = uint32(bottosErr.ErrNoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+		resp.Result = &TransactionStatus{Status: bottosErr.GetCodeString(errCode)}
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	isInPool := trxApply.IsTrxInPendingPool(common.HexToHash(req.TrxHash))
+	if true == isInPool {
+		resp.Errcode = uint32(bottosErr.RestErrTxPending)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTxPending)
+		resp.Result = &TransactionStatus{Status: "pending"}
+		encoderRestResponse(w, resp)
+		return
+	} else {
+		resp.Errcode = uint32(bottosErr.RestErrTxNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTxNotFound)
+		resp.Result = &TransactionStatus{Status: "not found"}
+		encoderRestResponse(w, resp)
+		return
+	}
+}
+
+//GetAccountBrief query account public key
+func GetAccountBrief(w http.ResponseWriter, r *http.Request) {
+	var msgReq api.GetAccountBriefRequest
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if resp := checkNil(msgReq, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+	name := msgReq.AccountName
+
+	result := &api.GetAccountBriefResponse_Result{}
+
+	accountType, _ := common.AnalyzeName(name)
+	if common.NameTypeUnknown == accountType {
+		resp.Errcode = uint32(bottosErr.ErrApiAccountNameIllegal)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNameIllegal)
+		encoderRestResponse(w, resp)
+		return
+	} else if common.NameTypeAccount == accountType {
+		account, err := roleIntf.GetAccount(name)
+		if err != nil {
+			resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+			resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+
+			encoderRestResponse(w, resp)
+			return
+		}
+		if resp := checkNil(account, 1); resp.Errcode != 0 {
+			encoderRestResponse(w, resp)
+			return
+		}
+
+		balance, err := roleIntf.GetBalance(name)
+		if err != nil {
+			log.Errorf("DB:GetBalance failed: %v", err)
+
+			resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
+			resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+			encoderRestResponse(w, resp)
+			return
+		}
+
+		result.AccountName = name
+		result.Pubkey = common.BytesToHex(account.PublicKey)
+		result.Balance = balance.Balance.String()
+	}
+
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
 }
 
 //GetAccount query account info
