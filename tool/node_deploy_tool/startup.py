@@ -31,6 +31,9 @@ GOPATH = '/home/bottos/go'                                  #
 GOROOT = '/usr/lib/go'					    #	
 #############################################################
 
+def get_all_install_options():
+    for item in option_list:
+        yield item
 
 def predo_cmd(cmd, *optional):
     stderr = ''
