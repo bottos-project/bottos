@@ -39,7 +39,7 @@ import (
 type ReportState struct {
 	ScheduledTime     uint64
 	ScheduledReporter string
-	PrivateKey        string
+	PubKey            string
 	IsReporting       bool
 	CheckFlag         uint32
 	ReportEnable      bool
@@ -152,7 +152,7 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 	}
 	r.state.ScheduledTime = scheduledTime
 	r.state.ScheduledReporter = accountName
-	r.state.PrivateKey = delegate.ReportKey
+	r.state.PubKey = delegate.ReportKey
 
 	return true
 }

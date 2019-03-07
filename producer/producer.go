@@ -28,15 +28,18 @@ package producer
 import (
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/signature"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/version"
 	log "github.com/cihub/seelog"
 )
 
 //Reporter is the producer
 type Reporter struct {
+	version  uint32
 	core     chain.BlockChainInterface
 	roleIntf role.RoleInterface
 	state    ReportState
@@ -50,7 +53,7 @@ type ReporterRepo interface {
 
 //New is to create new reporter
 func New(b chain.BlockChainInterface, roleIntf role.RoleInterface, protocolInterface context.ProtocolInterface) ReporterRepo {
-	stat := ReportState{0, "", "", false, 0, false, protocolInterface}
+	stat := ReportState{0, "", "", false, 0, protocolInterface}
 	return &Reporter{core: b, roleIntf: roleIntf, state: stat}
 }
 
@@ -60,7 +63,7 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 	accountName := p.state.ScheduledReporter
 	block, err := p.reportBlock(p.state.ScheduledTime, accountName, trxs)
 	if err != nil {
-		return nil // errors.New("report Block failed")
+		return nil
 	}
 
 	return block
@@ -72,17 +75,32 @@ func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*typ
 	head.Timestamp = blockTime
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
-	block.Header.DelegateSign = block.Sign("123").Bytes()
 
 	// If this block is last in a round, calculate the schedule for the new round
 	if block.Header.Number%uint64(config.BLOCKS_PER_ROUND) == 0 {
-		newSchedule := p.roleIntf.ElectNextTermDelegates(block, false)
+			var newSchedule []string
+			if p.roleIntf.IsTransitPeriod(block.Header.Number) == true {
+				newSchedule = p.roleIntf.ElectTransitPeriodDelegates(block, false)
+
+			} else {
+				newSchedule = p.roleIntf.ElectNextTermDelegates(block, false)
+
+			}
 		log.Info("next term delgates", newSchedule)
 		currentState, err := p.roleIntf.GetCoreState()
 		if err != nil {
+				log.Errorf("PRODUCER GetCoreState failed %v", err)
 			return nil, err
 		}
 		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
 	}
+	}
+
+	signature, err := signature.SignByDelegate(block.Hash().Bytes(), p.state.PubKey)
+	if err != nil {
+		log.Errorf("PRODUCER SignByDelegate failed %v,%x,%x", err, block.Hash().Bytes(), p.state.PubKey)
+		return nil, err
+	}
+	block.Header.DelegateSign = signature
 	return block, nil
 }

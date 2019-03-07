@@ -27,9 +27,8 @@ package role
 
 import (
 	"encoding/json"
-
-	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -41,16 +40,14 @@ const (
 type Account struct {
 	AccountName  string      `json:"account_name"`
 	PublicKey    []byte      `json:"public_key"`
-	VMType       byte        `json:"vm_type"`
-	VMVersion    byte        `json:"vm_version"`
-	CodeVersion  common.Hash `json:"code_version"`
 	CreateTime   uint64      `json:"create_date"`
-	ContractCode []byte      `json:"contract_code"`
-	ContractAbi  []byte      `json:"abi"`
+	GsPermission bool                                        `json:"gs_permission"`
+	ContractName []string 									 `json:"contract_name"`
 }
 
 // CreateAccountRole is create account role
 func CreateAccountRole(ldb *db.DBService) error {
+	ldb.AddObject(AccountObjectName)
 	return nil
 }
 
@@ -63,6 +60,7 @@ func SetAccountRole(ldb *db.DBService, accountName string, value *Account) error
 	key := accountNameToKey(accountName)
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Errorf("DB Marshal failed %v,%v", accountName, err)
 		return err
 	}
 	return ldb.SetObject(AccountObjectName, key, string(jsonvalue))
@@ -79,7 +77,9 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	res := &Account{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Errorf("ROLE Unmarshal failed %v,%v", accountName, err)
 		return nil, err
 	}
+
 	return res, nil
 }

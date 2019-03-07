@@ -1,4 +1,4 @@
-//it under the terms of the GNU General Public License as published by
+﻿//it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 
@@ -21,11 +21,14 @@
 package transaction
 
 import (
+	"github.com/bottos-project/bottos/common"
+	bottosErr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
 )
 
 type trxApplyApi interface {
-	ApplyTransaction(trx *types.Transaction)
+	ExecuteTransaction(trx *types.Transaction)
+	GetTrxErrorCode(trxHash common.Hash) bottosErr.ErrCode
 }
 
 // NewTrxApplyService is to retrieve the transaction service

@@ -1,0 +1,6 @@
+{
+    "account":{"type":"string"},
+    "age":{"type":"uint32"},
+    "account2":{"type":"string"},
+    "age2":{"type":"uint32"}
+}

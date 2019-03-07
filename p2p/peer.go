@@ -46,6 +46,48 @@ type PeerInfo struct {
 	Port string
 	//ChainId peer work chain id
 	ChainId string
+	//Signature peer auth
+	Signature []byte
+	//Version
+	Version uint32
+}
+
+// BasicPeerInfo define struct for PeerInfo signature
+type BasicPeerInfo struct {
+	ChainId string
+}
+
+// Hash BasicPeerInfo hash
+func (pi *BasicPeerInfo) Hash() common.Hash {
+	data, _ := bpl.Marshal(pi)
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
+	return hash
+}
+
+// Hash PeerInfo hash
+func (pi *PeerInfo) Hash() common.Hash {
+	data, _ := bpl.Marshal(pi)
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
+	return hash
+}
+
+// Sign sign a PeerInfo with privkey
+func (pi *PeerInfo) Sign(bp BasicPeerInfo, privkey []byte) ([]byte, error) {
+	data, err := bpl.Marshal(bp)
+
+	if nil != err {
+		return []byte{}, err
+	}
+
+	h := sha256.New()
+	h.Write([]byte(hex.EncodeToString(data)))
+	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
+	hash := h.Sum(nil)
+	signdata, err := crypto.Sign(hash, privkey)
+
+	return signdata, err
 }
 
 //Equal peer's info compare

@@ -26,10 +26,11 @@
 package contract
 
 import (
-	"fmt"
 		"math/big"
-
+	"fmt"
 	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/vm"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/role"
@@ -45,6 +46,13 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	
 	NewaccountName   := newaccount["name"].(string)
 	NewaccountPubKey := newaccount["pubkey"].(string)
+
+	if len(NewaccountPubKey) != config.PUBKEY_LEN {
+
+		return berr.ErrAccountPubkeyLenIllegal
+	}
+
+	//log.Errorf("test new account %s, len is %d, stand len is %d\n", NewaccountPubKey, len(NewaccountPubKey), config.PUBKEY_LEN)
 
 	//check account
 	cerr := nc.checkAccountName(NewaccountName)
@@ -85,6 +93,10 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+func (nc *NativeContract) checkSigner(account string, expected string) bool {
+	return account == expected
+}
+
 func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
@@ -105,6 +117,14 @@ func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	cerr = nc.checkAccount(ctx.RoleIntf, ToWhom)
 	if cerr != berr.ErrNoError {
 		return cerr
+	}
+
+	if FromWhom == ToWhom {
+		return berr.ErrContractTransferToSelf
+	}
+
+	if !nc.checkSigner(FromWhom, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
 	}
 
 	// check funds
@@ -220,13 +240,17 @@ func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if ParamName == ParamSpender {
+		return berr.ErrContractGrantToSelf
+	}
+
 	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
 	// sender must be from
-	if ctx.Trx.Sender != ParamName {
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
 		return berr.ErrContractAccountMismatch
 	}
 
@@ -270,6 +294,10 @@ func (nc *NativeContract) cancelCredit(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
+	}
+
 	_, err := ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
@@ -302,6 +330,10 @@ func (nc *NativeContract) transferFrom(ctx *Context) berr.ErrCode {
 	cerr = nc.checkAccount(ctx.RoleIntf, TransTo)
 	if cerr != berr.ErrNoError {
 		return cerr
+	}
+
+	if TransFrom == TransTo {
+		return berr.ErrContractTransferToSelf
 	}
 
 	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
@@ -377,6 +409,7 @@ func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	
 	ParamContract := param["contract"].(string)
 	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
+	ParamVmType := param["vm_type"].(byte)
 
 	// check account
 	cerr := nc.checkAccount(ctx.RoleIntf, ParamContract)
@@ -393,6 +426,7 @@ func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	codeHash := common.Sha256(ParamContractCode)
 
 	account, _ := ctx.RoleIntf.GetAccount(ParamContract)
+	account.VMType = byte(ParamVmType)
 	account.CodeVersion = codeHash
 	account.ContractCode = make([]byte, len(ParamContractCode))
 	copy(account.ContractCode, ParamContractCode)
@@ -470,7 +504,6 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 		return berr.ErrContractInsufficientFunds
 	}
 	sb, _ := ctx.RoleIntf.GetStakedBalance(ctx.Trx.Sender)
-	oldStakeAmount := sb.StakedBalance
 
 	if err := balance.SafeSub(amount); err != nil {
 		return berr.ErrContractTransferOverflow
@@ -505,10 +538,7 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 			if err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
-			delta := big.NewInt(0)
-			delta.Sub(sb.StakedBalance, oldStakeAmount)
-			delegateVote.UpdateVotes(delta, sd.CurrentTermTime)
-
+			delegateVote.UpdateVotes(amount, sd.CurrentTermTime)
 			if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
@@ -706,6 +736,10 @@ func (nc *NativeContract) unregDelegate(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
+	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
+		return berr.ErrContractAccountMismatch
+	}
+
 	delegate, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
 	if err == nil {
 		// new delegate
@@ -731,7 +765,7 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	voterName := param["voter"].(string)
 	delegateName := param["delegate"].(string)
 
-	if voterName != ctx.Trx.Sender {
+	if !nc.checkSigner(voterName, ctx.Trx.Sender) {
 		return berr.ErrContractAccountMismatch
 	}
 
@@ -749,6 +783,11 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 		return berr.ErrTrxContractHanldeError
 	}
 
+	// staked balance should more than 0
+	if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
+		return berr.ErrContractInsufficientFunds
+	}
+
 	sd, err := ctx.RoleIntf.GetScheduleDelegate()
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
@@ -758,11 +797,6 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 		// vote
 		if errcode := nc.checkAccount(ctx.RoleIntf, delegateName); errcode != berr.ErrNoError {
 			return errcode
-		}
-
-		// staked balance should more than 0
-		if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
-			return berr.ErrContractInsufficientFunds
 		}
 
 		if voter.Delegate != "" {

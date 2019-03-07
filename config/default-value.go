@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -67,7 +67,7 @@ const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 const DEFAULT_MAX_LIFE_TIME uint64 = 10000 //unit: second
 
 // DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 5000
+const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 30000
 
 // DEFAULT_OPTIONDB_NAME define default option db name
 const DEFAULT_OPTIONDB_NAME string = "bottos"

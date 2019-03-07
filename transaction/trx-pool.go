@@ -1,4 +1,4 @@
-//it under the terms of the GNU General Public License as published by
+﻿//it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 
@@ -44,7 +44,7 @@ import (
 )
 
 var (
-	trxExpirationCheckInterval = 2 * time.Second // Time interval for check expiration pending transactions
+	trxExpirationCheckInterval = 60 * time.Second // Time interval for check expiration pending transactions
 )
 
 // TrxPoolInst is local var of TrxPool

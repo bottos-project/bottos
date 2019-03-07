@@ -38,6 +38,8 @@ import (
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
 	log "github.com/cihub/seelog"
+	"encoding/hex"
+		"github.com/bottos-project/crypto-go/crypto"
 	)
 
 //ApiService is actor service
@@ -64,7 +66,6 @@ var trxPreHandleActorPid *actor.PID
 func SetTrxPreHandleActorPid(tpid *actor.PID) {
 	trxPreHandleActorPid = tpid
 }
-
 
 func ConvertApiTrxToIntTrx(trx *api.Transaction) (*types.Transaction, error) {
 	param, err := common.HexToBytes(trx.Param)
@@ -110,12 +111,14 @@ func ConvertIntTrxToApiTrx(trx *types.Transaction) *api.Transaction {
 	return apiTrx
 }
 
-//PushTrx push trx
+//SendTransaction push trx
 func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, resp *api.SendTransactionResponse) error {
 	if trx == nil {
 		//rsp.retCode = ??
 		return nil
 	}
+
+	log.Info("rcv trx, detail: ", trx)
 
 	intTrx, err := ConvertApiTrxToIntTrx(trx)
 	if err != nil {
@@ -126,16 +129,21 @@ func (a *ApiService) SendTransaction(ctx context.Context, trx *api.Transaction, 
 		Trx: intTrx,
 	}
 
-	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	start := common.MeasureStart()
+
+	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 1000*time.Millisecond).Result() // await result
 
 	if nil != err {
+		log.Error("fc ", common.Elapsed(start))
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
-		log.Errorf("trx: %x actor process failed", intTrx.Hash(),)
+		log.Error("trx: %x actor process failed", intTrx.Hash())
 
 		return nil
 	}
+
+	log.Error("succ, elapsed time ", common.Elapsed(start))
 
 	if bottosErr.ErrNoError == handlerErr {
 		resp.Result = &api.SendTransactionResponse_Result{}
@@ -213,17 +221,30 @@ func (a *ApiService) GetBlock(ctx context.Context, req *api.GetBlockRequest, res
 	resp.Result.BlockTime = response.Block.GetTimestamp()
 	resp.Result.TrxMerkleRoot = response.Block.ComputeMerkleRoot().ToHexString()
 	resp.Result.Delegate = string(response.Block.GetDelegate())
-	resp.Result.DelegateSign = response.Block.GetDelegateSign().ToHexString()
+	resp.Result.DelegateSign = common.BytesToHex(response.Block.GetDelegateSign())
 
 	resp.Errcode = 0
 	return nil
 }
 
+var QuerhChainInfoCntReq uint32 = 0
+var QuerhChainInfoCntSuc uint32 = 0
+
 //GetInfo query chain info
 func (a *ApiService) GetInfo(ctx context.Context, req *api.GetInfoRequest, resp *api.GetInfoResponse) error {
+
+	QuerhChainInfoCntReq++
+
+	log.Error("api actor rcv QueryChainInfo Req, cnt ", QuerhChainInfoCntReq)
+
+	/*
+
 	msgReq := &message.QueryChainInfoReq{}
-	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	start := common.MeasureStart()
+	res, err := chainActorPid.RequestFuture(msgReq, 1000*time.Millisecond).Result()
 	if err != nil {
+		log.Error("failed, elapsed time ",common.Elapsed(start) )
+		QuerhChainInfoCntTimeout++
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		return nil
@@ -297,7 +318,7 @@ func (a *ApiService) GetKeyValue(ctx context.Context, req *api.GetKeyValueReques
 	resp.Result.Contract = contract
 	resp.Result.Object = object
 	resp.Result.Key = key
-	resp.Result.Value = common.BytesToHex([]byte(value))
+	resp.Result.Value = value
 	resp.Errcode = 0
 
 	return nil
@@ -306,16 +327,17 @@ func (a *ApiService) GetKeyValue(ctx context.Context, req *api.GetKeyValueReques
 //GetAbi query contract abi info
 func (a *ApiService) GetAbi(ctx context.Context, req *api.GetAbiRequest, resp *api.GetAbiResponse) error {
 	contract := req.Contract
-	account, err := a.env.RoleIntf.GetAccount(contract)
+	contractInfo, err := a.env.RoleIntf.GetContract(contract)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
 		return nil
 	}
 
-	if len(account.ContractAbi) > 0 {
-		resp.Result = string(account.ContractAbi)
+	if len(contractInfo.ContractAbi) > 0 {
+		resp.Result = string(contractInfo.ContractAbi)
 	} else {
+		// TODO
 		return nil
 	}
 
@@ -337,6 +359,174 @@ func (a *ApiService) GetTransferCredit(ctx context.Context, req *api.GetTransfer
 	resp.Result.Name = credit.Name
 	resp.Result.Spender = credit.Spender
 	resp.Result.Limit = credit.Limit.String()
+
+	return nil
+}
+
+func newTransaction(contract string, method string, param []byte) *types.Transaction {
+	trx := &types.Transaction{
+		Sender:   contract,
+		Contract: contract,
+		Method:   method,
+		Param:    param,
+	}
+
+	return trx
+}
+
+//GetAllDelegates get all delegates
+func (a *ApiService) GetAllDelegates(ctx context.Context, req *api.GetAllDelegatesRequest, resp *api.GetAllDelegatesResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GenerateKeyPair query chain info
+func (a *ApiService) GenerateKeyPair(ctx context.Context, req *api.GenerateKeyPairRequest, resp *api.GenerateKeyPairResponse) error {
+	pubkey, seckey := crypto.GenerateKey()
+
+	resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//CreateAccount get all delegates
+func (a *ApiService) CreateAccount(ctx context.Context, req *api.CreateAccountRequest, resp *api.CreateAccountResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//CreateWallet get all delegates
+func (a *ApiService) CreateWallet(ctx context.Context, req *api.CreateWalletRequest, resp *api.CreateWalletResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+//CreateWalletManual get all delegates
+func (a *ApiService) CreateWalletManual(ctx context.Context, req *api.CreateWalletManualRequest, resp *api.CreateWalletManualResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetKeyPair query chain info
+func (a *ApiService) UnlockAccount(ctx context.Context, req *api.UnlockAccountRequest, resp *api.UnlockAccountResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetKeyPair query chain info
+func (a *ApiService) LockAccount(ctx context.Context, req *api.LockAccountRequest, resp *api.LockAccountResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//ListWallet get Wallet List
+func (a *ApiService) ListWallet(ctx context.Context, req *api.ListWalletRequest, resp *api.ListWalletResponse) error {
+	//pubkey, _ := crypto.GenerateKey()
+
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetKeyPair query chain info
+func (a *ApiService) GetKeyPair(ctx context.Context, req *api.GetKeyPairRequest, resp *api.GetKeyPairResponse) error {
+	pubkey, seckey := crypto.GenerateKey()
+
+	resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//SignTransaction query chain info
+func (a *ApiService) SignTransaction(ctx context.Context, req *api.SignTransactionRequest, resp *api.SignTransactionResponse) error {
+	//pubkey, seckey := crypto.GenerateKey()
+	//
+	//resp.Result.PublicKey = hex.EncodeToString(pubkey)
+	//resp.Result.PrivateKey = hex.EncodeToString(seckey)
+	resp.Errcode = 0
+
+	return nil
+}
+
+//SignData query chain info
+func (a *ApiService) SignData(ctx context.Context, req *api.SignDataRequest, resp *api.SignDataResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//SignHash query chain info
+func (a *ApiService) SignHash(ctx context.Context, req *api.SignHashRequest, resp *api.SignHashResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetDelegate query chain info
+func (a *ApiService) GetDelegate(ctx context.Context, req *api.GetDelegateRequest, resp *api.GetDelegateResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetDelegate query chain info
+func (a *ApiService) GetPubKey(ctx context.Context, req *api.GetPubKeyRequest, resp *api.GetPubKeyResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetDelegate query chain info
+func (a *ApiService) GetForecastResBalance(ctx context.Context, req *api.GetForecastResBalanceRequest, resp *api.GetForecastResBalanceResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+//GetPeers query peers
+func (a *ApiService) GetPeers(ctx context.Context, req *api.GetPeersRequest, resp *api.GetPeersResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetAccountBrief query account Brief
+func (a *ApiService) GetAccountBrief(ctx context.Context, req *api.GetAccountBriefRequest, resp *api.GetAccountBriefResponse) error {
+	resp.Errcode = 0
 
 	return nil
 }

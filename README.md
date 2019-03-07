@@ -9,7 +9,9 @@ Bottos blockchain architecture is shown below.
 
 ## Deveplopers Forum
 
-https://gitter.im/bottos-project/bottos
+English: https://gitter.im/bottos-project/bottos
+
+Chinese: http://forum.botfans.org/
 
 ## Develop Doc
 https://www.bottos.org 

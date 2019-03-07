@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -24,6 +24,8 @@
  */
 
 package errors
+
+import "strconv"
 
 // ErrCode define the type of error
 type ErrCode uint32
@@ -100,7 +102,7 @@ const (
 
 var (
 	aaa = map[ErrCode]string{
-		ErrTrxPendingNumLimit:     "push trx: " + "check Pending pool max num error",
+		ErrTrxPendingNumLimit:     "push trx: " + "trx pool busy",
 		ErrTrxSignError:           "push trx: " + "check signature error",
 		ErrTrxAccountError:        "push trx: " + "check account valid error",
 		ErrTrxLifeTimeError:       "push trx: " + "check life time error",
@@ -136,5 +138,13 @@ var (
 
 // GetCodeString get code string
 func GetCodeString(errorCode ErrCode) string {
+	if (ContractExecStart == errorCode&0xFF0000) {
+		if (0 == errorCode&0xf000) {
+			return aaa[ContractExecStart] + strconv.Itoa(int(errorCode&0xfff))
+		} else {
 	return aaa[errorCode]
+}
+	} else {
+		return aaa[errorCode]
+	}
 }

@@ -40,6 +40,7 @@ import (
 	"github.com/bottos-project/bottos/common/safemath"
 	//"github.com/bitly/go-simplejson"
 	TODO "github.com/bottos-project/bottos/restful/handler"
+	"github.com/bottos-project/bottos/common/vm"
 )
 
 
@@ -511,7 +512,7 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", mulrestlt, modrestlt)
   }
 
-func (cli *CLI) deploycode(name string, path string) {
+func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	
 	//chainInfo, err := cli.getChainInfo()
 	infourl := "http://" + ChainAddr + "/v1/block/height"
@@ -530,6 +531,16 @@ func (cli *CLI) deploycode(name string, path string) {
 	f, err := os.Open(path)
 	if err != nil {
 		fmt.Println("Open wasm file error: ", err)
+		return
+	}
+	var fileType vm.VmType
+
+	if fileTypeInput == "wasm" {
+		fileType = vm.VmTypeWasm
+	} else if fileTypeInput == "js" {
+		fileType = vm.VmTypeJS
+	} else {
+		fmt.Println("file type should be wasm or js.")
 		return
 	}
 
@@ -552,7 +563,7 @@ func (cli *CLI) deploycode(name string, path string) {
 	mapstruct := make(map[string]interface{})
 	
         abi.Setmapval(mapstruct, "contract", name)
-        abi.Setmapval(mapstruct, "vm_type", uint8(1))
+        abi.Setmapval(mapstruct, "vm_type", uint8(fileType))
         abi.Setmapval(mapstruct, "vm_version", uint8(1))
 	
 	abi.Setmapval(mapstruct, "contract_code", ContractCodeVal)
@@ -626,7 +637,7 @@ func (cli *CLI) deploycode(name string, path string) {
 
 	pdcp := &PrintDeployCodeParam{}
 	pdcp.Name = name 
-	pdcp.VMType = 1 
+	pdcp.VMType = byte(fileType) 
 	pdcp.VMVersion = 1
 	codeHex := BytesToHex(ContractCodeVal[0:100])
 	pdcp.ContractCode = codeHex + "..."

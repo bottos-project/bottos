@@ -1,4 +1,4 @@
-/*
+﻿/*
 @Time : 2018/8/13 10:15 
 @Author : 星空之钥丶
 @File : main
@@ -162,8 +162,9 @@ func (cli *CLI) BCLIPushTransaction(ctx *cli.Context) error {
 func (cli *CLI) BCLIDeployCode(ctx *cli.Context) error {
 	name := ctx.String("name")
 	code := ctx.String("code")
+	fileType := ctx.String("filetype")
 
-	cli.deploycode(name, code)
+	cli.deploycode(name, code, fileType)
 
 	return nil
 }
@@ -179,12 +180,39 @@ func (cli *CLI) BCLIDeployAbi(ctx *cli.Context) error {
 
 func (cli *CLI) BCLIDeployBoth(ctx *cli.Context) error {
 	name := ctx.String("name")
-	Abi  := ctx.String("abi")
+	Abi := ctx.String("abi")
 	code := ctx.String("code")
-	
-	cli.deploycode(name, code)
+	fileType := ctx.String("filetype")
+	user := ctx.String("user")
 
-	cli.deployabi(name, Abi)
+	if len(name) <= 0 {
+		fmt.Println("Error: Please input the contract name.")
+		return nil
+	}
+
+	if len(Abi) <= 0 {
+		fmt.Println("Error: Please input the contract abi file's path/name.")
+		return nil
+	}
+
+	if len(code) <= 0 {
+		fmt.Println("Error: Please input the contract code file's path/name.")
+		return nil
+	}
+
+	if len(fileType) <= 0 {
+		fmt.Println("Error: Please input file type: wasm or js.")
+		return nil
+	}
+
+	if len(user) <= 0 {
+		fmt.Println("Error: Please input the user name whom deploy the abi and contract.")
+		return nil
+	}
+
+	cli.deploycode(name, code, user, fileType)
+
+	cli.deployabi(name, Abi, user)
 
 	return nil
 }
@@ -511,41 +539,53 @@ func (Cli *CLI) RunNewCLI() {
 			Category: "contract",
 			Subcommands: []cli.Command {
 				{
-					Name: "deploy",
+					Name:  "deploy",
 					Usage: "contract deploy",
-					Flags:[]cli.Flag {
+					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name: "name",
+							Name:  "name",
+							Usage: "the contract name",
 						},
 						cli.StringFlag{
-							Name: "code",
-							Usage:"",
+							Name:  "code",
+							Usage: "the contract's wasm file path ( includes wasm file name )",
 						},
 						cli.StringFlag{
-							Name: "abi",
-							Usage:"",
+							Name:  "filetype",
+							Value: "wasm",
+							Usage: "the contract's file type: wasm or js",
 						},
 						cli.StringFlag{
-							Name: "sign",
-							Usage:"",
+							Name:  "abi",
+							Usage: "the contract's abi file path ( includes abi file name )",
+						},
+						cli.StringFlag{
+							Name:  "user",
+							Usage: "the user account",
 						},
 					},
 					Action: MigrateFlags(Cli.BCLIDeployBoth),
 				},
 				{
-					Name: "deploycode",
+					Name:  "deploycode",
 					Usage: "contract  deploycode",
-					Flags:[]cli.Flag {
+					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name: "name",
+							Name:  "name",
+							Usage: "the contract name",
 						},
 						cli.StringFlag{
-							Name: "code",
-							Usage:"",
+							Name:  "code",
+							Usage: "the contract's wasm file path ( includes wasm file name )",
 						},
 						cli.StringFlag{
-							Name: "sign",
-							Usage:"",
+							Name:  "filetype",
+							Value: "wasm",
+							Usage: "the contract's file type: wasm or js",
+						},
+						cli.StringFlag{
+							Name:  "user",
+							Usage: "the user account",
 						},
 					},
 					Action: MigrateFlags(Cli.BCLIDeployCode),
