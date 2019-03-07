@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -54,6 +54,17 @@ var (
 		Name: "rest-servaddr",
 		Usage: "RESTful API server address",
 	}
+	RestMaxLimit = cli.IntFlag{
+		Name:  "rest_max_limit",
+		Usage: "tps of rest",
+		Value: 1000,
+	}
+	WalletRestMaxLimit = cli.IntFlag{
+		Name:  "wallet_rest_max_limit",
+		Usage: "tps of wallet rest",
+		Value: 10,
+	}
+
 	EnableRPCFlag = cli.BoolFlag{
 		Name: "enable-rpc",
 		Usage: "Enable RPC server",
@@ -78,7 +89,7 @@ var (
 	}
 	DelegateSignkeyFlag = cli.StringFlag{
 		Name: "delegate-signkey",
-		Usage: "Sign key for delegate (<public key>,<private key>)",
+		Usage: "Sign key for delegate ('key:<public key>,<private key>' or 'wallet:<wallet url>')",
 	}
 	DelegateFlag = cli.StringFlag{
 		Name: "delegate",
@@ -122,5 +133,30 @@ var (
 	DebugFlag = cli.BoolFlag{
 		Name: "debug",
 		Usage: "Enable debug mode",
+	}
+	LogMinLevelFlag = cli.StringFlag{
+		Name:  "log-minlevel",
+		Usage: "log minlevel",
+		Value: "error",
+	}
+	LogMaxLevelFlag = cli.StringFlag{
+		Name:  "log-maxlevel",
+		Usage: "log maxlevel",
+		Value: "critical",
+	}
+	LogLevelsFlag = cli.StringFlag{
+		Name:  "log-levels",
+		Usage: "log levels",
+		Value: "debug,info,warn,error,critical",
+	}
+	LogMaxrollsFlag = cli.StringFlag{
+		Name:  "log-maxrolls",
+		Usage: "log maxrolls",
+		Value: "999",
+	}
+	RecoverAtBlockNumFlag = cli.IntFlag{
+		Name:  "recover_at_blocknum",
+		Usage: "recover at blocknum",
+		Value: 0,
 	}
 )
