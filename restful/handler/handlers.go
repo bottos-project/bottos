@@ -395,12 +395,24 @@ func convertIntTrxToApiTrxInter(trx *types.Transaction,r role.RoleInterface) int
 	return apiTrx
 }
 
+//GetTransaction get transaction by Trx hash
 func GetTransaction(w http.ResponseWriter, r *http.Request) {
 	var req *reqStruct
+	var resp comtool.ResponseStruct
+
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		log.Errorf("request error: %s", err)
-		panic(err)
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if resp := checkNil(req, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -408,12 +420,16 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		TrxHash: common.HexToHash(req.TrxHash),
 }
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
-	var resp ResponseStruct
 	if err != nil {
-		resp.Errcode = 1
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
+		log.Errorf("REST:chainActor process failed: %v", err)
+		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
+		encoderRestResponse(w, resp)
+		return
 		}
+
+	if resp := checkNil(res, 1); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
 

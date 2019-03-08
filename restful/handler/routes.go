@@ -17,6 +17,7 @@ const (
 	GET_TRANSACTION_STATUS = "/v1/transaction/status"
 
 	//Account
+	GET_ACCOUNT_BRIEF   = "/v1/account/brief"
 	GET_ACCOUNT = "/v1/account/info"
 	GET_TRANSFER_CREDIT = "/v1/balance/GetTransferCredit"
 
