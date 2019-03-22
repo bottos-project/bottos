@@ -26,121 +26,76 @@
 package common
 
 import (
-	"fmt"
-	"math/big"
+	"regexp"
+	"strings"
+	//log "github.com/cihub/seelog"
 	)
 
 const (
 	// MaxNameLength define max account name length
 	MaxNameLength int = 21
-
-	nameByteLen = 16
-	encodeRadix = 38
-	encodeBitLen = 6
 )
 
-// Name basic type for account name, method and contract
-type Name [nameByteLen]byte
+type NameType uint
 
-var defaultEncoding = encoding([]byte("0123456789abcdefghijklmnopqrstuvwxyz-."))
+const (
+	NameTypeAccount	    NameType = 1
+	NameTypeExContract  NameType = 2
+	NameTypeUnknown     NameType = 3
+)
 
-// NewName encode a string name to Name type
-func NewName(s string) (Name, error) {
-	if len(s) > MaxNameLength {
-		return Name{}, fmt.Errorf("Name too long, length: %v", len(s))
-	}
-	encoded, err := defaultEncoding.encode([]byte(s))
-	if err != nil {
-		return Name{}, err
-	}
-	return encoded, nil
+// ACCOUNT_NAME_REGEXP define account name format
+const CONTRACT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,9}$"
+const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9.-]{2,20}$"
+const EX_CONTRACT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,9}@[a-z][a-z0-9.-]{2,20}$"
+      
+
+var AccountReg *regexp.Regexp = regexp.MustCompile(ACCOUNT_NAME_REGEXP)
+var ContractReg *regexp.Regexp = regexp.MustCompile(CONTRACT_NAME_REGEXP)
+var ExContractReg *regexp.Regexp = regexp.MustCompile(EX_CONTRACT_NAME_REGEXP)
+//var CoreLogger log.LoggerInterface
+
+func CheckAccountNameContent(name string) bool {
+	return AccountReg.MatchString(name)
 }
 
-// ToString decode Name type to string type
-func (n Name) ToString() string {
-	decoded, err := defaultEncoding.decode(n)
-	if err != nil {
-		return ""
+func CheckContractNameContent(name string) bool {
+	return ContractReg.MatchString(name) 
+}
+
+func CheckExContractNameContent(name string) bool {
+	return ExContractReg.MatchString(name)
+}
+
+func AnalyzeName(name string) (NameType, string) {
+	
+	if CheckAccountNameContent(name) {
+		return NameTypeAccount, name
+	} else if CheckExContractNameContent(name) {
+		separateSymbol := strings.Index(name, "@")
+		return NameTypeExContract,  name[separateSymbol+1:]
+	} else {
+		return NameTypeUnknown, ""
 	}
-	return string(decoded)
+	
+	// else if  nc.checkContractNameContent(name) {
+	// 	return NameTypeContract, ""
+	// }
+	
 }
 
-func (n Name) toBig() *big.Int {
-	return big.NewInt(0).SetBytes(n[:])
+/*func Printf(format string, msg ...interface{}) {
+        CoreLogger.Infof(format, msg...)
+	//CoreLogger.Flush()
 }
 
-// Bytes get bytes of the name
-func (n Name) Bytes() []byte {
-	return n[:]
+func Println(format string, msg ...interface{}) {
+        CoreLogger.Infof(format, msg...)
+	//CoreLogger.Flush()
 }
 
-// EncodingStruct is a radix 58 encoding/decoding scheme.
-type EncodingStruct struct {
-	alphabet  [encodeRadix]byte
-	decodeMap map[byte]int64
-}
-
-func encoding(alphabet []byte) *EncodingStruct {
-	enc := &EncodingStruct{}
-	copy(enc.alphabet[:], alphabet[:])
-	for i := range enc.decodeMap {
-		enc.decodeMap[i] = -1
-	}
-	enc.decodeMap = make(map[byte]int64)
-	for i, b := range enc.alphabet {
-		enc.decodeMap[b] = int64(i)
-	}
-	return enc
-}
-
-// string name -> Name
-func (encoding *EncodingStruct) encode(src []byte) (Name, error) {
-	if len(src) == 0 {
-		return Name{}, nil
-	}
-
-	bigname := big.NewInt(0)
-	for _, c := range src {
-		if idx, ok := encoding.decodeMap[c]; ok {
-			bigname.Lsh(bigname, encodeBitLen)
-			bigname.Add(bigname, big.NewInt(idx))
-		} else {
-			return Name{}, fmt.Errorf("invalid character '%c' in decoding the string \"%s\"", c, src)
-		}
-	}
-
-	name := Name{}
-	name.setBytes(bigname.Bytes())
-	return name, nil
-}
-
-// Name -> string name
-func (encoding *EncodingStruct) decode(name Name) ([]byte, error) {
-	bigname := name.toBig()
-
-	var decoded []byte
-	zero := big.NewInt(0)
-	for {
-		switch bigname.Cmp(zero) {
-		case 1:
-			val := bigname.Int64() & 0x3F
-			if val >= encodeRadix {
-				return []byte{}, fmt.Errorf("invalid encoded value %v", val)
-			}
-			decoded = append(decoded, encoding.alphabet[val])
-			bigname.Rsh(bigname, encodeBitLen)
-		case 0:
-			reverse(decoded)
-			return decoded, nil
-		default:
-			return nil, fmt.Errorf("expecting a positive number in encoding but got %q", bigname)
-		}
-	}
-}
-
-func (n *Name) setBytes(b []byte) {
-	if len(b) > len(n) {
-		b = b[len(b)-nameByteLen:]
-	}
-	copy(n[nameByteLen-len(b):], b)
-}
+func Errorf(format string, msg ...interface{}) error {
+        err := CoreLogger.Errorf(format, msg...)
+	//CoreLogger.Flush()
+	return err
+}*/
