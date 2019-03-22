@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -31,7 +31,7 @@ import (
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/bpl"
 	"encoding/hex"
-	"github.com/bottos-project/crypto-go/crypto"
+	"github.com/bottos-project/common/signature"
 	log "github.com/cihub/seelog"
 )
 
@@ -105,10 +105,10 @@ func (trx *Transaction) VerifySignature(pubkey []byte) bool {
 	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
 	hash := h.Sum(nil)
 
-	ok := crypto.VerifySign(pubkey, hash, trx.Signature)
+	ok := signature.VerifySign(pubkey, hash, trx.Signature)
 
 	if false == ok {
-		log.Errorf("trx %x verify signature failed, sender %s, pubkey %x", trx.Hash(), trx.Sender, pubkey)
+		log.Errorf("COMMON trx verify signature failed, hash %x, sender %s, pubkey %x", trx.Hash(), trx.Sender, pubkey)
 	}
 
 	return ok
@@ -135,7 +135,7 @@ func (trx *Transaction) Sign(param []byte, privkey []byte) ([]byte, error) {
 	h.Write([]byte(hex.EncodeToString(data)))
 	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
 	hash := h.Sum(nil)
-	signdata, err := crypto.Sign(hash, privkey)
+	signdata, err := signature.Sign(hash, privkey)
 
 	return signdata, err
 }
