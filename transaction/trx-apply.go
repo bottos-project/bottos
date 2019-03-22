@@ -104,7 +104,6 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
 		log.Errorf("check unique error, trx: %x", trx.Hash())
-		log.Error("transactionExpiration is  ", transactionExpiration)
 
 		return false
 	}
