@@ -81,13 +81,17 @@ func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Tran
 	chainState, _ := trxApplyService.roleIntf.GetChainState()
 	curTime := chainState.LastBlockTime
 
+	systemTime := common.Now()
+
+	//log.Errorf("lifetime %v have past, head time %v system time %v trx hash: %x", time.Unix((int64)(trx.Lifetime), 0),  time.Unix((int64)(curTime), 0), time.Unix((int64)(systemTime), 0), trx.Hash())
+
 	if curTime >= trx.Lifetime {
-		log.Errorf("lifetime %v have past, head time %v, trx hash: %x",time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), trx.Hash())
+		log.Errorf("TRX check life time error, have past, trx %x, lifetime %v, head time %v, system time %v", trx.Hash(), time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), time.Unix((int64)(systemTime), 0))
 		return false
 	}
 
 	if trx.Lifetime >= (curTime + config.DEFAULT_MAX_LIFE_TIME) {
-		log.Errorf("lifetime %v too far, head time %v, trx hash: %x",time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), trx.Hash())
+		log.Errorf("TRX check life time error, too far, trx %x, lifetime %v, head time %v, system time %v", trx.Hash(), time.Unix((int64)(trx.Lifetime), 0), time.Unix((int64)(curTime), 0), time.Unix((int64)(systemTime), 0))
 		return false
 	}
 
