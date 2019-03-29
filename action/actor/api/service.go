@@ -250,21 +250,35 @@ func (a *ApiService) GetInfo(ctx context.Context, req *api.GetInfoRequest, resp 
 		return nil
 	}
 
+	log.Error("succed, elapsed time ",common.Elapsed(start) )
+
 	response := res.(*message.QueryChainInfoResp)
 	if response.Error != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		return nil
 	}
+	*/
+
+	coreState, err := a.env.RoleIntf.GetChainState()
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
+		return nil
+	}
 
 	resp.Result = &api.GetInfoResponse_Result{}
-	resp.Result.HeadBlockNum = response.HeadBlockNum
-	resp.Result.LastConsensusBlockNum = response.LastConsensusBlockNum
-	resp.Result.HeadBlockHash = response.HeadBlockHash.ToHexString()
-	resp.Result.HeadBlockTime = response.HeadBlockTime
-	resp.Result.HeadBlockDelegate = response.HeadBlockDelegate
-	resp.Result.CursorLabel = response.HeadBlockHash.Label()
+	resp.Result.HeadBlockNum = coreState.LastBlockNum
+	resp.Result.LastConsensusBlockNum = coreState.LastConsensusBlockNum
+	resp.Result.HeadBlockHash = coreState.LastBlockHash.ToHexString()
+	resp.Result.HeadBlockTime = coreState.LastBlockTime
+	resp.Result.HeadBlockDelegate = coreState.CurrentDelegate
+	resp.Result.CursorLabel = coreState.LastBlockHash.Label()
 	resp.Errcode = 0
+
+	QuerhChainInfoCntSuc++
+	log.Error("api actor rcv QueryChainInfo suc, cnt,direct", QuerhChainInfoCntSuc)
+
 	return nil
 }
 
@@ -274,21 +288,21 @@ func (a *ApiService) GetAccount(ctx context.Context, req *api.GetAccountRequest,
 	account, err := a.env.RoleIntf.GetAccount(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
-		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound) + "_" + name + "_1"
 		return nil
 	}
 
 	balance, err := a.env.RoleIntf.GetBalance(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
-		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound) + "_" + name + "_1"
 		return nil
 	}
 
 	stakedBalance, err := a.env.RoleIntf.GetStakedBalance(name)
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiAccountNotFound)
-		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNotFound) + "_" + name + "_1"
 		return nil
 	}
 
@@ -297,6 +311,8 @@ func (a *ApiService) GetAccount(ctx context.Context, req *api.GetAccountRequest,
 	resp.Result.Pubkey = common.BytesToHex(account.PublicKey)
 	resp.Result.Balance = balance.Balance.String()
 	resp.Result.StakedBalance = stakedBalance.StakedBalance.String()
+	resp.Result.UnStakingBalance = stakedBalance.UnstakingBalance.String()
+	resp.Result.UnStakingTimestamp = stakedBalance.LastUnstakingTime
 	resp.Errcode = 0
 
 	return nil

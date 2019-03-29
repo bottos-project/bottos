@@ -50,14 +50,14 @@ func GetAllPendingTrx() []*types.Transaction {
 
 	if nil == getTrxsErr {
 	} else {
-		log.Error("get all trx req exec error", getTrxsErr)
+		log.Errorf("PRODUCER get all trx req exec error %v", getTrxsErr)
 	}
 
 	if nil == getTrxsResult {
 		return nil
 	}
 	mesg := getTrxsResult.(*message.GetAllPendingTrxRsp)
-	log.Info("pending transaction number ", len(mesg.Trxs))
+	log.Debugf("PRODUCER pending transaction number %v", len(mesg.Trxs))
 	var trxs = []*types.Transaction{}
 	for i := 0; i < len(mesg.Trxs); i++ {
 		dbtag := new(types.Transaction)
@@ -70,17 +70,20 @@ func GetAllPendingTrx() []*types.Transaction {
 }
 
 // VerifyTransactions is to verify local and received transactons
-func verifyTransactions(trx *types.Transaction) (bool, error) {
-	log.Info("start apply transaction trx one by one")
+func verifyTransactions(trx *types.Transaction, version uint32) (bool, error, *types.ResourceReceipt) {
+	if trx.Version != version {
+		log.Errorf("PRODUCER verify trx failed, hash:%x, trx.Version:%v, my version:%v", trx.Hash(), trx.Version, version)
+		return false, nil, nil
+	}
 	trxApply := transaction.NewTrxApplyService()
-	pass, _, _ := trxApply.ApplyTransaction(trx)
+	pass, _, _, resourceReceipt, _ := trxApply.ExecuteTransaction(trx,true)
 
-	log.Info("verify result ", pass)
-	return pass, nil
+	log.Infof("PRODUCER verify trx result %v,%x,%v", pass, trx.Hash(), resourceReceipt)
+	return pass, nil, resourceReceipt
 }
 
 func removeTransaction(trxs []*types.Transaction) {
-	log.Info("start remove transactions ", len(trxs))
 	removeTrxs := &message.RemovePendingTrxsReq{Trxs: trxs}
 	trxPoolActorPid.Tell(removeTrxs)
+	log.Infof("PRODUCER remove transaction %v", len(trxs))
 }
