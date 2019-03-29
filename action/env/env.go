@@ -27,7 +27,6 @@ package env
 
 import (
 	"github.com/bottos-project/bottos/chain"
-	"github.com/bottos-project/bottos/chain/extra"
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
@@ -39,7 +38,6 @@ import (
 type ActorEnv struct {
 	RoleIntf   role.RoleInterface
 	Chain      chain.BlockChainInterface
-	TxStore    *txstore.TransactionStore
 	NcIntf     contract.NativeContractInterface
 	Protocol   context.ProtocolInterface
 	Db               *db.DBService
