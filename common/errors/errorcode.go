@@ -133,6 +133,64 @@ var (
 		ErrTransferCreditNotFound: "query credit: " + "credit not found",
 
 		ErrActorHandleError: "actor: " + "process error",
+
+		ErrContractInsufficientStakeBalanceToRegDelegate: "push trx: " + "please stake at least 490,000 BTO to get qualification of delegate",
+
+
+		ErrNoError:               "success",
+		RestErrInternal:          "internal error",
+		RestErrGenerateParm:      "generate parameter error",
+		RestErrJsonNewEncoder:    "json NewEncoder or Encode error",
+		RestErrBplMarshal:        "BPL Marshal Data error",
+		RestErrDecodeStringError: "Data Decode String error",
+		RestErrStringToBig:       "Input is Not valid Data",
+
+		RestErrReqNil:            "request Body is null",
+		RestErrResultNil:         "result is null",
+		RestErrPriKeyError:       "push trx: " + "check private key valid error",
+		RestErrPubKeyError:       "push trx: " + "check public key valid error",
+		RestErrHashError:         "push trx: " + "check hash value invalid",
+
+
+		RestErrTrxSignError:   "push trx: " + "signature Param error",
+		RestErrUnlockError:    "Unlock Account error",
+		RestErrUnkownAccType:  "Unkown Account Type",
+		RestErrWalletLocked:   "Account is locked",
+		RestErrWalletExist:    "Account already exists",
+		RestErrWalletNotExist: "Account is not exists",
+
+		RestErrTxPending:  "Trx is pending",
+		RestErrTxNotFound: "Trx execute failed",
+		RestErrTxPacked:   "Trx is packed",
+
+		RestErrGetResSpaceError: "Get Space resource failed",
+		RestErrGetResTimeError:  "Get Time resource failed",
+
+		ContractExecStart: "Contract exec failed, error code: ",
+
+		ErrWalletPasswdError: "PassWord of Wallet is error",
+
+		WASMEXecError_VM_ERR_CREATE_VM:      "failed to create a new VM instance",
+		WASMEXecError_VM_ERR_GET_VM:         "failed to get a VM instance from memory",
+		WASMEXecError_VM_ERR_FIND_VM_METHOD: "failed to find the method from the wasm module",
+		WASMEXecError_VM_ERR_PARAM_COUNT:    "parameters count is not right",
+		WASMEXecError_VM_ERR_UNSUPPORT_TYPE: "contract return type not support",
+		WASMEXecError_VM_ERR_EXEC_FAILED:    "failed to call contract method",
+
+		WASMEXecError_VM_ERR_OUT_OF_MEMORY:           "out of memory",
+		WASMEXecError_VM_ERR_INVALID_PARAMETER_COUNT: "invalid parameter count",
+		WASMEXecError_VM_ERR_FAIL_EXECUTE_ENVFUNC:    "failed to exec env func",
+		WASMEXecError_VM_ERR_FAIL_STORAGE_MEMORY:     "failed to storeage memory",
+		WASMEXecError_VM_ERR_EXEC_TIME_OVER:          "exec time over",
+		WASMEXecError_VM_ERR_EXEC_PANIC:              "exec enter panic",
+		WASMEXecError_VM_ERR_EXEC_DEFER:              "exec enter defer",
+
+
+		JSExecError_VM_CTX_INIT_FAIL:    "failed to init context",
+		JSExecError_VM_LOAD_CODE_FAIL:   "faild to load js code",
+		JSExecError_VM_JS_CALL_FAIL:     "faild to call js contract method",
+		JSExecError_VM_JS_RTN_FAIL:      "js exec failed",
+		JSExecError_VM_ADD_SUB_TRX_FAIL: "failed to add sub transaction to list",
 	}
 )
 
