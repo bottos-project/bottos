@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -58,12 +58,13 @@ func MeasureStart() uint64 {
 	return monotime.Now()
 }
 
-// Elapsed calculate elapsed microseconds
+// Elapsed calculate elapsed Millisecond
 func Elapsed(t uint64) uint64 {
 	nanoElapse := MeasureStart() - t
 	microElapse := nanoElapse / 1000
 	//	log.Info(microElapse)
-	return microElapse
+	milliElapse := microElapse / 1000
+	return milliElapse
 
 }
 
@@ -84,4 +85,18 @@ func NowToSlotSec(current time.Time, loopMicroSec uint64) uint64 {
 	value := MicrosecondsAddToSec(cur, loopMicroSec)
 	log.Info(cur)
 	return value
+}
+
+// MicroElapse calculate elapsed Microsecond
+func MicroElapse(t uint64) uint64 {
+	nanoElapse := ToNanoseconds(time.Now()) - t
+	microElapse := nanoElapse / 1000
+	//	log.Info(microElapse)
+	return microElapse
+}
+
+// NanoElapse calculate elapsed Nanosecond
+func NanoElapse(t uint64) uint64 {
+	nanoElapse := ToNanoseconds(time.Now()) - t
+	return nanoElapse
 }
