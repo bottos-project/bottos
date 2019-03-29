@@ -54,16 +54,16 @@ var (
 //Decode decodes byte stream to struct, slice/array or other basic types
 func Decode(r io.Reader, v interface{}) error {
 	if v == nil {
-		return fmt.Errorf("msgpack decode: nil pointer")
+		return fmt.Errorf("bpl decode: nil pointer")
 	}
 
 	rv := reflect.ValueOf(v)
 	t := rv.Type()
 	if t.Kind() != reflect.Ptr {
-		return fmt.Errorf("msgpack decode: need a pointer")
+		return fmt.Errorf("bpl decode: need a pointer")
 	}
 	if rv.IsNil() {
-		return fmt.Errorf("msgpack decode: nil pointer")
+		return fmt.Errorf("bpl decode: nil pointer")
 	}
 
 	decoder, err := getDecoder(t.Elem())
@@ -108,7 +108,7 @@ func getDecoder(t reflect.Type) (DecoderReader, error) {
 	case kind == reflect.Ptr:
 		return makePtrDecoder(t)
 	default:
-		return nil, fmt.Errorf("msgpack, type %v, kind %v not support", t, kind)
+		return nil, fmt.Errorf("bpl decode: type %v, kind %v not support", t, kind)
 	}
 }
 
@@ -165,7 +165,7 @@ func (ctx *DecodeContext) readHeader() error {
 			return err
 		}
 	default:
-		return fmt.Errorf("msgpack decode: unknown type identifier %X", ctx.t)
+		return fmt.Errorf("bpl decode: unknown type identifier %X", ctx.t)
 	}
 
 	return nil
@@ -214,14 +214,14 @@ func decodeBigIntNoPtr(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeBigInt(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != EXT16 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, EXT16)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, EXT16)
 	}
 	if ctx.ext != EXT_BIGINT {
-		return fmt.Errorf("msgpack: decode exttype %X, expected %X", ctx.ext, EXT_BIGINT)
+		return fmt.Errorf("bpl decode: decode exttype %X, expected %X", ctx.ext, EXT_BIGINT)
 	}
 	val, err := ctx.readRaw()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode big.Int fail")
+		return fmt.Errorf("bpl decode: decode big.Int fail")
 	}
 	i := v.Interface().(*big.Int)
 	if i == nil {
@@ -238,7 +238,7 @@ func decodeBool(v reflect.Value, ctx *DecodeContext) error {
 	} else if ctx.t == FALSE {
 		v.SetBool(false)
 	} else {
-		return fmt.Errorf("msgpack: decode type %X, expected %X or %X", ctx.t, TRUE, FALSE)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X or %X", ctx.t, TRUE, FALSE)
 	}
 
 	return nil
@@ -246,11 +246,11 @@ func decodeBool(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeUint8(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != UINT8 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT8)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, UINT8)
 	}
 	val, err := ctx.readUint()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode uint8 fail")
+		return fmt.Errorf("bpl decode: decode uint8 fail")
 	}
 	v.SetUint(val)
 	return nil
@@ -258,11 +258,11 @@ func decodeUint8(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeUint16(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != UINT16 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT16)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, UINT16)
 	}
 	val, err := ctx.readUint()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode uint16 fail")
+		return fmt.Errorf("bpl decode: decode uint16 fail")
 	}
 	v.SetUint(val)
 	return nil
@@ -270,11 +270,11 @@ func decodeUint16(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeUint32(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != UINT32 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT32)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, UINT32)
 	}
 	val, err := ctx.readUint()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode uint32 fail")
+		return fmt.Errorf("bpl decode: decode uint32 fail")
 	}
 	v.SetUint(val)
 	return nil
@@ -282,11 +282,11 @@ func decodeUint32(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeUint64(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != UINT64 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, UINT64)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, UINT64)
 	}
 	val, err := ctx.readUint()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode uint64 fail")
+		return fmt.Errorf("bpl decode: decode uint64 fail")
 	}
 	v.SetUint(val)
 	return nil
@@ -294,11 +294,11 @@ func decodeUint64(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeString(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != STR16 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, STR16)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, STR16)
 	}
 	val, err := ctx.readRaw()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode string fail")
+		return fmt.Errorf("bpl decode: decode string fail")
 	}
 	v.SetString(string(val))
 	return nil
@@ -306,11 +306,11 @@ func decodeString(v reflect.Value, ctx *DecodeContext) error {
 
 func decodeBytes(v reflect.Value, ctx *DecodeContext) error {
 	if ctx.t != BIN16 {
-		return fmt.Errorf("msgpack: decode type %X, expected %X", ctx.t, BIN16)
+		return fmt.Errorf("bpl decode: decode type %X, expected %X", ctx.t, BIN16)
 	}
 	val, err := ctx.readRaw()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode bin16 fail")
+		return fmt.Errorf("bpl decode: decode bin16 fail")
 	}
 	v.SetBytes(val)
 	return nil
@@ -319,12 +319,12 @@ func decodeBytes(v reflect.Value, ctx *DecodeContext) error {
 func decodeByteArray(v reflect.Value, ctx *DecodeContext) error {
 	val, err := ctx.readRaw()
 	if err != nil {
-		return fmt.Errorf("msgpack: decode bin16 fail")
+		return fmt.Errorf("bpl decode: decode bin16 fail")
 	}
 
 	vlen := v.Len()
 	if len(val) != vlen {
-		return fmt.Errorf("msgpack: wrong array size")
+		return fmt.Errorf("bpl decode: wrong array size")
 	}
 
 	slice := v.Slice(0, vlen).Interface().([]byte)
@@ -336,16 +336,16 @@ func decodeByteArray(v reflect.Value, ctx *DecodeContext) error {
 func decodeArray(v reflect.Value, ctx *DecodeContext, elemDecoder DecoderReader) error {
 	vlen := v.Len()
 	if vlen != int(ctx.size) {
-		return fmt.Errorf("msgpack: wrong array size %v, expected %v", int(ctx.size), vlen)
+		return fmt.Errorf("bpl decode: wrong array size %v, expected %v", int(ctx.size), vlen)
 	}
 	i := 0
 	for ; i < vlen; i++ {
 		if err := elemDecoder(v.Index(i), ctx); err != nil {
-			return fmt.Errorf("msgpack decoder: array decode error")
+			return fmt.Errorf("bpl decoder: array decode error")
 		}
 	}
 	if i < vlen {
-		return fmt.Errorf("msgpack decoder: array size array")
+		return fmt.Errorf("bpl decode: array size array")
 	}
 	return nil
 }
@@ -377,7 +377,7 @@ func decodeSlice(v reflect.Value, ctx *DecodeContext, elemDecoder DecoderReader)
 		}
 
 		if err := elemDecoder(v.Index(i), ctx); err != nil {
-			return fmt.Errorf("msgpack decoder: slice decode error")
+			return fmt.Errorf("bpl decode: slice decode error")
 		}
 	}
 	return nil

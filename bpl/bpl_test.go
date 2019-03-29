@@ -379,7 +379,7 @@ var val bTestStruct = bTestStruct{
 	V3: big.NewInt(0x7FFFFFFFFFFFFFFF),
 }
 
-func msgpackEncode() ([]byte, error) {
+func bplEncode() ([]byte, error) {
 	b := new(bytes.Buffer)
 	err := Encode(val, b)
 	return b.Bytes(), err
@@ -390,9 +390,9 @@ func jsonEncode() ([]byte, error) {
 	return b, err
 }
 
-func BenchmarkMsgpack(b *testing.B) {
+func BenchmarkBpl(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		msgpackEncode()
+		bplEncode()
 	}
 }
 

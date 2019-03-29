@@ -127,7 +127,7 @@ func getEncoder(t reflect.Type) (EncodeWriter, error) {
 }
 
 func unsupportedTypeEncoder(val reflect.Value, w io.Writer) error {
-	return fmt.Errorf("msgpack: supported type %v", val.Type())
+	return fmt.Errorf("bpl encode: unsupported type %v", val.Type())
 }
 
 func encodeBool(val reflect.Value, w io.Writer) error {
@@ -245,7 +245,7 @@ func makePtrEncoder(t reflect.Type) (EncodeWriter, error) {
 func encodeBigIntPtr(val reflect.Value, w io.Writer) error {
 	ptr := val.Interface().(*big.Int)
 	if ptr == nil {
-		return errors.New("nil ptr")
+		return errors.New("bpl encode: nil ptr")
 	}
 	return encodeBigInt(ptr, w)
 }
@@ -266,7 +266,7 @@ func encodeCustom(val reflect.Value, w io.Writer) error {
 
 func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
 	if !val.CanAddr() {
-		return fmt.Errorf("msgpack encode: unadressable value of type %v", val.Type())
+		return fmt.Errorf("bpl encode: unadressable value of type %v", val.Type())
 	}
 	return val.Addr().Interface().(Encoder).EncodeBPL(w)
 }
