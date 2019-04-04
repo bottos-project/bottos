@@ -30,6 +30,7 @@ import (
 	"math/big"
 
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 //TransferCreditObjectName is credit name
@@ -44,6 +45,7 @@ type TransferCredit struct {
 
 //CreateTransferCreditRole is create transfer credits
 func CreateTransferCreditRole(ldb *db.DBService) error {
+	ldb.AddObject(TransferCreditObjectName)
 	return nil
 }
 
@@ -53,11 +55,10 @@ func generateKey(name string, spender string) string {
 
 //SafeSub is safe sub
 func (credit *TransferCredit) SafeSub(amount *big.Int) error {
-	//var a, c uint64
 	result := big.NewInt(0)
-	//a = credit.Limit
 	result, err := safeSub(result, credit.Limit, amount)
 	if err != nil {
+		log.Error("ROLE safeSub failed ", err)
 		return err
 	}
 	credit.Limit.Set(result)
@@ -70,6 +71,7 @@ func SetTransferCreditRole(ldb *db.DBService, name string, value *TransferCredit
 	key := generateKey(name, value.Spender)
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Error("ROLE Marshal failed ", err)
 		return err
 	}
 	return ldb.SetObject(TransferCreditObjectName, key, string(jsonvalue))
@@ -86,6 +88,7 @@ func GetTransferCreditRole(ldb *db.DBService, name string, spender string) (*Tra
 	res := &TransferCredit{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Error("ROLE Unmarshal failed ", err)
 		return nil, err
 	}
 
