@@ -41,6 +41,7 @@ import (
 	"github.com/bottos-project/bottos/db/platform/codedb"
 	"github.com/bottos-project/bottos/producer"
 	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/version"
 )
 
 // ProducerActor is to define actor for producer
@@ -77,7 +78,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Infof("ProducerActor received started msg: %s", msg)
+		log.Error("PRODUCER received started msg ", msg)
 
 		context.SetReceiveTimeout(time.Duration(config.PRODUCER_TIME_OUT) * time.Millisecond)
 
@@ -86,19 +87,19 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 		context.SetReceiveTimeout(time.Duration(elapse) * time.Millisecond)
 
 	case *actor.Stopping:
-		log.Info("ProducerActor received stopping msg")
+		log.Error("PRODUCER received stopping msg")
 
 	case *actor.Restart:
-		log.Info("ProducerActor received restart msg")
+		log.Error("PRODUCER received restart msg")
 
 	case *actor.Restarting:
-		log.Info("ProducerActor received restarting msg")
+		log.Error("PRODUCER received restarting msg")
 
 	case *actor.Stop:
-		log.Info("ProducerActor received Stop msg")
+		log.Error("PRODUCER received Stop msg")
 
 	case *actor.Stopped:
-		log.Info("ProducerActor received Stopped msg")
+		log.Error("PRODUCER received Stopped msg")
 
 	default:
 		return false
@@ -114,7 +115,7 @@ func (p *ProducerActor) Receive(context actor.Context) {
 		return
 	}
 
-	log.Error("ProducerActor received Unknown msg")
+	log.Error("PRODUCER received Unknown msg")
 }
 func (p *ProducerActor) working() uint32 {
 
@@ -124,18 +125,19 @@ func (p *ProducerActor) working() uint32 {
 		start := common.MeasureStart()
 		p.pendingTxSession = p.db.GetSession()
 		if p.pendingTxSession != nil {
-			log.Infof("p.pendingTxSession need to reset ")
+			log.Debug("PRODUCER p.pendingTxSession need to reset")
 			p.db.ResetSession()
 		}
 		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
 
 		trxs := GetAllPendingTrx()
-		log.Debug("get trx times", common.Elapsed(start))
+		log.Debug("PRODUCER get trx times", common.Elapsed(start))
+		pendingTrxlen := len(trxs)
 		block := &types.Block{}
 		pendingBlockSize := uint32(unsafe.Sizeof(block))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
-			log.Info("GetGlobalPropertyRole failed")
+			log.Error("PRODUCER GetCoreState failed,begin rollback", err)
 			p.db.ResetSession()
 			return config.PRODUCER_TIME_OUT
 		}
@@ -177,8 +179,9 @@ func (p *ProducerActor) working() uint32 {
 		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			pendingTrxn := len(block.Transactions) - len(removeTrx)
-			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v, pendingTrxn:%v, blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), pendingTrxn, time.Unix(int64(block.Header.Timestamp), 0))
+			log.Errorf("PRODUCER block, hash: %x, delegate: %s, num:%v, trxn:%v, pendingTrxn:%v, blockTime:%s, blockSize %v\n",
+				block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.BlockTransactions), pendingTrxlen, time.Unix(int64(block.Header.Timestamp), 0), pendingBlockSize)
+
 			if config.BtoConfig.Delegate.Solo == false {
 				ConsensusProducedBlock(block)
 			} else {
