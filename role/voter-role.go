@@ -27,7 +27,9 @@ package role
 
 import (
 	"encoding/json"
+
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 const (
@@ -43,6 +45,7 @@ type Voter struct {
 
 // CreateVoterRole is create voter role
 func CreateVoterRole(ldb *db.DBService) error {
+	ldb.AddObject(VoterObjectName)
 	return nil
 }
 
@@ -51,6 +54,7 @@ func SetVoterRole(ldb *db.DBService, accountName string, value *Voter) error {
 	key := accountNameToKey(accountName)
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Error("ROLE Marshal failed ", accountName, err)
 		return err
 	}
 	return ldb.SetObject(VoterObjectName, key, string(jsonvalue))
@@ -67,6 +71,7 @@ func GetVoterRole(ldb *db.DBService, accountName string) (*Voter, error) {
 	res := &Voter{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Error("ROLE Unmarshal failed ", accountName, err)
 		return nil, err
 	}
 
