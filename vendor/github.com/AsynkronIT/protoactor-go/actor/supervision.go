@@ -33,7 +33,7 @@ func DefaultDecider(_ interface{}) Directive {
 }
 
 var (
-	defaultSupervisionStrategy    = NewOneForOneStrategy(10, 0, DefaultDecider)
+	defaultSupervisionStrategy    = NewOneForOneStrategy(10, 10, DefaultDecider)
 	restartingSupervisionStrategy = NewRestartingStrategy()
 )
 
