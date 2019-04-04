@@ -33,10 +33,12 @@ import (
 
 var netActorPid *actor.PID
 
+// SetNetActorPid is to set net actor pid
 func SetNetActorPid(tpid *actor.PID) {
 	netActorPid = tpid
 }
 
+// BroadCastBlock is to broadcast blocks
 func BroadCastBlock(block *types.Block) {
 
 	broadCastBlock := &message.NotifyBlock{block}
