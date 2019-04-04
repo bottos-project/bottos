@@ -79,6 +79,10 @@ const (
 	ErrContractAccountMismatch ErrCode = 10111
 	// ErrContractInsufficientCredits insufficient credit
 	ErrContractInsufficientCredits ErrCode = 10112
+        // ErrAccountPubkeyLenIllegal invalid pubkey len
+	ErrAccountPubkeyLenIllegal ErrCode = 10113
+	// ErrContractGenesisPermissionError no permission
+	ErrContractGenesisPermissionError ErrCode = 10114
 
 	// ErrApiTrxNotFound api trx not found
 	ErrApiTrxNotFound ErrCode = 10201
