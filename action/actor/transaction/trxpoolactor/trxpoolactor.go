@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -71,13 +71,17 @@ func SetTrxPool(pool *transaction.TrxPool) {
 func handleSystemMsg(context actor.Context) bool {
 	switch context.Message().(type) {
 	case *actor.Started:
-		log.Info("TrxPoolActor received started msg")
+		log.Error("TrxPoolActor received started msg")
 	case *actor.Stopping:
-		log.Info("TrxPoolActor received stopping msg")
+		log.Error("TrxPoolActor received stopping msg")
 	case *actor.Restart:
-		log.Info("TrxPoolActor received restart msg")
+		log.Error("TrxPoolActor received restart msg")
 	case *actor.Restarting:
-		log.Info("TrxPoolActor received restarting msg")
+		log.Error("TrxPoolActor received restarting msg")
+	case *actor.Stop:
+		log.Error("TrxPoolActor received Stop msg")
+	case *actor.Stopped:
+		log.Error("TrxPoolActor received Stopped msg")
 	default:
 		return false
 	}
@@ -112,7 +116,11 @@ func (t *TrxPoolActor) Receive(context actor.Context) {
 
 		trxPool.RemoveTransactions(msg.Trxs)
 
+	case *message.RemovePendingBlockTrxsReq:
+
+		trxPool.RemoveBlockTransactions(msg.Trxs)
+
 	default:
-		log.Info("trx actor: Unknown msg")
+		log.Errorf("trx pool actor: Unknown msg ", msg)
 	}
 }
