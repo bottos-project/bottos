@@ -134,15 +134,29 @@ func (p *ProducerActor) working() uint32 {
 		log.Debug("PRODUCER get trx times", common.Elapsed(start))
 		pendingTrxlen := len(trxs)
 		block := &types.Block{}
-		pendingBlockSize := uint32(unsafe.Sizeof(block))
+		data, _ := bpl.Marshal(block)
+		pendingBlockSize := uint32(len(data))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
 			log.Error("PRODUCER GetCoreState failed,begin rollback", err)
 			p.db.ResetSession()
 			return config.PRODUCER_TIME_OUT
 		}
-		var pendingBlockTrx = []*types.Transaction{}
+		chainStat, err := p.roleIntf.GetChainState()
+		if err != nil {
+			log.Error("PRODUCER GetChainState failed,begin rollback", err)
+			p.db.ResetSession()
+			return config.PRODUCER_TIME_OUT
+		}
+		version := version.GetVersionNumByBlockNum(chainStat.LastBlockNum + 1)
+		var pendingBlockTrx = []*types.BlockTransaction{}
 		var removeTrx = []*types.Transaction{}
+
+		err = p.roleIntf.OnBlock(p.roleIntf.GetMySelf())
+		if err != nil {
+			return config.PRODUCER_TIME_OUT
+		}
+
 		for _, trx := range trxs {
 			dtag := new(types.Transaction)
 			dtag = trx
