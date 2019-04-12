@@ -26,8 +26,12 @@
 package role
 
 import (
+	//	"math/bits"
+	"math/big"
+
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/db"
 )
 
@@ -42,10 +46,15 @@ type RoleInterface interface {
 	GetChainState() (*ChainState, error)
 	SetCoreState(value *CoreState) error
 	GetCoreState() (*CoreState, error)
-
+	SetGenesisState(value *GenesisState) error
+	GetGenesisState() (*GenesisState, error)
+	IsChainActivated() bool
+	IsTransitPeriod(blockNum uint64) bool
 	SetAccount(name string, value *Account) error
 	GetAccount(name string) (*Account, error)
 	IsAccountExist(name string) bool
+	SetContract(name string, value *Contract) error
+	GetContract(name string) (*Contract, error)
 	SetBalance(accountName string, value *Balance) error
 	GetBalance(accountName string) (*Balance, error)
 	SetStakedBalance(accountName string, value *StakedBalance) error
@@ -58,12 +67,16 @@ type RoleInterface interface {
 	GetDelegateByAccountName(name string) (*Delegate, error)
 	GetDelegateBySignKey(key string) (*Delegate, error)
 	GetCandidateBySlot(slotNum uint64) (string, error)
-	GetDelegateParticipationRate() uint64
-	SetVoter(name string, value *Voter) error
-	GetVoter(name string) (*Voter, error)
+	GetDelegateParticipationRate(string) uint32
+	GetAllDelegatesFilter() ([]*Delegate, error)
+
+	SetTransitVotes(accountName string, value *TransitVotes) error
+	GetTransitVotes(accountName string) (*TransitVotes, error)
 
 	SetScheduleDelegate(value *ScheduleDelegate) error
 	GetScheduleDelegate() (*ScheduleDelegate, error)
+	SetVoter(name string, value *Voter) error
+	GetVoter(name string) (*Voter, error)
 
 	CreateDelegateVotes() error
 	GetDelegateVotes(key string) (*DelegateVotes, error)
@@ -119,6 +132,38 @@ func (r *Role) GetCoreState() (*CoreState, error) {
 	return GetCoreStateRole(r.Db)
 }
 
+func (r *Role) SetGenesisState(value *GenesisState) error {
+	return SetGenesisStateRole(r.Db, value)
+}
+
+func (r *Role) GetGenesisState() (*GenesisState, error) {
+	return GetGenesisStateRole(r.Db)
+}
+
+func (r *Role) IsChainActivated() bool {
+
+	gs, err := GetGenesisStateRole(r.Db)
+	if err != nil {
+		return false
+	}
+	if gs.ProduceTransfer == true {
+		return true
+	}
+	cs, err := GetChainStateRole(r.Db)
+	if err != nil {
+		return false
+	}
+
+	if cs.LastBlockNum >= gs.ActivateBlockNumber {
+		return true
+	}
+
+	return false
+}
+func (r *Role) IsTransitPeriod(blockNum uint64) bool {
+	return IsTransitPeriodRole(r.Db, blockNum)
+}
+
 //SetAccount is setting account
 func (r *Role) SetAccount(name string, value *Account) error {
 	return SetAccountRole(r.Db, name, value)
@@ -136,6 +181,16 @@ func (r *Role) IsAccountExist(name string) bool {
 		return false
 	}
 	return true
+}
+
+//SetContract is setting account
+func (r *Role) SetContract(name string, value *Contract) error {
+	return SetContractRole(r.Db, name, value)
+}
+
+//GetContract is getting account
+func (r *Role) GetContract(name string) (*Contract, error) {
+	return GetContractRole(r.Db, name)
 }
 
 //SetBalance is setting balance
