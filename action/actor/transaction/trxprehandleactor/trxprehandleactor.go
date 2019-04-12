@@ -28,12 +28,15 @@ package trxprehandleactor
 import (
 	log "github.com/cihub/seelog"
 	
-	"github.com/bottos-project/bottos/common/types"
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/router"
+	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/transaction"
 	bottosErr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/context"
+	"github.com/bottos-project/bottos/transaction"
+	"github.com/bottos-project/bottos/config"
 )
 
 //TrxPreHandleActorPid trx actor pid
@@ -46,6 +49,10 @@ const maxConcurrency = 100
 
 var trxPool *transaction.TrxPool
 
+var actorEnv *env.ActorEnv
+
+var protocolInterface context.ProtocolInterface
+
 //TrxActor trx actor props
 // type TrxActor struct {
 // 	props *actor.Props
@@ -56,17 +63,21 @@ var trxPool *transaction.TrxPool
 // 	return &TrxActor{}
 // }
 
-
 func handleSystemMsg(context actor.Context) bool {
 	switch context.Message().(type) {
 	case *actor.Started:
-		log.Info("TrxPoolActor received started msg")
+		log.Error("TrxPreHandleActor received started msg")
 	case *actor.Stopping:
-		log.Info("TrxPoolActor received stopping msg")
+		log.Error("TrxPreHandleActor received stopping msg")
 	case *actor.Restart:
-		log.Info("TrxPoolActor received restart msg")
+		log.Error("TrxPreHandleActor received restart msg")
 	case *actor.Restarting:
-		log.Info("TrxPoolActor received restarting msg")
+		log.Error("TrxPreHandleActor received restarting msg")
+	case *actor.Stop:
+		log.Error("TrxPreHandleActor received Stop msg")
+	case *actor.Stopped:
+		log.Error("TrxPreHandleActor received Stopped msg")
+		
 	default:
 		return false
 	}
@@ -75,39 +86,71 @@ func handleSystemMsg(context actor.Context) bool {
 }
 
 func preHandleCommon (trx *types.Transaction) (bool, bottosErr.ErrCode) {
+	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
+		return false, err
+	}
 
-	if !trxPool.VerifySignature(trx) {
-		log.Errorf("trx %v VerifySignature error\n", trx.Hash())
+	if false == actorEnv.Protocol.GetBlockSyncState() {
+		log.Errorf("TRX rcv trx when block is syncing, trx %x", trx.Hash())
+
+		return false, bottosErr.ErrTrxBlockSyncingError
+	}
+
+	sender, err := actorEnv.RoleIntf.GetAccount(trx.Sender)
+	if nil != err {
+		return false, bottosErr.ErrTrxAccountError
+	}
+
+	if !trx.VerifySignature(sender.PublicKey) {
 		return false, bottosErr.ErrTrxSignError
 	}
 
 	return true, bottosErr.ErrNoError
 }
-
+func initP2PTrxMsg(msg *message.PushTrxReq) (msgp *message.PushTrxForP2PReq) {
+	//set trx TTL
+	var TTL uint16
+	switch  actorEnv.RoleIntf.IsMyselfDelegate() {
+	case true:
+		TTL = config.TRX_IN_TTL
+	case false:
+		TTL = config.TRX_OUT_TTL
+	}
+	var p2pTrx types.P2PTransaction
+	p2pTrx.Transaction = msg.Trx
+	p2pTrx.TTL = TTL
+	msgp = &message.PushTrxForP2PReq{P2PTrx: &p2pTrx}
+	return msgp
+}
 
 func preHandlePushTrxReq(msg *message.PushTrxReq, ctx actor.Context) {
 
 	preHandleResult, err := preHandleCommon(msg.Trx)
 	
 	if !preHandleResult {			
+		log.Errorf("TRX pre handle trx from front failed, trx %x", msg.Trx.Hash())
 		ctx.Respond(err)
 	} else {
-		trxActorPid.Tell(msg)
+		msgP2P := initP2PTrxMsg(msg)
+		trxActorPid.Tell(msgP2P)
 		ctx.Respond(bottosErr.ErrNoError)
 	}
 }
 
-
 func preHandleReceiveTrx(msg *message.ReceiveTrx, ctx actor.Context) {
 
-	preHandleResult, err := preHandleCommon(msg.Trx)
+	preHandleResult, _ := preHandleCommon(msg.P2PTrx.Transaction)
 	
-	if !preHandleResult {			
-		ctx.Respond(err)
-	} else {
+	if preHandleResult {
 		trxActorPid.Tell(msg)
-		ctx.Respond(bottosErr.ErrNoError)
-	}	
+	} else {
+		if actorEnv.RoleIntf.IsMyselfDelegate() == true{
+			log.Info("TRX pre handle trx from producer node failed, trx %x", msg.P2PTrx.Transaction.Hash())
+		}else{
+			log.Errorf("TRX pre handle trx from service node failed, trx %x", msg.P2PTrx.Transaction.Hash())
+		}
+
+	}
 }
 
 func doWork(ctx actor.Context) {
@@ -125,31 +168,20 @@ func doWork(ctx actor.Context) {
 		
 	case *message.ReceiveTrx:
 
-		log.Infof("rcv trx %x in ReceiveTrx\n", msg.Trx.Hash())
+		log.Infof("rcv trx %x in ReceiveTrx\n", msg.P2PTrx.Transaction.Hash())
 
 		preHandleReceiveTrx(msg, ctx)		
 
 	default:
-		log.Info("trx actor: Unknown msg")
+		log.Errorf("trx pool actor: Unknown msg ", msg)
 	}
 
 }
 
-
-
 //NewTrxPreHandleActor spawn a named actor
-func NewTrxPreHandleActor() *actor.PID {
+func NewTrxPreHandleActor(env *env.ActorEnv) *actor.PID {
 
-	// props := actor.FromProducer(func() actor.Actor { return ContructTrxActor() })
-
-	// var err error
-	// TrxPreHandleActorPid, err = actor.SpawnNamed(props, "TrxActor")
-
-	// if err != nil {
-	// 	panic(log.Errorf("TrxActor SpawnNamed error: %v", err))
-	// } else {
-	// 	return TrxPreHandleActorPid
-	// }
+	actorEnv = env
 
 	TrxPreHandleActorPid := actor.Spawn(router.NewRoundRobinPool(maxConcurrency).WithFunc(doWork))
 
@@ -165,52 +197,3 @@ func SetTrxActor(trxactorPid *actor.PID) {
 	trxActorPid = trxactorPid
 }
 
-
-// func handleSystemMsg(context actor.Context) bool {
-// 	switch context.Message().(type) {
-// 	case *actor.Started:
-// 		log.Info("TrxActor received started msg")
-// 	case *actor.Stopping:
-// 		log.Info("TrxActor received stopping msg")
-// 	case *actor.Restart:
-// 		log.Info("TrxActor received restart msg")
-// 	case *actor.Restarting:
-// 		log.Info("TrxActor received restarting msg")
-// 	default:
-// 		return false
-// 	}
-
-// 	return true
-// }
-
-//Receive process message
-var trxcnt uint64 = 0
-
-// func (t *TrxActor) Receive(context actor.Context) {
-
-// 	if handleSystemMsg(context) {
-// 		return
-// 	}
-
-// 	switch msg := context.Message().(type) {
-// 	case *message.PushTrxReq:
-// 		trxcnt += 1
-// 		//log.Error("TrxActor received trx: ", trxcnt)
-// 		trxPool.HandleTransactionFromFront(context, msg.Trx)
-
-// 	case *message.NotifyTrx:
-
-// 		trxPool.HandleTransactionFromP2P(context, msg.Trx)
-
-// 	// case *message.GetAllPendingTrxReq:
-
-// 	// 	trxPool.GetAllPendingTransactions(context)
-
-// 	// case *message.RemovePendingTrxsReq:
-
-// 	// 	trxPool.RemoveTransactions(msg.Trxs)
-
-// 	default:
-// 		log.Info("trx actor: Unknown msg")
-// 	}
-// }
