@@ -56,6 +56,7 @@ func (r *Role) GetSlotTime(slotNum uint64) uint64 {
 		genesisTime := config.Genesis.GenesisTime
 		return genesisTime + slotNum*uint64(interval)
 	}
+
 	headBlockAbsSlot := object.LastBlockTime / uint64(interval)
 	headSlotTime := headBlockAbsSlot * uint64(interval)
 	return headSlotTime + slotNum*uint64(interval)
