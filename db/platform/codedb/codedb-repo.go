@@ -27,54 +27,48 @@ package codedb
 
 import (
 	"errors"
-        "sync"
+	"sync"
 
 	log "github.com/cihub/seelog"
 	"github.com/tidwall/buntdb"
 )
 
 //CodeDbRepository is to build code db
-type CodeDbRepository struct {
-	fn string     // filename for reporting
-	db *buntdb.DB // LevelDB instance
-	tx *buntdb.Tx
-        globalSignal   sync.RWMutex // global signal for all state
+type MultindexDB struct {
+	fn             string     // filename for reporting
+	db             *buntdb.DB // LevelDB instance
+	undoFlag       bool
+	signal         sync.RWMutex // the gatekeeper for all fields
+	globalSignal   sync.Mutex   // global signal for all state
+	undoList       map[string]*UndoObject
+	session        *UndoSession
+	subsession     *UndoSession
+	sessionEx      *UndoSession
+	revision       uint64
+	commitRevision uint64
+	ai             *AutoInc
 }
 
 //NewCodeDbRepository is to create new code db
-func NewCodeDbRepository(file string) (*CodeDbRepository, error) {
+func NewMultindexDB(file string) (*MultindexDB, error) {
 	codedb, err := buntdb.Open(file)
 	if err != nil {
-		return nil, err
+		log.Error("DB open code database failed", file)
+		return nil, errors.New("buntdb open file failed")
 	}
-	return &CodeDbRepository{
-		fn: file,
-		db: codedb,
-	}, nil
-}
-//CallGlobalLock is to lock
-func (m *CodeDbRepository) CallGlobalLock() {
-	log.Info("CallGlobalLock")
-	m.globalSignal.Lock()
-}
-//CallGlobalUnLock is to unlock
-func (m *CodeDbRepository) CallGlobalUnLock() {
-	log.Info("CallGlobalUnLock")
-	m.globalSignal.Unlock()
-}
-//CallStartUndoSession is to start undo session
-func (k *CodeDbRepository) CallStartUndoSession(writable bool) {
-	k.tx, _ = k.db.Begin(true)
-}
-
-//CallCreatObjectIndex is to create object index
-func (k *CodeDbRepository) CallCreatObjectIndex(objectName string, indexName string, indexJson string) error {
-	if k.tx == nil {
-
-		return k.db.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+	mdb := &MultindexDB{
+		fn:       file,
+		db:       codedb,
+		undoFlag: false,
 	}
-
-	return k.tx.CreateIndex(indexName, objectName+"*", buntdb.IndexJSON(indexJson))
+	mdb.undoList = make(map[string]*UndoObject)
+	mdb.session = nil
+	mdb.subsession = nil
+	mdb.sessionEx = nil
+	mdb.revision = uint64(0)
+	mdb.commitRevision = uint64(0)
+	mdb.ai = New(10000000, 1)
+	return mdb, nil
 }
 func (m *MultindexDB) CallClose() {
 	m.db.Close()
@@ -87,6 +81,7 @@ func (m *MultindexDB) CallClose() {
 	m.ai = nil
 
 }
+
 func (m *MultindexDB) CallGlobalLock() {
 	m.globalSignal.Lock()
 }

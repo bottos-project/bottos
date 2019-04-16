@@ -38,8 +38,29 @@ type CodeDbRepo interface {
 	CallGetAllObjectsFilter(keyName string) ([]string, error)
 	CallGetAllObjectsSortByIndex(indexName string) ([]string, error)
 	CallGetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greaterThan string) ([]string, error)
-        CallGlobalLock()
+	CallGlobalLock()
 	CallGlobalUnLock()
-	CallCommit() error
+	CallClose()
+
+	////db undo
+	CallUndoFlush()
+	CallAddObject(object string)
 	CallRollback() error
+	CallRollbackAll() error
+	CallCommit(revision uint64) error
+	CallGetRevision() uint64
+	CallSetRevision(myRevision uint64)
+	CallLoadStateDB()
+	CallReleaseUndoInfo()
+
+	//session undo
+	CallBeginUndo(string) *UndoSession
+	CallGetSession() *UndoSession
+	CallGetSessionEx() *UndoSession
+	CallResetSession() error
+	CallResetSubSession() error
+	CallFreeSessionEx() error
+	CallPush(session *UndoSession)
+	CallPushEx(session *UndoSession)
+	CallSquash()
 }
