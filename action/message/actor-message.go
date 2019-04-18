@@ -123,7 +123,7 @@ type RemovePendingTrxsReq struct {
 
 //NotifyTrx txactor->p2pactor
 type NotifyTrx struct {
-	Trx *types.Transaction
+	P2PTrx *types.P2PTransaction
 }
 
 //NotifyBlock producer->p2pactor
@@ -133,7 +133,7 @@ type NotifyBlock struct {
 
 //ReceiveTrx p2pactor->trxpool
 type ReceiveTrx struct {
-	Trx *types.Transaction
+	P2PTrx *types.P2PTransaction
 }
 
 //ReceiveBlock p2pactor->chainactor
