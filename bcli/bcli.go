@@ -564,7 +564,7 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	
         abi.Setmapval(mapstruct, "contract", name)
         abi.Setmapval(mapstruct, "vm_type", uint8(fileType))
-        abi.Setmapval(mapstruct, "vm_version", uint8(1))
+        abi.Setmapval(mapstruct, "vm_version", uint8(0))
 	
 	abi.Setmapval(mapstruct, "contract_code", ContractCodeVal)
 	//fmt.Printf("contract_code: %x", ContractCodeVal)
