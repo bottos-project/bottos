@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -56,14 +56,14 @@ func Encode(w io.Writer, structs interface{}) error {
 	v := reflect.ValueOf(structs)
 
 	if !v.IsValid() {
-		log.Errorf("Not Valid %T\n", structs)
+		log.Errorf("MSGPACK encode error, Not Valid %T\n", structs)
 		return fmt.Errorf("Not Valid %T\n", structs)
 	}
 
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 		if !v.IsValid() {
-			log.Errorf("Nil Ptr: %T\n", structs)
+			log.Errorf("MSGPACK encode error, Nil Ptr: %T\n", structs)
 			return fmt.Errorf("Nil Ptr: %T\n", structs)
 		}
 	}
@@ -117,17 +117,17 @@ func Decode(r io.Reader, dst interface{}) error {
 	v := reflect.ValueOf(dst)
 
 	if !v.IsValid() {
-		log.Errorf("Not Valid %T\n", dst)
+		log.Errorf("MSGPACK decode error, Not Valid %T\n", dst)
 		return fmt.Errorf("Not Valid %T\n", dst)
 	}
 
 	if v.Kind() != reflect.Ptr {
-		log.Errorf("dst Not Settable %T\n", dst)
+		log.Errorf("MSGPACK decode error, dst Not Settable %T\n", dst)
 		return fmt.Errorf("dst Not Settable %T)", dst)
 	}
 
 	if !v.Elem().IsValid() {
-		log.Errorf("Nil Ptr: %T\n", dst)
+		log.Errorf("MSGPACK decode error, Nil Ptr: %T\n", dst)
 		return fmt.Errorf("Nil Ptr: %T\n", dst)
 	}
 
