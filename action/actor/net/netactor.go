@@ -94,6 +94,15 @@ func (n *NetActor) handleSystemMsg(context actor.Context) {
 	case *message.NotifyBlock:
 		n.protocol.SendNewBlock(msg)
 
+	case *message.SendPrevote:
+		n.protocol.SendPrevote(msg)
+
+	case *message.SendPrecommit:
+		n.protocol.SendPrecommit(msg)
+
+	case *message.SendCommit:
+		n.protocol.SendCommit(msg)
+
 	default:
 		log.Error("netactor receive unknown message")
 	}

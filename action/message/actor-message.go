@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -145,4 +145,20 @@ type ReceiveBlock struct {
 type ReceiveBlockResp struct {
 	BlockNum uint64
 	ErrorNo  uint32
+}
+
+
+//SendPrevote consensusactor->p2pactor
+type SendPrevote struct {
+	BlockState *types.ConsensusBlockState
+}
+
+//SendPrecommit consensusactor->p2pactor
+type SendPrecommit struct {
+	BlockState *types.ConsensusBlockState
+}
+
+//SendCommit consensusactor->p2pactor
+type SendCommit struct {
+	BftHeaderState *types.ConsensusHeaderState
 }
