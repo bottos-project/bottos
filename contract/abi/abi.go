@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -54,12 +54,21 @@ type ABIStruct struct {
 	Fields *FeildMap `json:"fields"`
 }
 
+//TableStruct struct for abi
+type TableStruct struct {
+	Table_name string   `json:"table_name"`
+	Index_type string   `json:"index_type"`
+	Key_names  []string `json:"key_names"`
+	Key_types  []string `json:"key_types"`
+	Type       string   `json:"type"`
+}
+
 //ABI struct for abi
 type ABI struct {
 	Types   []interface{} `json:"types"`
 	Structs []ABIStruct   `json:"structs"`
 	Actions []ABIAction   `json:"actions"`
-	Tables  []interface{} `json:"tables"`
+	Tables  []TableStruct `json:"tables"`
 }
 
 //ABIStructs structs for ABI
@@ -164,6 +173,157 @@ func getAbiFieldsByAbiEx(contractname string, method string, abi ABI, subStructN
 	}
 
 	return nil
+}
+
+//getTableFieldsByAbiEx function
+func getTablesStructNameByAbiEx(table_name string, abi ABI) string {
+
+	for _, subaction := range abi.Tables {
+		if subaction.Table_name != table_name {
+			continue
+		}
+
+		structname := subaction.Type
+
+		return structname
+	}
+
+	return ""
+}
+
+//GetTableAbiFieldsByAbiEx function
+func getTableAbiFieldsByAbiEx(table_name string, abi ABI, subStructName string) *FeildMap {
+
+	structname := getTablesStructNameByAbiEx(table_name, abi)
+
+	if len(structname) <= 0 {
+		fmt.Println("Error: table_name (", table_name, ")'s struct is empty in your abi?")
+		return nil
+	}
+
+	for _, substruct := range abi.Structs {
+		if subStructName != "" {
+			if substruct.Name != subStructName {
+				continue
+			}
+		} else if structname != substruct.Name {
+			continue
+		}
+
+		return substruct.Fields
+	}
+
+	return nil
+}
+
+//DecodeTableAbiEx is to encode message
+func DecodeTableAbiEx(table_name string, r io.Reader, abi ABI, subStructName string, subStructValueName string, mapResultIn *map[string]interface{}) map[string]interface{} {
+	mapResult := make(map[string]interface{})
+
+	if mapResultIn != nil && len(subStructName) > 0 {
+		mapResult = *mapResultIn
+		mapResult[subStructValueName] = make(map[string]interface{})
+		mapResult = mapResult[subStructValueName].(map[string]interface{})
+	}
+
+	abiFieldsAttr := getTableAbiFieldsByAbiEx(table_name, abi, subStructName)
+	if abiFieldsAttr == nil {
+		return nil
+	}
+
+	abiFields := abiFieldsAttr.GetStringPair()
+
+	count := len(abiFields)
+	if count <= 0 {
+		return nil
+	}
+
+	if len(abiFields) > 0 {
+		_, errs := msgpack.UnpackArraySize(r)
+		if errs != nil {
+			return nil
+		}
+	} else {
+		return nil
+	}
+	var i uint64 = 0
+	for _, abiValTypeAttr := range abiFields {
+		abiValKey := strings.ToLower(abiValTypeAttr.Key)
+		abiValType := abiValTypeAttr.Value
+
+		switch abiValType {
+		case "string":
+			val, err := msgpack.UnpackStr16(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint8":
+			val, err := msgpack.UnpackUint8(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint16":
+			val, err := msgpack.UnpackUint16(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint32":
+			val, err := msgpack.UnpackUint32(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint64":
+			val, err := msgpack.UnpackUint64(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "bytes":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				return nil
+			}
+			Setmapval(mapResult, abiValKey, common.BytesToHex(val))
+			i++
+		case "uint128":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				fmt.Println("unpack uint128 or uint256 error ", val, err)
+				return nil
+			}
+			valueBigInt := big.NewInt(0)
+			valueBigInt = valueBigInt.SetBytes(val)
+
+			Setmapval(mapResult, abiValKey, valueBigInt)
+			i++
+		case "uint256":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				fmt.Println("unpack uint128 or uint256 error ", val, err)
+				return nil
+			}
+			valueBigInt := big.NewInt(0)
+			valueBigInt = valueBigInt.SetBytes(val)
+
+			Setmapval(mapResult, abiValKey, valueBigInt)
+			i++
+		default:
+			fmt.Println("abiValType is ", abiValType)
+			DecodeTableAbiEx(table_name, r, abi, abiValType, abiValKey, &mapResult)
+		}
+		i += 1
+	}
+
+	return mapResult
 }
 
 //EncodeAbiEx is to encode message
