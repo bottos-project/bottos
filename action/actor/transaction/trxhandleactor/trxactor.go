@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -71,17 +71,17 @@ func SetTrxPool(pool *transaction.TrxPool) {
 func handleSystemMsg(context actor.Context) bool {
 	switch context.Message().(type) {
 	case *actor.Started:
-		log.Info("TrxActor received started msg")
+		log.Error("TrxActor received started msg")
 	case *actor.Stopping:
-		log.Info("TrxActor received stopping msg")
+		log.Error("TrxActor received stopping msg")
 	case *actor.Restart:
-		log.Info("TrxActor received restart msg")
+		log.Error("TrxActor received restart msg")
 	case *actor.Restarting:
-		log.Info("TrxActor received restarting msg")
+		log.Error("TrxActor received restarting msg")
 	case *actor.Stop:
-		log.Info("TrxActor received Stop msg")
+		log.Error("TrxActor received Stop msg")
 	case *actor.Stopped:
-		log.Info("TrxActor received Stopped msg")
+		log.Error("TrxActor received Stopped msg")
 	default:
 		return false
 	}
@@ -97,23 +97,16 @@ func (t *TrxActor) Receive(context actor.Context) {
 	}
 
 	switch msg := context.Message().(type) {
-	case *message.PushTrxReq:
+	case *message.PushTrxForP2PReq:
 
-		trxPool.HandleTransactionFromFront(context, msg.Trx)
+		trxPool.HandleTransactionFromFront(context, msg.P2PTrx)
 
 	case *message.ReceiveTrx:
 
-		trxPool.HandleTransactionFromP2P(context, msg.Trx)
+		trxPool.HandleTransactionFromP2P(context, msg.P2PTrx)
 
-	case *message.GetAllPendingTrxReq:
-
-		trxPool.GetAllPendingTransactions(context)
-
-	case *message.RemovePendingTrxsReq:
-
-		trxPool.RemoveTransactions(msg.Trxs)
 
 	default:
-		log.Error("trx actor: Unknown msg")
+		log.Errorf("trx actor: Unknown msg ", msg)
 	}
 }
