@@ -27,11 +27,12 @@ package types
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
+
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
-	"github.com/bottos-project/bottos/bpl"
-	"encoding/hex"
-	"github.com/bottos-project/common/signature"
+	"github.com/bottos-project/bottos/common/signature"
 	log "github.com/cihub/seelog"
 )
 
@@ -48,6 +49,21 @@ type Transaction struct {
 	SigAlg      uint32
 	Signature   []byte
 }
+type P2PTransaction struct {
+	Transaction *Transaction
+	TTL  uint16
+}
+type BlockTransaction struct {
+	Transaction     *Transaction
+	ResourceReceipt  *ResourceReceipt
+}
+
+// ResourceReceipt
+type ResourceReceipt struct {
+	AccountName    string `json:"account_name"`
+	SpaceTokenCost uint64 `json:"space_token_cost"`
+	TimeTokenCost  uint64 `json:"time_token_cost"`
+}
 
 // HandledTransaction define transaction which is handled
 type HandledTransaction struct {
@@ -63,6 +79,14 @@ type DerivedTransaction struct {
 
 // Hash transaction hash
 func (trx *Transaction) Hash() common.Hash {
+	data, _ := bpl.Marshal(trx)
+	temp := sha256.Sum256(data)
+	hash := sha256.Sum256(temp[:])
+	return hash
+}
+
+// Hash transaction hash
+func (trx *BlockTransaction) Hash() common.Hash {
 	data, _ := bpl.Marshal(trx)
 	temp := sha256.Sum256(data)
 	hash := sha256.Sum256(temp[:])
