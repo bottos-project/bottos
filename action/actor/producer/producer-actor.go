@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -158,34 +158,40 @@ func (p *ProducerActor) working() uint32 {
 		}
 
 		for _, trx := range trxs {
-			dtag := new(types.Transaction)
-			dtag = trx
+
 			if uint64(common.Elapsed(start)) > config.DEFAULT_BLOCK_TIME_LIMIT {
-				log.Info("Warning producing block is too slow", common.Elapsed(start))
+				p.db.ResetSubSession()
+				log.Error("PRODUCER block reach elapse time ", common.Elapsed(start))
 				break
 			}
+
 			p.db.BeginUndo(config.SUB_TRX_SESSION)
 			applyStart := common.MeasureStart()
-			pass, _ := verifyTransactions(trx)
+			pass, _, resReceipt := verifyTransactions(trx, version)
 			if pass == false {
-				log.Error("PRODUCER verify transactions failed, trx %x", trx.Hash())
+				log.Errorf("PRODUCER verify transactions failed, trx %x, resReceipt %v", trx.Hash(), resReceipt)
 				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
-			log.Info("apply start elapse", common.Elapsed(applyStart))
-			data, _ := bpl.Marshal(trx)
+			log.Debug("PRODUCER apply start elapse", common.Elapsed(applyStart))
+
+			//add BlockTransaction
+			dtag := new(types.BlockTransaction)
+			dtag.Transaction = trx
+			dtag.ResourceReceipt = resReceipt
+
+			data, _ := bpl.Marshal(dtag)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
-			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				p.db.ResetSubSession()
-				log.Info("Warning pending block size reach MaxBlockSize")
+				log.Error("PRODUCER pending block size reach MaxBlockSize ", pendingBlockSize)
 				break
 			}
 			p.db.Squash()
+
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
-			log.Info("pack apply elapse", common.Elapsed(applyStart))
 		}
 
 		removeTransaction(removeTrx)
