@@ -28,9 +28,9 @@ package consensus
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
-	"github.com/bottos-project/bottos/bpl"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 )
@@ -65,7 +65,7 @@ func (c *Consensus) Dispatch(index uint16, p *p2p.Packet) {
 func (c *Consensus) SendPrevote(notify *message.SendPrevote) {
 	buf, err := bpl.Marshal(notify.BlockState)
 	if err != nil {
-		log.Errorf("protocol block send marshal error")
+		log.Errorf("PROTOCOL block send marshal error")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (c *Consensus) SendPrevote(notify *message.SendPrevote) {
 func (c *Consensus) SendPrecommit(notify *message.SendPrecommit) {
 	buf, err := bpl.Marshal(notify.BlockState)
 	if err != nil {
-		log.Errorf("protocol block send marshal error")
+		log.Errorf("PROTOCOL block send marshal error")
 		return
 	}
 
@@ -107,7 +107,7 @@ func (c *Consensus) SendPrecommit(notify *message.SendPrecommit) {
 func (c *Consensus) SendCommit(notify *message.SendCommit) {
 	buf, err := bpl.Marshal(notify.BftHeaderState)
 	if err != nil {
-		log.Errorf("protocol block send marshal error")
+		log.Errorf("PROTOCOL block send marshal error")
 		return
 	}
 
@@ -128,7 +128,7 @@ func (c *Consensus) processPrevote(index uint16, data []byte) {
 	var block types.ConsensusBlockState
 	err := bpl.Unmarshal(data, &block)
 	if err != nil {
-		log.Errorf("protocol consensus block Unmarshal error:%s", err)
+		log.Errorf("PROTOCOL consensus block Unmarshal error:%s, blockId%x", err, block.HeaderState.BlockId)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (c *Consensus) processPrecommit(index uint16, data []byte) {
 	var block types.ConsensusBlockState
 	err := bpl.Unmarshal(data, &block)
 	if err != nil {
-		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		log.Errorf("PROTOCOL consensus head Unmarshal error:%s,blockId%x", err, block.HeaderState.BlockId)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (c *Consensus) processCommit(index uint16, data []byte) {
 	var head types.ConsensusHeaderState
 	err := bpl.Unmarshal(data, &head)
 	if err != nil {
-		log.Errorf("protocol consensus head Unmarshal error:%s", err)
+		log.Errorf("PROTOCOL consensus head Unmarshal error:%s,blockId%x", err, head.BlockId)
 		return
 	}
 
