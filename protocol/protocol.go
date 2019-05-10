@@ -26,19 +26,21 @@
 package protocol
 
 import (
+	"net"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
 	"github.com/bottos-project/bottos/chain"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/protocol/block"
 	"github.com/bottos-project/bottos/protocol/common"
 	"github.com/bottos-project/bottos/protocol/consensus"
 	"github.com/bottos-project/bottos/protocol/discover"
 	"github.com/bottos-project/bottos/protocol/transaction"
 	log "github.com/cihub/seelog"
-	"net"
 )
 
 type protocol struct {
@@ -48,12 +50,12 @@ type protocol struct {
 	c *consensus.Consensus
 }
 
-func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) context.ProtocolInstance {
-	runner := p2p.MakeP2PServer(config)
+func MakeProtocol(config *config.P2PConfig, chain chain.BlockChainInterface,roleIntf role.RoleInterface ) context.ProtocolInstance {
+	runner := p2p.MakeP2PServer(config,roleIntf)
 
 	p := &protocol{
 		d: discover.MakeDiscover(config),
-		t: transaction.MakeTransaction(),
+		t: transaction.MakeTransaction(roleIntf),
 		b: block.MakeBlock(chain, true), //we should get node type here
 		c: consensus.MakeConsensus(),
 	}
@@ -68,7 +70,7 @@ func MakeProtocol(config *config.Parameter, chain chain.BlockChainInterface) con
 		} else if packet.H.ProtocolType == common.CONSENSUS_PACKET {
 			p.c.Dispatch(index, packet)
 		} else {
-			log.Errorf("wrong packet type")
+			log.Errorf("PROTOCOL wrong packet type")
 		}
 	}
 
@@ -90,8 +92,38 @@ func (p *protocol) Start() {
 	p.b.Start()
 	p.t.Start()
 }
+func (p *protocol) GetPeerInfo()( uint64, []*context.PeersInfo) {
+	var peersInfo []*context.PeersInfo
+	var peerCount uint64 = 0
+	pr := p2p.Runner.GetPeerP2PInfo()
+	lengthPeers := len(pr)
 
+	for _, info := range p.b.S.Peers {
+		temp := info
+		for j := 0; j < lengthPeers; j++ {
+			if temp.Index == pr[j].Index {
+				peer := &context.PeersInfo{
+					LastLib:   temp.LastLib,
+					LastBlock: temp.LastBlock,
+					Addr:      pr[j].Info.Addr,
+					Port:      pr[j].Info.Port,
+					ChainId:   pr[j].Info.ChainId,
+					Version:   pr[j].Info.Version,
+				}
+				peersInfo = append(peersInfo, peer)
+				peerCount++
+				break
+			}
+
+		}
+	}
+	return peerCount, peersInfo
+}
 func (p *protocol) GetBlockSyncState() bool {
+
+	if config.BtoConfig.Delegate.Solo == true {
+		return true
+	}
 	return p.b.GetSyncState()
 }
 
@@ -112,10 +144,11 @@ func (p *protocol) SendNewTrx(notify *message.NotifyTrx) {
 }
 
 func (p *protocol) SendNewBlock(notify *message.NotifyBlock) {
-	p.b.SendNewBlock(notify)
 	p.b.UpdateHeadNumber()
 	p.b.UpdateNumber()
+	p.b.SendNewBlock(notify)
 }
+
 func (p *protocol) SendPrevote(notify *message.SendPrevote) {
 	p.c.SendPrevote(notify)
 }
