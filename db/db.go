@@ -69,6 +69,21 @@ func NewOptionDbService(optPath string) *OptionDBService {
 
 }
 
+//Close is to close db.
+func (d *DBService) Close() {
+	log.Error("DB close all")
+	d.codeRepo.CallUndoFlush()
+	d.kvRepo.CallClose()
+	d.codeRepo.CallClose()
+}
+
+func (d *OptionDBService) Close() {
+	if d.optDbRepo != nil {
+		log.Info("mongodb is not connect do not need close")
+		d.optDbRepo.CallClose()
+	}
+}
+
 //DBApi is listing all the interface that DBService provides.
 type DBApi interface {
 	Lock()
