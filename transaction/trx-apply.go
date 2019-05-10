@@ -123,7 +123,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 	var chainCursorLabel uint32 = (uint32)(blockHistory.BlockHash[common.HashLength-1]) + (uint32)(blockHistory.BlockHash[common.HashLength-2])<<8 + (uint32)(blockHistory.BlockHash[common.HashLength-3])<<16 + (uint32)(blockHistory.BlockHash[common.HashLength-4])<<24
 
 	if chainCursorLabel != trx.CursorLabel {
-		log.Errorf("check chain match error, trx cursorlabel %v, chain cursollabel %v, trx: %x", trx.CursorLabel, chainCursorLabel, trx.Hash())
+		log.Errorf("TRX check chain match error, trx %x, cursorlabel %v, chain cursolabel %v", trx.Hash(), trx.CursorLabel, chainCursorLabel)
 		return false
 	}
 
@@ -137,13 +137,13 @@ func (trxApplyService *TrxApplyService) SaveTransactionExpiration(trx *types.Tra
 	trxApplyService.roleIntf.SetTransactionExpiration(trx.Hash(), transactionExpiration)
 }
 
-// ApplyTransaction is to handle a transaction, include parameters checking
-func (trxApplyService *TrxApplyService) ApplyTransaction(trx *types.Transaction) (bool, bottosErr.ErrCode, *types.HandledTransaction) {
+func (trxApplyService *TrxApplyService) ApplyBlockTransaction(trx *types.BlockTransaction) (bool, bottosErr.ErrCode, *types.HandledTransaction, *types.ResourceReceipt) {
 
-	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
-	if nil != getAccountErr || nil == account {
-		log.Errorf("check account error, trx: %x", trx.Hash())
-		return false, bottosErr.ErrTrxAccountError, nil
+	log.Infof("RESOURCE: begin verify trx %x", trx.Transaction.Hash())
+	if trx.Transaction.Sender == config.BOTTOS_CONTRACT_NAME {
+		f, bErr, h, rr, _ := trxApplyService.ExecuteTransaction(trx.Transaction, false)
+		log.Errorf("RESOURCE: execute native transaction SUCESS , trx %x, error %v", trx.Transaction.Hash(), bottosErr.GetCodeString(bErr))
+		return f, bErr, h, rr
 	}
 
 	if !trxApplyService.CheckTransactionLifeTime(trx) {		
