@@ -268,6 +268,23 @@ func (bc *BlockChain) WriteBlock(block *types.Block) error {
 	return WriteBlock(bc.blockDb, block)
 }
 
+func (bc *BlockChain) handledBlockCallback(block *types.Block) {
+	for _, cb := range bc.handledBlockCB {
+		if cb != nil {
+			cb(block)
+		}
+	}
+}
+
+func (bc *BlockChain) committedBlockCallback(block *types.Block) {
+	for _, cb := range bc.committedBlockCB {
+		if cb != nil {
+			cb(block)
+		}
+	}
+}
+
+
 //HeadBlockTime get lastest block time
 func (bc *BlockChain) HeadBlockTime() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
