@@ -234,18 +234,19 @@ func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
 
-//GetBlockByNumber get block from cache and chain by number
+//GetBlockByNumber get block from forkdb main fork and blockdb by number
 func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
-	block := bc.blockCache.GetBlockByNum(number)
+	block := bc.forkdb.GetMainForkBlockByNum(number)
 	if block != nil {
 		return block
 	}
 
-	hash := GetBlockHashByNumber(bc.blockDb, number)
+	hash := bc.blockDb.GetBlockHashByNumber(number)
 	if hash == (common.Hash{}) {
+		log.Errorf("CHAIN GetBlockHashByNumber fail, number = %v", number)
 		return nil
 	}
-	return bc.GetBlock(hash)
+	return bc.blockDb.GetBlock(hash)
 }
 
 func (bc *BlockChain) GetHeaderByNumber(number uint64) *types.Header {
