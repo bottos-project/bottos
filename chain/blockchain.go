@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -134,6 +134,70 @@ func (bc *BlockChain) initChain() error {
 	bc.handledBlockCallback(block)
 	return nil
 }
+
+
+func (bc *BlockChain) InitOnRecover(ctx *cli.Context) error {
+	gsconfig, err := bc.blockDb.GetGenesisConfig()
+	if err != nil {
+		return fmt.Errorf("CHAIN InitOnRecover fail, genesis configuration not found")
+	}
+	config.SetGenesisConfig(gsconfig)
+
+	err = contract.NativeContractInitChain(bc.dbInst, bc.roleIntf, bc.nc)
+	if err != nil {
+		return err
+	}
+
+	b := bc.GetBlockByNumber(uint64(0))
+
+	bc.updateChainState(b)
+
+	return nil
+}
+
+func (bc *BlockChain) loadDB(ctx *cli.Context) error {
+	gsconfig, err := bc.blockDb.GetGenesisConfig()
+	if err != nil {
+		return fmt.Errorf("CHAIN Loading block database fail, genesis configuration not found")
+	}
+	config.SetGenesisConfig(gsconfig)
+
+	if ctx.GlobalIsSet(cmd.GenesisFileFlag.Name) {
+		log.Info("CHAIN Ignoring genesis configuration path, already have genesis configuration within block database")
+	}
+
+	lastb := bc.blockDb.GetLastBlock()
+	if lastb == nil {
+		return fmt.Errorf("CHAIN Loading block database fail, last block not found")
+	}
+
+	err = bc.dbInst.RollbackAll()
+	if err != nil {
+		return err
+	}
+
+	headBlockNum := bc.HeadBlockNum()
+	libNum := bc.LastConsensusBlockNum()
+	lastBlockNum := lastb.GetNumber()
+	log.Errorf("CHAIN Loading block database, headBlockNum %v, libNum %v, lastBlockNum %v", headBlockNum, libNum, lastBlockNum)
+
+	if bc.HeadBlockNum() != lastBlockNum || bc.LastConsensusBlockNum() != lastBlockNum {
+		return fmt.Errorf("CHAIN Head block number not match")
+	}
+
+	_, errcode := bc.forkdb.Insert(lastb)
+	if errcode != berr.ErrNoError {
+		return fmt.Errorf("CHAIN initialize forkdb fail")
+	}
+
+	if lastb.GetNumber() == 0 {
+		bc.updateChainState(lastb)
+	}
+	//release undo information after rollback success
+	bc.dbInst.ReleaseUndoInfo()
+	return nil
+}
+
 
 //RegisterHandledBlockCallback call back register
 func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
