@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -28,45 +28,41 @@ package chain
 import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/transaction"
+	berr "github.com/bottos-project/bottos/common/errors"
+	"gopkg.in/urfave/cli.v1"
 )
 
-const (
-	//InsertBlockSuccess insert block successfully
-	InsertBlockSuccess uint32 = 0
-	//InsertBlockErrorGeneral general error
-	InsertBlockErrorGeneral uint32 = 1
-	//InsertBlockErrorNotLinked the block not linked to the chain
-	InsertBlockErrorNotLinked uint32 = 2
-	//InsertBlockErrorValidateFail block validate fail
-	InsertBlockErrorValidateFail uint32 = 3
-	//InsertBlockErrorDiffLibLinked different lib block but linked
-	InsertBlockErrorDiffLibLinked uint32 = 4
-	//InsertBlockErrorDiffLibNotLinked different lib block and not linked in this chain
-	InsertBlockErrorDiffLibNotLinked uint32 = 5
-)
 
-//HandledBlockCallback call back
-type HandledBlockCallback func(*types.Block)
+//BlockCallback notify block
+type BlockCallback func(*types.Block)
 
 //BlockChainInterface the interface of chain
 type BlockChainInterface interface {
-	Init() error
+	Init(ctx *cli.Context) error
+	SetTrxPool(trxPool *transaction.TrxPool)
+	InitOnRecover(ctx *cli.Context) error
 	Close()
 
-	HasBlock(hash common.Hash) bool
+	IsMainForkHasBlock(block *types.Block) bool
 	GetBlockByHash(hash common.Hash) *types.Block
 	GetBlockByNumber(number uint64) *types.Block
 	GetHeaderByNumber(number uint64) *types.Header
+	GetTransaction(hash common.Hash) *types.BlockTransaction
+	GetCommittedTransaction(hash common.Hash) *types.BlockTransaction
 
 	HeadBlockTime() uint64
 	HeadBlockNum() uint64
 	HeadBlockHash() common.Hash
 	HeadBlockDelegate() string
 	LastConsensusBlockNum() uint64
-	GenesisTimestamp() uint64
 
-	ValidateBlock(block *types.Block) uint32
-	InsertBlock(block *types.Block) uint32
+	InsertBlock(block *types.Block) berr.ErrCode
+	ImportBlock(block *types.Block) berr.ErrCode
 
-	RegisterHandledBlockCallback(cb HandledBlockCallback)
+	CommitBlock(block *types.Block) berr.ErrCode
+	SyncCommitBlock(BftHeaderState *types.ConsensusHeaderState) berr.ErrCode
+
+	RegisterHandledBlockCallback(cb BlockCallback)
+	RegisterCommittedBlockCallback(cb BlockCallback)
 }
