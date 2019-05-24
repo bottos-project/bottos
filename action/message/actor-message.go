@@ -144,9 +144,28 @@ type ReceiveBlock struct {
 //ReceiveBlockResp chainactor->p2pactor
 type ReceiveBlockResp struct {
 	BlockNum uint64
-	ErrorNo  uint32
+	ErrorNo  berr.ErrCode
 }
 
+//ProducedBlockReq produceractor->consensusactor
+type ProducedBlockReq struct {
+	Block *types.Block
+}
+
+//RcvPrevoteReq p2pactor->consensusactor
+type RcvPrevoteReq struct {
+	BlockState *types.ConsensusBlockState
+}
+
+//RcvPrecommitReq p2pactor->consensusactor
+type RcvPrecommitReq struct {
+	BlockState *types.ConsensusBlockState
+}
+
+//RcvPrecommitReq p2pactor->consensusactor
+type RcvCommitReq struct {
+	BftHeaderState *types.ConsensusHeaderState
+}
 
 //SendPrevote consensusactor->p2pactor
 type SendPrevote struct {
