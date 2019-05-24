@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -52,6 +52,13 @@ func Marshal(v interface{}) ([]byte, error) {
 //Unmarshal is to unserialize the message
 func Unmarshal(data []byte, v interface{}) error {
 	r := bytes.NewReader(data)
-	err := Decode(r, v)
+	err := Decode(r, v, "")
+	return err
+}
+
+//unserialize the message until stopField
+func UnmarshalUntilField(data []byte, v interface{}, stopField string) error {
+	r := bytes.NewReader(data)
+	err := Decode(r, v, stopField)
 	return err
 }
