@@ -85,27 +85,32 @@ func handleSystemMsg(context actor.Context) bool {
 	return true
 }
 
-func preHandleCommon (trx *types.Transaction) (bool, bottosErr.ErrCode) {
+func preHandleCommon(trx *types.Transaction) (bool, bottosErr.ErrCode, bool) {
+	putInCache := false
 	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
-		return false, err
+		return false, err, putInCache
 	}
 
 	if false == actorEnv.Protocol.GetBlockSyncState() {
-		log.Errorf("TRX rcv trx when block is syncing, trx %x", trx.Hash())
-
-		return false, bottosErr.ErrTrxBlockSyncingError
+		distance := actorEnv.Protocol.GetBlockSyncDistance()
+		log.Errorf("TRX rcv trx when block is syncing, trx %x, distance %v", trx.Hash(), distance)
+		if distance > config.DEFAULT_MAX_SYNC_DISTANCE_PUT_TRX_IN_CACHE {
+			return false, bottosErr.ErrTrxBlockSyncingError, putInCache
+		} else {
+			putInCache = true
+		}
 	}
 
 	sender, err := actorEnv.RoleIntf.GetAccount(trx.Sender)
 	if nil != err {
-		return false, bottosErr.ErrTrxAccountError
+		return false, bottosErr.ErrTrxAccountError, putInCache
 	}
 
 	if !trx.VerifySignature(sender.PublicKey) {
-		return false, bottosErr.ErrTrxSignError
+		return false, bottosErr.ErrTrxSignError, putInCache
 	}
 
-	return true, bottosErr.ErrNoError
+	return true, bottosErr.ErrNoError, putInCache
 }
 func initP2PTrxMsg(msg *message.PushTrxReq) (msgp *message.PushTrxForP2PReq) {
 	//set trx TTL
@@ -125,24 +130,32 @@ func initP2PTrxMsg(msg *message.PushTrxReq) (msgp *message.PushTrxForP2PReq) {
 
 func preHandlePushTrxReq(msg *message.PushTrxReq, ctx actor.Context) {
 
-	preHandleResult, err := preHandleCommon(msg.Trx)
+	preHandleResult, err, putInCache := preHandleCommon(msg.Trx)
 	
 	if !preHandleResult {			
 		log.Errorf("TRX pre handle trx from front failed, trx %x", msg.Trx.Hash())
 		ctx.Respond(err)
 	} else {
 		msgP2P := initP2PTrxMsg(msg)
+		if putInCache || trxPool.IsCacheEmpty() == false {
+			trxPool.AddTransactionToCache(msgP2P)
+		} else {
 		trxActorPid.Tell(msgP2P)
+		}
 		ctx.Respond(bottosErr.ErrNoError)
 	}
 }
 
 func preHandleReceiveTrx(msg *message.ReceiveTrx, ctx actor.Context) {
 
-	preHandleResult, _ := preHandleCommon(msg.P2PTrx.Transaction)
+	preHandleResult, _, putInCache := preHandleCommon(msg.P2PTrx.Transaction)
 	
 	if preHandleResult {
+		if putInCache || trxPool.IsCacheEmpty() == false {
+			trxPool.AddTransactionToCache(msg)
+		} else {
 		trxActorPid.Tell(msg)
+		}
 	} else {
 		if actorEnv.RoleIntf.IsMyselfDelegate() == true{
 			log.Info("TRX pre handle trx from producer node failed, trx %x", msg.P2PTrx.Transaction.Hash())
