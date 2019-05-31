@@ -822,3 +822,50 @@ func encoderRestRequest(r *http.Request, req interface{}) (interface{}, error) {
 
 	return req, nil
 }
+
+func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.GetInfoResponse) ([]byte, *types.Transaction, error) {
+	var blockHeader *api.GetInfoResponse_Result
+	if h == nil {
+		var err error
+		blockHeader, err = GetBlockHeader()
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		blockHeader = h.Result
+	}
+
+	trx := &types.BasicTransaction{
+		Version:     blockHeader.HeadBlockVersion,
+		CursorNum:   blockHeader.HeadBlockNum,
+		CursorLabel: blockHeader.CursorLabel,
+		Lifetime:    blockHeader.HeadBlockTime + 100,
+		Sender:      sender,
+		Contract:    contract,
+		Method:      method,
+		Param:       param,
+		SigAlg:      config.SIGN_ALG,
+	}
+	msg, err := bpl.Marshal(trx)
+	if nil != err {
+		log.Errorf("REST:bpl Marshal failed: %v", err)
+		return nil, nil, err
+	}
+
+	//Add chainID Flag
+	chainID, _ := hex.DecodeString(blockHeader.ChainId)
+	msg = bytes.Join([][]byte{msg, chainID}, []byte{})
+
+	intTrx := &types.Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       trx.Param,
+		SigAlg:      config.SIGN_ALG,
+	}
+	return comtool.Sha256(msg), intTrx, err
+}
