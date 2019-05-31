@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -26,16 +26,20 @@
 package bpl
 
 import (
-	"errors"
 	"fmt"
+	"errors"
 	"io"
 	"math/big"
 	"reflect"
 	"sync"
 )
 
+type EncodeContext struct {
+	rootValue interface{}
+}
+
 //EncodeWriter function type of the encoder
-type EncodeWriter func(reflect.Value, io.Writer) error
+type EncodeWriter func(reflect.Value, io.Writer, *EncodeContext) error
 
 var encoderCache sync.Map // map[reflect.Type]EncodeWriter
 
@@ -60,7 +64,9 @@ func Encode(v interface{}, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	return encoder(rv, w)
+
+	ctx := newEncodeContext()
+	return encoder(rv, w, ctx)
 }
 
 func newEncoder(t reflect.Type) (EncodeWriter, error) {
@@ -111,9 +117,9 @@ func getEncoder(t reflect.Type) (EncodeWriter, error) {
 		f  EncodeWriter
 	)
 	wg.Add(1)
-	fi, loaded := encoderCache.LoadOrStore(t, EncodeWriter(func(val reflect.Value, w io.Writer) error {
+	fi, loaded := encoderCache.LoadOrStore(t, EncodeWriter(func(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 		wg.Wait()
-		return f(val, w)
+		return f(val, w, ctx)
 	}))
 	if loaded {
 		return fi.(EncodeWriter), nil
@@ -126,46 +132,51 @@ func getEncoder(t reflect.Type) (EncodeWriter, error) {
 	return encoder, err
 }
 
-func unsupportedTypeEncoder(val reflect.Value, w io.Writer) error {
+func newEncodeContext() *EncodeContext {
+	ctx := &EncodeContext{}
+	return ctx
+}
+
+func unsupportedTypeEncoder(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	return fmt.Errorf("bpl encode: unsupported type %v", val.Type())
 }
 
-func encodeBool(val reflect.Value, w io.Writer) error {
+func encodeBool(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackBool(w, val.Bool())
 	return nil
 }
 
-func encodeUint8(val reflect.Value, w io.Writer) error {
+func encodeUint8(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackUint8(w, uint8(val.Uint()))
 	return nil
 }
 
-func encodeUint16(val reflect.Value, w io.Writer) error {
+func encodeUint16(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackUint16(w, uint16(val.Uint()))
 	return nil
 }
 
-func encodeUint32(val reflect.Value, w io.Writer) error {
+func encodeUint32(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackUint32(w, uint32(val.Uint()))
 	return nil
 }
 
-func encodeUint64(val reflect.Value, w io.Writer) error {
+func encodeUint64(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackUint64(w, uint64(val.Uint()))
 	return nil
 }
 
-func encodeString(val reflect.Value, w io.Writer) error {
+func encodeString(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackStr16(w, val.String())
 	return nil
 }
 
-func encodeBytes(val reflect.Value, w io.Writer) error {
+func encodeBytes(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	PackBin16(w, val.Bytes())
 	return nil
 }
 
-func encodeByteArray(val reflect.Value, w io.Writer) error {
+func encodeByteArray(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	if !val.CanAddr() {
 		copy := reflect.New(val.Type()).Elem()
 		copy.Set(val)
@@ -183,11 +194,11 @@ func makeSliceEncoder(t reflect.Type) (EncodeWriter, error) {
 		return nil, err
 	}
 
-	encoder := func(val reflect.Value, w io.Writer) error {
+	encoder := func(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 		vlen := val.Len()
 		PackArraySize(w, uint16(vlen))
 		for i := 0; i < vlen; i++ {
-			if err := elemEncoder(val.Index(i), w); err != nil {
+			if err := elemEncoder(val.Index(i), w, ctx); err != nil {
 				return err
 			}
 		}
@@ -197,8 +208,9 @@ func makeSliceEncoder(t reflect.Type) (EncodeWriter, error) {
 }
 
 type structField struct {
-	t     reflect.Type
-	index int
+	t      reflect.Type
+	index  int
+	ignore bool
 }
 
 func makeStructEncoder(t reflect.Type) (EncodeWriter, error) {
@@ -206,17 +218,34 @@ func makeStructEncoder(t reflect.Type) (EncodeWriter, error) {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		fields = append(fields, structField{f.Type, i})
+		fields = append(fields, structField{f.Type, i, false})
 	}
 
-	encoder := func(val reflect.Value, w io.Writer) error {
-		PackArraySize(w, uint16(len(fields)))
+	rule, hasRule := ignoreRuleMap[t.Name()]
+
+	encoder := func(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
+		fieldNum := uint16(len(fields))
+		if hasRule {
+			if ctx.rootValue == nil {
+				ctx.rootValue = val.Interface()
+			}
+			for _, f := range fields {
+				fields[f.index].ignore = rule(t.Field(f.index), f.index, val.Interface(), ctx.rootValue)
+				if fields[f.index].ignore {
+					fieldNum--
+				}
+			}
+		}
+		PackArraySize(w, fieldNum)
 		for _, f := range fields {
+			if f.ignore {
+				continue
+			}
 			encoder, err := getEncoder(f.t)
 			if err != nil {
 				return err
 			}
-			if err := encoder(val.Field(f.index), w); err != nil {
+			if err := encoder(val.Field(f.index), w, ctx); err != nil {
 				return err
 			}
 		}
@@ -231,40 +260,40 @@ func makePtrEncoder(t reflect.Type) (EncodeWriter, error) {
 		return nil, err
 	}
 
-	encoder := func(val reflect.Value, w io.Writer) error {
+	encoder := func(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 		if val.IsNil() {
 			_, err := PackNil(w)
 			return err
 		}
-		return encodeWriter(val.Elem(), w)
+		return encodeWriter(val.Elem(), w, ctx)
 	}
 
 	return encoder, nil
 }
 
-func encodeBigIntPtr(val reflect.Value, w io.Writer) error {
+func encodeBigIntPtr(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	ptr := val.Interface().(*big.Int)
 	if ptr == nil {
 		return errors.New("bpl encode: nil ptr")
 	}
-	return encodeBigInt(ptr, w)
+	return encodeBigInt(ptr, w, ctx)
 }
 
-func encodeBigIntNoPtr(val reflect.Value, w io.Writer) error {
+func encodeBigIntNoPtr(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	i := val.Interface().(big.Int)
-	return encodeBigInt(&i, w)
+	return encodeBigInt(&i, w, ctx)
 }
 
-func encodeBigInt(i *big.Int, w io.Writer) error {
+func encodeBigInt(i *big.Int, w io.Writer, ctx *EncodeContext) error {
 	_, err := PackExt16(w, EXT_BIGINT, i.Bytes())
 	return err
 }
 
-func encodeCustom(val reflect.Value, w io.Writer) error {
+func encodeCustom(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	return val.Interface().(Encoder).EncodeBPL(w)
 }
 
-func encodeCustomNoPtr(val reflect.Value, w io.Writer) error {
+func encodeCustomNoPtr(val reflect.Value, w io.Writer, ctx *EncodeContext) error {
 	if !val.CanAddr() {
 		return fmt.Errorf("bpl encode: unadressable value of type %v", val.Type())
 	}

@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -33,10 +33,13 @@ import (
 )
 
 type DecodeContext struct {
-	r    io.Reader
-	t    uint8
-	ext  uint8
-	size uint16
+	r         io.Reader
+	t         uint8
+	ext       uint8
+	size      uint16
+	stopField string
+	stoped    bool
+	rootValue interface{}
 }
 
 //DecoderReader function type of the decoder
@@ -52,7 +55,7 @@ var (
 )
 
 //Decode decodes byte stream to struct, slice/array or other basic types
-func Decode(r io.Reader, v interface{}) error {
+func Decode(r io.Reader, v interface{}, stopField string) error {
 	if v == nil {
 		return fmt.Errorf("bpl decode: nil pointer")
 	}
@@ -71,7 +74,7 @@ func Decode(r io.Reader, v interface{}) error {
 		return err
 	}
 
-	ctx := newDecodeContext(r)
+	ctx := newDecodeContext(r, stopField)
 	if err = ctx.readHeader(); err != nil {
 		return err
 	}
@@ -112,8 +115,8 @@ func getDecoder(t reflect.Type) (DecoderReader, error) {
 	}
 }
 
-func newDecodeContext(r io.Reader) *DecodeContext {
-	ctx := &DecodeContext{r: r}
+func newDecodeContext(r io.Reader, stopfield string) *DecodeContext {
+	ctx := &DecodeContext{r: r, stopField: stopfield, stoped: false}
 	return ctx
 }
 
@@ -409,14 +412,22 @@ func makeStructDecoder(t reflect.Type) (DecoderReader, error) {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		fields = append(fields, structField{f.Type, i})
+		fields = append(fields, structField{f.Type, i, false})
 	}
 
+	rule, hasRule := ignoreRuleMap[t.Name()]
+
 	dec := func(val reflect.Value, ctx *DecodeContext) (err error) {
-		if len(fields) != int(ctx.size) {
-			return fmt.Errorf("msgpack decode: struct feild num mismatch, num %v, expected %v", len(fields), int(ctx.size))
+		if len(fields) < int(ctx.size) {
+			return fmt.Errorf("bpl decode: struct feild num mismatch, num %v, expected %v", len(fields), int(ctx.size))
+		}
+		if hasRule && ctx.rootValue == nil {
+			ctx.rootValue = val.Interface()
 		}
 		for _, f := range fields {
+			if hasRule && rule(t.Field(f.index), f.index, val.Interface(), ctx.rootValue) { //ignore
+				continue
+			}
 			decoder, err := getDecoder(f.t)
 			if err != nil {
 				return err
@@ -428,6 +439,13 @@ func makeStructDecoder(t reflect.Type) (DecoderReader, error) {
 			err = decoder(val.Field(f.index), ctx)
 			if err != nil {
 				return err
+			}
+			if ctx.stoped {
+				break
+			}
+			if len(ctx.stopField) > 0 && t.Field(f.index).Name == ctx.stopField {
+				ctx.stoped = true
+				break
 			}
 		}
 		return nil
