@@ -26,7 +26,7 @@
 package config
 
 // DEFAULT_BLOCK_INTERVAL define defalut interval of block production
-const DEFAULT_BLOCK_INTERVAL uint32 = 1
+const DEFAULT_BLOCK_INTERVAL uint32 = 3
 
 // BLOCKS_PER_ROUND define block num per round
 const BLOCKS_PER_ROUND uint32 = 29
@@ -35,7 +35,7 @@ const BLOCKS_PER_ROUND uint32 = 29
 const VOTED_DELEGATES_PER_ROUND uint32 = 28
 
 // CONSENSUS_BLOCKS_PERCENT define consensus rate
-const CONSENSUS_BLOCKS_PERCENT uint32 = 80
+const CONSENSUS_BLOCKS_PERCENT uint32 = 70
 
 // MAX_DELEGATE_VOTES define max delegate votes
 const MAX_DELEGATE_VOTES uint32 = 40
@@ -57,8 +57,11 @@ const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 // BOTTOS_SUPPLY_MUL define dot num of bto
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
+// MAX_ACCOUNT_NAME_LENGTH define max account name length
+const MAX_ACCOUNT_NAME_LENGTH int = 16
+
 // ACCOUNT_NAME_REGEXP define account name format
-const ACCOUNT_NAME_REGEXP string = "^[a-z1-9][a-z1-9.-]{2,20}$"
+const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
 
 // DEFAULT_BLOCK_TIME_LIMIT define default block time limit when producing block
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
@@ -67,7 +70,7 @@ const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 const DEFAULT_MAX_LIFE_TIME uint64 = 10000 //unit: second
 
 // DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 30000
+const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
 
 // DEFAULT_OPTIONDB_NAME define default option db name
 const DEFAULT_OPTIONDB_NAME string = "bottos"
@@ -87,5 +90,5 @@ const DEFAUL_MAX_CONTRACT_DEPTH uint32 = 10
 // DEFAUL_MAX_SUB_CONTRACT_NUM define max sub contract num
 const DEFAUL_MAX_SUB_CONTRACT_NUM uint32 = 10
 
-// UNSTAKING_BALANCE_DURATION lock time duration after unstaking
-const UNSTAKING_BALANCE_DURATION uint64 = 3 * 24 * 60 * 60
+const PRIMARY_TRX_SESSION string = "primary"
+const SUB_TRX_SESSION string = "subsession"
