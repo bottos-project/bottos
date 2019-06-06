@@ -78,7 +78,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Error("PRODUCER received started msg ", msg)
+		log.Infof("ProducerActor received started msg: %s", msg)
 
 		context.SetReceiveTimeout(time.Duration(config.PRODUCER_TIME_OUT) * time.Millisecond)
 
@@ -87,19 +87,19 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 		context.SetReceiveTimeout(time.Duration(elapse) * time.Millisecond)
 
 	case *actor.Stopping:
-		log.Error("PRODUCER received stopping msg")
+		log.Info("ProducerActor received stopping msg")
 
 	case *actor.Restart:
-		log.Error("PRODUCER received restart msg")
+		log.Info("ProducerActor received restart msg")
 
 	case *actor.Restarting:
-		log.Error("PRODUCER received restarting msg")
+		log.Info("ProducerActor received restarting msg")
 
 	case *actor.Stop:
-		log.Error("PRODUCER received Stop msg")
+		log.Info("ProducerActor received Stop msg")
 
 	case *actor.Stopped:
-		log.Error("PRODUCER received Stopped msg")
+		log.Info("ProducerActor received Stopped msg")
 
 	default:
 		return false
@@ -115,30 +115,30 @@ func (p *ProducerActor) Receive(context actor.Context) {
 		return
 	}
 
-	log.Error("PRODUCER received Unknown msg")
+	log.Error("ProducerActor received Unknown msg")
 }
 func (p *ProducerActor) working() uint32 {
 
 	if p.ins.IsReady() {
 		p.db.Lock()
 		defer p.db.UnLock()
-		start := common.MeasureStart()
+		log.Infof("begin to producer block ")
 		p.pendingTxSession = p.db.GetSession()
 		if p.pendingTxSession != nil {
-			log.Debug("PRODUCER p.pendingTxSession need to reset")
+			log.Infof("p.pendingTxSession need to reset ")
 			p.db.ResetSession()
 		}
+		log.Infof("begin session......... ")
 		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
 
 		trxs := GetAllPendingTrx()
-		log.Debug("PRODUCER get trx times", common.Elapsed(start))
-		pendingTrxlen := len(trxs)
+		log.Info("get trx times", common.Elapsed(start))
 		block := &types.Block{}
 		data, _ := bpl.Marshal(block)
 		pendingBlockSize := uint32(len(data))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
-			log.Error("PRODUCER GetCoreState failed,begin rollback", err)
+			log.Info("GetGlobalPropertyRole failed")
 			p.db.ResetSession()
 			return config.PRODUCER_TIME_OUT
 		}
@@ -169,29 +169,26 @@ func (p *ProducerActor) working() uint32 {
 			applyStart := common.MeasureStart()
 			pass, _, resReceipt := verifyTransactions(trx, version)
 			if pass == false {
-				log.Errorf("PRODUCER verify transactions failed, trx %x, resReceipt %v", trx.Hash(), resReceipt)
+				log.Info("ApplyTransaction failed")
 				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
-			log.Debug("PRODUCER apply start elapse", common.Elapsed(applyStart))
-
-			//add BlockTransaction
-			dtag := new(types.BlockTransaction)
-			dtag.Transaction = trx
-			dtag.ResourceReceipt = resReceipt
-
-			data, _ := bpl.Marshal(dtag)
+			log.Info("apply start elapse", common.Elapsed(applyStart))
+			data, _ := bpl.Marshal(trx)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
+			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				p.db.ResetSubSession()
-				log.Error("PRODUCER pending block size reach MaxBlockSize ", pendingBlockSize)
-				break
+				log.Info("Warning pending block size reach MaxBlockSize")
+				pendingTrx = append(pendingTrx, dtag)
+				continue
 			}
 			p.db.Squash()
 
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
+			log.Info("pack apply elapse", common.Elapsed(applyStart))
 		}
 
 		removeTransaction(removeTrx)
@@ -199,17 +196,8 @@ func (p *ProducerActor) working() uint32 {
 		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			log.Errorf("PRODUCER block, hash: %x, delegate: %s, num:%v, trxn:%v, pendingTrxn:%v, blockTime:%s, blockSize %v\n",
-				block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.BlockTransactions), pendingTrxlen, time.Unix(int64(block.Header.Timestamp), 0), pendingBlockSize)
-
-			if config.BtoConfig.Delegate.Solo == false {
-				ConsensusProducedBlock(block)
-			} else {
-				AddBlock(block)
-			}
-
-		} else {
-			return config.PRODUCER_TIME_OUT
+			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			ApplyBlock(block)
 		}
 		return p.ins.CalcNextReportTime(block)
 	}
