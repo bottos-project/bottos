@@ -208,4 +208,5 @@ func (c *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.Que
 func BroadCastBlock(block *types.Block) {
 	broadCastBlock := &message.NotifyBlock{block}
 	NetActorPid.Tell(broadCastBlock)
+	return
 }
