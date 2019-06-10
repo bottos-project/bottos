@@ -39,9 +39,11 @@ type ProtocolInstance interface {
 
 	SendNewTrx(notify *message.NotifyTrx)
 	SendNewBlock(notify *message.NotifyBlock)
+	SendPrevote(notify *message.SendPrevote)
+	SendPrecommit(notify *message.SendPrecommit)
+	SendCommit(notify *message.SendCommit)
 }
 
 type ProtocolInterface interface {
 	GetBlockSyncState() bool
-	GetPeerInfo()(uint64,[]*PeersInfo)
 }
