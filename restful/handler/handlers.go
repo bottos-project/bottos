@@ -75,14 +75,14 @@ func TodoShow(w http.ResponseWriter, r *http.Request) {
 
 //Node
 func GetGenerateBlockTime(w http.ResponseWriter, r *http.Request) {
-/*	//func GetGenerateBlockTime(cmd map[string]interface{}) map[string]interface{} {
-	resp := ResponsePack(error.SUCCESS)
-	resp["Result"] = "aq"
-	//fmt.Fprint(w, "Welcome!\n",resp	)
+	/*	//func GetGenerateBlockTime(cmd map[string]interface{}) map[string]interface{} {
+		resp := ResponsePack(error.SUCCESS)
+		resp["Result"] = "aq"
+		//fmt.Fprint(w, "Welcome!\n",resp	)
 
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		panic(err)
-	}*/
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			panic(err)
+		}*/
 	//resp["Result"] = config.DEFAULT_GEN_BLOCK_TIME
 	//return resp
 }
@@ -98,7 +98,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		encoderRestResponse(w, resp)
 		return
-		}
+	}
 
 	if resp := checkNil(res, 1); resp.Errcode != 0 {
 		encoderRestResponse(w, resp)
@@ -120,7 +120,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	result.HeadBlockTime = response.HeadBlockTime
 	result.HeadBlockDelegate = response.HeadBlockDelegate
 	result.CursorLabel = response.HeadBlockHash.Label()
-	result.ChainId=common.BytesToHex(config.GetChainID())
+	result.ChainId = common.BytesToHex(config.GetChainID())
 
 	resp.Errcode = uint32(bottosErr.ErrNoError)
 	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
@@ -151,24 +151,36 @@ func checkNil(req interface{}, flag int8) (ResponseStruct) {
 func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//params := mux.Vars(r)
 	var msgReq *api.GetBlockRequest
+	var resp ResponseStruct
 	err := json.NewDecoder(r.Body).Decode(&msgReq)
 	if err != nil {
-		log.Errorf("request error: %s", err)
-		panic(err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+		encoderRestResponse(w, resp)
+		return
+	}
+	if resp := checkNil(msgReq, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
 
-	msgReq2 := &message.QueryBlockReq{common.HexToHash(msgReq.BlockHash),
-		msgReq.BlockNum}
+	msgReq2 := &message.QueryBlockReq{BlockHash: common.HexToHash(msgReq.BlockHash),
+		BlockNumber: msgReq.BlockNum}
 
 	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
-	var resp ResponseStruct
 	if err != nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if resp := checkNil(res, 1); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -176,13 +188,12 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 	if response.Block == nil {
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+		encoderRestResponse(w, resp)
 		return
 	}
 
-	result := &api.GetBlockResponse_Result{}
+	//result := &api.GetBlockResponse_Result{}
+	result := &types.BlockDetail{}
 	hash := response.Block.Hash()
 	result.PrevBlockHash = response.Block.GetPrevBlockHash().ToHexString()
 	result.BlockNum = response.Block.GetNumber()
@@ -191,78 +202,62 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 	result.BlockTime = response.Block.GetTimestamp()
 	result.TrxMerkleRoot = response.Block.ComputeMerkleRoot().ToHexString()
 	result.Delegate = string(response.Block.GetDelegate())
-	result.DelegateSign = response.Block.GetDelegateSign().ToHexString()
-	resp.Result = result
-
-	resp.Errcode = 0
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		panic(err)
+	result.DelegateSign = common.BytesToHex(response.Block.GetDelegateSign())
+	for _, v := range response.Block.Transactions {
+		tx := convertIntTrxToApiTrxInter(v, roleIntf)
+		result.Trxs = append(result.Trxs, &tx)
 	}
+
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
 }
 
+//SendTransaction send transaction
 func SendTransaction(w http.ResponseWriter, r *http.Request) {
 	var trx *api.Transaction
+	var resp ResponseStruct
 	err := json.NewDecoder(r.Body).Decode(&trx)
 	if err != nil {
 		log.Errorf("request error: %s", err)
-		panic(err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+		encoderRestResponse(w, resp)
 		return
 	}
-	var resp ResponseStruct
-	if trx != nil {
-		//verity Sender
-		match, err := regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Sender)
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(err); err != nil {
-				//panic(err)
-				log.Error(err)
-			}
-			return
-		}
-		if !match {
-			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
-			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-			if err := json.NewEncoder(w).Encode(resp); err != nil {
-				panic(err)
-			}
-			return
-		}
-		//verity Contract
-		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Contract)
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(err); err != nil {
-				//panic(err)
-				log.Error(err)
-			}
-			return
-		}
-		if !match {
-			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
-			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-			if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+
+	if resp := checkNil(trx, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
 		return
 	}
-		//verity Method
-		match, err = regexp.MatchString("^[a-z1-9][a-z1-9.-]{2,20}$", trx.Method)
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(err); err != nil {
-				//panic(err)
-				log.Error(err)
-			}
-			return
-		}
-		if !match {
-			resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
-			resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-			if err := json.NewEncoder(w).Encode(resp); err != nil {
-				panic(err)
-			}
-			return
-		}
-	} else {
-		//rsp.retCode = ??
+
+	//verity Sender
+	if !re.MatchString(trx.Sender) {
+		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+		encoderRestResponse(w,resp)
+		return
+	}
+
+	//verity Contract
+	if !re.MatchString(trx.Contract) {
+		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+		encoderRestResponse(w,resp)
+		return
+	}
+
+	//verity Method
+	if !re.MatchString(trx.Method) {
+		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+		encoderRestResponse(w,resp)
+		return
 	}
 
 	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
@@ -277,17 +272,15 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		Trx: intTrx,
 	}
 
-	handlerErr, err := trxactorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
 	if nil != err {
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 
-		log.Errorf("trx: %x actor process failed", intTrx.Hash(), )
+		log.Errorf("trx: %x actor process failed", intTrx.Hash())
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -313,9 +306,7 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("trx: %v %s", result.TrxHash, resp.Msg)
 
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		panic(err)
-	}
+	encoderRestResponse(w, resp)
 }
 
 type reqStruct struct {
