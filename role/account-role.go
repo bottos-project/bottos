@@ -27,8 +27,9 @@ package role
 
 import (
 	"encoding/json"
+
+	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
-	log "github.com/cihub/seelog"
 )
 
 const (
@@ -40,9 +41,13 @@ const (
 type Account struct {
 	AccountName  string      `json:"account_name"`
 	PublicKey    []byte      `json:"public_key"`
+	VMType       byte        `json:"vm_type"`
+	VMVersion    byte        `json:"vm_version"`
+	CodeVersion  common.Hash `json:"code_version"`
 	CreateTime   uint64      `json:"create_date"`
-	GsPermission bool                                        `json:"gs_permission"`
-	ContractName []string 									 `json:"contract_name"`
+	ContractCode []byte      `json:"contract_code"`
+	ContractAbi  []byte      `json:"abi"`
+	GsPermission bool        `json:"gs_permission"`
 }
 
 // CreateAccountRole is create account role
