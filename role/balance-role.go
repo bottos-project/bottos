@@ -52,15 +52,9 @@ type StakedBalance struct {
 	LastUnstakingTime uint64 `json:"unstaking_time"`
 }
 
-// UnstakingBalance is definition of unstaking balance
-type UnstakingBalance struct {
-	AccountName   string `json:"account_name"`
-	UnstakingBalance *big.Int `json:"unstaking_balance"`
-	UnstakingTime uint64 `json:"unstaking_time"`
-}
-
 // CreateBalanceRole is to create balance role
 func CreateBalanceRole(ldb *db.DBService) error {
+	ldb.AddObject(BalanceObjectName)
 	return nil
 }
 
@@ -137,6 +131,7 @@ func (balance *Balance) SafeSub(amount *big.Int) error {
 
 // CreateStakedBalanceRole is to create stake balance role
 func CreateStakedBalanceRole(ldb *db.DBService) error {
+	ldb.AddObject(StakedBalanceObjectName)
 	return nil
 }
 

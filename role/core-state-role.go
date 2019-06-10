@@ -55,8 +55,7 @@ const (
 
 // CreateCoreStateRole is to save init core state
 func CreateCoreStateRole(ldb *db.DBService) error {
-	_, err := ldb.GetObject(CoreStateName, CoreStateDefaultKey)
-	if err != nil {
+	if _, err := GetCoreStateRole(ldb); err != nil {
 		dgp := &CoreState{
 			Config: ChainConfig{
 				MaxBlockSize:   5242880,
@@ -66,8 +65,13 @@ func CreateCoreStateRole(ldb *db.DBService) error {
 			},
 			CurrentDelegates: []string{},
 		}
-		return SetCoreStateRole(ldb, dgp)
+		err := SetCoreStateRole(ldb, dgp)
+		if err != nil {
+			return err
+		}
 	}
+
+	ldb.AddObject(CoreStateName)
 	return nil
 }
 
@@ -88,7 +92,7 @@ func GetCoreStateRole(ldb *db.DBService) (*CoreState, error) {
 		return nil, err
 	}
 	res := new(CoreState)
-	res.CurrentDelegates = make([]string, 0, config.MAX_DELEGATE_VOTES)
+	res.CurrentDelegates = make([]string, 0, config.BLOCKS_PER_ROUND)
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
 		return nil, err

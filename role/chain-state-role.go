@@ -14,6 +14,7 @@ type ChainState struct {
 	LastBlockHash         common.Hash `json:"last_block_hash"`
 	LastBlockTime         uint64      `json:"last_block_time"`
 	LastConsensusBlockNum uint64      `json:"last_consensus_block_num"`
+	LastDposConsensusBlockNum uint64      `json:"last_dpos_consensus_block_num"`
 	CurrentDelegate       string      `json:"current_delegate"`
 	CurrentAbsoluteSlot   uint64      `json:"current_absolute_slot"`
 	RecentSlotFilled      uint64      `json:"recent_slot_filled"`
@@ -33,14 +34,20 @@ func getGenesisTime() uint64 {
 
 // CreateChainStateRole is to save init chain state
 func CreateChainStateRole(ldb *db.DBService) error {
-	_, err := ldb.GetObject(ChainStateName, ChainStateDefaultKey)
-	if err != nil {
+	if _, err := GetChainStateRole(ldb); err != nil {
 		object := &ChainState{
 			LastBlockTime:    getGenesisTime(),
 			RecentSlotFilled: ^uint64(0),
 		}
-		return SetChainStateRole(ldb, object)
+
+		err := SetChainStateRole(ldb, object)
+		if err != nil {
+			return err
+		}
+		log.Infof("Create chain state role")
 	}
+
+	ldb.AddObject(ChainStateName)
 	return nil
 }
 

@@ -50,6 +50,7 @@ func blockNumberToKey(blockNumber uint64) string {
 
 // CreateBlockHistoryRole is to init block history
 func CreateBlockHistoryRole(ldb *db.DBService) error {
+	ldb.AddObject(BlockHistoryObjectName)
 	return nil
 }
 
