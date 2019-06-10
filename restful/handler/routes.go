@@ -16,13 +16,13 @@ const (
 	GET_TRANSACTION  = "/v1/transaction/get"
 	GET_TRANSACTION_STATUS = "/v1/transaction/status"
 
+
 	//Account
-	GET_ACCOUNT_BRIEF   = "/v1/account/brief"
-	GET_ACCOUNT = "/v1/account/info"
+	GET_ACCOUNT         = "/v1/account/info"
 	GET_TRANSFER_CREDIT = "/v1/balance/GetTransferCredit"
 
 	//Contract
-	GET_CONTRACT_ABI = "/v1/contract/abi"
+	GET_CONTRACT_ABI  = "/v1/contract/abi"
 	GET_CONTRACT_CODE = "/v1/contract/code"
 
 	// Common query
@@ -31,6 +31,8 @@ const (
 	//node
 	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"
 	GET_CONN_COUNT   = "/v1/node/connectioncount"
+	//delegate
+	GET_ALL_DELEFATE = "/v1/delegate/getall"
 )
 
 type Route struct {
@@ -107,6 +109,14 @@ var routes = Routes{
 		GET_TRANSACTION,
 		GetTransaction,
 	},
+
+	Route{
+		"",
+		"POST",
+		GET_TRANSACTION_STATUS,
+		GetTransactionStatus,
+	},
+
 	Route{
 		"",
 		"POST",
@@ -118,6 +128,12 @@ var routes = Routes{
 		"POST",
 		GET_KEY_VALUE,
 		GetKeyValue,
+	},
+	Route{
+		"",
+		"POST",
+		JSON_TO_BIN,
+		JsonToBin,
 	},
 	Route{
 		"",
@@ -136,5 +152,11 @@ var routes = Routes{
 		"POST",
 		GET_TRANSFER_CREDIT,
 		GetTransferCredit,
+	},
+	Route{
+		"",
+		"POST",
+		GET_ALL_DELEFATE,
+		GetAllDelegates,
 	},
 }
