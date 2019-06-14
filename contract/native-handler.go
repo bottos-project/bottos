@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -85,10 +85,24 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	stakedBalance := &role.StakedBalance{
 		AccountName:   NewaccountName,
 		StakedBalance: big.NewInt(0),
+		StakedSpaceBalance: big.NewInt(0),
+		StakedTimeBalance:  big.NewInt(0),
 		UnstakingBalance: big.NewInt(0),
 		LastUnstakingTime: 0,
 	}
 	ctx.RoleIntf.SetStakedBalance(NewaccountName, stakedBalance)
+
+	// 4, create ResourceUsage
+	resourceUsage := &role.ResourceUsage{
+		AccountName:                NewaccountName,
+		PledgedSpaceTokenUsedInWin: 0,
+		PledgedTimeTokenUsedInWin:  0,
+		FreeTimeTokenUsedInWin:     0,
+		FreeSpaceTokenUsedInWin:    0,
+		LastSpaceCursorBlock:       0,
+		LastTimeCursorBlock:        0,
+	}
+	ctx.RoleIntf.SetResourceUsage(NewaccountName, resourceUsage)
 
 	return berr.ErrNoError
 }
