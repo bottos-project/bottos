@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -183,4 +183,28 @@ func (m *Header) GetDelegateChanges() []string {
 		return m.DelegateChanges
 	}
 	return nil
+}
+
+func (m *Header) GetVersion() uint32 {
+	if m != nil {
+		return m.Version
+	}
+	return 0
+}
+
+func (b *Block) SignVote(account string, vote *Validator) (*Validator, error) {
+	myVote := vote.Copy()
+	digest := signDigest(b, myVote)
+	signature, err := signValidator(account, digest)
+	if err != nil {
+		log.Errorf("COMMON SignVote delegate %s, voteInfo.Height %v, voteInfo.Round %v,voteInfo.Step %v, voteInfo.VoteResult %v,DelegateSignature %x",
+			myVote.Delegate, myVote.VoteInfo.Height, myVote.VoteInfo.Round, myVote.VoteInfo.Step, myVote.VoteInfo.VoteResult, signature)
+
+		log.Errorf("COMMON SignVote failed: signdata %x, hash %x, account=%s", signature, digest.Bytes(), account)
+		return nil, err
+	}
+
+	myVote.DelegateSignature = signature
+
+	return myVote, nil
 }
