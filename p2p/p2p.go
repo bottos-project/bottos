@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -40,6 +40,9 @@ var LocalPeerInfo PeerInfo
 //Runner p2p global instance
 var Runner *P2PServer
 
+//BasicLocalPeerInfo
+var BasicLocalPeerInfo BasicPeerInfo
+
 //P2PServer p2p server
 type P2PServer struct {
 	c      *collection
@@ -56,10 +59,24 @@ type SendupCb func(index uint16, p *Packet)
 type NewconnCb func(conn net.Conn)
 
 //MakeP2PServer create instance
-func MakeP2PServer(p *config.P2PConfig) *P2PServer {
+func MakeP2PServer(p *config.P2PConfig, roleIntf role.RoleInterface) *P2PServer {
+
 	LocalPeerInfo.Addr = p.P2PServAddr
 	LocalPeerInfo.Port = strconv.Itoa(p.P2PPort)
 	LocalPeerInfo.ChainId = common.BytesToHex(config.GetChainID())
+	if roleIntf.IsMyselfDelegate() == true{
+		LocalPeerInfo.NodeType = "delegate"
+		LocalPeerInfo.Account = roleIntf.GetMySelf()
+	}else {
+		LocalPeerInfo.NodeType = "service"
+	}
+	coreState, err := roleIntf.GetChainState()
+	if err != nil {
+		LocalPeerInfo.Version = version.GetAppVersionNum()
+	} else {
+		LocalPeerInfo.Version = version.GetVersionNumByBlockNum(coreState.LastBlockNum)
+	}
+	
 
 	id := LocalPeerInfo.Addr + LocalPeerInfo.Port
 	LocalPeerInfo.Id = common.DoubleSha256([]byte(id)).ToHexString()
@@ -130,6 +147,10 @@ func (s *P2PServer) GetPeersData() PeerDataSet {
 	return s.c.getPeersData()
 }
 
+//GetPeerP2P get all peers
+func (s *P2PServer) GetPeerP2PInfo() []Peer {
+	return s.c.getPeerP2PInfo()
+}
 func (s *P2PServer) listenRoutine() {
 	l, err := net.Listen("tcp", "0.0.0.0:"+fmt.Sprint(LocalPeerInfo.Port))
 	if err != nil {
