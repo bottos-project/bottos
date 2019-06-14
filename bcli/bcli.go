@@ -512,6 +512,70 @@ func (cli *CLI) getaccount(name string) {
 	fmt.Printf("    Balance: %d.%08d BTO\n", mulrestlt, modrestlt)
   }
 
+func showContractInfo(name string, fileType vm.VmType, ContractCodeVal []byte, trx chain.Transaction) []byte {
+	type PrintDeployCodeParam struct {
+		Name         string `json:"name"`
+		VMType       byte   `json:"vm_type"`
+		VMVersion    byte   `json:"vm_version"`
+		ContractCode string `json:"contract_code"`
+	}
+	pdcp := &PrintDeployCodeParam{}
+	pdcp.Name = name
+	pdcp.VMType = byte(fileType)
+	pdcp.VMVersion = 1
+
+	//decide the length of show val
+	codeLength := len(ContractCodeVal)
+	paramLength := len([]byte(trx.Param))
+	if codeLength > 100 {
+		codeLength = 100
+	}
+	if paramLength > 200 {
+		paramLength = 200
+	}
+	codeHex := BytesToHex(ContractCodeVal[0:codeLength])
+	pdcp.ContractCode = codeHex + "..."
+	printTrx := Transaction{
+		Version:     trx.Version,
+		CursorNum:   trx.CursorNum,
+		CursorLabel: trx.CursorLabel,
+		Lifetime:    trx.Lifetime,
+		Sender:      trx.Sender,
+		Contract:    trx.Contract,
+		Method:      trx.Method,
+		Param:       pdcp,
+		ParamBin:    string([]byte(trx.Param)[0:paramLength]) + "...",
+		//ParamBin: trx.Param,
+		SigAlg:    trx.SigAlg,
+		Signature: trx.Signature,
+	}
+	b, _ := json.Marshal(printTrx)
+	return b
+}
+
+func buildContractMapStruct(contractCodeVal, contractAbiVal []byte, name string, fileType vm.VmType) map[string]interface{} {
+	mapstruct := make(map[string]interface{})
+
+	abi.Setmapval(mapstruct, "contract", name)
+	abi.Setmapval(mapstruct, "vm_type", uint8(fileType))
+	abi.Setmapval(mapstruct, "vm_version", uint8(0))
+	abi.Setmapval(mapstruct, "contract_code", contractCodeVal)
+	abi.Setmapval(mapstruct, "contract_abi", contractAbiVal)
+
+	return mapstruct
+}
+
+func getCodeFileType(fileTypeInput string) (vm.VmType, error) {
+	if fileTypeInput == "wasm" {
+		return vm.VmTypeWasm, nil
+	} else if fileTypeInput == "js" {
+		return vm.VmTypeJS, nil
+	} else {
+		fmt.Println("file type should be wasm or js.")
+		return vm.VmTypeUnkonw, errors.New("file type should be wasm or js")
+	}
+}
+
 func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	
 	//chainInfo, err := cli.getChainInfo()
