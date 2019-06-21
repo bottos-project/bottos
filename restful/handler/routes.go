@@ -120,6 +120,12 @@ var routes = Routes{
 	Route{
 		"",
 		"POST",
+		GET_ACCOUNT_PUB,
+		GetAccountPub,
+	},
+	Route{
+		"",
+		"POST",
 		GET_ACCOUNT,
 		GetAccount,
 	},
