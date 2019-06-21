@@ -47,7 +47,8 @@ type Reporter struct {
 
 //ReporterRepo is the interface of reporters
 type ReporterRepo interface {
-	Woker(Trxs []*types.Transaction) *types.Block
+	Woker(Trxs []*types.BlockTransaction) *types.Block
+	CalcNextReportTime(block *types.Block) uint32
 	IsReady() bool
 }
 
@@ -58,7 +59,7 @@ func New(b chain.BlockChainInterface, roleIntf role.RoleInterface, protocolInter
 }
 
 //Woker is an actor of repoter
-func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
+func (p *Reporter) Woker(trxs []*types.BlockTransaction) *types.Block {
 
 	accountName := p.state.ScheduledReporter
 	block, err := p.reportBlock(p.state.ScheduledTime, accountName, trxs)
@@ -68,16 +69,19 @@ func (p *Reporter) Woker(trxs []*types.Transaction) *types.Block {
 
 	return block
 }
-func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*types.Transaction) (*types.Block, error) {
-	head := types.NewHeader()
+func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*types.BlockTransaction) (*types.Block, error) {
+	number := p.core.HeadBlockNum() + 1
+	head := types.NewHeader(version.GetVersionNumByBlockNum(number))
 	head.PrevBlockHash = p.core.HeadBlockHash().Bytes()
-	head.Number = p.core.HeadBlockNum() + 1
+	head.Number = number
 	head.Timestamp = blockTime
 	head.Delegate = []byte(accountName)
 	block := types.NewBlock(head, trxs)
 
-	// If this block is last in a round, calculate the schedule for the new round
-	if block.Header.Number%uint64(config.BLOCKS_PER_ROUND) == 0 {
+	gs, _ := p.roleIntf.GetGenesisState()
+	if !gs.GenesisBlockProducing {
+		// If this block is last in a round, calculate the schedule for the new round
+		if block.Header.Number%uint64(config.BLOCKS_PER_ROUND) == 0 {
 			var newSchedule []string
 			if p.roleIntf.IsTransitPeriod(block.Header.Number) == true {
 				newSchedule = p.roleIntf.ElectTransitPeriodDelegates(block, false)
@@ -86,14 +90,14 @@ func (p *Reporter) reportBlock(blockTime uint64, accountName string, trxs []*typ
 				newSchedule = p.roleIntf.ElectNextTermDelegates(block, false)
 
 			}
-		log.Info("next term delgates", newSchedule)
-		currentState, err := p.roleIntf.GetCoreState()
-		if err != nil {
+			log.Info("next term delgates", newSchedule)
+			currentState, err := p.roleIntf.GetCoreState()
+			if err != nil {
 				log.Errorf("PRODUCER GetCoreState failed %v", err)
-			return nil, err
+				return nil, err
+			}
+			block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
 		}
-		block.Header.DelegateChanges = common.Filter(currentState.CurrentDelegates, newSchedule)
-	}
 	}
 
 	signature, err := signature.SignByDelegate(block.Hash().Bytes(), p.state.PubKey)
