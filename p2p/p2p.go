@@ -27,11 +27,14 @@ package p2p
 
 import (
 	"fmt"
-	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/config"
-	log "github.com/cihub/seelog"
 	"net"
 	"strconv"
+
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/role"
+	"github.com/bottos-project/bottos/version"
+	log "github.com/cihub/seelog"
 )
 
 //LocalPeerInfo ourself node info
@@ -64,12 +67,6 @@ func MakeP2PServer(p *config.P2PConfig, roleIntf role.RoleInterface) *P2PServer 
 	LocalPeerInfo.Addr = p.P2PServAddr
 	LocalPeerInfo.Port = strconv.Itoa(p.P2PPort)
 	LocalPeerInfo.ChainId = common.BytesToHex(config.GetChainID())
-	if roleIntf.IsMyselfDelegate() == true{
-		LocalPeerInfo.NodeType = "delegate"
-		LocalPeerInfo.Account = roleIntf.GetMySelf()
-	}else {
-		LocalPeerInfo.NodeType = "service"
-	}
 	coreState, err := roleIntf.GetChainState()
 	if err != nil {
 		LocalPeerInfo.Version = version.GetAppVersionNum()
@@ -154,7 +151,7 @@ func (s *P2PServer) GetPeerP2PInfo() []Peer {
 func (s *P2PServer) listenRoutine() {
 	l, err := net.Listen("tcp", "0.0.0.0:"+fmt.Sprint(LocalPeerInfo.Port))
 	if err != nil {
-		log.Errorf("p2p start p2p server listen error: %s", err)
+		log.Errorf("P2P start p2p server listen error: %s", err)
 		panic(err)
 	}
 
@@ -163,7 +160,7 @@ func (s *P2PServer) listenRoutine() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			log.Error("p2p NetServer::Listening() Failed to accept")
+			log.Error("P2P NetServer::Listening() Failed to accept")
 			continue
 		}
 
