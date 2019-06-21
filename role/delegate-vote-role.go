@@ -10,10 +10,10 @@ import (
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
 	log "github.com/cihub/seelog"
-	)
+)
 
 // DelegateVotesObjectName is definition of delegate vote object name
-const DelegateVotesObjectName string = "delegatevotes"
+const DelegateVotesObjectName string = "producervote"
 
 // DelegateVotesObjectKeyName is definition of delegate vote object key name
 const DelegateVotesObjectKeyName string = "owner_account"
@@ -44,16 +44,21 @@ type DelegateVotes struct {
 func CreateDelegateVotesRole(ldb *db.DBService) error {
 	err := ldb.CreatObjectIndex(DelegateVotesObjectName, DelegateVotesObjectKeyName, DelegateVotesObjectKeyName)
 	if err != nil {
+		log.Error("ROLE one CreatObjectIndex failed, ", DelegateVotesObjectName, DelegateVotesObjectKeyName)
 		return err
 	}
 	err = ldb.CreatObjectMultiIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, DelegateVotesObjectIndexVoteJSON, DelegateVotesObjectKeyName)
 	if err != nil {
+		log.Error("ROLE two CreatObjectIndex failed, ", DelegateVotesObjectName, DelegateVotesObjectIndexVote)
 		return err
 	}
 	err = ldb.CreatObjectMultiIndex(DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime, DelegateVotesObjectIndexFinishTimeJSON, DelegateVotesObjectKeyName)
 	if err != nil {
+		log.Error("ROLE three CreatObjectIndex failed, ", DelegateVotesObjectName, DelegateVotesObjectIndexFinishTime)
 		return err
 	}
+
+	ldb.AddObject(DelegateVotesObjectName)
 	return nil
 }
 
@@ -61,6 +66,7 @@ func CreateDelegateVotesRole(ldb *db.DBService) error {
 func SetDelegateVotesRole(ldb *db.DBService, key string, value *DelegateVotes) error {
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Error("ROLE Marshal failed", key)
 		return err
 	}
 
@@ -77,6 +83,7 @@ func GetDelegateVotesRole(ldb *db.DBService, key string) (*DelegateVotes, error)
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Error("ROLE Unmarshal failed", key)
 		return nil, err
 	}
 
@@ -84,8 +91,8 @@ func GetDelegateVotesRole(ldb *db.DBService, key string) (*DelegateVotes, error)
 
 }
 
-// GetDelegateVotesRoleByVote is to get delegate votes by vote
-func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes, error) {
+// getDelegateVotesRoleByVote is to get delegate votes by vote
+func getDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes, error) {
 	value, err := ldb.GetObjectByIndex(DelegateVotesObjectName, DelegateVotesObjectIndexVote, strconv.FormatUint(vote, 10))
 	if err != nil {
 		return nil, err
@@ -93,6 +100,7 @@ func GetDelegateVotesRoleByVote(ldb *db.DBService, vote uint64) (*DelegateVotes,
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Error("ROLE Unmarshal failed ", vote)
 		return nil, err
 	}
 
@@ -109,6 +117,7 @@ func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*Delegat
 	res := &DelegateVotes{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Error("ROLE Unmarshal failed ", key)
 		return nil, err
 	}
 
@@ -118,19 +127,19 @@ func GetDelegateVotesRoleByFinishTime(ldb *db.DBService, key *big.Int) (*Delegat
 
 // update is to update delegate
 func (d *DelegateVotes) update(currentVotes *big.Int, currentPosition *big.Int, currentTermTime *big.Int) {
-	if currentTermTime.Cmp(big.NewInt(0)) == -1 || currentTermTime.Cmp(big.NewInt(0)) == -1 {
+	if currentVotes.Cmp(big.NewInt(0)) == -1 || currentPosition.Cmp(big.NewInt(0)) == -1 || currentTermTime.Cmp(big.NewInt(0)) == -1 {
 		return
 	}
 	termTimeToFinish := new(big.Int)
 	remaining := termTimeToFinish.Sub(common.MaxUint128(), currentPosition)
-	if  1 == currentVotes.Cmp(big.NewInt(0)) {
+	if 1 == currentVotes.Cmp(big.NewInt(0)) {
 		termTimeToFinish = termTimeToFinish.Div(remaining, currentVotes)
 	} else {
 		termTimeToFinish = common.MaxUint128()
 	}
 
 	if currentTermTime.Cmp(new(big.Int).Sub(common.MaxUint128(), termTimeToFinish)) == -1 {
-		log.Error("ERROR currentTermTime time overflow", currentTermTime)
+		log.Critical("ROLE currentTermTime time overflow ", currentTermTime)
 		return
 	}
 	termFinishTime := new(big.Int).Add(currentTermTime, termTimeToFinish)
@@ -144,7 +153,7 @@ func (d *DelegateVotes) update(currentVotes *big.Int, currentPosition *big.Int, 
 func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 	objects, err := ldb.GetAllObjects(DelegateVotesObjectKeyName)
 	if err != nil {
-		log.Error("ERROR failed ", err)
+		log.Error("ROLE get all delegate vote objects failed ", err)
 		return nil, err
 	}
 	var dgates = []*DelegateVotes{}
@@ -152,6 +161,7 @@ func GetAllDelegateVotesRole(ldb *db.DBService) ([]*DelegateVotes, error) {
 		res := &DelegateVotes{}
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
+			log.Error("ROLE Unmarshal failed ", err)
 			return nil, errors.New("invalid object to Unmarshal" + object)
 		}
 		dgates = append(dgates, res)
@@ -170,7 +180,6 @@ func ResetAllDelegateNewTerm(ldb *db.DBService) {
 		dvotes := object.StartNewTerm(big.NewInt(0))
 		dvotes.OwnerAccount = object.OwnerAccount
 		SetDelegateVotesRole(ldb, object.OwnerAccount, dvotes)
-		//log.Info("ResetAllDelegateNewTerm", object.OwnerAccount, dvotes)
 	}
 }
 
@@ -181,6 +190,7 @@ func SetDelegateListNewTerm(ldb *db.DBService, termTime *big.Int, lists []string
 	for _, accountName := range mylists {
 		delegate, err := GetDelegateVotesRole(ldb, accountName)
 		if err != nil {
+			log.Error("ROLE Unmarshal failed ", err)
 			return
 		}
 		dvotes := delegate.StartNewTerm(termTime)
@@ -229,6 +239,7 @@ func GetAllSortVotesDelegates(ldb *db.DBService) ([]string, error) {
 		res := new(DelegateVotes)
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
+			log.Error("ROLE Unmarshal failed")
 			return nil, err
 		}
 		accounts = append(accounts, res.OwnerAccount)
@@ -251,6 +262,7 @@ func GetAllSortFinishTimeDelegates(ldb *db.DBService) ([]string, error) {
 		res := &DelegateVotes{}
 		err = json.Unmarshal([]byte(object), res)
 		if err != nil {
+			log.Error("ROLE Unmarshal failed")
 			return nil, err
 		}
 		accounts = append(accounts, res.OwnerAccount)
