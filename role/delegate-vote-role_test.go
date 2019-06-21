@@ -26,65 +26,55 @@ package role
 
 import (
 	//	"encoding/json"
-	log "github.com/cihub/seelog"
-	"math/big"
+	//"math/big"
 	"testing"
 
-	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
+
+	//"github.com/bottos-project/bottos/db"
 )
 
 func TestDelegateVotes_writedb(t *testing.T) {
-	ins := db.NewDbService("./file2", "./file2/db.db", "")
-	err := CreateDelegateVotesRole(ins)
-	if err != nil {
-		log.Error(err)
-	}
-	value := &DelegateVotes{
-		OwnerAccount: "nodepad",
-		Serve: Serve{
-			Votes:          1,
-			Position:       big.NewInt(2),
-			TermUpdateTime: big.NewInt(2),
-			TermFinishTime: big.NewInt(2),
-		},
-	}
-	err = SetDelegateVotesRole(ins, value.OwnerAccount, value)
-	if err != nil {
-		log.Error("SetDelegateVotesRole", err)
-	}
+	log.Info("gtest")
+	//	ins := db.NewDbService("./file2", "./file2/db.db")
+	//	err := CreateDelegateVotesRole(ins)
+	//	if err != nil {
+	//		log.Error(err)
+	//	}
+	//	value := &DelegateVotes{
+	//		OwnerAccount: "nodepad",
+	//		Serve: Serve{
+	//			Votes:          big.NewInt(2),
+	//			Position:       big.NewInt(2),
+	//			TermUpdateTime: big.NewInt(2),
+	//			TermFinishTime: big.NewInt(2),
+	//		},
+	//	}
+	//	err = SetDelegateVotesRole(ins, value.OwnerAccount, value)
+	//	if err != nil {
+	//		log.Error("SetDelegateVotesRole", err)
+	//	}
 
-	value, err = GetDelegateVotesRole(ins, value.OwnerAccount)
-	if err != nil {
-		log.Error("GetDelegateVotesRole", err)
-	}
-	log.Info(value)
+	//	value, err = GetDelegateVotesRoleByFinishTime(ins, value.Serve.TermFinishTime)
+	//	if err != nil {
+	//		log.Error("GetDelegateVotesRoleByFinishTime", err)
+	//	}
+	//	log.Info(value)
 
-	value, err = GetDelegateVotesRoleByVote(ins, value.Serve.Votes)
-	if err != nil {
-		log.Error("GetDelegateVotesRoleByVote", err)
-	}
-	log.Info(value)
+	//	values, nerr := GetAllDelegateVotesRole(ins)
+	//	if nerr != nil {
+	//		log.Error("GetAllDelegateVotes", nerr)
+	//	}
+	//	log.Info(len(values))
 
-	value, err = GetDelegateVotesRoleByFinishTime(ins, value.Serve.TermFinishTime)
-	if err != nil {
-		log.Error("GetDelegateVotesRoleByFinishTime", err)
-	}
-	log.Info(value)
-
-	values, nerr := GetAllDelegateVotesRole(ins)
-	if nerr != nil {
-		log.Error("GetAllDelegateVotes", nerr)
-	}
-	log.Info(len(values))
-
-	svotes, nerr := GetAllSortVotesDelegates(ins)
-	if nerr != nil {
-		log.Error("GetAllSortVotesDelegates", nerr)
-	}
-	log.Info(len(svotes))
-	tvotes, nerr := GetAllSortFinishTimeDelegates(ins)
-	if nerr != nil {
-		log.Error("GetAllSortFinishTimeDelegates", nerr)
-	}
-	log.Info(len(tvotes))
+	//	svotes, nerr := GetAllSortVotesDelegates(ins)
+	//	if nerr != nil {
+	//		log.Error("GetAllSortVotesDelegates", nerr)
+	//	}
+	//	log.Info(len(svotes))
+	//	tvotes, nerr := GetAllSortFinishTimeDelegates(ins)
+	//	if nerr != nil {
+	//		log.Error("GetAllSortFinishTimeDelegates", nerr)
+	//	}
+	//	log.Info(len(tvotes))
 }
