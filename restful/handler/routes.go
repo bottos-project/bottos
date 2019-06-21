@@ -27,12 +27,21 @@ const (
 
 	// Common query
 	GET_KEY_VALUE = "/v1/common/query"
+	JSON_TO_BIN   = "/v1/common/jsontobin"
 
 	//node
 	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"
 	GET_CONN_COUNT   = "/v1/node/connectioncount"
+
 	//delegate
 	GET_ALL_DELEFATE = "/v1/delegate/getall"
+
+	//global
+	GET_GLOBAL_STAKED      = "/v1/global/stakedbalance"
+	GET_FORECAST_RESOURCE_BALANCE = "/v1/resource/forecastresource"
+
+	//p2p
+	GET_ALL_PEERINFO = "/v1/p2p/getpeers"
 )
 
 type Route struct {
@@ -164,5 +173,26 @@ var routes = Routes{
 		"POST",
 		GET_ALL_DELEFATE,
 		GetAllDelegates,
+	},
+	
+	Route{
+		"",
+		"GET",
+		GET_GLOBAL_STAKED,
+		GetGlobalStakedBalance,
+	},
+	Route{
+		"",
+		"POST",
+		GET_FORECAST_RESOURCE_BALANCE,
+		GetForecastResBalance,
+	},
+
+
+	Route{
+		"",
+		"POST",
+		GET_ALL_PEERINFO,
+		GetPeers,
 	},
 }
