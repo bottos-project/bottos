@@ -16,8 +16,8 @@ const (
 	GET_TRANSACTION  = "/v1/transaction/get"
 	GET_TRANSACTION_STATUS = "/v1/transaction/status"
 
-
 	//Account
+	GET_ACCOUNT_PUB     = "/v1/account/pubkey"
 	GET_ACCOUNT         = "/v1/account/info"
 	GET_TRANSFER_CREDIT = "/v1/balance/GetTransferCredit"
 
@@ -59,7 +59,7 @@ func NewRouter() *mux.Router {
 }
 
 var routes = Routes{
-	Route{
+	/*Route{
 		"Index",
 		"GET",
 		"/",
@@ -76,7 +76,7 @@ var routes = Routes{
 		"GET",
 		"/todos/{todoId}",
 		TodoShow,
-	},
+	},*/
 	Route{
 		"",
 		"GET",
