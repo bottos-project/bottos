@@ -28,12 +28,19 @@ package p2p
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
-	log "github.com/cihub/seelog"
 	"io"
 	"net"
 	"strings"
+
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/crypto-go/crypto"
+	log "github.com/cihub/seelog"
 )
 
 //PeerInfo peer's info
@@ -182,31 +189,31 @@ func (p *Peer) Send(packet Packet) error {
 	}
 
 	if length > MAX_PACKET_LEN {
-		log.Errorf("p2p Send packet length large than max packet length")
+		log.Errorf("P2P Send packet length large than max packet length")
 		return errors.New("large than max packet length")
 	}
 
 	buf := &bytes.Buffer{}
 	err := binary.Write(buf, binary.BigEndian, length)
 	if err != nil {
-		log.Error("p2p send write packet length error")
+		log.Error("P2P send write packet length error")
 		return err
 	}
 
 	err = binary.Write(buf, binary.BigEndian, packet.H)
 	if err != nil {
-		log.Error("p2p send write packet protocolType error")
+		log.Error("P2P send write packet protocolType error")
 		return err
 	}
 
 	_, err = buf.Write(packet.Data)
 	if err != nil {
-		log.Error("p2p send write packet Data error")
+		log.Error("P2P send write packet Data error")
 		return err
 	}
 
 	if !p.isconn {
-		return errors.New("peer disconnected")
+		return errors.New("P2P peer disconnected")
 	}
 
 	//log.Debugf("p2p peer index: %d send packet %d %d", p.Index, packet.H.ProtocolType, packet.H.PacketType)
