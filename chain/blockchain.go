@@ -234,6 +234,12 @@ func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
 
+//GetCommittedTransaction get committed transaction from blockdb by hash
+func (bc *BlockChain) GetCommittedTransaction(hash common.Hash) *types.BlockTransaction {
+	return bc.blockDb.GetTransaction(hash)
+}
+
+
 //GetBlockByNumber get block from forkdb main fork and blockdb by number
 func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
 	block := bc.forkdb.GetMainForkBlockByNum(number)
