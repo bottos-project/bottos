@@ -49,7 +49,6 @@ type BlockChainInterface interface {
 	GetBlockByNumber(number uint64) *types.Block
 	GetHeaderByNumber(number uint64) *types.Header
 	GetTransaction(hash common.Hash) *types.BlockTransaction
-	GetCommittedTransaction(hash common.Hash) *types.BlockTransaction
 
 	HeadBlockTime() uint64
 	HeadBlockNum() uint64
@@ -60,6 +59,8 @@ type BlockChainInterface interface {
 	InsertBlock(block *types.Block) berr.ErrCode
 	ImportBlock(block *types.Block) berr.ErrCode
 
+	PreVoteBlock(block *types.Block) berr.ErrCode
+	PreCommitBlock(block *types.Block) berr.ErrCode
 	CommitBlock(block *types.Block) berr.ErrCode
 	SyncCommitBlock(BftHeaderState *types.ConsensusHeaderState) berr.ErrCode
 
