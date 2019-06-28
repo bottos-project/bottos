@@ -7,6 +7,7 @@ import (
 	"regexp"
 )
 
+//SignKeyValidate validate the keypair is valid
 func SignKeyValidate(privateKey, publicKey string) (bool, error) {
 	if privateKey == "" && publicKey == "" {
 		return true, nil
@@ -29,8 +30,9 @@ func isHex(key string) ([]byte, error) {
 	return hex.DecodeString(key)
 }
 
+//PortValidate validate the port is valid
 func PortValidate(port int) (bool, error) {
-	if port < 1 || port > 65535 {
+	if port < 1024 || port > 65535 {
 		return false, errors.New("port number invalidation")
 	}
 	return true, nil
