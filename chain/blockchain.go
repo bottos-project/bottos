@@ -44,15 +44,17 @@ import (
 )
 
 //BlockChain the chain info
+//BlockChain the chain info
 type BlockChain struct {
-	blockDb    *db.DBService
-	roleIntf   role.RoleInterface
-	blockCache *BlockChainCache
-	nc         contract.NativeContractInterface
+	dbInst   *db.DBService
+	blockDb  *BlockDB
+	roleIntf role.RoleInterface
+	forkdb   *ForkDB
+	nc       contract.NativeContractInterface
+	trxPool  *transaction.TrxPool
 
-	handledBlockCB []HandledBlockCallback
-
-	genesisBlock *types.Block
+	handledBlockCB   []BlockCallback
+	committedBlockCB []BlockCallback
 
 	chainmu sync.RWMutex
 }
