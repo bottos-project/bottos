@@ -687,7 +687,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint64, end uint64) {
 
 	peerset := s.getPeers()
 	if len(peerset) == 0 {
-		log.Error("protocol sendBlockHeaderReq no peer")
+		log.Error("PROTOCOL sendBlockHeaderReq no peer")
 		return
 	}
 
@@ -704,8 +704,8 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint64, end uint64) {
 			msg := p2p.UniMsgPacket{Index: info.index,
 				P: packet}
 
-			s.set.indexHeader[counter] = info.index
-			log.Debugf("protocol sendBlockHeaderReq index: %d", s.set.indexHeader[counter])
+			s.set.indexHeader[counter] = info.Index
+			log.Debugf("PROTOCOL sendBlockHeaderReq index: %d", s.set.indexHeader[counter])
 
 			p2p.Runner.SendUnicast(msg)
 
@@ -717,7 +717,7 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint64, end uint64) {
 
 func (s *synchronizes) syncBundleBlock() {
 	if s.set.end < s.set.begin {
-		log.Errorf("protocol syncBundleBlock end %d smaller than begin %d", s.set.end, s.set.begin)
+		log.Errorf("PROTOCOL syncBundleBlock end %d smaller than begin %d", s.set.end, s.set.begin)
 		return
 	}
 
@@ -730,13 +730,13 @@ func (s *synchronizes) syncBundleBlock() {
 	}
 
 	if len(numbers) == 0 {
-		log.Errorf("protocol syncBundleBlock sync bundle block finish, wait for send up")
+		log.Errorf("PROTOCOL syncBundleBlock sync bundle block finish, wait for send up")
 		return
 	}
 
 	peerset := s.getPeers()
 	if len(peerset) == 0 {
-		log.Errorf("protocol syncBundleBlock no peer")
+		log.Errorf("PROTOCOL syncBundleBlock no peer")
 		return
 	}
 
@@ -773,8 +773,8 @@ func (s *synchronizes) syncBundleBlock() {
 		sort.Sort(setlib)
 	}
 
-	if setlib[len(setlib)-1].lastLib < numbers[len(numbers)-1] {
-		log.Errorf("protocol syncBundleBlock peers max lib is smaller than number")
+	if setlib[len(setlib)-1].LastLib < numbers[len(numbers)-1] {
+		log.Errorf("PROTOCOL syncBundleBlock peers max lib is smaller than number")
 		return
 	}
 
@@ -803,7 +803,7 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint64, ptype uint16) {
 
 	data, err := bpl.Marshal(number)
 	if err != nil {
-		log.Error("protocol sendGetBlock Marshal number error ")
+		log.Error("PROTOCOL sendGetBlock Marshal number error ")
 		return
 	}
 
@@ -816,7 +816,6 @@ func (s *synchronizes) sendBlockReq(index uint16, number uint64, ptype uint16) {
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
-	log.Debugf("protocol sendBlockReq block %d, type: %d, index: %d", number, ptype, index)
 	p2p.Runner.SendUnicast(msg)
 }
 
@@ -835,7 +834,7 @@ func (s *synchronizes) setSyncStateCheck() {
 }
 
 func (s *synchronizes) checkSyncHeaderTimeoutPeer() {
-	log.Debugf("protocol index %d sync head time out", s.set.indexHeader)
+	log.Debugf("PROTOCOL index %d sync head time out", s.set.indexHeader)
 	for i := 0; i < SYNC_HEADER_BUNDLE; i++ {
 		if s.set.indexHeader[i] != 0 {
 			s.recordPeerSyncTimeout(s.set.indexHeader[i])
@@ -847,21 +846,21 @@ func (s *synchronizes) checkSyncBlockTimeoutPeers() {
 	lenght := s.set.end + 1 - s.set.begin
 	for i := 0; i < int(lenght) && i < SYNC_BLOCK_BUNDLE; i++ {
 		if s.set.blocks[i] == nil {
-			log.Debugf("protocol index %d sync block time out", s.set.indexs[i])
+			log.Debugf("PROTOCOL index %d sync block time out", s.set.indexs[i])
 			s.recordPeerSyncTimeout(s.set.indexs[i])
 		}
 	}
 }
 
 func (s *synchronizes) sendupBundleBlock() {
-	log.Debugf("protocol sync bundle of block finish")
+	log.Debugf("PROTOCOL sync bundle of block finish")
 
 	if s.set.end < s.set.begin {
 		return
 	}
 
 	if s.set.begin <= s.libLocal {
-		log.Errorf("lib local is change bigger, wait next time")
+		log.Errorf("PROTOCOL sendupBundleBlock lib local is change bigger, wait next time")
 		s.set.reset()
 		return
 	}
@@ -877,14 +876,14 @@ func (s *synchronizes) sendupBundleBlock() {
 
 	s.libLocal = s.set.end
 	s.lastLocal = s.set.end
-	log.Debugf("protocol update local lib and number: %d", s.libLocal)
+	log.Debugf("PROTOCOL update local lib and number: %d", s.libLocal)
 
 	s.set.reset()
 
 	if s.libLocal < s.libRemote {
 		s.syncBlockHeader()
 	} else {
-		log.Debugf("protocol sync finish reset peer sync counter")
+		log.Debugf("PROTOCOL sync finish reset peer sync counter")
 		s.resetPeerSyncTimeout()
 	}
 }
@@ -892,14 +891,14 @@ func (s *synchronizes) sendupBundleBlock() {
 func (s *synchronizes) sendupBlock(block *types.Block) berr.ErrCode {
 
 	start := common.MeasureStart()
-	log.Debugf("protocol send up block :%d", block.Header.Number)
+	log.Debugf("PROTOCOL send up block :%d", block.Header.Number)
 
 	for i := 0; i < 5; i++ {
 		msg := &message.ReceiveBlock{Block: block}
 
 		result, err := s.chain.RequestFuture(msg, 500*time.Millisecond).Result()
 		if err != nil {
-			log.Errorf("protocol send block request error:%s", err)
+			log.Errorf("PROTOCOL send block request error:%s", err)
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
@@ -907,7 +906,7 @@ func (s *synchronizes) sendupBlock(block *types.Block) berr.ErrCode {
 		rsp := result.(*message.ReceiveBlockResp)
 
 		if rsp.ErrorNo != berr.ErrNoError {
-			log.Errorf("protocol block insert error: %d", rsp.ErrorNo)
+			log.Errorf("PROTOCOL block insert error: %d", rsp.ErrorNo)
 		}
 		s.updateLocalNumber(block.Header.Number)
 		s.updateLocalLib(block.Header.Number)
@@ -916,9 +915,9 @@ func (s *synchronizes) sendupBlock(block *types.Block) berr.ErrCode {
 		return rsp.ErrorNo
 	}
 
-	log.Error("protocol block insert timeout with five times")
+	log.Error("PROTOCOL block insert timeout with five times")
 
-	log.Debugf("elapsed time 2 %d", common.Elapsed(start))
+	log.Debugf("PROTOCOL elapsed time 2 %d", common.Elapsed(start))
 
 	return berr.ErrNoError
 }
@@ -936,7 +935,7 @@ func (s *synchronizes) broadcastRcvNewBlock(update *blockUpdate) {
 func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 	buf, err := bpl.Marshal(update.block)
 	if err != nil {
-		log.Errorf("protocol block send marshal error")
+		log.Errorf("PROTOCOL block send marshal error")
 	}
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
@@ -1158,17 +1157,17 @@ func makeSyncSet() *syncSet {
 
 func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	if set.state != SET_SYNC_HEADER {
-		log.Debug("protocol recvBlockHeader state error, could have receive ack")
+		log.Debug("PROTOCOL recvBlockHeader state error, could have receive ack")
 		return false
 	}
 
 	if set.end < set.begin {
-		log.Errorf("protocol recvBlockHeader set end %d small than begin %d", set.end, set.begin)
+		log.Errorf("PROTOCOL recvBlockHeader set end %d small than begin %d", set.end, set.begin)
 		return false
 	}
 
 	if uint64(len(rsp.set)) != (set.end + 1 - set.begin) {
-		log.Errorf("protocol recvBlockHeader rsp length error")
+		log.Errorf("PROTOCOL recvBlockHeader rsp length error")
 		return false
 	}
 
@@ -1176,7 +1175,7 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 	j := 0
 	for i := set.begin; i <= set.end; i++ {
 		if rsp.set[j].GetNumber() != i {
-			log.Errorf("protocol recvBlockHeader rsp info error number:%d", rsp.set[j].GetNumber())
+			log.Errorf("PROTOCOL recvBlockHeader rsp info error number:%d", rsp.set[j].GetNumber())
 			check = true
 			break
 		}
@@ -1197,13 +1196,13 @@ func (set *syncSet) recvBlockHeader(rsp *blockHeaderRsp) bool {
 //endcCheck peer max lib change small if some peer is disconnect
 func (set *syncSet) endcCheck(number uint64) {
 	if set.state == SET_SYNC_NULL {
-		log.Debugf("protocol sync status null")
+		log.Debugf("PROTOCOL sync status null")
 		return
 	}
 
 	//remote lib change small , we should reset and wait for sync judge
 	if number < set.end {
-		log.Debugf("protocol endcCheck reset end: %d, lib: %d", set.end, number)
+		log.Debugf("PROTOCOL endcCheck reset end: %d, lib: %d", set.end, number)
 		set.reset()
 	}
 }
@@ -1211,13 +1210,13 @@ func (set *syncSet) endcCheck(number uint64) {
 //begincCheck local lib change bigger when produce a block in p2p sync state
 func (set *syncSet) begincCheck(number uint64) {
 	if set.state == SET_SYNC_NULL {
-		log.Debugf("protocol sync status null")
+		log.Debugf("PROTOCOL sync status null")
 		return
 	}
 
 	//local lib change bigger , we should reset and wait for sync judge
 	if number >= set.begin {
-		log.Debugf("protocol begincCheck reset begin: %d, lib: %d", set.begin, number)
+		log.Debugf("PROTOCOL begincCheck reset begin: %d, lib: %d", set.begin, number)
 		set.reset()
 	}
 }
