@@ -44,15 +44,17 @@ import (
 )
 
 //BlockChain the chain info
+//BlockChain the chain info
 type BlockChain struct {
-	blockDb    *db.DBService
-	roleIntf   role.RoleInterface
-	blockCache *BlockChainCache
-	nc         contract.NativeContractInterface
+	dbInst   *db.DBService
+	blockDb  *BlockDB
+	roleIntf role.RoleInterface
+	forkdb   *ForkDB
+	nc       contract.NativeContractInterface
+	trxPool  *transaction.TrxPool
 
-	handledBlockCB []HandledBlockCallback
-
-	genesisBlock *types.Block
+	handledBlockCB   []BlockCallback
+	committedBlockCB []BlockCallback
 
 	chainmu sync.RWMutex
 }
@@ -233,6 +235,12 @@ func (bc *BlockChain) GetBlock(hash common.Hash) *types.Block {
 func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	return bc.GetBlock(hash)
 }
+
+//GetCommittedTransaction get committed transaction from blockdb by hash
+func (bc *BlockChain) GetCommittedTransaction(hash common.Hash) *types.BlockTransaction {
+	return bc.blockDb.GetTransaction(hash)
+}
+
 
 //GetBlockByNumber get block from forkdb main fork and blockdb by number
 func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
