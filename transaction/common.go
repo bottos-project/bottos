@@ -21,13 +21,13 @@
 package transaction
 
 import (
-	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/common"
 	bottosErr "github.com/bottos-project/bottos/common/errors"
+	"github.com/bottos-project/bottos/common/types"
 )
 
 type trxApplyApi interface {
-	ApplyTransaction(trx *types.Transaction)
+	ExecuteTransaction(trx *types.Transaction)
 	GetTrxErrorCode(trxHash common.Hash) bottosErr.ErrCode
 }
 
