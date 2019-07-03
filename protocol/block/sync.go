@@ -123,7 +123,7 @@ func (s syncsetlib) Len() int {
 }
 
 func (s syncsetlib) Less(i, j int) bool {
-	return s[i].lastLib < s[j].lastLib
+	return s[i].LastLib < s[j].LastLib
 }
 
 func (s syncsetlib) Swap(i, j int) {
@@ -370,7 +370,7 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
 	number := update.header.GetNumber()
 	if number <= s.lastLocal {
-		log.Debugf("protocol drop block header: %d is smaller than local", number)
+		log.Debugf("protocol drop block header: %d is smaller than local %d ", number, s.lastLocal)
 		return
 	}
 
@@ -401,27 +401,32 @@ func (s *synchronizes) recvBlockNumberInfo(info *peerBlockInfo) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	peer, ok := s.peers[info.index]
+	peer, ok := s.Peers[info.Index]
 	if ok {
-		peer.lastBlock = info.lastBlock
-		peer.lastLib = info.lastLib
+		peer.LastBlock = info.LastBlock
+		peer.LastLib = info.LastLib
+		peer.LastBlockVersion = info.LastBlockVersion
 		peer.exchangeCounter++
 	} else {
 		info.exchangeCounter = 1
-		s.peers[info.index] = info
+		s.Peers[info.Index] = info
 	}
 
-	s.updateRemoteLib(info.lastLib, false)
-	s.updateRemoteNumber(info.lastBlock, false)
+	s.updateRemoteLib(info.LastLib, false)
+	s.updateRemoteNumber(info.LastBlock, info.LastBlockVersion, false)
 }
 
 func (s *synchronizes) syncBlockNumberCheck() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	for key, info := range s.peers {
+	for key, info := range s.Peers {
+		expectRemoteVersion := version.GetVersionNumByBlockNum(info.LastBlock)
+		if info.LastBlockVersion < expectRemoteVersion {
+			delete(s.Peers, key)
+		}
 		if info.exchangeCounter == 0 {
-			delete(s.peers, key)
+			delete(s.Peers, key)
 		} else {
 			info.exchangeCounter = 0
 		}
@@ -432,7 +437,7 @@ func (s *synchronizes) recordPeerSyncTimeout(index uint16) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	peer, ok := s.peers[index]
+	peer, ok := s.Peers[index]
 	if ok {
 		peer.syncTimeoutCounter++
 	}
@@ -442,7 +447,7 @@ func (s *synchronizes) resetPeerSyncTimeout() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	for _, info := range s.peers {
+	for _, info := range s.Peers {
 		info.syncTimeoutCounter = 0
 	}
 }
@@ -452,7 +457,7 @@ func (s *synchronizes) getPeers() syncset {
 	defer s.lock.Unlock()
 
 	var peerset syncset
-	for _, info := range s.peers {
+	for _, info := range s.Peers {
 		peerset = append(peerset, *info)
 	}
 
@@ -469,62 +474,92 @@ func (s *synchronizes) syncStateCheck()(syncFlag bool) {
 
 	catchindex := s.c.index
 	var catchremote uint64
+	var catchremoteVersion uint32
 
 	for _, info := range peerset {
-		if info.lastLib > remoteLib {
-			remoteLib = info.lastLib
-		}
+		if info.LastBlockVersion < remoteNumVersion {
+			continue
+		} else if info.LastBlockVersion > remoteNumVersion {
+			remoteLib = info.LastLib
+			remoteNumber = info.LastBlock
+			remoteNumVersion = info.LastBlockVersion
+			catchremote = info.LastBlock
+			catchremoteVersion = info.LastBlockVersion
+			index = info.Index
+		} else {
+			if info.LastLib > remoteLib {
+				remoteLib = info.LastLib
+			}
 
-		if info.lastBlock > remoteNumber {
-			remoteNumber = info.lastBlock
-			index = info.index
-		}
+			if info.LastBlock > remoteNumber {
+				remoteNumber = info.LastBlock
+				remoteNumVersion = info.LastBlockVersion
+				index = info.Index
+			}
 
-		if catchindex != 0 && info.index == catchindex {
-			catchremote = info.lastBlock
+			if catchindex != 0 && info.Index == catchindex {
+				catchremote = info.LastBlock
+				catchremoteVersion = info.LastBlockVersion
+			}
 		}
 	}
 
-	if remoteNumber == catchremote {
+	if remoteNumber == catchremote && remoteNumVersion == catchremoteVersion {
 		index = catchindex
 	}
 
-	//remote block lib be smaller, wo should reset it
-	if remoteLib < s.libRemote {
-		log.Errorf("protocol syncStateCheck remote lib number change smaller")
+	if remoteNumVersion < s.lastRemoteVersion {
 		if remoteLib > 0 {
 			s.updateRemoteLib(remoteLib, true)
 			s.set.endc <- remoteLib
 		}
-
-		//judge by the next time, if no peer exist, sync could be always false
-		return
-	} else if remoteLib > s.libRemote {
-		log.Errorf("protocol syncStateCheck remote lib number change bigger")
-		s.updateRemoteLib(remoteLib, false)
-	}
-
-	//remote block lib be smaller, wo should reset it
-	if remoteNumber < s.lastRemote {
-		log.Errorf("protocol syncStateCheck remote number change smaller")
 		if remoteNumber > 0 {
-			s.updateRemoteNumber(remoteNumber, true)
+			s.updateRemoteNumber(remoteNumber, remoteNumVersion, true)
 		}
 
-		//judge by the next time, if no peer exist, sync could be always false
-		return
-	} else if remoteNumber > s.lastRemote {
-		log.Errorf("protocol syncStateCheck remote number change bigger")
-		s.updateRemoteNumber(remoteNumber, false)
+	} else {
+
+		//remote block lib be smaller, wo should reset it
+		if remoteLib < s.libRemote {
+			log.Errorf("protocol syncStateCheck remote lib number change smaller")
+			if remoteLib > 0 {
+				s.updateRemoteLib(remoteLib, true)
+				s.set.endc <- remoteLib
+			}
+
+			//judge by the next time, if no peer exist, sync could be always false
+			return
+		} else if remoteLib > s.libRemote {
+			log.Errorf("protocol syncStateCheck remote lib number change bigger")
+			s.updateRemoteLib(remoteLib, false)
+		}
+
+		//remote block lib be smaller, wo should reset it
+		if remoteNumber < s.lastRemote {
+			log.Errorf("protocol syncStateCheck remote number change smaller")
+			if remoteNumber > 0 {
+				s.updateRemoteNumber(remoteNumber, remoteNumVersion, true)
+			}
+
+			//judge by the next time, if no peer exist, sync could be always false
+			return
+		} else if remoteNumber > s.lastRemote {
+			log.Errorf("protocol syncStateCheck remote number change bigger")
+			s.updateRemoteNumber(remoteNumber, remoteNumVersion, false)
+		}
 	}
 
-	flag :=s.syncStateJudge(index)
+	flag := s.syncStateJudge(index)
 	return flag
 }
 
-func (s *synchronizes) syncStateJudge(index uint16)(syncFlag bool) {
+func (s *synchronizes) syncStateJudge(index uint16) (syncFlag bool) {
+	localNumVersion := version.GetVersionNumByBlockNum(s.lastLocal)
+	if localNumVersion > s.lastRemoteVersion {
+		return true
+	}
 	if s.libLocal < s.libRemote {
-		log.Debugf("protocol syncStateJudge lib small than remote, need sync")
+		log.Debugf("protocol syncStateJudge lib small than remote, need sync %d,%d,version %d,%d", s.libLocal, s.libRemote, localNumVersion, s.lastRemoteVersion)
 
 		if !s.once {
 			s.state = STATE_SYNCING
@@ -535,7 +570,7 @@ func (s *synchronizes) syncStateJudge(index uint16)(syncFlag bool) {
 
 		if s.lastLocal >= s.lastRemote {
 			log.Debugf("protocol syncStateJudge head bigger than remote, sync wait")
-			return   true
+			return true
 		}
 
 		if s.state == STATE_NORMAL ||
@@ -700,8 +735,8 @@ func (s *synchronizes) sendBlockHeaderReq(begin uint64, end uint64) {
 			break
 		}
 
-		if info.lastLib >= end {
-			msg := p2p.UniMsgPacket{Index: info.index,
+		if info.LastLib >= end {
+			msg := p2p.UniMsgPacket{Index: info.Index,
 				P: packet}
 
 			s.set.indexHeader[counter] = info.Index
@@ -764,7 +799,7 @@ func (s *synchronizes) syncBundleBlock() {
 
 	sort.Sort(setlib)
 
-	if setlib[len(setlib)-1].lastLib < numbers[len(numbers)-1] {
+	if setlib[len(setlib)-1].LastLib < numbers[len(numbers)-1] {
 		//can't filter peers, because timeout peer lib is bigger
 		for ; j < len(peerset); j++ {
 			setlib = append(setlib, peerset[j])
@@ -785,9 +820,9 @@ func (s *synchronizes) syncBundleBlock() {
 		}
 
 		for k < len(setlib) {
-			if setlib[k].lastLib >= number {
-				s.sendBlockReq(setlib[k].index, number, BLOCK_REQ)
-				s.set.indexs[number-s.set.begin] = setlib[k].index
+			if setlib[k].LastLib >= number {
+				s.sendBlockReq(setlib[k].Index, number, BLOCK_REQ)
+				s.set.indexs[number-s.set.begin] = setlib[k].Index
 				k++
 				break
 			} else {
