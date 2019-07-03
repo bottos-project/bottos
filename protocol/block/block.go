@@ -139,6 +139,25 @@ func (b *Block) GetSyncState() bool {
 	return false
 }
 
+func (b *Block) UpdateHeadNumber() {
+	lastNum := b.chainIf.HeadBlockNum()
+
+	log.Debugf("PROTOCOL update  head number %d", lastNum)
+	b.S.updateHeadc <- lastNum
+}
+
+func (b *Block) UpdateNumber() {
+	version := version.GetVersionNumByBlockNum(b.chainIf.HeadBlockNum())
+	number := &chainNumber{
+		LibNumber:    b.chainIf.LastConsensusBlockNum(),
+		BlockNumber:  b.chainIf.HeadBlockNum(),
+		BlockVersion: version,
+	}
+
+	log.Debugf("PROTOCOL update lib number: %d head number %d,version %d", number.LibNumber, number.BlockNumber, version)
+	b.S.updateLibc <- number
+}
+
 //SendNewBlock send out a new block
 func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 	b.sendPacket(true, notify.Block, nil)
