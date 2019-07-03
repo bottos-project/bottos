@@ -41,6 +41,7 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/p2p"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
+	"github.com/bottos-project/bottos/version"
 	log "github.com/cihub/seelog"
 )
 
@@ -50,7 +51,7 @@ const (
 	TIMER_NORMAL_SYNC_LAST_BLOCK_NUMBER = 4
 	TIMER_CHECK_SYNC_LAST_BLOCK_NUMBER  = 20
 
-	TIMER_SYNC_STATE_CHECK = 5
+	TIMER_SYNC_STATE_CHECK  = 5
 	TIMER_SYNC_STATE_CHECK1 = 1
 
 	TIMER_HEADER_SYNC = 2
@@ -88,9 +89,10 @@ const (
 )
 
 type peerBlockInfo struct {
-	index     uint16
-	lastLib   uint64
-	lastBlock uint64
+	Index            uint16
+	LastLib          uint64
+	LastBlock        uint64
+	LastBlockVersion uint32
 
 	syncTimeoutCounter int16
 	exchangeCounter    int16
@@ -129,15 +131,20 @@ func (s syncsetlib) Swap(i, j int) {
 }
 
 type synchronizes struct {
-	peers map[uint16]*peerBlockInfo
+	Peers map[uint16]*peerBlockInfo
 	lock  sync.Mutex
 
-	libLocal   uint64
-	libRemote  uint64
-	lastLocal  uint64
-	lastRemote uint64
-	state      uint16
-	once       bool //have synchronized one time or not when start up
+	libLocal  uint64
+	libRemote uint64
+
+	lastLocal        uint64
+	lastLocalVersion uint32
+
+	lastRemote        uint64
+	lastRemoteVersion uint32
+
+	state uint16
+	once  bool //have synchronized one time or not when start up
 
 	infoc        chan *peerBlockInfo
 	updateLibc   chan *chainNumber
@@ -157,18 +164,18 @@ type synchronizes struct {
 
 func makeSynchronizes(nodeType bool, chainIf chain.BlockChainInterface) *synchronizes {
 	return &synchronizes{
-		peers:   make(map[uint16]*peerBlockInfo),
-		infoc:   make(chan *peerBlockInfo),
+		Peers:       make(map[uint16]*peerBlockInfo),
+		infoc:       make(chan *peerBlockInfo),
 		updateLibc:  make(chan *chainNumber),
 		updateHeadc: make(chan uint64),
-		blockc:  make(chan *blockUpdate),
-		headerc: make(chan *headerUpdate),
-		state:   STATE_SYNCING,
-		once:    false,
-		set:     makeSyncSet(),
-		c:       makeCatchup(),
-		config:  syncConfig{nodeType: nodeType},
-		chainIf: chainIf,
+		blockc:      make(chan *blockUpdate),
+		headerc:     make(chan *headerUpdate),
+		state:       STATE_SYNCING,
+		once:        false,
+		set:         makeSyncSet(),
+		c:           makeCatchup(),
+		config:      syncConfig{nodeType: nodeType},
+		chainIf:     chainIf,
 	}
 }
 
@@ -230,9 +237,9 @@ func (s *synchronizes) checkRoutine() {
 		case block := <-s.blockc:
 			s.recvBlock(block)
 		case <-checkTimer.C:
-			if s.syncStateCheck(){
+			if s.syncStateCheck() {
 				checkTimer.Reset(TIMER_SYNC_STATE_CHECK1 * time.Second)
-			}else{
+			} else {
 				checkTimer.Reset(TIMER_SYNC_STATE_CHECK * time.Second)
 			}
 		case header := <-s.headerc:
@@ -296,7 +303,7 @@ func (s *synchronizes) recvBlock(update *blockUpdate) {
 
 	if s.state == STATE_NORMAL {
 		if number > s.lastLocal+1 {
-			log.Debugf("protocol lose block , need catch up with this peer")
+			log.Debugf("protocol lose block , need catch up with this peer index:%d,number:%d", update.index, number)
 			s.state = STATE_CATCHUP
 			s.catchupWithPeer(update.index, number)
 			return
@@ -959,7 +966,7 @@ func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
 func (s *synchronizes) broadcastNewBlockHeader(update *blockUpdate, all bool) {
 	buf, err := bpl.Marshal(update.block.Header)
 	if err != nil {
-		log.Errorf("protocol block send marshal error")
+		log.Errorf("PROTOCOL block send marshal error")
 	}
 
 	head := p2p.Head{ProtocolType: pcommon.BLOCK_PACKET,
@@ -1033,10 +1040,10 @@ func (s *synchronizes) catchupCheck() {
 
 	s.c.counter++
 	if s.c.counter >= CATCHUP_COUNTER {
-		log.Debugf("protocol catchup counter error")
+		log.Debugf("PROTOCOL catchup counter error")
 		s.c.catchupReset()
 	} else {
-		log.Debugf("protocol catchup resend get block: %d", s.c.current)
+		log.Debugf("PROTOCOL catchup resend get block: %d", s.c.current)
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	}
 }
@@ -1048,13 +1055,13 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 
 	if update.block == nil ||
 		update.block.Header == nil {
-		log.Errorf("protocol catchup with peer index:%d , block:%d finish", s.c.index, s.c.current-1)
+		log.Errorf("PROTOCOL catchup with peer index:%d , block:%d finish", s.c.index, s.c.current-1)
 		s.c.catchupReset()
 		return
 	}
 
 	if update.block.Header.Number != s.c.current {
-		log.Errorf("protocol catch up recevie wrong block numbe:%d", update.block.Header.Number)
+		log.Errorf("PROTOCOL catch up recevie wrong block numbe:%d", update.block.Header.Number)
 		return
 	}
 
@@ -1064,35 +1071,35 @@ func (s *synchronizes) catchupRecvBlock(update *blockUpdate) {
 		s.c.counter = 0
 
 		s.lastLocal = update.block.Header.Number
-		log.Debugf("protocol catchup update local number: %d", s.lastLocal)
-		log.Debugf("protocol catchup get next block: %d", s.c.current)
+		log.Debugf("PROTOCOL catchup update local number: %d", s.lastLocal)
+		log.Debugf("PROTOCOL catchup get next block: %d", s.c.current)
 
 		s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 	} else if result == berr.ErrBlockInsertErrorNotLinked {
 		if s.c.current > s.c.begin {
-			log.Errorf("protocol catchup no link, start catchup from begin: %d", s.lastLocal)
+			log.Errorf("PROTOCOL catchup no link, start catchup from begin: %d", s.lastLocal)
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 		} else if s.c.current == s.c.begin && s.c.begin > s.libLocal+1 {
-			log.Errorf("protocol catchup no link, start catchup from lib: %d", s.libLocal)
+			log.Errorf("PROTOCOL catchup no link, start catchup from lib: %d", s.libLocal)
 			s.c.begin = s.libLocal + 1
 			s.c.current = s.c.begin
 			s.c.counter = 0
 			s.sendBlockReq(s.c.index, s.c.current, BLOCK_CATCH_REQUEST)
 		} else {
-			log.Errorf("protocol catchup with peer:%d error", s.c.index)
+			log.Errorf("PROTOCOL catchup with peer:%d error", s.c.index)
 			s.c.catchupReset()
 		}
 	} else {
-		log.Errorf("protocol catchup with peer error, reset and wait next time")
+		log.Errorf("PROTOCOL catchup with peer error, reset and wait next time")
 		s.c.catchupReset()
 	}
 
 }
 
 func (s *synchronizes) catchupWithPeer(index uint16, number uint64) {
-	log.Debugf("protocol catch up with peer:%d, number:%d", index, number)
+	log.Errorf("PROTOCOL catch up with peer:%d, number:%d,s.c.state%d,s.c.index%d", index, number, s.c.state, s.c.index)
 
 	if s.c.state == CATCHUP_COMPLETE {
 		s.c.begin = s.lastLocal + 1
@@ -1107,11 +1114,16 @@ func (s *synchronizes) catchupWithPeer(index uint16, number uint64) {
 		if index != s.c.index {
 			s.c.index = index
 			s.c.counter = 0
+			log.Debugf("PROTOCOL catch up doing with peer:%d, number:%d,state%d,s.c.index%d", index, number, s.c.state, s.c.index)
 			s.sendBlockReq(index, s.c.current, BLOCK_CATCH_REQUEST)
 			return
+		} else {
+			log.Debugf("PROTOCOL catch up doing for extra with peer:%d, number:%d,state%d,s.c.index%d", index, number, s.c.state, s.c.index)
+			s.sendBlockReq(index, s.c.current, BLOCK_CATCH_REQUEST)
 		}
 	} else {
-		panic("protocol wrong state")
+		log.Debugf("PROTOCOL catchupWithPeer wrong state %d", s.c.state)
+		panic("PROTOCOL wrong state")
 		return
 	}
 }
