@@ -29,6 +29,7 @@ import (
 	"errors"
 	log "github.com/cihub/seelog"
 	"sync"
+	"encoding/hex"
 )
 
 type collection struct {
@@ -49,18 +50,18 @@ func (c *collection) addPeer(peer *Peer) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("p2p collection add peer index: %d, id: %s , add: %s, port: %s",
-		peer.Index, peer.Info.Id, peer.Info.Addr, peer.Info.Port)
+	log.Debugf("P2P collection add peer index: %d, id: %s , add: %s, port: %s， chainId: %s, signature: %s, version: %d",
+		peer.Index, peer.Info.Id, peer.Info.Addr, peer.Info.Port, peer.Info.ChainId, hex.EncodeToString(peer.Info.Signature), peer.Info.Version)
 
 	if peer.Info.IsIncomplete() {
-		log.Info("p2p peer info error")
+		log.Info("P2P peer info error")
 		return errors.New("peer info error")
 	}
 
 	for _, p := range c.peers {
 		if p.Info.Equal(peer.Info) {
 			if p.isconn {
-				log.Info("p2p peer is already exist")
+				log.Info("P2P peer is already exist")
 				return errors.New("peer is already exist")
 			}
 		}
@@ -77,8 +78,11 @@ func (c *collection) getPeer(index uint16) *PeerInfo {
 	var info PeerInfo
 	peer, ok := c.peers[index]
 	if ok {
+		info.ChainId = peer.Info.ChainId
 		info.Addr = peer.Info.Addr
 		info.Port = peer.Info.Port
+		info.Signature = peer.Info.Signature
+		info.Version = peer.Info.Version
 		return &info
 	}
 
@@ -89,22 +93,18 @@ func (c *collection) delPeer(index uint16) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("p2p collection delete peer index: %d", index)
+
 	peer, ok := c.peers[index]
 	if ok {
-		log.Debugf("p2p delete peer index: %d, %s:%s", peer.Index, peer.Info.Addr, peer.Info.Port)
 		if peer.isconn {
-			log.Error("p2p peer is connected , don't delete")
 			return false
 		}
-
-		log.Error("p2p peer is disconnected , delete")
 		peer.Stop()
 		delete(c.peers, index)
 		return true
 	}
 
-	log.Error("p2p peer not exist")
+
 	return false
 }
 
@@ -152,14 +152,23 @@ func (c *collection) getPeersData() PeerDataSet {
 
 	return peers
 }
+func (c *collection) getPeerP2PInfo() []Peer {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	var peers []Peer
+	for _, p := range c.peers {
+		peers = append(peers, *p)
+	}
 
+	return peers
+}
 func (c *collection) send(msg *UniMsgPacket) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	peer, ok := c.peers[msg.Index]
 	if !ok {
-		log.Errorf("p2p peer not exist %s", msg.Index)
+		log.Errorf("P2P peer not exist %s", msg.Index)
 		return
 	}
 
