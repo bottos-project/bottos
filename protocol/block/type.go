@@ -46,8 +46,9 @@ const (
 )
 
 type chainNumber struct {
-	LibNumber   uint64
-	BlockNumber uint64
+	LibNumber    uint64
+	BlockNumber  uint64
+	BlockVersion uint32
 }
 
 type headerReq struct {
@@ -72,4 +73,8 @@ type blockUpdate struct {
 type headerUpdate struct {
 	index  uint16
 	header *types.Header
+}
+type syncReq struct {
+	Number  uint64
+	Version uint32
 }
