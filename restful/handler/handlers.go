@@ -763,7 +763,93 @@ func GetTransferCredit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//GetPeers get all peers
+func ConnetPeerbyAddress(w http.ResponseWriter, r *http.Request) {
+	var msgReq api.ConnectPeerByAddressRequest
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
 
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	address := msgReq.Address
+	isDone := actorenv.Protocol.UpdatePeerStateToActive(address)
+
+
+
+	result := &api.ConnectPeerByAddressResponse_Result{
+		Result: isDone,
+	}
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+}
+
+//GetPeers get all peers
+func DisConnectPeerbyAddress(w http.ResponseWriter, r *http.Request) {
+	var msgReq api.DisconnectPeerByAddressRequest
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	address := msgReq.Address
+	isDone := actorenv.Protocol.UpdatePeerStateToUnActive(address)
+
+
+
+	result := &api.DisconnectPeerByAddressResponse_Result{
+		Result: isDone,
+	}
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+}
+
+
+//GetPeers get all peers
+func GetPeerStatebyAddress(w http.ResponseWriter, r *http.Request) {
+	var msgReq api.GetPeerStateByAddressRequest
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	address := msgReq.Address
+	state := actorenv.Protocol.QueryPeerState(address)
+
+
+
+	result := &api.GetPeerStateByAddressResponse_Result{
+		IsActive: state,
+	}
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+}
 
 func encoderRestResponse(w http.ResponseWriter, resp ResponseStruct) (http.ResponseWriter) {
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
