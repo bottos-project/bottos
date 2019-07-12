@@ -42,7 +42,6 @@ type ReportState struct {
 	PubKey            string
 	IsReporting       bool
 	CheckFlag         uint32
-	ReportEnable      bool
 	ProtocolInterface context.ProtocolInterface
 }
 
@@ -50,22 +49,29 @@ type ReportState struct {
 func (r *Reporter) IsReady() bool {
 	now := GetReportTimeNow()
 	r.state.SetCheckFlag(1)
-	if r.IsSynced() == false {
-		log.Info("p2p is syncing")
+
+	if config.BtoConfig.Delegate.Solo == false && r.roleIntf.IsChainActivated() == false {
+		//log.Debug("PRODUCER node is not produce transfered")
 		return false
+	} else if config.BtoConfig.Delegate.Solo == false {
+		if r.IsSynced() == false {
+			log.Debugf("PRODUCER p2p is syncing")
+			return false
+		}
 	}
+
 	slot := r.roleIntf.GetSlotAtTime(now)
 	if slot == 0 {
-		//log.Info("slot is 0,not time yet")
 		return false
 	}
 
 	object, err := r.roleIntf.GetChainState()
 	if err != nil {
+		log.Errorf("PRODUCER GetChainState failed %v", err)
 		return false
 	}
 	if (now < object.LastBlockTime+uint64(config.DEFAULT_BLOCK_INTERVAL)) && object.LastBlockNum != 0 {
-		//log.Infof("time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
+		log.Debugf("PRODUCER time not ready", now, object.LastBlockTime, uint64(config.DEFAULT_BLOCK_INTERVAL))
 		return false
 	}
 	if r.IsMyTurn(now, slot) == false {
@@ -111,19 +117,18 @@ func (r *Reporter) IsSynced() bool {
 func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 	accountName, err := r.roleIntf.GetCandidateBySlot(slot)
 	if err != nil {
-		log.Infof("cannot get delegate by slot", slot)
+		log.Debugf("PRODUCER cannot get delegate by slot:%v,err:%v", slot, err)
 		return false
 	}
 	if r.roleIntf.IsAccountExist(accountName) == false {
-		log.Infof("account not exist", accountName)
+		log.Debugf("PRODUCER account not exist, account %s", accountName)
 		return false
 	}
 
 	scheduledTime := r.roleIntf.GetSlotTime(slot)
-
 	delegate, err := r.roleIntf.GetDelegateByAccountName(accountName)
 	if err != nil {
-		log.Infof("find delegate by account failed", accountName)
+		log.Debugf("PRODUCER find delegate by account failed %s", accountName)
 		return false
 	}
 
@@ -146,8 +151,8 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		return false
 	}
 
-	if math.Abs(float64(scheduledTime)-float64(startTime)) > 500 {
-		//	log.Info("delegate  is too slow")
+	if math.Abs(float64(scheduledTime)*1000-float64(startTime)*1000) > float64(config.PRODUCER_TIME_OUT*10) {
+		log.Debugf("PRODUCER delegate is too slow %s,%v,%v", accountName, scheduledTime, startTime)
 		return false
 	}
 	r.state.ScheduledTime = scheduledTime
