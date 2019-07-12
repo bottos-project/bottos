@@ -41,7 +41,7 @@ import (
 type Block struct {
 	actor   *actor.PID
 	chainIf chain.BlockChainInterface
-	s       *synchronizes
+	S       *synchronizes
 
 	headerc chan *headerReq
 	init    bool
@@ -54,7 +54,7 @@ const (
 
 //MakeBlock new instance
 func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
-	return &Block{s: makeSynchronizes(nodeType, chain),
+	return &Block{S: makeSynchronizes(nodeType, chain),
 		chainIf: chain,
 		headerc: make(chan *headerReq),
 		init:    false}
@@ -63,7 +63,7 @@ func MakeBlock(chain chain.BlockChainInterface, nodeType bool) *Block {
 //SetActor set chain actor id
 func (b *Block) SetActor(tid *actor.PID) {
 	b.actor = tid
-	b.s.setActor(tid)
+	b.S.setActor(tid)
 }
 
 //Start start
@@ -75,20 +75,18 @@ func (b *Block) Start() {
 func (b *Block) waitActorReady() {
 	time.Sleep(WAIT_TIME * time.Second)
 
-	log.Debug("protocol wait actor ready")
-
 	blocknumber := b.chainIf.HeadBlockNum()
 	libNumber := b.chainIf.LastConsensusBlockNum()
 
-	log.Debugf("protocol timer local block number:%d, %d", libNumber, blocknumber)
+	log.Debugf("PROTOCOL timer local block number:%d, %d", libNumber, blocknumber)
 	if blocknumber < libNumber {
-		panic("protocol wrong lib number")
+		panic("PROTOCOL wrong lib number")
 		return
 	}
 
-	b.s.updateLocalLib(libNumber)
-	b.s.updateLocalNumber(blocknumber)
-	b.s.start()
+	b.S.updateLocalLib(libNumber)
+	b.S.updateLocalNumber(blocknumber)
+	b.S.start()
 	b.init = true
 }
 
@@ -133,7 +131,7 @@ func (b *Block) routine() {
 
 //GetSyncState get current synchronize status
 func (b *Block) GetSyncState() bool {
-	if b.s.state == STATE_NORMAL {
+	if b.S.state == STATE_NORMAL {
 		return true
 	}
 	return false
@@ -163,10 +161,9 @@ func (b *Block) SendNewBlock(notify *message.NotifyBlock) {
 	b.sendPacket(true, notify.Block, nil)
 }
 
-func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
-	last := chainNumber{LibNumber: b.chainIf.LastConsensusBlockNum(),
-		BlockNumber: b.chainIf.HeadBlockNum()}
-	b.s.updatec <- last
+func (b *Block) sendPacket(broadcast bool, block *types.Block, peers []uint16) {
+	last := b.chainIf.HeadBlockNum()
+	b.S.updateHeadc <- last
 
 	buf, err := bpl.Marshal(data)
 	if err != nil {
@@ -194,7 +191,7 @@ func (b *Block) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 }
 
 func (b *Block) processLastBlockNumberReq(index uint16, data []byte) {
-	b.s.sendLastBlockNumberRsp(index)
+	b.S.sendLastBlockNumberRsp(index)
 }
 
 func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
@@ -211,7 +208,7 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 		lastBlock: last.BlockNumber,
 	}
 
-	b.s.infoc <- info
+	b.S.infoc <- info
 }
 
 func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
@@ -263,7 +260,7 @@ func (b *Block) processBlockHeaderRsp(index uint16, data []byte) {
 
 	log.Debugf("protocol processBlockHeaderRsp index: %d", index)
 
-	b.s.set.syncheaderc <- &rsp
+	b.S.set.syncheaderc <- &rsp
 }
 
 func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
@@ -304,7 +301,7 @@ func (b *Block) processBlockInfo(index uint16, data []byte) {
 
 	update := &blockUpdate{index: index, block: &block}
 
-	b.s.blockc <- update
+	b.S.blockc <- update
 }
 
 func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
@@ -316,7 +313,7 @@ func (b *Block) processBlockCatchRsp(index uint16, data []byte) {
 	}
 
 	update := blockUpdate{index: index, block: &block}
-	b.s.c.catchupc <- &update
+	b.S.c.catchupc <- &update
 }
 
 func (b *Block) sendBlockHeaderRsp(index uint16, rsp *blockHeaderRsp) {
@@ -367,5 +364,5 @@ func (b *Block) processBlockHeaderUpdate(index uint16, data []byte) {
 
 	update := headerUpdate{index: index, header: &header}
 
-	b.s.headerc <- &update
+	b.S.headerc <- &update
 }

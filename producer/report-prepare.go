@@ -131,23 +131,18 @@ func (r *Reporter) IsMyTurn(startTime uint64, slot uint64) bool {
 		log.Debugf("PRODUCER find delegate by account failed %s", accountName)
 		return false
 	}
-
-	found := false
-	for _, v := range config.Param.Delegates {
-		if accountName == v {
-			found = true
-			break
-		}
-	}
-	if !found {
-		log.Infof("current delegate: %v, not found in this node\n", accountName)
+	_, err = config.GetDelegateSignKey(delegate.ReportKey)
+	if err != nil {
 		return false
 	}
 
-	prate := r.roleIntf.GetDelegateParticipationRate()
+	if accountName != config.BtoConfig.Delegate.Account {
+		return false
+	}
+
+	prate := r.roleIntf.GetDelegateParticipationRate(accountName)
 
 	if prate < config.DELEGATE_PATICIPATION {
-		//	log.Info("delegate paticipate rate is too low")
 		return false
 	}
 
