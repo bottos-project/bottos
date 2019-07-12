@@ -368,6 +368,12 @@ func (s *synchronizes) syncRecvBlock(update *blockUpdate) {
 }
 
 func (s *synchronizes) recvBlockHeader(update *headerUpdate) {
+	myVersion := update.header.Version
+	lastVersion := version.GetVersionNumByBlockNum(s.lastLocal)
+	if myVersion <= lastVersion {
+		log.Debugf("protocol drop block header version%d : is smaller than local %d", myVersion, lastVersion)
+		return
+	}
 	number := update.header.GetNumber()
 	if number <= s.lastLocal {
 		log.Debugf("protocol drop block header: %d is smaller than local %d ", number, s.lastLocal)
@@ -400,6 +406,16 @@ func (s *synchronizes) checkHeader() {
 func (s *synchronizes) recvBlockNumberInfo(info *peerBlockInfo) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	//check version if is lower than delete this peer
+	expectRemoteVersion := version.GetVersionNumByBlockNum(info.LastBlock)
+	if info.LastBlockVersion < expectRemoteVersion {
+		log.Errorf("protocol remote version %d header %d smaller %d ",info.LastBlockVersion, info.LastBlock, expectRemoteVersion )
+		_, ok := s.Peers[info.Index]
+		if ok{
+			delete(s.Peers, info.Index)
+		}
+		return
+	}
 
 	peer, ok := s.Peers[info.Index]
 	if ok {
@@ -464,9 +480,10 @@ func (s *synchronizes) getPeers() syncset {
 	return peerset
 }
 
-func (s *synchronizes) syncStateCheck()(syncFlag bool) {
+func (s *synchronizes) syncStateCheck() (syncFlag bool) {
 	var remoteLib uint64
 	var remoteNumber uint64
+	var remoteNumVersion uint32
 	var index uint16
 
 	//we can't judge where peer exist or not because we need in sync status when only one node
@@ -623,6 +640,7 @@ func (s *synchronizes) updateLocalNumber(number uint64) {
 	}
 
 	log.Debugf("protocol update local block number:%d", number)
+	s.lastLocalVersion = version.GetVersionNumByBlockNum(number)
 	s.lastLocal = number
 }
 
@@ -635,13 +653,17 @@ func (s *synchronizes) updateRemoteLib(lib uint64, force bool) {
 	s.libRemote = lib
 }
 
-func (s *synchronizes) updateRemoteNumber(number uint64, force bool) {
+func (s *synchronizes) updateRemoteNumber(number uint64, numVersion uint32, force bool) {
+	if numVersion < s.lastRemoteVersion {
+		return
+	}
 	if !force && number <= s.lastRemote {
 		return
 	}
 
 	log.Debugf("protocol peer max block number:%d", number)
 	s.lastRemote = number
+	s.lastRemoteVersion = numVersion
 }
 
 func (s *synchronizes) sendLastBlockNumberReq() {
@@ -658,7 +680,8 @@ func (s *synchronizes) sendLastBlockNumberReq() {
 }
 
 func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
-	rsp := chainNumber{LibNumber: s.libLocal, BlockNumber: s.lastLocal}
+	myVersion := version.GetVersionNumByBlockNum(s.lastLocal)
+	rsp := chainNumber{LibNumber: s.libLocal, BlockNumber: s.lastLocal, BlockVersion: myVersion}
 
 	data, err := bpl.Marshal(rsp)
 	if err != nil {
@@ -675,7 +698,7 @@ func (s *synchronizes) sendLastBlockNumberRsp(index uint16) {
 	msg := p2p.UniMsgPacket{Index: index,
 		P: packet}
 
-	log.Debugf("protocol sendGetLastRsp lib:%d head: %d", s.libLocal, s.lastLocal)
+	log.Debugf("protocol sendGetLastRsp lib:%d head: %d version %d ", s.libLocal, s.lastLocal, myVersion)
 
 	p2p.Runner.SendUnicast(msg)
 }
@@ -835,8 +858,8 @@ func (s *synchronizes) syncBundleBlock() {
 }
 
 func (s *synchronizes) sendBlockReq(index uint16, number uint64, ptype uint16) {
-
-	data, err := bpl.Marshal(number)
+	req := syncReq{Number: number, Version: version.GetVersionNumByBlockNum(number)}
+	data, err := bpl.Marshal(req)
 	if err != nil {
 		log.Error("PROTOCOL sendGetBlock Marshal number error ")
 		return
@@ -943,9 +966,11 @@ func (s *synchronizes) sendupBlock(block *types.Block) berr.ErrCode {
 		if rsp.ErrorNo != berr.ErrNoError {
 			log.Errorf("PROTOCOL block insert error: %d", rsp.ErrorNo)
 		}
-		s.updateLocalNumber(block.Header.Number)
-		s.updateLocalLib(block.Header.Number)
-		log.Debugf("elapsed time 1 %d ", common.Elapsed(start))
+		blocknumber := s.chainIf.HeadBlockNum()
+		s.updateLocalNumber(blocknumber)
+		libnumber := s.chainIf.LastConsensusBlockNum()
+		s.updateLocalLib(libnumber)
+		log.Debugf("PROTOCOL elapsed time 1 %d ", common.Elapsed(start))
 
 		return rsp.ErrorNo
 	}
@@ -968,7 +993,7 @@ func (s *synchronizes) broadcastRcvNewBlock(update *blockUpdate) {
 }
 
 func (s *synchronizes) broadcastNewBlock(update *blockUpdate, all bool) {
-	buf, err := bpl.Marshal(update.block)
+	buf, err := update.block.Marshal()
 	if err != nil {
 		log.Errorf("PROTOCOL block send marshal error")
 	}
