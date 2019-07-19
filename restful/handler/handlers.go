@@ -127,8 +127,10 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	resp.Result = result
 	encoderRestResponse(w, resp)
 }
-func checkNil(req interface{}, flag int8) (ResponseStruct) {
-	var resp ResponseStruct
+
+//checkNil check param is or not Nil,flag 0:request; 1:response
+func checkNil(req interface{}, flag int8) comtool.ResponseStruct {
+	var resp comtool.ResponseStruct
 
 	if req == nil {
 		if flag == 0 {
@@ -140,8 +142,7 @@ func checkNil(req interface{}, flag int8) (ResponseStruct) {
 		}
 
 		funcName, _, _, _ := runtime.Caller(1)
-		log.Errorf("%s errcode: %d checkNil error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, resp.Msg)
-		//encoderRestResponse(w, resp)
+		log.Errorf("REST:check param is nil,%s errcode: %d, msg:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, resp.Msg)
 		return resp
 	}
 	return resp
@@ -151,15 +152,13 @@ func checkNil(req interface{}, flag int8) (ResponseStruct) {
 func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//params := mux.Vars(r)
 	var msgReq *api.GetBlockRequest
-	var resp ResponseStruct
+	var resp comtool.ResponseStruct
 	err := json.NewDecoder(r.Body).Decode(&msgReq)
 	if err != nil {
+		log.Errorf("REST:json Decoder failed:%v", err)
 		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
 		resp.Result = err
-
-		funcName, _, _, _ := runtime.Caller(1)
-		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
 		encoderRestResponse(w, resp)
 		return
 	}
@@ -173,6 +172,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 
 	res, err := chainActorPid.RequestFuture(msgReq2, 500*time.Millisecond).Result()
 	if err != nil {
+		log.Errorf("REST:chain Actor Request failed,%v", err)
 		resp.Errcode = uint32(bottosErr.ErrApiBlockNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiBlockNotFound)
 		encoderRestResponse(w, resp)
@@ -195,6 +195,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 	//result := &api.GetBlockResponse_Result{}
 	result := &types.BlockDetail{}
 	hash := response.Block.Hash()
+	result.BlockVersion = response.Block.GetVersion()
 	result.PrevBlockHash = response.Block.GetPrevBlockHash().ToHexString()
 	result.BlockNum = response.Block.GetNumber()
 	result.BlockHash = hash.ToHexString()
@@ -203,7 +204,7 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 	result.TrxMerkleRoot = response.Block.ComputeMerkleRoot().ToHexString()
 	result.Delegate = string(response.Block.GetDelegate())
 	result.DelegateSign = common.BytesToHex(response.Block.GetDelegateSign())
-	for _, v := range response.Block.Transactions {
+	for _, v := range response.Block.BlockTransactions {
 		tx := convertIntTrxToApiTrxInter(v, roleIntf)
 		result.Trxs = append(result.Trxs, &tx)
 	}
