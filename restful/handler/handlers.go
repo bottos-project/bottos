@@ -327,26 +327,28 @@ type BlockTransaction struct {
 }
 
 type Transaction struct {
-	Version     uint32 `json:"version"`
-	CursorNum   uint64 `json:"cursor_num"`
-	CursorLabel uint32 `json:"cursor_label"`
-	Lifetime    uint64 `json:"lifetime"`
-	Sender      string `json:"sender"`
-	Contract    string `json:"contract"`
-	Method      string `json:"method"`
+	Version     uint32      `json:"version"`
+	CursorNum   uint64      `json:"cursor_num"`
+	CursorLabel uint32      `json:"cursor_label"`
+	Lifetime    uint64      `json:"lifetime"`
+	Sender      string      `json:"sender"`
+	Contract    string      `json:"contract"`
+	Method      string      `json:"method"`
 	Param       interface{} `json:"param"`
-	SigAlg      uint32 `json:"sig_alg"`
-	Signature   string `json:"signature"`
+	SigAlg      uint32      `json:"sig_alg"`
+	Signature   string      `json:"signature"`
 }
 
-func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
-	account, err := r.GetAccount(contract)
+func getContractAbi(r role.RoleInterface, contractName string) (*abi.ABI, error) {
+	contract, err := r.GetContract(contractName)
 	if err != nil {
-		return nil, errors.New("Get account fail")
+		log.Errorf("REST:GetContract failed,%v", err)
+		return nil, errors.New("Get contract fail")
 	}
 
-	Abi, err := abi.ParseAbi(account.ContractAbi)
+	Abi, err := abi.ParseAbi(contract.ContractAbi)
 	if err != nil {
+		log.Errorf("REST:ParseAbi failed, %v", err)
 		return nil, err
 	}
 
@@ -355,10 +357,11 @@ func getContractAbi(r role.RoleInterface, contract string) (*abi.ABI, error) {
 
 func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, Method string) (interface{}, error) {
 	var Abi *abi.ABI = nil
-	if Contract != "bottos" {
+	if Contract != config.BOTTOS_CONTRACT_NAME {
 		var err error
 		Abi, err = getContractAbi(r, Contract)
-		if  err != nil {
+		if err != nil {
+			log.Errorf("REST:getContractAbi failed, %v", err)
 			return nil, errors.New("External Abi is empty!")
 		}
 	} else {
@@ -369,21 +372,29 @@ func ParseTransactionParam(r role.RoleInterface, Param []byte, Contract string, 
 		return nil, errors.New("Abi is empty!")
 	}
 
-	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
+	decodedParam, isOK := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
 	if decodedParam == nil || len(decodedParam) <= 0 {
-		return nil, errors.New("ParseTransactionParam: FAILED")
+		if isOK {
+			decodedParam = make(map[string]interface{})
+		} else {
+			return nil, errors.New("ParseTransactionParam: FAILED")
+		}
 	}
 	return decodedParam, nil
 }
 
-func convertIntTrxToApiTrxInter(trx *types.Transaction,r role.RoleInterface) interface{} {
+//convertIntTrxToApiTrxInter convert IntTrx to Api TrxInter
+func convertIntTrxToApiTrxInter(trxB *types.BlockTransaction, r role.RoleInterface) interface{} {
+	trx := trxB.Transaction
+	var apiTrx *BlockTransaction
+
 	parmConvered, err := ParseTransactionParam(r, trx.Param, trx.Contract, trx.Method)
 	if err != nil {
-		log.Errorf("role.ParseParam: %s", err)
-		panic(err)
+		log.Errorf("REST:ParseTransactionParam failed, %v", err)
+		return apiTrx
 	}
 
-	apiTrx := &Transaction{
+	apiTx := &Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
@@ -396,6 +407,11 @@ func convertIntTrxToApiTrxInter(trx *types.Transaction,r role.RoleInterface) int
 		Signature:   common.BytesToHex(trx.Signature),
 	}
 
+	apiTrx = &BlockTransaction{
+		Transaction:     apiTx,
+		ResourceReceipt: trxB.ResourceReceipt,
+		TrxHash:         trx.Hash().ToHexString(),
+	}
 	return apiTrx
 }
 
