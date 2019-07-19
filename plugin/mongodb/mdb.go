@@ -29,6 +29,7 @@ import (
 	"errors"
 	log "github.com/cihub/seelog"
 	"time"
+	"math/big"
 
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/safemath"
@@ -38,7 +39,6 @@ import (
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
 	"gopkg.in/mgo.v2/bson"
-	"math/big"
 )
 
 type MongoDBPlugin struct {
@@ -260,10 +260,10 @@ func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.T
 		bto := &AccountInfo{
 			ID:               bson.NewObjectId(),
 			AccountName:      config.BOTTOS_CONTRACT_NAME,
-			Balance:          initSupply.String(),
-			StakedBalance:    "0",
-			UnstakingBalance: "0",
-			PublicKey:        config.Param.KeyPairs[0].PublicKey,
+			Balance:          initSupply.String(), //uint32        `bson:"bto_balance"`
+			StakedBalance:    "0",          //uint64        `bson:"staked_balance"`
+			UnstakingBalance: "0",         //             `bson:"unstaking_balance"`
+			PublicKey:        common.BytesToHex(config.Genesis.GenesisKey),
 			CreateTime:       time.Unix(int64(config.Genesis.GenesisTime), 0), //time.Time     `bson:"create_time"`
 			UpdatedTime:      time.Now(),                                      //time.Time     `bson:"updated_time"`
 		}
@@ -271,7 +271,7 @@ func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.T
 	}
 
 	if trx.Method == "transfer" {
-		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		data, _ := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
 		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 		}
@@ -306,7 +306,7 @@ func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.T
 			return err
 		}
 	} else if trx.Method == "newaccount" {
-		data := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
+		data, _ := abi.UnmarshalAbiEx(trx.Contract, Abi, trx.Method, trx.Param)
 		if data == nil || len(data) <= 0 {
 			log.Error("UnmarshalAbi for contract: ", trx.Contract, ", Method: ", trx.Method, " failed!")
 			return err
@@ -323,8 +323,8 @@ func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.T
 		NewAccount := &AccountInfo{
 			ID:               oid,
 			AccountName:      DataName,
-			Balance:          "0", //uint32        `bson:"bto_balance"`
-			StakedBalance:    "0", //uint64        `bson:"staked_balance"`
+			Balance:          "0",  //uint32        `bson:"bto_balance"`
+			StakedBalance:    "0",  //uint64        `bson:"staked_balance"`
 			UnstakingBalance: "0", //             `bson:"unstaking_balance"`
 			PublicKey:        DataPubKey,
 			CreateTime:       time.Now(), //time.Time     `bson:"create_time"`
@@ -350,14 +350,14 @@ func (mdb *MongoDBPlugin) getAbiForExternalContract(contract string) (*abi.ABI, 
 		return ExternalAbiMap[contract].(*abi.ABI), nil
 	}
 
-	account, err := mdb.Role.GetAccount(contract)
+	contractInfo, err := mdb.Role.GetContract(contract)
 	if err != nil {
-		return nil, errors.New("Get account fail")
+		return nil, errors.New("Get contract fail")
 	}
 
-	if len(account.ContractAbi) > 0 {
+	if len(contractInfo.ContractAbi) > 0 {
 
-		Abi, err := abi.ParseAbi(account.ContractAbi)
+		Abi, err := abi.ParseAbi(contractInfo.ContractAbi)
 		if err != nil {
 			return nil, err
 		}
