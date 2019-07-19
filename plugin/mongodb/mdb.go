@@ -99,8 +99,8 @@ func (mdb *MongoDBPlugin) ApplyBlock(block *types.Block) error {
 	if !mdb.Db.IsOpDbConfigured() {
 		return nil
 	}
-	oids := make([]bson.ObjectId, len(block.Transactions))
-	for i := range block.Transactions {
+	oids := make([]bson.ObjectId, len(block.BlockTransactions))
+	for i := range block.BlockTransactions {
 		oids[i] = bson.NewObjectId()
 	}
 	mdb.insertBlockInfoRole(block, oids)
@@ -130,10 +130,14 @@ func (mdb *MongoDBPlugin) ParseParam(Contract string, Method string, Param []byt
 		return nil, errors.New("Abi is empty!")
 	}
 
-	decodedParam := abi.UnmarshalAbiEx(Contract, Abi, Method, Param)
+	decodedParam, isOK := abi.UnmarshalAbiExForMgoDB(Contract, Abi, Method, Param)
 	if decodedParam == nil || len(decodedParam) <= 0 {
-		log.Error("insertTxInfoRole: FAILED (decodedParam is nil!): Contract: ", Contract, ", Method: ", Method)
-		return nil, errors.New("insertTxInfoRole: FAILED")
+		if isOK {
+			decodedParam = make(map[string]interface{})
+		} else {
+			log.Error("insertTxInfoRole: FAILED (decodedParam is nil!): Contract: ", Contract, ", Method: ", Method)
+			return nil, errors.New("insertTxInfoRole: FAILED")
+		}
 	}
 	return decodedParam, nil
 }
@@ -142,37 +146,37 @@ func (mdb *MongoDBPlugin) insertTxInfoRole(block *types.Block, oids []bson.Objec
 	if block == nil {
 		return errors.New("Error Invalid param")
 	}
-	if len(oids) != len(block.Transactions) {
+	if len(oids) != len(block.BlockTransactions) {
 		return errors.New("invalid param")
 	}
-	for i, trx := range block.Transactions {
+	for i, trx := range block.BlockTransactions {
 		newtrx := &TxInfo{
 			ID:            oids[i],
 			BlockNum:      block.Header.Number,
-			TransactionID: trx.Hash().ToHexString(), //trx.Hash()
+			TransactionID: trx.Transaction.Hash().ToHexString(), //trx.Hash()
 			SequenceNum:   uint32(i),
 			BlockHash:     block.Hash().ToHexString(), //block.Hash(),
-			CursorNum:     trx.CursorNum,
-			CursorLabel:   trx.CursorLabel,
-			Lifetime:      trx.Lifetime,
-			Sender:        trx.Sender,
-			Contract:      trx.Contract,
-			Method:        trx.Method,
+			CursorNum:     trx.Transaction.CursorNum,
+			CursorLabel:   trx.Transaction.CursorLabel,
+			Lifetime:      trx.Transaction.Lifetime,
+			Sender:        trx.Transaction.Sender,
+			Contract:      trx.Transaction.Contract,
+			Method:        trx.Transaction.Method,
 			//Param:         trx.Param,
-			SigAlg:     trx.SigAlg,
-			Signature:  common.BytesToHex(trx.Signature),
+			SigAlg:     trx.Transaction.SigAlg,
+			Signature:  common.BytesToHex(trx.Transaction.Signature),
 			CreateTime: time.Now(),
 		}
 
-		decodedParam, err := mdb.ParseParam(newtrx.Contract, newtrx.Method, trx.Param)
+		decodedParam, err := mdb.ParseParam(newtrx.Contract, newtrx.Method, trx.Transaction.Param)
 		if err != nil {
 			continue
 		}
 		newtrx.Param = decodedParam
 
 		mdb.Db.Insert(config.DEFAULT_OPTIONDB_TABLE_TRX_NAME, newtrx)
-		if trx.Contract == config.BOTTOS_CONTRACT_NAME {
-			mdb.insertAccountInfoRole(block, trx, oids[i])
+		if trx.Transaction.Contract == config.BOTTOS_CONTRACT_NAME {
+			mdb.insertAccountInfoRole(block, trx.Transaction, oids[i])
 		}
 	}
 
@@ -214,7 +218,7 @@ func (mdb *MongoDBPlugin) GetBalanceOp(accountName string) (*role.Balance, error
 
 	balance, errConvert := big.NewInt(0).SetString(value2.Balance, 10)
 
-	if false == errConvert {
+	if (false == errConvert) {
 		return nil, errors.New("convert balance error")
 	}
 
@@ -228,7 +232,7 @@ func (mdb *MongoDBPlugin) GetBalanceOp(accountName string) (*role.Balance, error
 
 // SetBalanceOp is to save account balance
 func (mdb *MongoDBPlugin) SetBalanceOp(accountName string, balance *big.Int) error {
-	return mdb.Db.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance)
+	return mdb.Db.Update(config.DEFAULT_OPTIONDB_TABLE_ACCOUNT_NAME, "account_name", accountName, "bto_balance", balance.String())
 }
 
 func (mdb *MongoDBPlugin) insertAccountInfoRole(block *types.Block, trx *types.Transaction, oid bson.ObjectId) error {
