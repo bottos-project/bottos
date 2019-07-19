@@ -50,12 +50,6 @@ func (d *DBService) Flush() error {
 	return d.kvRepo.CallFlush()
 }
 
-//Close is to close db.
-func (d *DBService) Close() {
-
-	d.kvRepo.CallClose()
-}
-
 //Seek is to Seek db.
 func (d *DBService) Seek(prefixKey []byte) ([]string, error) {
 
@@ -66,4 +60,20 @@ func (d *DBService) Seek(prefixKey []byte) ([]string, error) {
 func (d *DBService) NewIterator() iterator.Iterator {
 
 	return d.kvRepo.CallNewIterator()
+}
+
+func (d *DBService) NewBatch() {
+	d.kvRepo.CallNewBatch()
+}
+
+func (d *DBService) BatchPut(key []byte, value []byte) {
+	d.kvRepo.CallBatchPut(key, value)
+}
+
+func (d *DBService) BatchDelete(key []byte) {
+	d.kvRepo.CallDelete(key)
+}
+
+func (d *DBService) BatchCommit() error {
+	return d.kvRepo.CallBatchCommit()
 }
