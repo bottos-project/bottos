@@ -235,21 +235,21 @@ func (p *Peer) recvRoutine() {
 	for {
 		_, err := io.ReadFull(p.reader, bl)
 		if err != nil {
-			log.Errorf("p2p recvRoutine read head error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
+			log.Errorf("P2P recvRoutine read head error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 			p.isconn = false
 			return
 		}
 
 		packetLen = binary.BigEndian.Uint32(bl)
 		if packetLen < headsize || packetLen > MAX_PACKET_LEN {
-			log.Errorf("p2p recvRoutine drop packet wrong packet lenght %d", packetLen)
+			log.Errorf("P2P recvRoutine drop packet wrong packet lenght %d", packetLen)
 			continue
 		}
 
 		buf := make([]byte, packetLen)
 		len, err = io.ReadFull(p.reader, buf)
 		if err != nil {
-			log.Errorf("p2p recvRoutine read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
+			log.Errorf("P2P recvRoutine read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 			p.isconn = false
 			return
 		}
@@ -258,7 +258,7 @@ func (p *Peer) recvRoutine() {
 			for {
 				length, err := io.ReadFull(p.reader, buf[len:])
 				if err != nil {
-					log.Errorf("p2p recvRoutine continue read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
+					log.Errorf("P2P recvRoutine continue read data error:%s,  peer index: %d, %s:%s", err, p.Index, p.Info.Addr, p.Info.Port)
 					p.isconn = false
 					return
 				}
@@ -270,7 +270,7 @@ func (p *Peer) recvRoutine() {
 				} else if uint32(len) == packetLen {
 					break
 				} else {
-					log.Errorf("p2p recvRoutine continue read data length wrong packet length:%d, read:%d", packetLen, len)
+					log.Errorf("P2 recvRoutine continue read data length wrong packet length:%d, read:%d", packetLen, len)
 					readerr = true
 					break
 				}
@@ -293,6 +293,5 @@ func (p *Peer) recvRoutine() {
 
 		p.sendup(p.Index, &packet)
 	}
-
 	p.isconn = false
 }
