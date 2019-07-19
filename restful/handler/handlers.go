@@ -218,16 +218,14 @@ func GetBlock(w http.ResponseWriter, r *http.Request) {
 //SendTransaction send transaction
 func SendTransaction(w http.ResponseWriter, r *http.Request) {
 	var trx *api.Transaction
-	var resp ResponseStruct
+	var resp comtool.ResponseStruct
 	err := json.NewDecoder(r.Body).Decode(&trx)
 	if err != nil {
-		log.Errorf("request error: %s", err)
+		log.Errorf("REST:json Decoder failed:%v", err)
 		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
 		resp.Result = err
 
-		funcName, _, _, _ := runtime.Caller(1)
-		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
 		encoderRestResponse(w, resp)
 		return
 	}
@@ -239,33 +237,37 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 
 	//verity Sender
 	if !re.MatchString(trx.Sender) {
+		log.Errorf("REST:match sender failed,sender:%v", trx.Sender)
 		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-		encoderRestResponse(w,resp)
+		encoderRestResponse(w, resp)
 		return
 	}
 
 	//verity Contract
-	if !re.MatchString(trx.Contract) {
+	if !contractRe.MatchString(trx.Contract) && trx.Contract != config.BOTTOS_CONTRACT_NAME {
+		log.Errorf("REST:match method failed,Contract:%v", trx.Contract)
 		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-		encoderRestResponse(w,resp)
+		encoderRestResponse(w, resp)
 		return
 	}
 
 	//verity Method
 	if !re.MatchString(trx.Method) {
+		log.Errorf("REST:match method failed,Method:%v", trx.Method)
 		resp.Errcode = uint32(bottosErr.ErrTrxAccountError)
 		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
-		encoderRestResponse(w,resp)
+		encoderRestResponse(w, resp)
 		return
 	}
 
 	intTrx, err := service.ConvertApiTrxToIntTrx(trx)
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		log.Errorf("REST:Convert ApiTrx to IntTrx failed:%v", err)
+		resp.Errcode = uint32(bottosErr.RestErrInternal)
+		resp.Msg = err.Error()
+		encoderRestResponse(w, resp)
 		return
 	}
 
@@ -276,22 +278,24 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
 
 	if nil != err {
+		log.Errorf("REST:trxPreHandle %x Actor process failed,", intTrx.Hash(), err)
+
 		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
-
-		log.Errorf("trx: %x actor process failed", intTrx.Hash())
-
 		encoderRestResponse(w, resp)
 		return
 	}
 
 	result := &api.SendTransactionResponse_Result{}
 	if bottosErr.ErrNoError == handlerErr {
+		resp.Errcode = uint32(bottosErr.ErrNoError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+
 		result.TrxHash = intTrx.Hash().ToHexString()
 		result.Trx = service.ConvertIntTrxToApiTrx(intTrx)
 		resp.Result = result
-		resp.Msg = "trx receive succ"
-		resp.Errcode = 0
+		encoderRestResponse(w, resp)
+		return
 	} else {
 		result.TrxHash = intTrx.Hash().ToHexString()
 		result.Trx = service.ConvertIntTrxToApiTrx(intTrx)
@@ -302,16 +306,24 @@ func SendTransaction(w http.ResponseWriter, r *http.Request) {
 		tempErr = handlerErr.(bottosErr.ErrCode)
 
 		resp.Errcode = (uint32)(tempErr)
-		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+		resp.Msg = bottosErr.GetCodeString(tempErr)
+		encoderRestResponse(w, resp)
+		return
 	}
 
-	log.Infof("trx: %v %s", result.TrxHash, resp.Msg)
+	log.Infof("REST:trx hash:%v, response: %s", result.TrxHash, resp.Msg)
 
 	encoderRestResponse(w, resp)
 }
 
 type reqStruct struct {
 	TrxHash string `json:"trx_hash,omitemty"`
+}
+
+type BlockTransaction struct {
+	Transaction     *Transaction
+	ResourceReceipt *types.ResourceReceipt
+	TrxHash         string
 }
 
 type Transaction struct {
