@@ -981,3 +981,97 @@ func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.Get
 	}
 	return comtool.Sha256(msg), intTrx, err
 }
+
+func GetContract(contractName string) (*role.Contract, error) {
+	return roleIntf.GetContract(contractName)
+}
+
+func ReviewProposal(w http.ResponseWriter, r *http.Request) {
+	var msgReq api.ReviewProposalRequest
+	var resp comtool.ResponseStruct
+	err := json.NewDecoder(r.Body).Decode(&msgReq)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed: %v", err)
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if resp := checkNil(msgReq, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if !common.CheckAccountNameContent(msgReq.ProposalName) {
+		resp.Errcode = uint32(bottosErr.ErrApiProposalNameIllegal)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiProposalNameIllegal)
+		encoderRestResponse(w, resp)
+		return
+		if !common.CheckAccountNameContent(msgReq.Proposer) {
+			resp.Errcode = uint32(bottosErr.ErrApiAccountNameIllegal)
+			resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiAccountNameIllegal)
+			encoderRestResponse(w, resp)
+			return
+		}
+	}
+
+	msignTransfer, err := roleIntf.GetMsignTransfer(msgReq.ProposalName)
+	if err != nil {
+		log.Errorf("REST:get Multi sign transfer failed: %v", err)
+
+		resp.Errcode = uint32(bottosErr.RestErrGetMsignTransferError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrGetMsignTransferError)
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	if resp := checkNil(msignTransfer, 1); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+	if msignTransfer.ProposerName != msgReq.Proposer {
+		log.Errorf("REST:mutli sign proposal:%+v", msignTransfer)
+		resp.Errcode = uint32(bottosErr.ErrMsignProposalNotFound)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrMsignProposalNotFound)
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	var authorList = []*api.AuthorList{}
+	for _, v := range msignTransfer.RequestList {
+		authorList = append(authorList, &api.AuthorList{
+			AuthorAccount: v.AuthorAccount,
+			IsApproved:    v.IsApproved,
+		})
+	}
+
+	var param = &api.MsignTransferParam{}
+	err = json.Unmarshal(msignTransfer.PackedTransaction, &param)
+	if err != nil {
+		log.Errorf("REST:Unmarshal failed: %v", err)
+
+		resp.Errcode = uint32(bottosErr.RestErrBplMarshal)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrBplMarshal)
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	result := &api.ReviewProposalResponse_Result{
+		ProposalName:      msignTransfer.ProposalName,
+		Proposer:          msignTransfer.ProposerName,
+		MsignAccountName:  msignTransfer.MsignAccountName,
+		AuthorList:        authorList,
+		PackedTransaction: common.BytesToHex(msignTransfer.PackedTransaction),
+		Transaction:       param,
+		Available:         msignTransfer.Available,
+		Time:              msignTransfer.Time,
+	}
+
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+}
