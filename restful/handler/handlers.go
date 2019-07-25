@@ -932,41 +932,10 @@ func encoderRestRequest(r *http.Request, req interface{}) (interface{}, error) {
 	return req, nil
 }
 
-func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.GetInfoResponse) ([]byte, *types.Transaction, error) {
-	var blockHeader *api.GetInfoResponse_Result
-	if h == nil {
-		var err error
-		blockHeader, err = GetBlockHeader()
-		if err != nil {
-			return nil, nil, err
-		}
-	} else {
-		blockHeader = h.Result
-	}
+func PushTrxReq(signature string, trx *types.BasicTransaction) (*message.PushTrxReq, error) {
 
-	trx := &types.BasicTransaction{
-		Version:     blockHeader.HeadBlockVersion,
-		CursorNum:   blockHeader.HeadBlockNum,
-		CursorLabel: blockHeader.CursorLabel,
-		Lifetime:    blockHeader.HeadBlockTime + 100,
-		Sender:      sender,
-		Contract:    contract,
-		Method:      method,
-		Param:       param,
-		SigAlg:      config.SIGN_ALG,
-	}
-	msg, err := bpl.Marshal(trx)
-	if nil != err {
-		log.Errorf("REST:bpl Marshal failed: %v", err)
-		return nil, nil, err
-	}
-
-	//Add chainID Flag
-	chainID, _ := hex.DecodeString(blockHeader.ChainId)
-	msg = bytes.Join([][]byte{msg, chainID}, []byte{})
-
-	intTrx := &types.Transaction{
-		Version:     trx.Version,
+	/*intTrx := &types.Transaction{
+		Version:     config.TRX_VERSION,
 		CursorNum:   trx.CursorNum,
 		CursorLabel: trx.CursorLabel,
 		Lifetime:    trx.Lifetime,
@@ -975,8 +944,39 @@ func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.Get
 		Method:      trx.Method,
 		Param:       trx.Param,
 		SigAlg:      config.SIGN_ALG,
+		Signature:   signature,
+	}*/
+	var intTrx *types.Transaction
+	reqMsg := &message.PushTrxReq{
+		Trx: intTrx,
 	}
-	return comtool.Sha256(msg), intTrx, err
+	return reqMsg, nil
+}
+
+func GetBlockHeader() (*api.GetInfoResponse_Result, error) {
+	msgReq := &message.QueryChainInfoReq{}
+
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	if err != nil {
+		log.Errorf("REST:chainActor process failed: %v", err)
+		return nil, err
+	}
+
+	response := res.(*message.QueryChainInfoResp)
+	if response.Error != nil {
+		log.Errorf("REST:QueryChainInfoResp failed: %v", err)
+		return nil, response.Error
+	}
+	result := &api.GetInfoResponse_Result{}
+	result.HeadBlockNum = response.HeadBlockNum
+	//result.LastConsensusBlockNum = response.LastConsensusBlockNum
+	//result.HeadBlockHash = response.HeadBlockHash.ToHexString()
+	result.HeadBlockTime = response.HeadBlockTime
+	//result.HeadBlockDelegate = response.HeadBlockDelegate
+	result.CursorLabel = response.HeadBlockHash.Label()
+	result.ChainId = common.BytesToHex(config.GetChainID())
+	result.HeadBlockVersion = response.HeadBlockVersion
+	return result, nil
 }
 
 func PushTrx(intTrx *types.Transaction) (comtool.ResponseStruct, error) {
