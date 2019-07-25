@@ -441,7 +441,7 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 
 	msgReq := &message.QueryTrxReq{
 		TrxHash: common.HexToHash(req.TrxHash),
-}
+	}
 	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
 		log.Errorf("REST:chainActor process failed: %v", err)
@@ -449,20 +449,18 @@ func GetTransaction(w http.ResponseWriter, r *http.Request) {
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
 		encoderRestResponse(w, resp)
 		return
-		}
+	}
 
 	if resp := checkNil(res, 1); resp.Errcode != 0 {
 		encoderRestResponse(w, resp)
 		return
 	}
 
-	response := res.(*message.QueryTrxResp)
+	response := res.(*message.QueryBlockTrxResp)
 	if response.Trx == nil {
 		resp.Errcode = uint32(bottosErr.ErrApiTrxNotFound)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiTrxNotFound)
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
+		encoderRestResponse(w, resp)
 		return
 	}
 
