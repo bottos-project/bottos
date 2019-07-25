@@ -522,7 +522,7 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 	if err := balance.SafeSub(amount); err != nil {
 		return berr.ErrContractTransferOverflow
 	}
-	if err := sb.SafeAdd(amount); err != nil {
+	if err := sb.SafeAdd(amount, target); err != nil {
 		return berr.ErrContractTransferOverflow
 	}
 
@@ -530,6 +530,15 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 		return berr.ErrTrxContractHanldeError
 	}
 	if err := ctx.RoleIntf.SetStakedBalance(sb.AccountName, sb); err != nil {
+		return berr.ErrTrxContractHanldeError
+	}
+
+	//update  AllStakedSpaceBalance& AllStakedTimeBalance
+	cs, _ := ctx.RoleIntf.GetChainState()
+	if err := cs.SafeAdd(amount, target); err != nil {
+		return berr.ErrContractTransferOverflow
+	}
+	if err := ctx.RoleIntf.SetChainState(cs); err != nil {
 		return berr.ErrTrxContractHanldeError
 	}
 
