@@ -883,8 +883,7 @@ func GetPeerStatebyAddress(w http.ResponseWriter, r *http.Request) {
 	resp.Result = result
 	encoderRestResponse(w, resp)
 }
-
-func encoderRestResponse(w http.ResponseWriter, resp ResponseStruct) (http.ResponseWriter) {
+func encoderRestResponse(w http.ResponseWriter, resp comtool.ResponseStruct) http.ResponseWriter {
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("content-type", "application/json;charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -900,14 +899,14 @@ func encoderRestResponse(w http.ResponseWriter, resp ResponseStruct) (http.Respo
 		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
 
 		funcName, _, _, _ := runtime.Caller(1)
-		log.Errorf("%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+		log.Errorf("REST:json encoder failed,%s errcode: %d json.NewEncoder(w).Encode(resp) error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
 	}
 
 	return w
 }
 
 func encoderRestRequest(r *http.Request, req interface{}) (interface{}, error) {
-	var resp ResponseStruct
+	var resp comtool.ResponseStruct
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Errorf("request error: %s", err)
@@ -980,6 +979,45 @@ func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.Get
 	return comtool.Sha256(msg), intTrx, err
 }
 
+func PushTrx(intTrx *types.Transaction) (comtool.ResponseStruct, error) {
+	reqMsg := &message.PushTrxReq{
+		Trx: intTrx,
+	}
+
+	handlerErr, err := trxPreHandleActorPid.RequestFuture(reqMsg, 500*time.Millisecond).Result() // await result
+	var resp comtool.ResponseStruct
+	if nil != err {
+		resp.Errcode = uint32(bottosErr.ErrActorHandleError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrActorHandleError)
+
+		log.Errorf("REST:trx PreHandleActor: %x actor process failed,%v", reqMsg.Trx.Hash(), err)
+		return resp, err
+	}
+
+	result := &api.SendTransactionResponse_Result{}
+	if bottosErr.ErrNoError == handlerErr {
+		result.TrxHash = reqMsg.Trx.Hash().ToHexString()
+		result.Trx = service.ConvertIntTrxToApiTrx(reqMsg.Trx)
+		resp.Result = result
+		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+		resp.Errcode = uint32(bottosErr.ErrNoError)
+	} else {
+		result.TrxHash = reqMsg.Trx.Hash().ToHexString()
+		result.Trx = service.ConvertIntTrxToApiTrx(reqMsg.Trx)
+		resp.Result = result
+		//resp.Msg = handlerErr.(string)GetCodeString
+		//resp.Msg = "to be add detail error description"
+		var tempErr bottosErr.ErrCode
+		tempErr = handlerErr.(bottosErr.ErrCode)
+
+		resp.Errcode = (uint32)(tempErr)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+	}
+
+	log.Infof("REST:PushTrx trx: %v %s", result.TrxHash, resp.Msg)
+
+	return resp, nil
+}
 
 func JsonToBin(w http.ResponseWriter, r *http.Request) {
 
