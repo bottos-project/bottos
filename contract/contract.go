@@ -29,13 +29,14 @@ import (
 	"math/big"
 
 	"github.com/bottos-project/bottos/common/safemath"
-	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-	log "github.com/cihub/seelog"
+	"github.com/bottos-project/bottos/common"
 )
+
+
 
 //NewNativeContract is to create a new native contract
 func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, error) {
@@ -48,95 +49,21 @@ func NewNativeContract(roleIntf role.RoleInterface) (NativeContractInterface, er
 	return intf, nil
 }
 
-func newTransaction(contract string, method string, param []byte) *types.Transaction {
-	trx := &types.Transaction{
-		Sender:   contract,
-		Contract: contract,
-		Method:   method,
-		Param:    param,
-	}
-
-	return trx
-}
-
 //NativeContractInitChain is to init
-func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncIntf NativeContractInterface) ([]*types.Transaction, error) {
+func NativeContractInitChain(ldb *db.DBService, roleIntf role.RoleInterface, ncIntf NativeContractInterface) error {
 	err := CreateNativeContractAccount(roleIntf)
 	if err != nil {
-		return nil, err
-	}
-
-	var trxs []*types.Transaction
-
-	// construct trxs
-	var i int
-	Abi := abi.GetAbi()
-
-	for i = 0; i < len(config.Genesis.InitDelegates); i++ {
-		name := config.Genesis.InitDelegates[i].Name
-
-		// 1, new account trx
-		mapstruct := make(map[string]interface{})
-		abi.Setmapval(mapstruct, "name", name)
-		abi.Setmapval(mapstruct, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
-		nparam, err2 := abi.MarshalAbiEx(mapstruct, Abi, config.BOTTOS_CONTRACT_NAME, "newaccount")
-		if err2 != nil {
-			log.Error("abi.MarshalAbiEx failed for new account:", name)
-			continue
-		}
-
-		trx := newTransaction(config.BOTTOS_CONTRACT_NAME, "newaccount", nparam)
-		trxs = append(trxs, trx)
-
-		// 2, transfer trx
-
-		mapstruct2 := make(map[string]interface{})
-		abi.Setmapval(mapstruct2, "from", config.BOTTOS_CONTRACT_NAME)
-		abi.Setmapval(mapstruct2, "to", name)
-		balance := big.NewInt(0)
-		balance, balanceResult := balance.SetString(config.Genesis.InitDelegates[i].Balance, 10)
-		if false == balanceResult {
-			log.Error("big Int set from string error")
-			continue
-		}
-
-		abi.Setmapval(mapstruct2, "value", *balance)
-		tparam, err3 := abi.MarshalAbiEx(mapstruct2, Abi, config.BOTTOS_CONTRACT_NAME, "transfer")
-		if err3 != nil {
-			log.Error("abi.MarshalAbiEx failed for transfer with account:", name)
-			log.Error("error is: ", err3)
-			continue
-		}
-
-		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "transfer", tparam)
-		trxs = append(trxs, trx)
-
-		// 3, set delegate
-
-		mapstruct3 := make(map[string]interface{})
-		abi.Setmapval(mapstruct3, "name", name)
-		abi.Setmapval(mapstruct3, "pubkey", config.Genesis.InitDelegates[i].PublicKey)
-		abi.Setmapval(mapstruct3, "location", string(""))
-		abi.Setmapval(mapstruct3, "description", string(""))
-		sparam, err4 := abi.MarshalAbiEx(mapstruct3, Abi, config.BOTTOS_CONTRACT_NAME, "setdelegate")
-		if err4 != nil {
-			log.Info("abi.MarshalAbiEx failed for setdegelage with account:", name)
-			continue
-		}
-		trx = newTransaction(config.BOTTOS_CONTRACT_NAME, "setdelegate", sparam)
-		trxs = append(trxs, trx)
+		return err
 	}
 
 	// init CoreState delegates
 	coreState, _ := roleIntf.GetCoreState()
-	for i = 0; i < int(config.BLOCKS_PER_ROUND); i++ {
-		name := config.Genesis.InitDelegates[i].Name
-
-		coreState.CurrentDelegates = append(coreState.CurrentDelegates, name)
-	}
+	coreState.CurrentDelegates = []string{config.BOTTOS_CONTRACT_NAME}
 	roleIntf.SetCoreState(coreState)
 
-	return trxs, nil
+	roleIntf.InitRewardPoolRole()
+
+	return nil
 }
 
 //CreateNativeContractAccount is to create native contract account
