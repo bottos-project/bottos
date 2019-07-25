@@ -982,6 +982,47 @@ func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.Get
 	return comtool.Sha256(msg), intTrx, err
 }
 
+
+func JsonToBin(w http.ResponseWriter, r *http.Request) {
+
+	//info := fmt.Sprintln(r.Header.Get("Content-Type"))
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
+
+	//fmt.Fprintln(w, info, string(body))
+
+	/*	var data map[string]json.RawMessage
+		err := json.Unmarshal([]byte(r.Body), &data)
+		if err != nil {
+			fmt.Println(err)
+		}*/
+
+	param, err := bpl.Marshal(body)
+
+	var resp comtool.ResponseStruct
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.RestErrBplMarshal)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrBplMarshal)
+		resp.Result = err
+
+		funcName, _, _, _ := runtime.Caller(1)
+		log.Errorf("%s errcode: %d bpl.Marshal error:%s", runtime.FuncForPC(funcName).Name(), resp.Errcode, err)
+		encoderRestResponse(w, resp)
+		return
+	}
+	if resp := checkNil(body, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = hex.EncodeToString(param)
+	encoderRestResponse(w, resp)
+	return
+}
+
 func GetContract(contractName string) (*role.Contract, error) {
 	return roleIntf.GetContract(contractName)
 }
