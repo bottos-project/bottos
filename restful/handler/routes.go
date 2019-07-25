@@ -42,6 +42,9 @@ const (
 
 	//p2p
 	GET_ALL_PEERINFO = "/v1/p2p/getpeers"
+
+	//MutlSign
+	Proposal_Review = "/v1/proposal/review"
 )
 
 type Route struct {
@@ -194,5 +197,13 @@ var routes = Routes{
 		"POST",
 		GET_ALL_PEERINFO,
 		GetPeers,
+	},
+
+	//Multi Sign
+	Route{
+		"",
+		"POST",
+		Proposal_Review,
+		ReviewProposal,
 	},
 }
