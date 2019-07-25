@@ -32,8 +32,19 @@ import (
 
 //Context for contracts
 type Context struct {
-	RoleIntf   role.RoleInterface
-	Trx        *types.Transaction
+	// input params:
+	RoleIntf role.RoleInterface
+	Trx      *types.Transaction
+	CallContract string
+	CallMethod string
+	//NoticeContract string
+	DeepLimit uint32
+	MaxExecTime  uint64
+
+	//output prams:
+	NoticeContractList []string
+	// DbSaveLen uint64
+	// ExecTime uint64
 }
 
 //GetTrxParam for contracts
