@@ -45,13 +45,14 @@ func SetChainActorPid(tpid *actor.PID) {
 	chainActorPid = tpid
 }
 
-var trxactorPid *actor.PID
+var trxPreHandleActorPid *actor.PID
 
 //SetTrxActorPid set trx actor pid
-func SetTrxActorPid(tpid *actor.PID) {
-	trxactorPid = tpid
+func SetTrxPreHandleActorPid(tpid *actor.PID) {
+	trxPreHandleActorPid = tpid
 }
 
+/*
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome!\n")
 }
@@ -71,7 +72,7 @@ func TodoShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	todoId := vars["todoId"]
 	fmt.Fprintf(w, "Todo show: %s\n", todoId)
-}
+}*/
 
 //Node
 func GetGenerateBlockTime(w http.ResponseWriter, r *http.Request) {
@@ -90,10 +91,11 @@ func GetGenerateBlockTime(w http.ResponseWriter, r *http.Request) {
 //GetInfo query chain info
 func GetInfo(w http.ResponseWriter, r *http.Request) {
 	msgReq := &message.QueryChainInfoReq{}
-	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
+	var resp comtool.ResponseStruct
 
-	var resp ResponseStruct
+	res, err := chainActorPid.RequestFuture(msgReq, 500*time.Millisecond).Result()
 	if err != nil {
+		log.Errorf("REST:chain Actor Request failed,%v", err)
 		resp.Errcode = uint32(bottosErr.ErrApiQueryChainInfoError)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrApiQueryChainInfoError)
 		encoderRestResponse(w, resp)
@@ -114,6 +116,7 @@ func GetInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := &api.GetInfoResponse_Result{}
+	result.HeadBlockVersion = response.HeadBlockVersion
 	result.HeadBlockNum = response.HeadBlockNum
 	result.LastConsensusBlockNum = response.LastConsensusBlockNum
 	result.HeadBlockHash = response.HeadBlockHash.ToHexString()
@@ -515,8 +518,11 @@ func GetTransactionStatus(w http.ResponseWriter, r *http.Request) {
 	trxApply := transaction.NewTrxApplyService()
 	errCode := trxApply.GetTrxErrorCode(common.HexToHash(req.TrxHash))
 	if bottosErr.ErrNoError != errCode {
+		log.Errorf("REST:get trx error code:%v",errCode)
 
+		//resp.Errcode = uint32(errCode)
 		resp.Errcode = uint32(bottosErr.ErrNoError)
+		//resp.Msg = bottosErr.GetCodeString(errCode)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
 		resp.Result = &TransactionStatus{Status: bottosErr.GetCodeString(errCode)}
 		encoderRestResponse(w, resp)

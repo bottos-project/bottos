@@ -80,13 +80,31 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 		AccountName: config.BOTTOS_CONTRACT_NAME,
 		CreateTime:  config.Genesis.GenesisTime,
 		PublicKey:   config.Genesis.GenesisKey,
-		ContractAbi: []byte(abijson),
+		GsPermission:  true,
 	}
+	
 	roleIntf.SetAccount(bto.AccountName, bto)
 
+	btoContract := &role.Contract{
+		ContractName: config.BOTTOS_CONTRACT_NAME,
+		ContractAbi: []byte(abijson),
+		DeployAccountName: config.BOTTOS_CONTRACT_NAME,
+	}
+
+	roleIntf.SetContract(btoContract.ContractName, btoContract)
+
 	// balance
-	var initSupply *big.Int = big.NewInt(0)
+	initSupply := big.NewInt(0)
 	initSupply, err = safemath.U256Mul(initSupply, new(big.Int).SetUint64(config.BOTTOS_INIT_SUPPLY), new(big.Int).SetUint64(config.BOTTOS_SUPPLY_MUL))
+	if err != nil {
+		return err
+	}
+	totalDelegateReward := big.NewInt(0)
+	totalDelegateReward, err = safemath.U256Mul(totalDelegateReward, new(big.Int).SetUint64(config.TOTAL_DELEGATE_REWARD), new(big.Int).SetUint64(config.BOTTOS_SUPPLY_MUL))
+	if err != nil {
+		return err
+	}
+	initSupply, err = safemath.U256Sub(initSupply, initSupply, totalDelegateReward)
 	if err != nil {
 		return err
 	}
@@ -99,12 +117,27 @@ func CreateNativeContractAccount(roleIntf role.RoleInterface) error {
 
 	// staked_balance
 	stakedBalance := &role.StakedBalance{
-		AccountName:       bto.AccountName,
-		StakedBalance:     big.NewInt(0),
-		UnstakingBalance:  big.NewInt(0),
+		AccountName: bto.AccountName,
+		StakedBalance : big.NewInt(0),
+		StakedSpaceBalance: big.NewInt(0),
+		StakedTimeBalance:  big.NewInt(0),
+		UnstakingBalance: big.NewInt(0),
 		LastUnstakingTime: 0,
 	}
 	roleIntf.SetStakedBalance(bto.AccountName, stakedBalance)
+
+	newdelegate := &role.Delegate{
+		AccountName: bto.AccountName,
+		ReportKey:   common.BytesToHex(config.Genesis.GenesisKey),
+		Location: "",
+		Description: "",
+		Active: true,
+	}
+	roleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
+
+	gs, _ := roleIntf.GetGenesisState()
+	gs.GenesisBlockProducing = true
+	roleIntf.SetGenesisState(gs)
 
 	return nil
 }
