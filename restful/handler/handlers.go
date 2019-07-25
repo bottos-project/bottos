@@ -34,8 +34,12 @@ type ApiService struct {
 
 var roleIntf role.RoleInterface
 //SetChainActorPid set chain actor pid
-func SetRoleIntf(tpid role.RoleInterface) {
+func SetRoleIntf(tpid role.RoleInterface, env *actionenv.ActorEnv) {
 	roleIntf = tpid
+	re = regexp.MustCompile(common.ACCOUNT_NAME_REGEXP)
+	contractRe = regexp.MustCompile(common.EX_CONTRACT_NAME_REGEXP)
+
+	actorenv = env
 }
 
 var chainActorPid *actor.PID
