@@ -325,6 +325,24 @@ func (nc *NativeContract) cancelCredit(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+//include normal account and contractaccount
+func (nc *NativeContract) checkAccountExist(roleIntf role.RoleInterface, name string) berr.ErrCode {
+	fromType, _ := common.AnalyzeName(name)
+	if common.NameTypeUnknown == fromType {
+		return berr.ErrAccountNameIllegal
+	} else if common.NameTypeAccount == fromType {
+		cerr := nc.checkAccount(roleIntf, name)
+		if cerr != berr.ErrNoError {
+			return cerr
+		}
+	} else if common.NameTypeExContract == fromType {
+		cerr := nc.checkContract(roleIntf, name)
+		if cerr != berr.ErrNoError {
+			return cerr
+		}
+	}
+	return berr.ErrNoError
+}
 func (nc *NativeContract) transferFrom(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
