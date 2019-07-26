@@ -343,34 +343,32 @@ func (nc *NativeContract) checkAccountExist(roleIntf role.RoleInterface, name st
 	}
 	return berr.ErrNoError
 }
+
 func (nc *NativeContract) transferFrom(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
+	transfer, _ := abi.UnmarshalAbiEx("bottos", Abi, "transferfrom", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
 		return berr.ErrContractParamParseError
 	}
 	TransFrom := transfer["from"].(string)
 	TransTo := transfer["to"].(string)
 	TransValue := transfer["value"].(*big.Int)
-	
+
 	// check account
-	cerr := nc.checkAccount(ctx.RoleIntf, TransFrom)
-	if cerr != berr.ErrNoError {
-		return cerr
+	if err := nc.checkAccountExist(ctx.RoleIntf, TransFrom); err != berr.ErrNoError {
+		return err
 	}
 
-	cerr = nc.checkAccount(ctx.RoleIntf, TransTo)
-	if cerr != berr.ErrNoError {
-		return cerr
+	if err := nc.checkAccountExist(ctx.RoleIntf, TransTo); err != berr.ErrNoError {
+		return err
 	}
 
 	if TransFrom == TransTo {
 		return berr.ErrContractTransferToSelf
 	}
 
-	cerr = nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender)
-	if cerr != berr.ErrNoError {
-		return cerr
+	if err := nc.checkAccountExist(ctx.RoleIntf, ctx.Trx.Sender); err != berr.ErrNoError {
+		return err
 	}
 
 	// Note: sender is the spender
