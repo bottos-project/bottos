@@ -61,7 +61,7 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	}
 
 	if nc.isAccountNameExist(ctx.RoleIntf, NewaccountName) {
-		return berr.ErrContractAccountAlreadyExist
+		return berr.ErrAccountAlreadyExist
 	}
 
 	chainState, _ := ctx.RoleIntf.GetChainState()
@@ -83,12 +83,12 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 
 	// 3, create staked_balance
 	stakedBalance := &role.StakedBalance{
-		AccountName:   NewaccountName,
-		StakedBalance: big.NewInt(0),
+		AccountName:        NewaccountName,
+		StakedBalance:      big.NewInt(0),
 		StakedSpaceBalance: big.NewInt(0),
 		StakedTimeBalance:  big.NewInt(0),
-		UnstakingBalance: big.NewInt(0),
-		LastUnstakingTime: 0,
+		UnstakingBalance:   big.NewInt(0),
+		LastUnstakingTime:  0,
 	}
 	ctx.RoleIntf.SetStakedBalance(NewaccountName, stakedBalance)
 
