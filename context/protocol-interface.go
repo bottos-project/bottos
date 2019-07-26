@@ -43,7 +43,16 @@ type ProtocolInstance interface {
 	SendPrecommit(notify *message.SendPrecommit)
 	SendCommit(notify *message.SendCommit)
 }
-
+//PeersInfo peersinfo for rest
+type PeersInfo struct {
+	LastLib uint64
+	LastBlock uint64
+	Addr string
+	Port string
+	ChainId string
+	Version uint32
+}
 type ProtocolInterface interface {
 	GetBlockSyncState() bool
+	GetPeerInfo()(uint64,[]*PeersInfo)
 }
