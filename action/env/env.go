@@ -36,10 +36,10 @@ import (
 
 //ActorEnv actor external interface
 type ActorEnv struct {
-	RoleIntf   role.RoleInterface
-	Chain      chain.BlockChainInterface
-	NcIntf     contract.NativeContractInterface
-	Protocol   context.ProtocolInterface
+	RoleIntf         role.RoleInterface
+	Chain            chain.BlockChainInterface
+	NcIntf           contract.NativeContractInterface
+	Protocol         context.ProtocolInterface
 	Db               *db.DBService
 	PendingTxSession *codedb.UndoSession
 }
