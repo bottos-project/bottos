@@ -117,6 +117,10 @@ type GetAllPendingTrxRsp struct {
 }
 
 //RemovePendingTrxsReq the key of remove trx
+type RemovePendingBlockTrxsReq struct {
+	Trxs []*types.BlockTransaction
+}
+
 type RemovePendingTrxsReq struct {
 	Trxs []*types.Transaction
 }
