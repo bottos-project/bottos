@@ -185,3 +185,31 @@ type SendPrecommit struct {
 type SendCommit struct {
 	BftHeaderState *types.ConsensusHeaderState
 }
+
+//PrevoteReq consensusactor->chainactor
+type PrevoteReq struct {
+	Block        *types.Block
+	IsMyProduced bool
+}
+
+//PrecommitReq consensusactor->chainactor
+type PrecommitReq struct {
+	Block *types.Block
+}
+
+//PrecommitReq chainactor->p2pactor
+type PrecommitResp struct {
+	BlockNum uint64
+	ErrorNo  berr.ErrCode
+	MainFork bool
+}
+
+//CommitReq consensusactor->chainactor
+type CommitReq struct {
+	Block *types.Block
+}
+
+//SyncCommitReq consensusactor->chainactor
+type SyncCommitReq struct {
+	BftHeaderState *types.ConsensusHeaderState
+}
