@@ -50,7 +50,7 @@ const (
 )
 
 //MakeDiscover create instance
-func MakeDiscover(config *config.Parameter) *Discover {
+func MakeDiscover(config *config.P2PConfig) *Discover {
 	d := &Discover{}
 	d.p = makePne(config)
 	d.c = makeCandidates(d.p)
@@ -99,7 +99,7 @@ func (d *Discover) Dispatch(index uint16, p *p2p.Packet) {
 	case PEER_PONG:
 		d.k.processPong(index, p.Data)
 	default:
-		log.Errorf("discover Dispatch packet type:%d error", p.H.PacketType)
+		log.Errorf("PROTOCOL discover Dispatch packet type:%d error", p.H.PacketType)
 	}
 
 }
@@ -124,7 +124,7 @@ func (d *Discover) newConn(peer p2p.PeerInfo) error {
 	addrPort := peer.Addr + ":" + peer.Port
 	conn, err := net.DialTimeout("tcp", addrPort, 2*time.Second)
 	if err != nil {
-		log.Debugf("connect to peer %s:%s error:%s", peer.Addr, peer.Port, err)
+		log.Debugf("PROTOCOL connect to peer %s:%s error:%s", peer.Addr, peer.Port, err)
 		return err
 	}
 
@@ -141,12 +141,12 @@ func (d *Discover) newConn(peer p2p.PeerInfo) error {
 }
 
 func (d *Discover) discoverTimer() {
-	log.Debug("discoverTimer")
+	log.Debug("PROTOCOL discoverTimer")
 
 	dicover := time.NewTimer(TIME_DISCOVER * time.Second)
 
 	defer func() {
-		log.Debug("discoverTimer stop")
+		log.Debug("PROTOCOL discoverTimer stop")
 		dicover.Stop()
 	}()
 
