@@ -27,6 +27,7 @@ package discover
 
 import (
 	"github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/config"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
 	"sync/atomic"
@@ -42,7 +43,7 @@ const (
 )
 
 type keeplive struct {
-	counter [MAX_PEER_COUNT + 1]int32
+	counter [config.DefaultMaxPeer + 1]int32
 
 	c *candidates
 	p *pne
@@ -53,7 +54,7 @@ func makeKeeplive(c *candidates, p *pne) *keeplive {
 }
 
 func (k *keeplive) start() {
-	for i := 0; i < MAX_PEER_COUNT; i++ {
+	for i := 0; i < config.BtoConfig.P2P.MaxPeer; i++ {
 		k.counter[i] = -1
 	}
 
@@ -104,7 +105,7 @@ func (k *keeplive) checkTimer() {
 }
 
 func (k *keeplive) checkPeer() {
-	for i := 0; i < MAX_PEER_COUNT; i++ {
+	for i := 0; i < config.BtoConfig.P2P.MaxPeer; i++ {
 		if k.counter[i] != -1 {
 			if k.counter[i] == 0 {
 				info := p2p.Runner.GetPeer(uint16(i))
