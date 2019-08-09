@@ -66,12 +66,12 @@ func (k *keeplive) initCounter(index uint16) {
 }
 
 func (k *keeplive) keepliveTimer() {
-	log.Debug("protocol keepliveTimer")
+	log.Debug("PROTOCOL keepliveTimer")
 
 	keep := time.NewTimer(TIMER_KEEP_LIVE * time.Second)
 
 	defer func() {
-		log.Debug("protocol keepliveTimer stop")
+		log.Debug("PROTOCOL keepliveTimer stop")
 		keep.Stop()
 	}()
 
@@ -85,12 +85,12 @@ func (k *keeplive) keepliveTimer() {
 }
 
 func (k *keeplive) checkTimer() {
-	log.Debug("protocol checkTimer")
+	log.Debug("PROTOCOL checkTimer")
 
 	check := time.NewTimer(TIMER_CHECK * time.Second)
 
 	defer func() {
-		log.Debug("protocol checkTimer stop")
+		log.Debug("PROTOCOL checkTimer stop")
 		check.Stop()
 	}()
 
@@ -112,7 +112,7 @@ func (k *keeplive) checkPeer() {
 				set = append(set, *info)
 
 				if p2p.Runner.DelPeer(uint16(i)) {
-					log.Infof("protocol peer %s:%s disconnect, add back to connect neighbors", info.Addr, info.Port)
+					log.Infof("PROTOCOL peer %s:%s disconnect, add back to connect neighbors", info.Addr, info.Port)
 					k.c.pushPeerIndex(uint16(i))
 					k.p.n.addNeighbor(set)
 					atomic.StoreInt32(&k.counter[i], -1)
