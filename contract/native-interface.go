@@ -36,17 +36,22 @@ const NativeContractExecTime uint64 = 100
 
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
-	IsNativeContract(contract string, method string) bool
-	ExecuteNativeContract(*Context) berr.ErrCode
+	IsNativeContractMethod(contract string, method string) bool
+	ExecuteNativeContract(*Context) (berr.ErrCode, uint64, uint64)
 }
 
 //NativeContractMethod is native contract method
 type NativeContractMethod func(*Context) berr.ErrCode
 
+type NativeContractMethodConfig struct {
+	handler  NativeContractMethod
+	timeCost uint64
+}
+
 //NativeContract is native contract handler
 type NativeContract struct {
-	Handler map[string]NativeContractMethod
-	re *regexp.Regexp
+	//Config map[string]NativeContractMethod
+	Config map[string]NativeContractMethodConfig
 }
 
 //NewNativeContractHandler is native contract handler to handle different contracts
@@ -86,10 +91,10 @@ func NewNativeContractHandler() (NativeContractInterface, error) {
 	return nc, nil
 }
 
-//IsNativeContract is to check if the contract is native
-func (nc *NativeContract) IsNativeContract(contract string, method string) bool {
+//IsNativeContractMethod is to check if the contract is native
+func (nc *NativeContract) IsNativeContractMethod(contract string, method string) bool {
 	if contract == config.BOTTOS_CONTRACT_NAME {
-		if _, ok := nc.Handler[method]; ok {
+		if _, ok := nc.Config[method]; ok {
 			return true
 		}
 	}
@@ -97,16 +102,16 @@ func (nc *NativeContract) IsNativeContract(contract string, method string) bool 
 }
 
 //ExecuteNativeContract is to call native contract
-func (nc *NativeContract) ExecuteNativeContract(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) ExecuteNativeContract(ctx *Context) (berr.ErrCode, uint64, uint64) {
 	contract := ctx.Trx.Contract
 	method := ctx.Trx.Method
-	if nc.IsNativeContract(contract, method) {
-		if handler, ok := nc.Handler[method]; ok {
-			contErr := handler(ctx)
-			return contErr
+	if nc.IsNativeContractMethod(contract, method) {
+		if handler, ok := nc.Config[method]; ok {
+			contErr := handler.handler(ctx)
+			return contErr, uint64(len(ctx.Trx.Param)), handler.timeCost
 		}
-		return berr.ErrContractUnknownMethod
+		return berr.ErrContractUnknownMethod, 0, 0
 	}
-	return berr.ErrContractUnknownContract
+	return berr.ErrContractUnknownContract, 0, 0
 
 }

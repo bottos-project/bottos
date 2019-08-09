@@ -2,6 +2,7 @@ package consensus
 
 //DO NOT EDIT
 const (
-	BlockStateMsg = 1
-	HeadStateMsg  = 2
+	ConsensusPreVote   = 1
+	ConsensusPreCommit = 2
+	ConsensusCommit    = 3
 )
