@@ -135,6 +135,51 @@ func (c *candidates) isCandidateFull() bool {
 	return false
 }
 
+//P2PAuthSign auth P2PAuthSign
+func (c *candidates) P2PAuthSign() ([]byte, error) {
+	data, err := bpl.Marshal(p2p.BasicPeerInfo{
+		ChainId: common.BytesToHex(config.GetChainID()),
+	})
+
+	if nil != err {
+		log.Errorf("PROTOCOL start P2PAuthSign Marshal error: %s", err)
+	}
+	signature, err := signature.SignByDelegate(Sha256(data), config.BtoConfig.Delegate.Signature.PublicKey)
+	if err != nil {
+		log.Errorf("PROTOCOL start P2PAuthSign  Sign error: %s", err)
+	}
+	return signature, nil
+}
+
+// VerifySignature is verify signature from peerAuthenticate whether it is valid
+func (c *candidates) VerifySignature(pi *p2p.PeerInfo) bool {
+
+	peerToVerify := &p2p.BasicPeerInfo{
+		ChainId: pi.ChainId,
+	}
+	serializeData, err := bpl.Marshal(peerToVerify)
+	if nil != err {
+		return false
+	}
+
+	var verifyResult = false
+	for _, pubKey := range config.BtoConfig.P2P.P2PAuthKeyList {
+		pubkey, err := hex.DecodeString(pubKey)
+		if err != nil {
+			log.Errorf("PROTOCOL p2p candidate pubkey error: %s", err)
+		}
+		result := crypto.VerifySign(pubkey, Sha256(serializeData), pi.Signature)
+		if result {
+			verifyResult = true
+		}
+	}
+
+	if false == verifyResult {
+		log.Errorf("PROTOCOL peerInfoHash %x verify signature failed", pi.Hash())
+	}
+
+	return verifyResult
+}
 func (c *candidates) addCandidate(peer *p2p.Peer) error {
 	c.l.Lock()
 	defer c.l.Unlock()
