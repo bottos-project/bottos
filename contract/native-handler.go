@@ -26,25 +26,28 @@
 package contract
 
 import (
-		"math/big"
+	"encoding/json"
 	"fmt"
+	"math/big"
+	"strings"
+
 	"github.com/bottos-project/bottos/common"
 	berr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/vm"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
 	"github.com/bottos-project/bottos/role"
-	berr "github.com/bottos-project/bottos/common/errors"
-	)
+	log "github.com/cihub/seelog"
+)
 
 func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	newaccount := abi.UnmarshalAbiEx("bottos", Abi, "newaccount", ctx.Trx.Param)
+	newaccount, _ := abi.UnmarshalAbiEx("bottos", Abi, "newaccount", ctx.Trx.Param)
 	if newaccount == nil || len(newaccount) <= 0 {
 		return berr.ErrContractParamParseError
 	}
-	
-	NewaccountName   := newaccount["name"].(string)
+
+	NewaccountName := newaccount["name"].(string)
 	NewaccountPubKey := newaccount["pubkey"].(string)
 
 	if len(NewaccountPubKey) != config.PUBKEY_LEN {
@@ -52,7 +55,7 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 		return berr.ErrAccountPubkeyLenIllegal
 	}
 
-	//log.Errorf("test new account %s, len is %d, stand len is %d\n", NewaccountPubKey, len(NewaccountPubKey), config.PUBKEY_LEN)
+	//log.Errorf("test new account %s, len is %d, stand len is %d\n", NewaccountPubKey, len(NewaccountPubKey), config.PUBKEY_LEN )
 
 	//check account
 	cerr := nc.checkAccountName(NewaccountName)
@@ -109,6 +112,17 @@ func (nc *NativeContract) newAccount(ctx *Context) berr.ErrCode {
 
 func (nc *NativeContract) checkSigner(account string, expected string) bool {
 	return account == expected
+}
+
+func (nc *NativeContract) pushNoticeContract(ctx *Context, contractName string) {
+
+	if !common.CheckExContractNameContent(contractName) {
+		return
+	}
+
+	ctx.NoticeContractList = append(ctx.NoticeContractList, contractName)
+
+	return
 }
 
 func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {

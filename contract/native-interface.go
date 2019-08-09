@@ -26,17 +26,13 @@
 package contract
 
 import (
-	"github.com/bottos-project/bottos/config"
 	berr "github.com/bottos-project/bottos/common/errors"
-	"math/big"
-	"regexp"
+	"github.com/bottos-project/bottos/config"
 )
 
 const MaxDelegateLocationLen int = 32
 const MaxDelegateDescriptionLen int = 128
-
-// BLOCKS_PER_ROUND define block num per round
-const BLOCKS_PER_ROUND uint32 = 29
+const NativeContractExecTime uint64 = 100
 
 //NewAccountParam struct for name and pubkey
 type NewAccountParam struct {
