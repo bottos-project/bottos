@@ -135,6 +135,13 @@ func (c *candidates) isCandidateFull() bool {
 	return false
 }
 
+//Sha256 sha256
+func Sha256(msg []byte) []byte {
+	sha := sha256.New()
+	sha.Write([]byte(hex.EncodeToString(msg)))
+	return sha.Sum(nil)
+}
+
 //P2PAuthSign auth P2PAuthSign
 func (c *candidates) P2PAuthSign() ([]byte, error) {
 	data, err := bpl.Marshal(p2p.BasicPeerInfo{
