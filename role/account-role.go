@@ -39,15 +39,11 @@ const (
 
 // Account is definition of user account
 type Account struct {
-	AccountName  string      `json:"account_name"`
-	PublicKey    []byte      `json:"public_key"`
-	VMType       byte        `json:"vm_type"`
-	VMVersion    byte        `json:"vm_version"`
-	CodeVersion  common.Hash `json:"code_version"`
-	CreateTime   uint64      `json:"create_date"`
-	ContractCode []byte      `json:"contract_code"`
-	ContractAbi  []byte      `json:"abi"`
-	GsPermission bool        `json:"gs_permission"`
+	AccountName  string                                      `json:"account_name"`
+	PublicKey    []byte                                      `json:"public_key"`
+	CreateTime   uint64                                      `json:"create_date"`
+	GsPermission bool                                        `json:"gs_permission"`
+	ContractName []string 									 `json:"contract_name"`
 }
 
 // CreateAccountRole is create account role
@@ -80,6 +76,35 @@ func GetAccountRole(ldb *db.DBService, accountName string) (*Account, error) {
 	}
 
 	res := &Account{}
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		log.Errorf("ROLE Unmarshal failed %v,%v", accountName, err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// SetMsignAccountRole is common func to set role for multisign account
+func SetMsignAccountRole(ldb *db.DBService, accountName string, value *MsignAccount) error {
+	key := accountNameToKey(accountName)
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		log.Errorf("DB Marshal failed %v,%v", accountName, err)
+		return err
+	}
+	return ldb.SetObject(MsignAccountObjectName, key, string(jsonvalue))
+}
+
+// GetMsignAccountRole is common func to get role for multisign account
+func GetMsignAccountRole(ldb *db.DBService, accountName string) (*MsignAccount, error) {
+	key := accountNameToKey(accountName)
+	value, err := ldb.GetObject(MsignAccountObjectName, key)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &MsignAccount{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
 		log.Errorf("ROLE Unmarshal failed %v,%v", accountName, err)
