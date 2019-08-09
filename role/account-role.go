@@ -27,14 +27,15 @@ package role
 
 import (
 	"encoding/json"
-
-	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/db"
+	log "github.com/cihub/seelog"
 )
 
 const (
 	//AccountObjectName is the table name of user account
 	AccountObjectName string = "account"
+	//MsignAccountObjectName is the table name of user multisign account
+	MsignAccountObjectName string = "msignaccount"
 )
 
 // Account is definition of user account
@@ -46,9 +47,27 @@ type Account struct {
 	ContractName []string 									 `json:"contract_name"`
 }
 
+type MsignAccountAuthority struct {
+	AuthorAccount string `json:"author_account"`
+	Weight        uint32 `json:"weight"`
+}
+
+// MsignAccount is definition of user multisign account
+type MsignAccount struct {
+	MsignAccountName string                  `json:"msign_account_name"`
+	Authority        []MsignAccountAuthority `json:"authority"`
+	Threshold        uint32                  `json:"threshold"`
+}
+
 // CreateAccountRole is create account role
 func CreateAccountRole(ldb *db.DBService) error {
 	ldb.AddObject(AccountObjectName)
+	return nil
+}
+
+// CreateMsignAccountRole is create account role
+func CreateMsignAccountRole(ldb *db.DBService) error {
+	ldb.AddObject(MsignAccountObjectName)
 	return nil
 }
 
