@@ -27,14 +27,20 @@ package discover
 
 import (
 	"container/list"
-	"github.com/bottos-project/bottos/bpl"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
-	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/p2p"
-	pcommon "github.com/bottos-project/bottos/protocol/common"
-	log "github.com/cihub/seelog"
 	"sync"
 	"time"
+
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/signature"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/p2p"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
+	"github.com/bottos-project/crypto-go/crypto"
+	log "github.com/cihub/seelog"
 )
 
 //DO NOT EDIT
@@ -66,7 +72,7 @@ func makeCandidates(p *pne) *candidates {
 	}
 
 	var i uint16
-	for i = 1; i <= MAX_PEER_COUNT; i++ {
+	for i = 1; i <= uint16(config.BtoConfig.P2P.MaxPeer); i++ {
 		cs.qindex.Push(i)
 	}
 
@@ -285,7 +291,7 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 	c.sendHandshakeReq(candi)
 }
 
-func (c *candidates) processHandshakeReq(index uint16, date []byte) {
+func (c *candidates) processHandshakeReq(index uint16, data []byte) {
 	c.l.Lock()
 	defer c.l.Unlock()
 
@@ -296,7 +302,7 @@ func (c *candidates) processHandshakeReq(index uint16, date []byte) {
 	}
 
 	candi := e.Value.(*candidate)
-
+	candi.peer.Info.Signature = data
 	if candi.peer.State != p2p.PEER_STATE_HANDSHAKE {
 		log.Debug("PROTOCOL processHandshakeReq not in hand shake state")
 		return
@@ -305,7 +311,7 @@ func (c *candidates) processHandshakeReq(index uint16, date []byte) {
 	c.sendHandshakeRsp(candi)
 }
 
-func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
+func (c *candidates) processHandshakeRsp(index uint16, data []byte) {
 	c.l.Lock()
 	defer c.l.Unlock()
 
@@ -317,6 +323,7 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 	}
 
 	candi := ec.Value.(*candidate)
+	candi.peer.Info.Signature = data
 
 	if candi.peer.State != p2p.PEER_STATE_HANDSHAKE {
 		log.Debug("PROTOCOL processHandshakeReq not in hand shake state")
@@ -414,11 +421,17 @@ func (c *candidates) sendPeerInfoReq(candi *candidate) {
 }
 
 func (c *candidates) sendPeerInfoRsp(candi *candidate) {
+	sign, err := c.P2PAuthSign()
+	if err != nil {
+		log.Errorf("PROTOCOL start P2PAuthSign  error: %s", err)
+	}
 	info := p2p.PeerInfo{
-		Id:      p2p.LocalPeerInfo.Id,
-		Addr:    p2p.LocalPeerInfo.Addr,
-		Port:    p2p.LocalPeerInfo.Port,
-		ChainId: p2p.LocalPeerInfo.ChainId,
+		Id:        p2p.LocalPeerInfo.Id,
+		Addr:      p2p.LocalPeerInfo.Addr,
+		Port:      p2p.LocalPeerInfo.Port,
+		ChainId:   p2p.LocalPeerInfo.ChainId,
+		Signature: sign,
+		Version:   p2p.LocalPeerInfo.Version,
 	}
 
 	rsp := PeerInfoRsp{
@@ -453,23 +466,45 @@ func (c *candidates) sendHandshakeReq(candi *candidate) {
 	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_REQ,
 	}
+	sign, err := c.P2PAuthSign()
+	if err != nil {
+		log.Errorf("PROTOCOL start P2PAuthSign  error: %s", err)
+	}
 
-	packet := p2p.Packet{H: head}
+	packet := p2p.Packet{H: head, Data: sign}
 
 	candi.peer.Send(packet)
 }
 
 func (c *candidates) sendHandshakeRsp(candi *candidate) {
+	if config.BtoConfig.P2P.P2PAuthRequried != config.DefaultP2PAuthRequried {
+		if !c.VerifySignature(&candi.peer.Info) {
+			log.Errorf("PROTOCOL trx %v VerifySignature error\n", p2p.LocalPeerInfo.Hash())
+			return
+		}
+	}
+
 	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_RSP,
 	}
 
-	packet := p2p.Packet{H: head}
+	sign, err := c.P2PAuthSign()
+	if err != nil {
+		log.Errorf("PROTOCOL start P2PAuthSign  error: %s", err)
+	}
+	packet := p2p.Packet{H: head, Data: sign}
 
 	candi.peer.Send(packet)
 }
 
 func (c *candidates) sendHandshakeRspAck(candi *candidate) {
+	if config.BtoConfig.P2P.P2PAuthRequried != config.DefaultP2PAuthRequried {
+		if !c.VerifySignature(&candi.peer.Info) {
+			log.Errorf("PROTOCOL trx %v VerifySignature error\n", p2p.LocalPeerInfo.Hash())
+			return
+		}
+	}
+
 	head := p2p.Head{ProtocolType: pcommon.P2P_PACKET,
 		PacketType: PEER_HANDSHAKE_RSP_ACK,
 	}
