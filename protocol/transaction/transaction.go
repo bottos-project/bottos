@@ -91,17 +91,21 @@ func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint1
 }
 
 func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
-	var trx types.Transaction
-
-	err := bpl.Unmarshal(p.Data, &trx)
+	var p2pTrx types.P2PTransaction
+	err := bpl.Unmarshal(p.Data, &p2pTrx)
 	if err != nil {
-		log.Errorf("processTrxInfo Unmarshal error")
+		log.Errorf("PROTOCOL processTrxInfo Unmarshal error")
 		return
 	}
 
-	log.Debugf("protocol send up trx %s from index %d", trx.Hash().ToHexString(), index)
-	t.sendupTrx(&trx)
-
+	if p2pTrx.TTL >0 {
+		p2pTrx.TTL--
+		if p2pTrx.TTL > config.TRX_IN_TTL && t.roleIntf.IsMyselfDelegate() {
+			p2pTrx.TTL = config.TRX_IN_TTL
+		}
+		log.Debugf("PROTOCOL  send up trx %s from index %d TTL %d ", p2pTrx.Transaction.Hash().ToHexString(), index, p2pTrx.TTL)
+		t.sendupTrx(&p2pTrx)
+	}
 }
 
 func (t *Transaction) sendupTrx(trx *types.Transaction)  {
