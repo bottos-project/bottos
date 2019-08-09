@@ -127,22 +127,35 @@ func (nc *NativeContract) pushNoticeContract(ctx *Context, contractName string) 
 
 func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	transfer := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
+	transfer, _ := abi.UnmarshalAbiEx("bottos", Abi, "transfer", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
 		return berr.ErrContractParamParseError
 	}
-	
+
 	FromWhom := transfer["from"].(string)
-	ToWhom   := transfer["to"].(string)
+	ToWhom := transfer["to"].(string)
 	TransValue := transfer["value"].(*big.Int)
-	
+	return nc.innertransfer(ctx, FromWhom, ToWhom, TransValue, false)
+}
+
+func (nc *NativeContract) innertransfer(ctx *Context, FromWhom string, ToWhom string, TransValue *big.Int, isMsign bool) berr.ErrCode {
+	fromType, fromAccount := common.AnalyzeName(FromWhom)
+	if common.NameTypeUnknown == fromType {
+		return berr.ErrAccountNameIllegal
+	}
+	toType, toAccount := common.AnalyzeName(ToWhom)
+
+	if common.NameTypeUnknown == toType {
+		return berr.ErrAccountNameIllegal
+	}
+
 	// check account
-	cerr := nc.checkAccount(ctx.RoleIntf, FromWhom)
+	cerr := nc.checkAccount(ctx.RoleIntf, fromAccount)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = nc.checkAccount(ctx.RoleIntf, ToWhom)
+	cerr = nc.checkAccount(ctx.RoleIntf, toAccount)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
@@ -151,16 +164,23 @@ func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 		return berr.ErrContractTransferToSelf
 	}
 
-	if !nc.checkSigner(FromWhom, ctx.Trx.Sender) {
-		return berr.ErrContractAccountMismatch
+	if !isMsign && !nc.checkSigner(fromAccount, ctx.Trx.Sender) {
+		return berr.ErrAccountMismatch
 	}
 
 	// check funds
 	from, _ := ctx.RoleIntf.GetBalance(FromWhom)
-	if -1 == from.Balance.Cmp(TransValue) {
+	if (nil == from) || (-1 == from.Balance.Cmp(TransValue)) {
 		return berr.ErrContractInsufficientFunds
 	}
+
 	to, _ := ctx.RoleIntf.GetBalance(ToWhom)
+	if nil == to {
+		to = &role.Balance{
+			AccountName: ToWhom,
+			Balance:     big.NewInt(0),
+		}
+	}
 
 	err := from.SafeSub(TransValue)
 	if err != nil {
@@ -179,68 +199,9 @@ func (nc *NativeContract) transfer(ctx *Context) berr.ErrCode {
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
 	}
-	
-	return berr.ErrNoError
-}
 
-func (nc *NativeContract) setDelegate(ctx *Context) berr.ErrCode {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "setdelegate", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
-		return berr.ErrContractParamParseError
-	}
-	
-	ParamName   := param["name"].(string)
-	ParamPubKey := param["pubkey"].(string)
-	location := param["location"].(string)
-	description := param["description"].(string)
-
-	// check account
-	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
-	if cerr != berr.ErrNoError {
-		return cerr
-	}
-
-	if len(location) > MaxDelegateLocationLen {
-		return berr.ErrTrxContractHanldeError
-	}
-
-	if len(description) > MaxDelegateDescriptionLen {
-		return berr.ErrTrxContractHanldeError
-	}
-
-	_, err := ctx.RoleIntf.GetDelegateByAccountName(ParamName)
-	if err != nil {
-		// new delegate
-		newdelegate := &role.Delegate{
-			AccountName: ParamName,
-			ReportKey:   ParamPubKey,
-		}
-		ctx.RoleIntf.SetDelegate(newdelegate.AccountName, newdelegate)
-
-		//create schedule delegate vote role
-		scheduleDelegate, err := ctx.RoleIntf.GetScheduleDelegate()
-		if err != nil {
-			return berr.ErrTrxContractHanldeError
-		}
-
-		delegateVote := &role.DelegateVotes{
-			OwnerAccount: newdelegate.AccountName,
-			Serve : role.Serve{
-				Votes: big.NewInt(0),
-				Position: big.NewInt(0),
-				TermUpdateTime: big.NewInt(0),
-				TermFinishTime: big.NewInt(0),
-			},
-		}
-		delegateVote.OwnerAccount = newdelegate.AccountName
-		delegateVote.StartNewTerm(scheduleDelegate.CurrentTermTime)
-		err = ctx.RoleIntf.SetDelegateVotes(newdelegate.AccountName, delegateVote)
-		if err != nil {
-			return berr.ErrTrxContractHanldeError
-		}
-	} else {
-		return berr.ErrTrxContractHanldeError
+	if common.NameTypeExContract == toType {
+		nc.pushNoticeContract(ctx, ToWhom)
 	}
 
 	return berr.ErrNoError
@@ -809,7 +770,7 @@ func (nc *NativeContract) unregDelegate(ctx *Context) berr.ErrCode {
 
 func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "votedelegate", ctx.Trx.Param)
+	param, _ := abi.UnmarshalAbiEx("bottos", Abi, "votedelegate", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return berr.ErrContractParamParseError
 	}
@@ -819,7 +780,7 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	delegateName := param["delegate"].(string)
 
 	if !nc.checkSigner(voterName, ctx.Trx.Sender) {
-		return berr.ErrContractAccountMismatch
+		return berr.ErrAccountMismatch
 	}
 
 	if errcode := nc.checkAccount(ctx.RoleIntf, voterName); errcode != berr.ErrNoError {
@@ -828,7 +789,14 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 
 	voter, err := ctx.RoleIntf.GetVoter(voterName)
 	if err != nil {
-		return berr.ErrTrxContractHanldeError
+		if err.Error() == "not found" {
+			voter = &role.Voter{
+				Owner:    "",
+				Delegate: "",
+			}
+		} else {
+			return berr.ErrContractNoStakedVoteFunds
+		}
 	}
 
 	sb, err := ctx.RoleIntf.GetStakedBalance(voterName)
@@ -838,7 +806,7 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 
 	// staked balance should more than 0
 	if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
-		return berr.ErrContractInsufficientFunds
+		return berr.ErrContractNoStakedVoteFunds
 	}
 
 	sd, err := ctx.RoleIntf.GetScheduleDelegate()
@@ -849,16 +817,32 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	if voteop == 1 {
 		// vote
 		if errcode := nc.checkAccount(ctx.RoleIntf, delegateName); errcode != berr.ErrNoError {
-			return errcode
+			return berr.ErrContractMustVoteToValidDelegate
+		}
+
+		_, err := ctx.RoleIntf.GetDelegateVotes(delegateName)
+		if err != nil {
+			return berr.ErrContractMustVoteToValidDelegate
+		}
+
+		if voter.Delegate == delegateName {
+			return berr.ErrNoError
 		}
 
 		if voter.Delegate != "" {
+			voteStake := big.NewInt(0).Set(sb.StakedBalance)
+			voteStake.Mul(voteStake, big.NewInt(-1))
+
+			err := ctx.RoleIntf.RewardHandleVotesChange(voter.Delegate, voteStake, false)
+			if err != nil {
+				return berr.ErrTrxContractHanldeError
+			}
+
 			oldDelegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
 			if err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
-			voteStake := big.NewInt(0).Set(sb.StakedBalance)
-			voteStake.Mul(voteStake, big.NewInt(-1))
+
 			oldDelegateVote.UpdateVotes(voteStake, sd.CurrentTermTime)
 
 			if err := ctx.RoleIntf.SetDelegateVotes(oldDelegateVote.OwnerAccount, oldDelegateVote); err != nil {
@@ -866,41 +850,41 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 			}
 		}
 
-		delegateVote, err := ctx.RoleIntf.GetDelegateVotes(delegateName)
+		err = ctx.RoleIntf.RewardHandleVotesChange(delegateName, sb.StakedBalance, false)
 		if err != nil {
 			return berr.ErrTrxContractHanldeError
 		}
-		delegateVote.UpdateVotes(sb.StakedBalance, sd.CurrentTermTime)
 
+		delegateVote, _ := ctx.RoleIntf.GetDelegateVotes(delegateName)
+		delegateVote.UpdateVotes(sb.StakedBalance, sd.CurrentTermTime)
 		voter.Delegate = delegateName
 		if err := ctx.RoleIntf.SetVoter(voterName, voter); err != nil {
 			return berr.ErrTrxContractHanldeError
 		}
-
 		if err := ctx.RoleIntf.SetDelegateVotes(delegateVote.OwnerAccount, delegateVote); err != nil {
 			return berr.ErrTrxContractHanldeError
 		}
 	} else if voteop == 0 {
 		// cancel vote
-		// staked balance should more than 0
-		if 1 != sb.StakedBalance.Cmp(big.NewInt(0)) {
-			return berr.ErrContractInsufficientFunds
-		}
-
 		if voter.Delegate != "" {
+			voteStake := big.NewInt(0).Set(sb.StakedBalance)
+			voteStake.Mul(voteStake, big.NewInt(-1))
+
+			err = ctx.RoleIntf.RewardHandleVotesChange(voter.Delegate, voteStake, false)
+			if err != nil {
+				return berr.ErrTrxContractHanldeError
+			}
+
 			oldDelegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
 			if err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
-			voteStake := big.NewInt(0).Set(sb.StakedBalance)
-			voteStake.Mul(voteStake, big.NewInt(-1))
-			oldDelegateVote.UpdateVotes(voteStake, sd.CurrentTermTime)
 
+			oldDelegateVote.UpdateVotes(voteStake, sd.CurrentTermTime)
 			voter.Delegate = ""
 			if err := ctx.RoleIntf.SetVoter(voterName, voter); err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
-
 			if err := ctx.RoleIntf.SetDelegateVotes(oldDelegateVote.OwnerAccount, oldDelegateVote); err != nil {
 				return berr.ErrTrxContractHanldeError
 			}

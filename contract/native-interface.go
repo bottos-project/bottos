@@ -34,65 +34,6 @@ const MaxDelegateLocationLen int = 32
 const MaxDelegateDescriptionLen int = 128
 const NativeContractExecTime uint64 = 100
 
-//NewAccountParam struct for name and pubkey
-type NewAccountParam struct {
-	Name   string `json:"name"`
-	Pubkey string `json:"pubkey"`
-}
-
-//TransferParam struct for transfer
-type TransferParam struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Value uint64 `json:"value"`
-}
-
-//SetDelegateParam struct for delegate
-type SetDelegateParam struct {
-	Name   string `json:"name"`
-	Pubkey string `json:"pubkey"`
-	// TODO CONFIG
-}
-
-//GrantCreditParam struct to grand credit
-type GrantCreditParam struct {
-	Name    string `json:"name"`
-	Spender string `json:"spender"`
-	Limit   uint64 `json:"limit"`
-}
-
-//CancelCreditParam struct to cancel credit
-type CancelCreditParam struct {
-	Name    string `json:"name"`
-	Spender string `json:"spender"`
-}
-
-//TransferFromParam struct to transfer credit
-type TransferFromParam struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Value uint64 `json:"value"`
-}
-
-//DeployCodeParam struct to deploy code
-type DeployCodeParam struct {
-	Name         string `json:"contract"`
-	VMType       byte   `json:"vm_type"`
-	VMVersion    byte   `json:"vm_version"`
-	ContractCode []byte `json:"contract_code"`
-}
-
-//DeployABIParam struct to deploy abi
-type DeployABIParam struct {
-	Name        string `json:"contract"`
-	ContractAbi []byte `json:"contract_abi"`
-}
-
-//StakeParam for stake, unstke and claim contract
-type StakeParam struct {
-	Amount *big.Int `json:"amount"`
-}
-
 //NativeContractInterface is native contract interface
 type NativeContractInterface interface {
 	IsNativeContract(contract string, method string) bool
@@ -111,24 +52,36 @@ type NativeContract struct {
 //NewNativeContractHandler is native contract handler to handle different contracts
 func NewNativeContractHandler() (NativeContractInterface, error) {
 	nc := &NativeContract{
-		Handler: make(map[string]NativeContractMethod),
+		Config: make(map[string]NativeContractMethodConfig),
 	}
-	nc.re = regexp.MustCompile(config.ACCOUNT_NAME_REGEXP)
 
-	nc.Handler["newaccount"] = nc.newAccount
-	nc.Handler["transfer"] = nc.transfer
-	nc.Handler["setdelegate"] = nc.setDelegate
-	nc.Handler["grantcredit"] = nc.grantCredit
-	nc.Handler["cancelcredit"] = nc.cancelCredit
-	nc.Handler["transferfrom"] = nc.transferFrom
-	nc.Handler["deploycode"] = nc.deployCode
-	nc.Handler["deployabi"] = nc.deployAbi
-	nc.Handler["stake"] = nc.stake
-	nc.Handler["unstake"] = nc.unstake
-	nc.Handler["claim"] = nc.claim
-	nc.Handler["regdelegate"] = nc.regDelegate
-	nc.Handler["unregdelegate"] = nc.unregDelegate
-	nc.Handler["votedelegate"] = nc.voteDelegate
+	nc.Config["newaccount"] = NativeContractMethodConfig{nc.newAccount, NativeContractExecTime}
+	nc.Config["transfer"] = NativeContractMethodConfig{nc.transfer, NativeContractExecTime}
+	nc.Config["grantcredit"] = NativeContractMethodConfig{nc.grantCredit, NativeContractExecTime}
+	nc.Config["cancelcredit"] = NativeContractMethodConfig{nc.cancelCredit, NativeContractExecTime}
+	nc.Config["transferfrom"] = NativeContractMethodConfig{nc.transferFrom, NativeContractExecTime}
+	nc.Config["deploycontract"] = NativeContractMethodConfig{nc.deployContract, NativeContractExecTime}
+	nc.Config["stake"] = NativeContractMethodConfig{nc.stake, NativeContractExecTime}
+	nc.Config["unstake"] = NativeContractMethodConfig{nc.unstake, NativeContractExecTime}
+	nc.Config["claim"] = NativeContractMethodConfig{nc.claim, NativeContractExecTime}
+	nc.Config["regdelegate"] = NativeContractMethodConfig{nc.regDelegate, NativeContractExecTime}
+	nc.Config["unregdelegate"] = NativeContractMethodConfig{nc.unregDelegate, NativeContractExecTime}
+	nc.Config["votedelegate"] = NativeContractMethodConfig{nc.voteDelegate, NativeContractExecTime}
+	nc.Config["newmsignaccount"] = NativeContractMethodConfig{nc.newMsignAccount, NativeContractExecTime}
+	nc.Config["pushmsignproposal"] = NativeContractMethodConfig{nc.pushMsignProposal, NativeContractExecTime}
+	nc.Config["approvemsignproposal"] = NativeContractMethodConfig{nc.approveMsignProposal, NativeContractExecTime}
+	nc.Config["unapprovemsign"] = NativeContractMethodConfig{nc.unapproveMsignProposal, NativeContractExecTime}
+	nc.Config["execmsignproposal"] = NativeContractMethodConfig{nc.execMsignProposal, NativeContractExecTime}
+	nc.Config["cancelmsignproposal"] = NativeContractMethodConfig{nc.cancelMsignProposal, NativeContractExecTime}
+
+	// genesis
+	nc.Config["setdelegate"] = NativeContractMethodConfig{nc.setDelegate, NativeContractExecTime}
+	nc.Config["unsetdelegate"] = NativeContractMethodConfig{nc.unsetDelegate, NativeContractExecTime}
+	nc.Config["cancelgsperm"] = NativeContractMethodConfig{nc.cancelGsPermission, NativeContractExecTime}
+	nc.Config["blkprodtrans"] = NativeContractMethodConfig{nc.blockProducingTransfer, NativeContractExecTime}
+	nc.Config["settransitvote"] = NativeContractMethodConfig{nc.setTransitVote, NativeContractExecTime}
+	nc.Config["claimreward"] = NativeContractMethodConfig{nc.claimReward, NativeContractExecTime}
+	nc.Config["newstkaccount"] = NativeContractMethodConfig{nc.newStkAccount, NativeContractExecTime}
 
 	return nc, nil
 }
