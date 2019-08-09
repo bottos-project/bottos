@@ -82,12 +82,12 @@ func (c *candidates) setKeeplive(k *keeplive) {
 }
 
 func (c *candidates) exchangeTimer() {
-	log.Debug("exchangeTimer start")
+	log.Debug("PROTOCOL exchangeTimer start")
 
 	exchangeTimer := time.NewTimer(TIMER_PEER_EXCHANGE * time.Second)
 
 	defer func() {
-		log.Debug("exchangeTimer stop")
+		log.Debug("PROTOCOL exchangeTimer stop")
 		exchangeTimer.Stop()
 	}()
 
@@ -108,7 +108,7 @@ func (c *candidates) exchange() {
 	for e := c.cs.Front(); e != nil; {
 		candi := e.Value.(*candidate)
 		if candi.count >= MAX_REQ_COUNT {
-			log.Debugf("exchange max req count index: %d", candi.peer.Index)
+			log.Debugf("PROTOCOL exchange max req count index: %d", candi.peer.Index)
 			next = e.Next()
 			candi.peer.Stop()
 			c.deleteCandidate(e, true)
@@ -141,11 +141,11 @@ func (c *candidates) addCandidate(peer *p2p.Peer) error {
 
 	index := c.qindex.Pop()
 	if index == nil {
-		log.Error("candidates full")
+		log.Error("PROTOCOL candidates full")
 		return errors.New("candidates full")
 	}
 
-	log.Debugf("AddCandidate index: %d", index.(uint16))
+	log.Debugf("PROTOCOL addCandidate index: %d", index.(uint16))
 	peer.Index = index.(uint16)
 	peer.State = p2p.PEER_STATE_INIT
 	candi := &candidate{peer: peer, count: 0}
@@ -166,7 +166,7 @@ func (c *candidates) deleteCandidate(e *list.Element, bRetureIndex bool) {
 	candi := e.Value.(*candidate)
 	index := candi.peer.Index
 
-	log.Debugf("deleteCandidate index: %d", index)
+	log.Debugf("PROTOCOL deleteCandidate index: %d", index)
 
 	c.cs.Remove(e)
 	if bRetureIndex {
@@ -181,7 +181,7 @@ func (c *candidates) processPeerInfoReq(index uint16, date []byte) {
 
 	e := c.getCandidate(index)
 	if e == nil {
-		log.Debugf("ProcessPeerInfoReq candi not exist index: %d", index)
+		log.Debugf("PROTOCOL processPeerInfoReq candi not exist index: %d", index)
 		return
 	}
 
@@ -195,7 +195,7 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 
 	e := c.getCandidate(index)
 	if e == nil {
-		log.Debugf("ProcessPeerInfoRsp candi not exist index: %d", index)
+		log.Debugf("PROTOCOL processPeerInfoRsp candi not exist index: %d", index)
 		return
 	}
 
@@ -204,17 +204,17 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 	var rsp PeerInfoRsp
 	err := bpl.Unmarshal(date, &rsp)
 	if err != nil {
-		log.Error("ProcessPeerInfoRsp Unmarshal error")
+		log.Error("PROTOCOL processPeerInfoRsp Unmarshal error")
 		return
 	}
 
 	if rsp.Info.IsIncomplete() {
-		log.Error("ProcessPeerInfoRsp rsp info error")
+		log.Error("PROTOCOL processPeerInfoRsp rsp info error")
 		return
 	}
 
 	if rsp.Info.ChainId != p2p.LocalPeerInfo.ChainId {
-		log.Error("not on the same chain, drop candidate")
+		log.Error("PROTOCOL not on the same chain, drop candidate")
 		c.deleteCandidate(e, true)
 		return
 	}
@@ -223,7 +223,7 @@ func (c *candidates) processPeerInfoRsp(index uint16, date []byte) {
 	if !candi.peer.In &&
 		candi.peer.Info.Addr != rsp.Info.Addr &&
 		candi.peer.Info.Port != rsp.Info.Port {
-		log.Errorf("ProcessPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
+		log.Errorf("PROTOCOL processPeerInfoRsp wrong peer info addr: %s, port: %s", rsp.Info.Addr, rsp.Info.Port)
 		return
 	}
 
@@ -239,14 +239,14 @@ func (c *candidates) processHandshakeReq(index uint16, date []byte) {
 
 	e := c.getCandidate(index)
 	if e == nil {
-		log.Debugf("ProcessHandshakeReq candi not exist index: %d", index)
+		log.Debugf("PROTOCOL processHandshakeReq candi not exist index: %d", index)
 		return
 	}
 
 	candi := e.Value.(*candidate)
 
 	if candi.peer.State != p2p.PEER_STATE_HANDSHAKE {
-		log.Debug("ProcessHandshakeReq not in hand shake state")
+		log.Debug("PROTOCOL processHandshakeReq not in hand shake state")
 		return
 	}
 
@@ -260,14 +260,14 @@ func (c *candidates) processHandshakeRsp(index uint16, date []byte) {
 	var ec *list.Element
 	ec = c.getCandidate(index)
 	if ec == nil {
-		log.Debug("ProcessPeerInfoReq candi not exist ")
+		log.Debug("PROTOCOL processPeerInfoReq candi not exist ")
 		return
 	}
 
 	candi := ec.Value.(*candidate)
 
 	if candi.peer.State != p2p.PEER_STATE_HANDSHAKE {
-		log.Debug("ProcessHandshakeReq not in hand shake state")
+		log.Debug("PROTOCOL processHandshakeReq not in hand shake state")
 		return
 	}
 
@@ -309,7 +309,7 @@ func (c *candidates) processHandshakeRspAck(index uint16, date []byte) {
 	var ec *list.Element
 	ec = c.getCandidate(index)
 	if ec == nil {
-		log.Debug("ProcessHandshakeRspAck candi not exist ")
+		log.Debug("PROTOCOL processHandshakeRspAck candi not exist ")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 
 	data, err := bpl.Marshal(rsp)
 	if err != nil {
-		log.Error("sendPeerInfoRsp Marshal data error ")
+		log.Error("PROTOCOL sendPeerInfoRsp Marshal data error ")
 		return
 	}
 
@@ -394,7 +394,7 @@ func (c *candidates) sendPeerInfoRsp(candi *candidate) {
 func (c *candidates) sendHandshakeReq(candi *candidate) {
 	//bigger peer send hand shake
 	if p2p.LocalPeerInfo.Bigger(candi.peer.Info) < 1 {
-		log.Debugf("sendHandshakeReq local is small")
+		log.Debugf("PROTOCOL sendHandshakeReq local is small")
 		return
 	}
 
