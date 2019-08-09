@@ -26,23 +26,28 @@
 package transaction
 
 import (
-
-"github.com/AsynkronIT/protoactor-go/actor"
-"github.com/bottos-project/bottos/action/message"
-"github.com/bottos-project/bottos/bpl"
-"github.com/bottos-project/bottos/common/types"
-"github.com/bottos-project/bottos/p2p"
-pcommon "github.com/bottos-project/bottos/protocol/common"
-log "github.com/cihub/seelog"
-
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/bottos-project/bottos/action/message"
+	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/common/types"
+	"github.com/bottos-project/bottos/p2p"
+	"github.com/bottos-project/bottos/role"
+	pcommon "github.com/bottos-project/bottos/protocol/common"
+	log "github.com/cihub/seelog"
 )
 
 type Transaction struct {
 	actor *actor.PID
+	roleIntf role.RoleInterface
 }
 
-func MakeTransaction() *Transaction {
-	return &Transaction{}
+
+
+func MakeTransaction(roleIntf role.RoleInterface) *Transaction {
+	return &Transaction{
+		roleIntf: roleIntf,
+	}
 }
 
 func (t *Transaction) Start() {
@@ -55,24 +60,35 @@ func (t *Transaction) SetActor(tid *actor.PID) {
 
 func (t *Transaction) Dispatch(index uint16, p *p2p.Packet) {
 	switch p.H.PacketType {
-	case TRX_UPDATE:
+	case config.TRX_IN:
+		if t.roleIntf.IsMyselfDelegate() == true{
+			t.processTrxInfo(index, p)
+		}
+	case config.TRX_OUT:
 		t.processTrxInfo(index, p)
 	}
 }
 
 func (t *Transaction) SendNewTrx(notify *message.NotifyTrx) {
-	log.Debugf("protocol send new trx %s ", notify.Trx.Hash().ToHexString())
-	t.sendPacket(true, notify.Trx, nil)
+	t.sendPacket(true, notify.P2PTrx, nil)
 }
 
 func (t *Transaction) sendPacket(broadcast bool, data interface{}, peers []uint16) {
 	buf, err := bpl.Marshal(data)
 	if err != nil {
-		log.Errorf("Transaction send marshal error")
+		log.Errorf("PROTOCOL P2PTransaction send marshal error")
+	}
+	var packetType uint16
+	switch  t.roleIntf.IsMyselfDelegate() {
+	case true:
+		packetType = config.TRX_IN
+	case false:
+		packetType = config.TRX_OUT
 	}
 
+
 	head := p2p.Head{ProtocolType: pcommon.TRX_PACKET,
-		PacketType: TRX_UPDATE,
+		PacketType: packetType,
 	}
 
 	packet := p2p.Packet{H: head,
@@ -108,8 +124,8 @@ func (t *Transaction) processTrxInfo(index uint16, p *p2p.Packet) {
 	}
 }
 
-func (t *Transaction) sendupTrx(trx *types.Transaction)  {
-	msg := &message.ReceiveTrx{Trx: trx}
+func (t *Transaction) sendupTrx(p2pTrx *types.P2PTransaction)  {
+	msg := &message.ReceiveTrx{P2PTrx: p2pTrx}
 	t.actor.Tell(msg)
 	/*for i := 0; i < 5; i++ {
 		msg := &message.ReceiveTrx{Trx: trx}
