@@ -27,15 +27,16 @@ package discover
 
 import (
 	"container/list"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/p2p"
 	pcommon "github.com/bottos-project/bottos/protocol/common"
 	log "github.com/cihub/seelog"
-	"strings"
-	"sync"
-	"time"
 )
 
 //DO NOT EDIT
@@ -54,7 +55,7 @@ type pne struct {
 	seeds []p2p.PeerInfo
 }
 
-func makePne(config *config.Parameter) *pne {
+func makePne(config *config.P2PConfig) *pne {
 
 	pne := &pne{
 		qPeers: common.NewQueue(),
@@ -77,13 +78,16 @@ func (p *pne) pushPeerIndex(index uint16) {
 	p.qPeers.Push(index)
 }
 
-func (p *pne) parseSeeds(config *config.Parameter) {
+func (p *pne) parseSeeds(config *config.P2PConfig) {
 
 	var peers []p2p.PeerInfo
 
 	for _, element := range config.PeerList {
 		peerCfg := strings.Split(element, ":")
-
+		if len(peerCfg) != 2 {
+			log.Errorf("PROTOCOL parse peer addr of config.PeerList failed, peeraddr: %v", element)
+			continue
+		}
 		addr := peerCfg[0]
 		port := peerCfg[1]
 
@@ -91,19 +95,19 @@ func (p *pne) parseSeeds(config *config.Parameter) {
 		peer.Addr = addr
 		peer.Port = port
 		peers = append(peers, peer)
-		log.Debugf("protocol parseSeeds: %s:%s", addr, port)
+		log.Debugf("PROTOCOL parseSeeds: %s:%s", addr, port)
 		p.n.addNeighbor(peers)
 	}
 }
 
 func (p *pne) pneTimer() {
-	log.Debug("protocol pneTimer")
+	log.Debug("PROTOCOL pneTimer")
 
 	tripple := 0
 	exchange := time.NewTimer(TIME_FAST_PNE_EXCHANGE * time.Second)
 
 	defer func() {
-		log.Debug("protocol pneTimer stop")
+		log.Debug("PROTOCOL pneTimer stop")
 		exchange.Stop()
 	}()
 
@@ -111,14 +115,14 @@ func (p *pne) pneTimer() {
 		select {
 		case <-exchange.C:
 			if tripple < 3 {
-				log.Debugf("protocol pneTimer send pne request")
+				log.Debugf("PROTOCOL pneTimer send pne request")
 				p.sendPneRequest(0)
 				tripple++
 				exchange.Reset(TIME_FAST_PNE_EXCHANGE * time.Second)
 			} else {
 				index := p.nextPeer()
 				if index != 0 {
-					log.Debugf("protocol pneTimer peer index: %d", index)
+					log.Debugf("PROTOCOL pneTimer peer index: %d", index)
 					p.sendPneRequest(index)
 				}
 				exchange.Reset(TIME_PNE_EXCHANGE * time.Second)
@@ -188,7 +192,7 @@ func (p *pne) sendPneResponse(index uint16) {
 
 	data, err := bpl.Marshal(resp)
 	if err != nil {
-		log.Errorf("protocol pne response addrs Marshal error:%s", err)
+		log.Errorf("PROTOCOL pne response addrs Marshal error:%s", err)
 		return
 	}
 
@@ -228,7 +232,7 @@ func (p *pne) processPneNeighborRsp(index uint16, date []byte) {
 	var rsp PeerNeighborRsp
 	err := bpl.Unmarshal(date, &rsp)
 	if err != nil {
-		log.Errorf("protocol ProcessPneNeighborRsp Unmarshal error")
+		log.Errorf("PROTOCOL ProcessPneNeighborRsp Unmarshal error")
 		return
 	}
 
