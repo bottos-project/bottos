@@ -33,15 +33,14 @@ import (
 	"github.com/bottos-project/bottos/role"
 	wasm "github.com/bottos-project/bottos/vm/wasm/exec"
 	log "github.com/cihub/seelog"
-
-	"github.com/bottos-project/bottos/vm/duktape"
 	"github.com/bottos-project/bottos/common/vm"
+	"github.com/bottos-project/bottos/vm/duktape"
 )
 
 // TrxApplyService is to define a service for apply a transaction
 type TrxApplyService struct {
-	roleIntf   role.RoleInterface
-	ncIntf     contract.NativeContractInterface
+	roleIntf role.RoleInterface
+	ncIntf   contract.NativeContractInterface
 
 	trxHashErrorList     [config.DEFAULT_MAX_TRX_ERROR_CODE_NUM]common.Hash
 	curTrxErrorCodeIndex uint64
@@ -79,6 +78,7 @@ func GetTrxApplyService() *TrxApplyService {
 func (trxApplyService *TrxApplyService) CheckTransactionLifeTime(trx *types.Transaction) bool {
 
 	chainState, _ := trxApplyService.roleIntf.GetChainState()
+
 	curTime := chainState.LastBlockTime
 
 	systemTime := common.Now()
@@ -103,7 +103,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionUnique(trx *types.Transa
 
 	transactionExpiration, _ := trxApplyService.roleIntf.GetTransactionExpiration(trx.Hash())
 	if nil != transactionExpiration {
-		log.Errorf("check unique error, trx: %x", trx.Hash())
+		log.Errorf("TRX check unique error, trx %x, trx Expiration %x", trx.Hash(), transactionExpiration)
 
 		return false
 	}
@@ -116,7 +116,7 @@ func (trxApplyService *TrxApplyService) CheckTransactionMatchChain(trx *types.Tr
 
 	blockHistory, err := trxApplyService.roleIntf.GetBlockHistory(trx.CursorNum)
 	if nil != err || nil == blockHistory {
-		log.Error("get block history error")
+		log.Errorf("TRX check chain match error, trx %x, cursor %v", trx.Hash(), trx.CursorNum)
 		return false
 	}
 
@@ -172,14 +172,18 @@ func (trxApplyService *TrxApplyService) ApplyBlockTransaction(trx *types.BlockTr
 		DerivedTrx:  derivedTrxList,
 	}
 
-	return true, bottosErr.ErrNoError, handleTrx
+	log.Infof("TRX exec trx success, trx %x, elapsed time %v", trx.Hash(), common.Elapsed(start))
+	return true, bottosErr.ErrNoError, handleTrx, resouceReceipt, resUsage
 }
 
 // ProcessTransaction is to handle a transaction without parameters checking
-func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transaction, deepLimit uint32) (bool, bottosErr.ErrCode, []*types.DerivedTransaction) {
+func (trxApplyService *TrxApplyService) ProcessTransaction(applyContext *contract.Context) (bottosErr.ErrCode, []*types.DerivedTransaction, uint64, uint64) {
 
-	if deepLimit >= config.DEFAUL_MAX_CONTRACT_DEPTH {
-		return false, bottosErr.ErrTrxContractDepthError, nil
+	log.Debugf("TRX begein exec contract %v, deep %v", applyContext.CallContract,  applyContext.DeepLimit)
+
+	if applyContext.DeepLimit >= config.DEFAUL_MAX_CONTRACT_DEPTH {
+		log.Errorf("TRX exec trx failed, deep over %v",applyContext.DeepLimit)
+		return bottosErr.ErrTrxContractDepthError, nil, 0, 0
 	}
 
 	var derivedTrx []*types.DerivedTransaction
@@ -225,38 +229,50 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(trx *types.Transactio
 			derivedTrx = append(derivedTrx, handleTrx)
 		}
 
-		return true, bottosErr.ErrNoError ,derivedTrx
-	} else {	
-	// else branch
-	trxList, exeErr := wasm.GetInstance().Start(applyContext, 1, false)
-	if nil != exeErr {
-		log.Error("process trx failed, error: ",exeErr)
-		return false, bottosErr.ErrTrxContractHanldeError, nil
-	}
-
-	log.Trace("derived trx list len is ", len(trxList))
+	log.Debugf("TRX begin exec sub trx list:")	
+	
+	log.Debugf("TRX sub trx list:")
 	for _, subTrx := range trxList {
-		log.Trace(subTrx)
+		log.Debug(subTrx)
 	}
-
-	if (uint32(len(trxList))) >= config.DEFAUL_MAX_SUB_CONTRACT_NUM {
-		return false, bottosErr.ErrTrxSubContractNumError, nil
-	}
-
+	
 	for _, subTrx := range trxList {
-		result, bottosErr, subDerivedTrx := trxApplyService.ProcessTransaction(subTrx, deepLimit+1)
-		if false == result {
-			return false, bottosErr, nil
+		subApplyContext := &contract.Context{
+			RoleIntf: trxApplyService.roleIntf,
+			Trx: subTrx, 
+			CallContract: subTrx.Contract,
+		    CallMethod: subTrx.Method,
+			DeepLimit:applyContext.DeepLimit + 1,  
+			MaxExecTime:applyContext.MaxExecTime - totalExecTime}
+
+		subTrxErr, subDerivedTrx, subTrxDbDataSaveLen, subExecTime := trxApplyService.ProcessTransaction(subApplyContext)
+		if bottosErr.ErrNoError != subTrxErr {
+			log.Errorf("TRX exec sub trx failed, trx %x, error %v, sub trx %v, method %v,", applyContext.Trx.Hash(), subTrxErr, subTrx.Contract, subTrx.Method)
+			return subTrxErr, nil, 0, 0
 		}
+
+		log.Infof("TRX exec sub trx, contract %v, db save len %v, exec time %v",subTrx.Contract, subTrxDbDataSaveLen, subExecTime)
+
+		totalExecTime += subExecTime
+
+		totalDbDataSaveLen += subTrxDbDataSaveLen
+
+		if totalExecTime > applyContext.MaxExecTime {
+			log.Errorf("TRX exec sub trx failed, trx %x, exec time over", applyContext.Trx.Hash())
+			return bottosErr.ErrTrxExecTimeOver, nil, 0, 0
+		}		
 
 		handleTrx := &types.DerivedTransaction{
 			Transaction: subTrx,
 			DerivedTrx:  subDerivedTrx,
 		}
+
 		derivedTrx = append(derivedTrx, handleTrx)
 	}
-	return true, bottosErr.ErrNoError, derivedTrx
 
+	log.Debugf("TRX exec contract %v done, deep %v", applyContext.CallContract, applyContext.DeepLimit)
+
+	return bottosErr.ErrNoError, derivedTrx, totalDbDataSaveLen, totalExecTime
 }
 
 func (trxApplyService *TrxApplyService) AddTrxErrorCode(trxHash common.Hash, errCode bottosErr.ErrCode) {
@@ -264,15 +280,14 @@ func (trxApplyService *TrxApplyService) AddTrxErrorCode(trxHash common.Hash, err
 	trxApplyService.mu.Lock()
 	defer trxApplyService.mu.Unlock()
 
-	var nextTrxErrorCodeIndex = (trxApplyService.curTrxErrorCodeIndex + 1)%config.DEFAULT_MAX_TRX_ERROR_CODE_NUM
+	var nextTrxErrorCodeIndex = (trxApplyService.curTrxErrorCodeIndex + 1) % config.DEFAULT_MAX_TRX_ERROR_CODE_NUM
 	delete(trxApplyService.trxHashErrorMap, trxApplyService.trxHashErrorList[nextTrxErrorCodeIndex])
 	trxApplyService.trxHashErrorMap[trxHash] = errCode
 
-	trxApplyService.trxHashErrorList[nextTrxErrorCodeIndex] = trxHash	
+	trxApplyService.trxHashErrorList[nextTrxErrorCodeIndex] = trxHash
 
 	trxApplyService.curTrxErrorCodeIndex = nextTrxErrorCodeIndex
 }
-
 
 func (trxApplyService *TrxApplyService) GetTrxErrorCode(trxHash common.Hash) bottosErr.ErrCode {
 
@@ -280,23 +295,21 @@ func (trxApplyService *TrxApplyService) GetTrxErrorCode(trxHash common.Hash) bot
 	defer trxApplyService.mu.Unlock()
 
 	errCode, ok := trxApplyService.trxHashErrorMap[trxHash]
-	if ok { 
+	if ok {
 		return errCode
-	}else {
+	} else {
 		return bottosErr.ErrNoError
 	}
 }
 
-
-
 func (trxApplyService *TrxApplyService) IsTrxInPendingPool(trxHash common.Hash) bool {
 	TrxPoolInst.mu.Lock()
-	defer TrxPoolInst.mu.Unlock()	
+	defer TrxPoolInst.mu.Unlock()
 
 	_, ok := TrxPoolInst.pending[trxHash]
-	if ok { 
+	if ok {
 		return true
-	}else {
+	} else {
 		return false
 	}
 }
