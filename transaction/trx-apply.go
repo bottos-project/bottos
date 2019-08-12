@@ -150,21 +150,82 @@ func (trxApplyService *TrxApplyService) ApplyBlockTransaction(trx *types.BlockTr
 		return false, bottosErr.ErrTrxLifeTimeError, nil
 	}
 
+// ExecuteTransaction is to handle a transaction, include parameters checking
+func (trxApplyService *TrxApplyService) ExecuteTransaction(trx *types.Transaction, verifyTimeFlag bool) (bool, bottosErr.ErrCode, *types.HandledTransaction, *types.ResourceReceipt, role.ResourceUsage) {
+	start := common.MeasureStart()
+	log.Infof("TRX begin exec trx, trx %x", trx.Hash())
+	var resouceReceipt *types.ResourceReceipt
+	var resUsage role.ResourceUsage
+
 	if !trxApplyService.CheckTransactionUnique(trx) {
-		return false, bottosErr.ErrTrxUniqueError, nil
+		return false, bottosErr.ErrTrxUniqueError, nil, resouceReceipt, resUsage
+	}
+
+	account, getAccountErr := trxApplyService.roleIntf.GetAccount(trx.Sender)
+	if nil != getAccountErr || nil == account {
+		log.Errorf("TRX exec trx get account error, trx %x", trx.Hash())
+		return false, bottosErr.ErrTrxAccountError, nil, resouceReceipt, resUsage
+	}
+
+	if !trxApplyService.CheckTransactionLifeTime(trx) {
+		return false, bottosErr.ErrTrxLifeTimeError, nil, resouceReceipt, resUsage
 	}
 
 	if !trxApplyService.CheckTransactionMatchChain(trx) {
-		return false, bottosErr.ErrTrxChainMathError, nil
+		return false, bottosErr.ErrTrxChainMathError, nil, resouceReceipt, resUsage
 	}
 
 	trxApplyService.SaveTransactionExpiration(trx)
 
-	result, bottosError, derivedTrxList := trxApplyService.ProcessTransaction(trx, 0)
+	resService := CreateResProcessorService(trxApplyService.roleIntf)
 
-	if false == result {
-		log.Errorf("process trx error: %v trx: %x", bottosError, trx.Hash())
-		return false, bottosError, nil
+	f, err := checkMinBalance(resService, trx.Sender)
+	if err != nil {
+		log.Warnf("RESOURCE:checkMinBalance failed:%v", err)
+		//return false, bottosErr.ErrTrxResourceCheckMinBalance, nil, resouceReceipt, resUsage
+	}
+
+	if trx.Sender != config.BOTTOS_CONTRACT_NAME {
+		resConfig, err := trxApplyService.roleIntf.GetResourceConfig()
+		if err != nil {
+			log.Errorf("RESOURCE:get Resource Config failed,", err)
+		}
+		_, berr := GetTxSize(*resConfig, trx, 0)
+
+		if int(berr) != 0 {
+			log.Errorf("RESOURCE: check Process Space Resource failed:%v", bottosErr.GetCodeString(berr))
+			return false, berr, nil, resouceReceipt, resUsage
+		}
+	}
+
+	//max available time of user
+	maxTime, err := MaxContractExecuteTime(trxApplyService.roleIntf, trx.Sender, f)
+	if err != nil {
+		log.Errorf("RESOURCE: get max time failed, trx: %x, err:%v", trx.Hash(), err)
+		return false, bottosErr.ErrTrxCheckTimeInternalError, nil, resouceReceipt, resUsage
+	}
+	if maxTime < config.CONTRACT_EXEC_MIN_TIME {
+		if (trx.Contract == config.BOTTOS_CONTRACT_NAME) && (trx.Method == "stake") {
+		maxTime = config.CONTRACT_EXEC_MIN_TIME
+		} else {
+			log.Errorf("RESOURCE: max timeToken less than min required, maxTime: %v", maxTime)
+			return false, bottosErr.ErrTrxCheckMinTimeError, nil, resouceReceipt, resUsage
+		}
+	}
+	
+	applyContext := &contract.Context{
+		RoleIntf: trxApplyService.roleIntf, 
+		Trx: trx, 
+		CallContract: trx.Contract,
+		CallMethod: trx.Method,
+		DeepLimit:0, 
+		MaxExecTime:maxTime}
+	
+	bottosError, derivedTrxList, space, execTime:= trxApplyService.ProcessTransaction(applyContext)
+
+	if bottosErr.ErrNoError != bottosError {
+		//log.Errorf("TRX process trx error, trx %x, error %v", trx.Hash(), bottosError)
+		return false, bottosError, nil, resouceReceipt, resUsage
 	}
 
 	handleTrx := &types.HandledTransaction{
