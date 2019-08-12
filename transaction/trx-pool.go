@@ -214,6 +214,19 @@ func (trxPool *TrxPool) GetAllPendingTransactions(context actor.Context) {
 	context.Respond(rsp)
 }
 
+// GetAllPendingTransactions is interface to get all pending trxs in trx pool
+func (trxPool *TrxPool) GetAllPendingTransactions4funcCall() []*types.Transaction {
+
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
+	var trxs []*types.Transaction
+	for trxHash := range trxPool.pending {
+		trxs = append(trxs, trxPool.pending[trxHash])
+	}
+	return trxs
+}
+
 // RemoveTransactions is interface to remove trxs in trx pool
 func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 
@@ -231,7 +244,11 @@ func (trxPool *TrxPool) RemoveSingleTransaction(trx *types.Transaction) {
 	trxPool.mu.Lock()
 	defer trxPool.mu.Unlock()
 
+	log.Infof("TRX rm single trx %x", trx.Hash())
+
 	delete(trxPool.pending, trx.Hash())
+
+	log.Infof("TRX after rm single trx num in pool %v", len(trxPool.pending))
 }
 
 // RemoveSingleTransactionbyHash is interface to remove single trx in trx pool
@@ -240,55 +257,20 @@ func (trxPool *TrxPool) RemoveSingleTransactionbyHash(trxHash common.Hash) {
 	trxPool.mu.Lock()
 	defer trxPool.mu.Unlock()
 
+	log.Infof("TRX rm trx by hash, trx %x", trxHash)
+
 	delete(trxPool.pending, trxHash)
+
+	log.Infof("TRX after rm trx by hash, trx num in pool %v", len(trxPool.pending))
 }
 
-func (trxPool *TrxPool) getPubKey(accountName string) ([]byte, error) {
+// RemoveSingleTransactionbyHash is interface to remove single trx in trx pool
+func (trxPool *TrxPool) RemoveSingleTransactionbyHashNotLock(trxHash common.Hash) {
 
-	account, err := trxPool.roleIntf.GetAccount(accountName)
-	if nil != err {
-		return nil, fmt.Errorf("get account failed")
-	}
+	log.Infof("TRX rm trx by hash not lock, trx %x", trxHash)
 
-	return account.PublicKey, nil
+	delete(trxPool.pending, trxHash)
+
+	log.Infof("TRX after rm trx by hash not lock, trx num in pool %v", len(trxPool.pending))
 }
 
-// VerifySignature is verify signature from trx whether it is valid
-func (trxPool *TrxPool) VerifySignature(trx *types.Transaction) bool {
-
-	trxToVerify := &types.BasicTransaction{
-		Version:     trx.Version,
-		CursorNum:   trx.CursorNum,
-		CursorLabel: trx.CursorLabel,
-		Lifetime:    trx.Lifetime,
-		Sender:      trx.Sender,
-		Contract:    trx.Contract,
-		Method:      trx.Method,
-		Param:       trx.Param,
-		SigAlg:      trx.SigAlg,
-	}
-
-	serializeData, err := bpl.Marshal(trxToVerify)
-	if nil != err {
-		return false
-	}
-
-	senderPubKey, err := trxPool.getPubKey(trx.Sender)
-	if nil != err {
-		log.Errorf("trx %x get pub key error", trx.Hash())
-		return false
-	}
-
-	h := sha256.New()
-	h.Write([]byte(hex.EncodeToString(serializeData)))
-	h.Write([]byte(hex.EncodeToString(config.GetChainID())))
-	hashData := h.Sum(nil)
-
-	verifyResult := crypto.VerifySign(senderPubKey, hashData, trx.Signature)
-
-	if false == verifyResult {
-		log.Errorf("trx %x verify signature failed, sender %v, pubkey %v", trx.Hash(), trx.Sender, senderPubKey)
-	}
-
-	return verifyResult
-}

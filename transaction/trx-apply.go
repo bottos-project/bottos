@@ -228,6 +228,7 @@ func (trxApplyService *TrxApplyService) ExecuteTransaction(trx *types.Transactio
 		return false, bottosError, nil, resouceReceipt, resUsage
 	}
 
+	log.Infof("TRX contract exec succ, space is %v, time %v ", space, execTime)
 	handleTrx := &types.HandledTransaction{
 		Transaction: trx,
 		DerivedTrx:  derivedTrxList,
@@ -283,12 +284,13 @@ func (trxApplyService *TrxApplyService) ProcessTransaction(applyContext *contrac
 				return false, bottosErr, nil
 			}
 
-			handleTrx := &types.DerivedTransaction{
-				Transaction: subTrx,
-				DerivedTrx:  subDerivedTrx,
-			}
-			derivedTrx = append(derivedTrx, handleTrx)
+		handleTrx := &types.DerivedTransaction{
+			Transaction: applyContext.Trx,
+			DerivedTrx:  subDerivedTrx,
 		}
+
+		derivedTrx = append(derivedTrx, handleTrx)
+	}
 
 	log.Debugf("TRX begin exec sub trx list:")	
 	
