@@ -62,14 +62,13 @@ type TrxPool struct {
 }
 
 // InitTrxPool is init trx pool process when system start
-func InitTrxPool(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface, netActorPid *actor.PID) *TrxPool {
+func InitTrxPool(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface, protocol context.ProtocolInterface, netActorPid *actor.PID) *TrxPool {
 
-	TrxPoolInst := &TrxPool{
+	TrxPoolInst = &TrxPool{
 		pending:     make(map[common.Hash]*types.Transaction),
 		roleIntf:    roleIntf,
 		netActorPid: netActorPid,
 		dbInst:      dbInstance,
-
 		quit: make(chan struct{}),
 	}
 
