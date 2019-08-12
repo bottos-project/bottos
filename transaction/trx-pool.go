@@ -108,12 +108,16 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 	}
 }
 
-func (trxPool *TrxPool) isTransactionExist(trx *types.Transaction) {
+func (trxPool *TrxPool) isTransactionExist(trx *types.Transaction) bool {
+
 	trxPool.mu.Lock()
 	defer trxPool.mu.Unlock()
 
-	_, ok := trxPool[trx.Hash()]
-	return ok
+	if nil == trxPool.pending[trx.Hash()] {
+		return false
+	} else {
+		return true
+	}
 }
 
 func (trxPool *TrxPool) addTransaction(trx *types.Transaction) {
@@ -122,7 +126,11 @@ func (trxPool *TrxPool) addTransaction(trx *types.Transaction) {
 	defer trxPool.mu.Unlock()
 
 	trxHash := trx.Hash()
+
 	trxPool.pending[trxHash] = trx
+
+	log.Infof("TRX add add trx, num in pool %v", len(trxPool.pending))
+
 }
 
 // Stop is processing when system stop
@@ -130,7 +138,7 @@ func (trxPool *TrxPool) Stop() {
 
 	close(trxPool.quit)
 
-	log.Info("Transaction pool stopped")
+	log.Errorf("TRX Transaction pool stopped")
 }
 
 // CheckTransactionBaseCondition is checking trx
@@ -179,9 +187,15 @@ func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *t
 }
 
 // HandleTransactionFromP2P is handling trx from P2P
-func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, trx *types.Transaction) {
-	log.Tracef("rcv trx %x from P2P,sender %v, contract %v method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
-	trxPool.HandleTransactionCommon(context, trx)
+func (trxPool *TrxPool) HandleTransactionFromP2P(context actor.Context, p2pTrx *types.P2PTransaction) {
+	log.Infof("TRX rcv trx from P2P, trx %x, sender %v, contract %v method %v, TTL %v", p2pTrx.Transaction.Hash(), p2pTrx.Transaction.Sender, p2pTrx.Transaction.Contract, p2pTrx.Transaction.Method, p2pTrx.TTL)
+	err := trxPool.HandleTransactionCommon(context, p2pTrx.Transaction)	
+
+	if bottosErr.ErrNoError != err {
+		log.Errorf("TRX handle trx from node failed, trx %x, error %v", p2pTrx.Transaction.Hash(), err)
+	} else {
+		trxPool.SendP2PTrx(p2pTrx)
+	}
 }
 
 // GetAllPendingTransactions is interface to get all pending trxs in trx pool
@@ -194,6 +208,8 @@ func (trxPool *TrxPool) GetAllPendingTransactions(context actor.Context) {
 	for trxHash := range trxPool.pending {
 		rsp.Trxs = append(rsp.Trxs, trxPool.pending[trxHash])
 	}
+
+	log.Infof("TRX get all pending trx num in pool, total num %v", len(rsp.Trxs))
 
 	context.Respond(rsp)
 }
