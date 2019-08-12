@@ -88,13 +88,19 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 		select {
 		case <-expire.C:
 
+			trxPool.mu.Lock()
+
 			var currentTime = common.Now()
+			log.Infof("TRX trx num in pool before check: %v", len(trxPool.pending))
 			for trxHash := range trxPool.pending {
 				if currentTime >= (trxPool.pending[trxHash].Lifetime) {
-					log.Info("remove expirate trx, hash is: ", trxHash, "curtime", currentTime, "lifeTime", trxPool.pending[trxHash].Lifetime)
-					trxPool.RemoveSingleTransactionbyHash(trxHash)
+					log.Infof("TRX remove expirate trx, trx %x, curtime %v, lifeTime %v", trxHash, currentTime, trxPool.pending[trxHash].Lifetime)
+					trxPool.RemoveSingleTransactionbyHashNotLock(trxHash)
 				}
 			}
+			log.Infof("TRX trx num in pool after check: %v", len(trxPool.pending))
+
+			trxPool.mu.Unlock()
 
 		case <-trxPool.quit:
 			return
