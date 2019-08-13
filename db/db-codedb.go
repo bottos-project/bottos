@@ -83,11 +83,14 @@ func (d *DBService) DeleteObject(objectName string, key string) (string, error) 
 }
 
 //Commit is to commit object
-func (d *DBService) Commit() error {
-	return d.codeRepo.CallCommit()
+func (d *DBService) Commit(revision uint64) error {
+	return d.codeRepo.CallCommit(revision)
 }
 
 //Rollback is to rollback object
 func (d *DBService) Rollback() error {
 	return d.codeRepo.CallRollback()
+}
+func (d *DBService) RollbackAll() error {
+	return d.codeRepo.CallRollbackAll()
 }

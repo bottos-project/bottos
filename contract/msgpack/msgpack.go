@@ -27,8 +27,8 @@ package msgpack
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	"fmt"
 	"reflect"
 
 	log "github.com/cihub/seelog"

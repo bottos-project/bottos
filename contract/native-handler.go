@@ -264,38 +264,44 @@ func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 
 func (nc *NativeContract) cancelCredit(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "cancelcredit", ctx.Trx.Param)
+	param, _ := abi.UnmarshalAbiEx("bottos", Abi, "cancelcredit", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return berr.ErrContractParamParseError
 	}
 
-	ParamName    := param["name"].(string)
+	ParamName := param["name"].(string)
 	ParamSpender := param["spender"].(string)
-	
+
 	// check account
 	cerr := nc.checkAccount(ctx.RoleIntf, ParamName)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
-	cerr = nc.checkAccount(ctx.RoleIntf, ParamSpender)
-	if cerr != berr.ErrNoError {
-		return cerr
+	if err := nc.checkAccountExist(ctx.RoleIntf, ParamSpender); err != berr.ErrNoError {
+		return err
 	}
 
 	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
-		return berr.ErrContractAccountMismatch
+		return berr.ErrAccountMismatch
 	}
 
-	_, err := ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
+	credit, err := ctx.RoleIntf.GetTransferCredit(ParamName, ParamSpender)
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
 	}
 
-	err = ctx.RoleIntf.DeleteTransferCredit(ParamName, ParamSpender)
+	credit.Limit = big.NewInt(0)
+
+	err = ctx.RoleIntf.SetTransferCredit(credit.Name, credit)
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
 	}
+
+	// err = ctx.RoleIntf.DeleteTransferCredit(ParamName, ParamSpender)
+	// if err != nil {
+	// 	return berr.ErrTrxContractHanldeError
+	// }
 
 	return berr.ErrNoError
 }

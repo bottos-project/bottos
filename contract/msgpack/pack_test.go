@@ -26,7 +26,6 @@ package msgpack
 
 import (
 	"fmt"
-	//"bytes"
 	"encoding/hex"
 	"testing"
 )
