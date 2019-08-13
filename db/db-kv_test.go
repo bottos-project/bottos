@@ -33,7 +33,7 @@ import (
 
 func TestDBService_Callput(t *testing.T) {
 	log.Info("abc")
-	ins := NewDbService("./db")
+	ins := NewDbService("./db", "./db2")
 	ins.Put([]byte("abc"), []byte("123"))
 	res, _ := ins.Get([]byte("abc"))
 	log.Info(res)
@@ -41,14 +41,14 @@ func TestDBService_Callput(t *testing.T) {
 }
 func TestDBService_CallGet(t *testing.T) {
 	log.Info("abc")
-	ins := NewDbService("./db")
+	ins := NewDbService("./db", "./db2")
 	ins.Put([]byte("abc"), []byte("123"))
 	res, _ := ins.Get([]byte("abc"))
 	log.Info(res)
 }
 func TestDBService_CallFlush(t *testing.T) {
-	log.Info("abc")
-	ins := NewDbService("./db")
-	ins.Put([]byte("abc"), []byte("123"))
-	ins.Flush()
+	//	log.Info("abc")
+	//	ins := NewDbService("./db", "./db2")
+	//	ins.Put([]byte("abc2"), []byte("1234"))
+	//ins.Flush()
 }
