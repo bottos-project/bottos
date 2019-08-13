@@ -40,6 +40,7 @@ import (
 
 
 var u256BytesLen int = 32
+var u128BytesLen int = 16
 
 //ABIAction abi Action(Method)
 type ABIAction struct {
@@ -370,46 +371,62 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 			
 			if valType != abiValType {
 				return fmt.Errorf("EncodeAbiEx: abiValType %s mismatch to valType %s", abiValType, valType)
+		}
+
+		switch abiValType {
+		case "string":
+			msgpack.PackStr16(w, val.(string))
+		case "uint8":
+			msgpack.PackUint8(w, val.(uint8))
+		case "uint16":
+			msgpack.PackUint16(w, val.(uint16))
+		case "uint32":
+			msgpack.PackUint32(w, val.(uint32))
+		case "uint64":
+			msgpack.PackUint64(w, val.(uint64))
+		case "bytes":
+			msgpack.PackBin16(w, val.([]byte))
+		case "uint128":
+			bigIntVal := (val.(big.Int))
+			bigIntValBytes := bigIntVal.Bytes()
+
+			if len(bigIntValBytes) > u128BytesLen {
+				return fmt.Errorf("u128 is over flows")
 			}
 
-			switch abiValType {
-				case "string":
-					msgpack.PackStr16(w, val.(string))
-				case "uint8":
-					msgpack.PackUint8(w, val.(uint8))
-				case "uint16":
-					msgpack.PackUint16(w, val.(uint16))
-				case "uint32":
-					msgpack.PackUint32(w, val.(uint32))
-				case "uint64":
-					msgpack.PackUint64(w, val.(uint64))
-				case "bytes":
-					msgpack.PackBin16(w, val.([]byte))
-				case "Int":
-					bigIntVal := (val.(big.Int))
-					bigIntValBytes := bigIntVal.Bytes()
+			buf := make([]byte, u128BytesLen)
+			i := u128BytesLen - len(bigIntValBytes)
 
-					if(len(bigIntValBytes) > u256BytesLen) {
-						return fmt.Errorf("u256 is over flows")
-					}
+			for key, value := range bigIntValBytes {
+				buf[i+key] = value
+			}
 
-					buf := make([]byte, u256BytesLen)
-					i := u256BytesLen - len(bigIntValBytes)
+			msgpack.PackBin16(w, buf)
+		case "uint256":
+			bigIntVal := (val.(big.Int))
+			bigIntValBytes := bigIntVal.Bytes()
 
-					for key, value := range bigIntValBytes {
-						buf[i+key] = value
-					}
+			if len(bigIntValBytes) > u256BytesLen {
+				return fmt.Errorf("u256 is over flows")
+			}
 
-					msgpack.PackBin16(w, buf)
-				default:
-					if reflect.ValueOf(value[abiValKey]).Kind() == reflect.Struct {
-						EncodeAbiEx(contractName, method, w, value, abi, abiValKey)
-					} else {
-						return fmt.Errorf("Unsupported Type: %v | %v", valType, abiValType)
-					}
-				}
+			buf := make([]byte, u256BytesLen)
+			i := u256BytesLen - len(bigIntValBytes)
+
+			for key, value := range bigIntValBytes {
+				buf[i+key] = value
+			}
+
+			msgpack.PackBin16(w, buf)
+		default:
+			if reflect.ValueOf(value[abiValKey]).Kind() == reflect.Struct {
+				EncodeAbiEx(contractName, method, w, value, abi, abiValKey)
+			} else {
+				return fmt.Errorf("Unsupported Type: %v | %v", valType, abiValType)
+			}
 		}
-		
+	}
+
 	return nil
 }
 
