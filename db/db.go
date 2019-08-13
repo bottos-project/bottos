@@ -88,6 +88,7 @@ func (d *OptionDBService) Close() {
 type DBApi interface {
 	Lock()
 	UnLock()
+	Close()
 	//kv database interface
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
@@ -100,7 +101,7 @@ type DBApi interface {
 	BatchCommit() error
 	//code db interface can rollback
 	StartUndoSession()
-	CreatObjectIndex(objectName string, indexName string, indexJson string) error
+	CreatObjectIndex(objectName string, indexName string) error
 	CreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error
 	SetObject(objectName string, objectValue interface{}) error
 	SetObjectByIndex(objectName string, indexName string, indexValue interface{}, objectValue interface{}) error
