@@ -119,8 +119,13 @@ func (o *FeildMap) Delete(key string) {
 	// remove from keys
 	for i, k := range o.keys {
 		if k == key {
-			o.keys = append(o.keys[:i], o.keys[i+1:]...)
-			break
+			if i == len(o.keys) - 1 {
+                               o.keys[i] = ""
+                               break
+                       } else {
+                               o.keys = append(o.keys[:i], o.keys[i+1:]...)
+                               break
+                       }
 		}
 	}
 	// remove from values
