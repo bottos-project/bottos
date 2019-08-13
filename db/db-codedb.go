@@ -25,9 +25,13 @@
 
 package db
 
-//StartUndoSession is to start undo session
-func (d *DBService) StartUndoSession() {
-	d.codeRepo.CallStartUndoSession(true)
+import (
+	"github.com/bottos-project/bottos/db/platform/codedb"
+)
+
+//BeginUndo is to start undo session
+func (d *DBService) BeginUndo(name string) *codedb.UndoSession {
+	return d.codeRepo.CallBeginUndo(name)
 }
 
 //CreatObjectIndex is to create object index when one object's attributed is going to
