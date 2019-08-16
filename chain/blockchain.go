@@ -95,8 +95,11 @@ func (bc *BlockChain) Init() error {
 
 //Close close chain cache
 func (bc *BlockChain) Close() {
-	log.Info("BlockChain: Close")
-	bc.blockCache.Reset()
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	bc.forkdb.Close()
+	log.Info("CHAIN closed")
 }
 
 func (bc *BlockChain) initChain() error {
@@ -266,6 +269,15 @@ func (bc *BlockChain) GetHeaderByNumber(number uint64) *types.Header {
 	return nil
 }
 
+//GetBlockByHash get block in forkdb(no matter which forks, linked or unlinked) and blockdb
+func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
+	block := bc.forkdb.GetBlock(hash)
+	if block != nil {
+		return block
+	}
+
+	return bc.blockDb.GetBlock(hash)
+}
 //GetBlockHashByNumber get block hash from chain by number
 func (bc *BlockChain) GetBlockHashByNumber(number uint64) common.Hash {
 	return GetBlockHashByNumber(bc.blockDb, number)
