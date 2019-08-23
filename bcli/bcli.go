@@ -72,33 +72,36 @@ func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 }
 
 func (cli *CLI) GetChainInfoOverHttp(http_url string) (*chain.GetInfoResponse_Result, error) {
-		getinfo := &chain.GetInfoRequest{}
-		req, _ := json.Marshal(getinfo)
-		req_new := bytes.NewBuffer([]byte(req))
-		httpRspBody, err := send_httpreq("GET", http_url, req_new)
-		if err != nil || httpRspBody == nil {
-			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
-			return nil, errors.New("Error!")
-		}
-		
-		var trxrespbody  TODO.ResponseStruct
-		
-		err = json.Unmarshal(httpRspBody, &trxrespbody)
-		
-		if err != nil {
-		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
-		    return nil, errors.New("Error!")
-		} else if trxrespbody.Errcode != 0 {
-		    fmt.Println("Error! ",trxrespbody.Errcode, ":", trxrespbody.Msg)
-		    return nil, errors.New("Error!")
-			
-		}
-		
-		b, _ := json.Marshal(trxrespbody.Result)
-		//cli.jsonPrint(b)
-		var chainInfo chain.GetInfoResponse_Result
-		json.Unmarshal(b, &chainInfo)
-		
+	getinfo := &chain.GetInfoRequest{}
+	req, _ := json.Marshal(getinfo)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("GET", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+		return nil, errors.New("Error!")
+	}
+
+	var trxrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+
+	if err != nil {
+		fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		return nil, errors.New("Error!")
+	} else if trxrespbody.Errcode != 0 {
+		fmt.Println("Error! ", trxrespbody.Errcode, ":", trxrespbody.Msg)
+		return nil, errors.New("Error!")
+
+	} else if trxrespbody.Result == nil {
+		fmt.Println("Error! trxrespbody.Result is empty!")
+		return nil, errors.New("Error!")
+	}
+
+	b, _ := json.Marshal(trxrespbody.Result)
+	//cli.jsonPrint(b)
+	var chainInfo chain.GetInfoResponse_Result
+	json.Unmarshal(b, &chainInfo)
+
 	return &chainInfo, nil
 }
 
