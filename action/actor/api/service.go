@@ -540,6 +540,13 @@ func (a *ApiService) GetPeers(ctx context.Context, req *api.GetPeersRequest, res
 	return nil
 }
 
+//GetHashForSign query account Brief
+func (a *ApiService) GetHashForSign(ctx context.Context, req *api.GetHashForSignRequest, resp *api.GetHashForSignResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
 //GetAccountBrief query account Brief
 func (a *ApiService) GetAccountBrief(ctx context.Context, req *api.GetAccountBriefRequest, resp *api.GetAccountBriefResponse) error {
 	resp.Errcode = 0
