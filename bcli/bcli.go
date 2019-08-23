@@ -144,34 +144,43 @@ func (cli *CLI) getBlockInfoOverHttp(http_url string, block_num uint64, block_ha
 	return &blockInfo, nil
 }
 
-func (cli *CLI) getAccountInfoOverHttp(name string, http_url string) (*chain.GetAccountResponse_Result, error) {
-		
-		getinfo := &chain.GetAccountRequest{AccountName:name}
-		req, _ := json.Marshal(getinfo)
-		req_new := bytes.NewBuffer([]byte(req))
-		httpRspBody, err := send_httpreq("POST", http_url, req_new)
-		if err != nil || httpRspBody == nil {
+func (cli *CLI) getAccountInfoOverHttp(name string, http_url string, silent ...bool) (*chain.GetAccountResponse_Result, error) {
+
+	getinfo := &chain.GetAccountRequest{AccountName: name}
+	req, _ := json.Marshal(getinfo)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		if len(silent) <= 0 {
 			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
-			return nil, errors.New("Error!")
 		}
-		
-		var respbody  TODO.ResponseStruct
-		
-		err = json.Unmarshal(httpRspBody, &respbody)
-		
-		if err != nil {
-		    fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
-		    return nil, errors.New("Error!")
-		} else if respbody.Errcode != 0 {
-		    fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
-		    return nil, errors.New("Error!") 
+		return nil, errors.New("Error!")
+	}
+
+	var respbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &respbody)
+
+	if err != nil {
+		if len(silent) <= 0 {
+			fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
 		}
-		
-		b, _ := json.Marshal(respbody.Result)
-		//cli.jsonPrint(b)
-		var accountInfo chain.GetAccountResponse_Result
-		json.Unmarshal(b, &accountInfo)
-		
+		return nil, errors.New("Error!")
+	} else if respbody.Errcode != 0 {
+		if len(silent) <= 0 {
+			fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		}
+		return nil, errors.New("Error!")
+	} else if respbody.Result == nil {
+		fmt.Println("Error! trxrespbody.Result is empty!")
+		return nil, errors.New("Error!")
+	}
+
+	b, _ := json.Marshal(respbody.Result)
+	//cli.jsonPrint(b)
+	var accountInfo chain.GetAccountResponse_Result
+	json.Unmarshal(b, &accountInfo)
+
 	return &accountInfo, nil
 }
 
