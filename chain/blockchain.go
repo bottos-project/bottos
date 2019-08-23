@@ -615,3 +615,14 @@ func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 
 	return InsertBlockSuccess
 }
+
+
+func (b *BlockChain) GetLastBlockNumber() (uint64, error) {
+	lastb := b.blockDb.GetLastBlock()
+	if lastb == nil {
+		return 0, fmt.Errorf("CHAIN last block not found")
+	}
+
+	lastBlockNum := lastb.GetNumber()
+	return lastBlockNum, nil
+}
