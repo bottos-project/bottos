@@ -481,10 +481,10 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 
 func (cli *CLI) getaccount(name string) {
 	//accountRsp, err := cli.client.GetAccount(context.TODO(), &chain.GetAccountRequest{AccountName: name})
-	
+
 	infourl := "http://" + ChainAddr + "/v1/account/info"
 	account, err := cli.getAccountInfoOverHttp(name, infourl)
-	
+
 	if err != nil || account == nil {
 		return
 	}
@@ -497,32 +497,324 @@ func (cli *CLI) getaccount(name string) {
 	account := accountRsp.GetResult()
 	*/
 	balance := big.NewInt(0)
-	mulval  := big.NewInt(100000000)
+	mulval := big.NewInt(100000000)
 
 	balanceResult, result := balance.SetString(account.Balance, 10)
 	if false == result {
-		fmt.Println("Error: balance.SetString failed. account: ", account)
+		fmt.Println("Error: balance.SetString Balance failed. account: ", account)
 		return
 	}
-	
+
 	var mulrestlt *big.Int = big.NewInt(0)
 	var modrestlt *big.Int = big.NewInt(0)
 
-	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval) 
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
 
 	if err != nil {
 		return
 	}
-	
-	mulval2  := big.NewInt(100000000)
+
+	mulval2 := big.NewInt(100000000)
 	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("    Account: %s\n", account.AccountName)
+	fmt.Printf("\n    Account: %s\n", account.AccountName)
+	fmt.Printf("    Authority: %v\n", account.Authority)
+	fmt.Printf("    Threshold: %d\n", account.Threshold)
 	fmt.Printf("    Balance: %d.%08d BTO\n", mulrestlt, modrestlt)
-  }
+	fmt.Printf("    Pubkey: %s\n\n", account.Pubkey)
+
+	balanceResult, result = balance.SetString(account.StakedBalance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString StakedBalance failed. account: ", account)
+		return
+	}
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    StakedBalance: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	balanceResult, result = balance.SetString(account.UnStakingBalance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString UnStakingBalance failed. account: ", account)
+		return
+	}
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    UnStakingBalance: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	balanceResult, result = balance.SetString(account.StakedSpaceBalance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString StakedSpaceBalance failed. account: ", account)
+		return
+	}
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    StakedSpaceBalance: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	balanceResult, result = balance.SetString(account.StakedTimeBalance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString StakedTimeBalance failed. account: ", account)
+		return
+	}
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    StakedTimeBalance: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	fmt.Printf("    UnStakingTimestamp: %d\n\n", account.UnStakingTimestamp)
+
+	if account.Resource == nil {
+		fmt.Printf("    Resource: N/A\n\n")
+	} else {
+		a, _ := json.MarshalIndent(&account.Resource, "     ", "\t")
+
+		fmt.Printf("    Resource: %v\n\n", string(a))
+	}
+
+	balanceResult, result = balance.SetString(account.UnClaimedBlockReward, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString UnClaimedBlockReward failed. account: ", account)
+		return
+	}
+	UnClaimedBlockReward := big.NewInt(0).Add(balanceResult, big.NewInt(0))
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    UnClaimedBlockReward: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	balanceResult, result = balance.SetString(account.UnClaimedVoteReward, 10)
+	UnClaimedVoteReward := big.NewInt(0).Add(balanceResult, big.NewInt(0))
+	if false == result {
+		fmt.Println("Error: balance.SetString UnClaimedVoteReward failed. account: ", account)
+		return
+	}
+
+	mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, balanceResult, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    UnClaimedVoteReward: %d.%08d BTO\n", mulrestlt, modrestlt)
+
+	UnClaimedTotalReward := big.NewInt(0).Add(UnClaimedBlockReward, UnClaimedVoteReward)
+	mulrestlt, err = safemath.U256Div(mulrestlt, UnClaimedTotalReward, mulval)
+
+	if err != nil {
+		return
+	}
+
+	mulval2 = big.NewInt(100000000)
+	modrestlt, err = safemath.U256Mod(modrestlt, UnClaimedTotalReward, mulval2)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("    UnClaimedTotalReward: %d.%08d BTO\n\n", mulrestlt, modrestlt)
+
+	if account.Vote == nil {
+		fmt.Printf("    Vote: N/A\n\n")
+	} else {
+		fmt.Printf("    Vote: %v\n\n", account.Vote)
+	}
+
+	if len(account.DeployContractList) <= 0 {
+		fmt.Printf("    Contracts: N/A\n\n")
+	} else {
+		fmt.Printf("    Contracts: %s\n\n", account.DeployContractList)
+	}
+
+}
+
+func sendTransaction(trx chain.Transaction) ([]byte, error) {
+	http_url := "http://" + ChainAddr + "/v1/transaction/send"
+	req, _ := json.Marshal(trx)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil {
+		fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return nil, err
+	}
+	if httpRspBody == nil {
+		fmt.Println("BcliSendTransaction Error:httpRspBody is null")
+		return nil, errors.New("deploy send contract resp is null")
+	}
+	return httpRspBody, nil
+}
+
+func getTransactionResp(httpRspBody []byte) (*chain.SendTransactionResponse, error) {
+	var respbody *chain.SendTransactionResponse
+	if err := json.Unmarshal(httpRspBody, &respbody); err != nil {
+		return nil, err
+	}
+
+	if respbody.Errcode != 0 {
+		fmt.Println("Deploy code error! ", respbody.Errcode, ":", respbody.Msg)
+		return respbody, errors.New(respbody.Msg)
+	}
+	return respbody, nil
+}
+
+func readContractFile(contractPath string) ([]byte, error) {
+	_, err := ioutil.ReadFile(contractPath)
+
+	if err != nil {
+		fmt.Printf("Open %s error: %v", contractPath, err)
+		return nil, err
+	}
+
+	contractFile, err := os.Open(contractPath)
+	defer contractFile.Close()
+
+	if err != nil {
+		fmt.Printf("Open %s error: %v", contractPath, err)
+		return nil, err
+	}
+
+	contractFileInfo, err := contractFile.Stat()
+	if err != nil {
+		fmt.Printf("Open %s error: %v", contractPath, err)
+		return nil, err
+	}
+
+	contractCode := make([]byte, contractFileInfo.Size())
+	if _, err := contractFile.Read(contractCode); err != nil {
+		fmt.Printf("Read %s error: %v", contractPath, err)
+		return nil, err
+	}
+
+	return contractCode, nil
+}
+
+func (cli *CLI) deploycontract(name string, codePath, abiPath string, user string, fileTypeInput string) {
+	contractCode, err := readContractFile(codePath)
+	if err != nil {
+		return
+	}
+
+	contractAbi, err := readContractFile(abiPath)
+	if err != nil {
+		return
+	}
+
+	//get file type(wasm or js)
+	var fileType vm.VmType
+	vmType, err := getCodeFileType(fileTypeInput)
+	if err != nil {
+		return
+	}
+	fileType = vmType
+
+	Abi, err := getAbibyContractName("bottos")
+	if err != nil {
+		return
+	}
+
+	//Marshal contract
+	mapStruct := buildContractMapStruct(contractCode, contractAbi, name, fileType)
+	param, _ := abi.MarshalAbiEx(mapStruct, &Abi, "bottos", "deploycontract")
+
+	//sign transaction
+	ptrx, err := signTransaction(cli, user, param)
+	if err != nil {
+		return
+	}
+
+	//send transaction
+	var deployContractRsp *chain.SendTransactionResponse
+
+	respBodyByte, err := sendTransaction(*ptrx)
+	if err != nil {
+		return
+	}
+	respBody, err := getTransactionResp(respBodyByte)
+	if err != nil || respBody == nil {
+		return
+	}
+
+	deployContractRsp = respBody
+
+	//show resp
+	/*fmt.Printf("\nPush transaction done for deploying contract %v.\n", name)
+	fmt.Printf("Trx: \n")
+
+	deployContractInfo := showContractInfo(name, fileType, contractCode, *ptrx)
+	cli.jsonPrint(deployContractInfo)*/
+	fmt.Printf("\nTrxHash: %v\n", deployContractRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+
+func signTransaction(cli *CLI, user string, param []byte) (*chain.Transaction, error) {
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, user, "bottos", "deploycontract", BytesToHex(param))
+	if err != nil || ptrx == nil {
+		fmt.Println("Deploy contract error! May be your wallet has not been created ok unlocked?")
+		return nil, err
+	}
+
+	return ptrx, nil
+}
 
 func showContractInfo(name string, fileType vm.VmType, ContractCodeVal []byte, trx chain.Transaction) []byte {
 	type PrintDeployCodeParam struct {
