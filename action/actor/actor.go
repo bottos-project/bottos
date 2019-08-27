@@ -47,19 +47,22 @@ var chainActorPid *actor.PID
 
 //MultiActor actor group
 type MultiActor struct {
-	apiActorPid      *actor.PID
-	netActorPid      *actor.PID
-	trxActorPid      *actor.PID
-	trxPoolActorPid      *actor.PID
+	apiActorPid       *actor.PID
+	netActorPid       *actor.PID
+	trxActorPid       *actor.PID
+	trxPoolActorPid   *actor.PID
 	trxPreHandleActor *actor.PID
-	chainActorPid    *actor.PID
-	producerActorPid *actor.PID
+	chainActorPid     *actor.PID
+	producerActorPid  *actor.PID
+	consensusActorPid *actor.PID
 }
 
+//GetTrxActor get net actor PID
 func (m *MultiActor) GetTrxActor() *actor.PID {
 	return m.trxActorPid
 }
 
+//GetTrxPreHandleActor get net actor PID
 func (m *MultiActor) GetTrxPreHandleActor() *actor.PID {
 	return m.trxPreHandleActor
 }
