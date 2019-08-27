@@ -138,7 +138,7 @@ func (p *ProducerActor) working() uint32 {
 		pendingBlockSize := uint32(len(data))
 		coreStat, err := p.roleIntf.GetCoreState()
 		if err != nil {
-			log.Info("GetGlobalPropertyRole failed")
+			log.Error("PRODUCER GetCoreState failed,begin rollback", err)
 			p.db.ResetSession()
 			return config.PRODUCER_TIME_OUT
 		}
@@ -169,21 +169,20 @@ func (p *ProducerActor) working() uint32 {
 			applyStart := common.MeasureStart()
 			pass, _, resReceipt := verifyTransactions(trx, version)
 			if pass == false {
-				log.Info("ApplyTransaction failed")
+				log.Errorf("PRODUCER verify transactions failed, trx %x, resReceipt %v", trx.Hash(), resReceipt)
 				p.db.ResetSubSession()
 				removeTrx = append(removeTrx, trx)
 				continue
 			}
-			log.Info("apply start elapse", common.Elapsed(applyStart))
+			log.Debug("PRODUCER apply start elapse", common.Elapsed(applyStart))
 			data, _ := bpl.Marshal(trx)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
 			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				p.db.ResetSubSession()
-				log.Info("Warning pending block size reach MaxBlockSize")
-				pendingTrx = append(pendingTrx, dtag)
-				continue
+				log.Error("PRODUCER pending block size reach MaxBlockSize ", pendingBlockSize)
+				break
 			}
 			p.db.Squash()
 
@@ -196,7 +195,8 @@ func (p *ProducerActor) working() uint32 {
 		p.db.ResetSession()
 		trxs = nil
 		if block != nil {
-			log.Infof("Generate block: hash: %x, delegate: %s, number:%v, trxn:%v,blockTime:%s\n", block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.Transactions), time.Unix(int64(block.Header.Timestamp), 0))
+			log.Errorf("PRODUCER block, hash: %x, delegate: %s, num:%v, trxn:%v, pendingTrxn:%v, blockTime:%s, blockSize %v\n",
+				block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.BlockTransactions), pendingTrxlen, time.Unix(int64(block.Header.Timestamp), 0), pendingBlockSize)
 			ApplyBlock(block)
 		}
 		return p.ins.CalcNextReportTime(block)

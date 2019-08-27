@@ -159,8 +159,8 @@ func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveB
 		ctx.Sender().Request(resp, ctx.Self())
 	}
 
-	if errcode == chain.InsertBlockSuccess {
-		req := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+	if errcode == berr.ErrNoError {
+		req := &message.RemovePendingBlockTrxsReq{Trxs: req.Block.BlockTransactions}
 		trxPoolActorPid.Tell(req)
 	}
 }
