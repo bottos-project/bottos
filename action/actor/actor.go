@@ -105,6 +105,7 @@ func registerActorMsgTbl(m *MultiActor) {
 
 	netactor.SetTrxPreHandleActorPid(m.trxPreHandleActor)     //p2p --> trx
 	netactor.SetChainActorPid(m.chainActorPid) //p2p --> chain
+	netactor.SetConsensusActorPid(m.consensusActorPid)    //p2p --> consensus
 }
 
 //GetTrxActorPID get trx actor pid
@@ -120,5 +121,5 @@ func (m *MultiActor) ActorsStop() {
 	m.netActorPid.Stop()
 	m.trxActorPid.Stop()
 	m.trxPoolActorPid.Stop()
-
+	m.consensusActorPid.Stop()
 }
