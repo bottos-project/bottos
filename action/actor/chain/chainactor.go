@@ -83,17 +83,17 @@ func handleSystemMsg(context actor.Context) bool {
 
 	switch context.Message().(type) {
 	case *actor.Started:
-		log.Info("BlockActor received started msg")
+		log.Info("ChainActor received started msg")
 	case *actor.Stopping:
-		log.Info("BlockActor received stopping msg")
+		log.Error("ChainActor received stopping msg")
 	case *actor.Restart:
-		log.Info("BlockActor received restart msg")
+		log.Error("ChainActor received restart msg")
 	case *actor.Restarting:
-		log.Info("BlockActor received restarting msg")
+		log.Error("ChainActor received restarting msg")
 	case *actor.Stop:
-		log.Info("BlockActor received Stop msg")
+		log.Error("ChainActor received Stop msg")
 	case *actor.Stopped:
-		log.Info("BlockActor received Stopped msg")
+		log.Error("ChainActor received Stopped msg")
 	default:
 		return false
 	}
