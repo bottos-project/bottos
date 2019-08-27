@@ -127,6 +127,8 @@ func (c *ChainActor) Receive(context actor.Context) {
 //HandleNewProducedBlock new block msg
 func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.InsertBlockReq) {
 	errcode := actorEnv.Chain.InsertBlock(req.Block)
+	log.Errorf("Insert New Produced Block, errorcode:%v, number:%v, time:%v, delegate:%v, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+		errcode, req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	if ctx.Sender() != nil {
 		resp := &message.InsertBlockRsp{
 			Hash:  req.Block.Hash(),
@@ -139,14 +141,16 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 		trxPoolActorPid.Tell(r)
 
 		BroadCastBlock(req.Block)
-		log.Infof("Broadcast block: block num:%v, trxn:%v, delegate: %s, hash: %x\n", req.Block.GetNumber(), len(req.Block.Transactions), req.Block.Header.Delegate, req.Block.Hash())
+		log.Infof("Broadcast block: number:%v, time:%v, delegate:%s, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+			req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	}
 }
 
 //HandleReceiveBlock receive block
 func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveBlock) {
 	errcode := actorEnv.Chain.InsertBlock(req.Block)
-
+	log.Errorf("InsertBlock, errorcode:%v, number:%v, time:%v, delegate:%v, trxn:%v, validatorn:%v, hash:%x, prevHash:%x\n",
+		errcode, req.Block.GetNumber(), common.TimeFormat(req.Block.GetTimestamp()), string(req.Block.GetDelegate()), len(req.Block.BlockTransactions), len(req.Block.ValidatorSet), req.Block.Hash(), req.Block.GetPrevBlockHash())
 	if ctx.Sender() != nil {
 		resp := &message.ReceiveBlockResp{
 			BlockNum: req.Block.GetNumber(),
