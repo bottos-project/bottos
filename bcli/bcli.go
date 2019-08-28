@@ -184,7 +184,7 @@ func (cli *CLI) getAccountInfoOverHttp(name string, http_url string, silent ...b
 	return &accountInfo, nil
 }
 
-func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
+func (cli *CLI) signTrx(trx *chain.Transaction, param []byte, seckey string) (string, error) {
 	ctrx := &types.BasicTransaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -207,8 +207,10 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte) (string, error) {
 	chainId, err := GetChainId()
 	h.Write([]byte(hex.EncodeToString(chainId)))
 	hashData := h.Sum(nil)
-	seckey, err := GetDefaultKey()
-	signdata, err := crypto.Sign(hashData, seckey)
+	//seckey, err := GetDefaultKey()
+	seckey2, _ := hex.DecodeString(seckey)
+	//do not use []byte(seckey) here.
+	signdata, err := crypto.Sign(hashData, seckey2)
 
 	return BytesToHex(signdata), err
 }
