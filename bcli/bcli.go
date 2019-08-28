@@ -882,16 +882,8 @@ func getCodeFileType(fileTypeInput string) (vm.VmType, error) {
 	}
 }
 
-func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
-	
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
-	
-	if err != nil {
-		fmt.Println("GetInfo error: ", err)
-		return
-	}
+func (cli *CLI) deploycode(name string, path string, user string, fileTypeInput string) {
+	var err error
 	_, err = ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("Open wasm file error: ", err)
@@ -903,6 +895,7 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 		fmt.Println("Open wasm file error: ", err)
 		return
 	}
+
 	var fileType vm.VmType
 
 	if fileTypeInput == "wasm" {
@@ -923,47 +916,39 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	}
 
 	Abi, abierr := getAbibyContractName("bottos")
-        if abierr != nil {
-           return
-        }
+	if abierr != nil {
+		return
+	}
 
 	var ContractCodeVal []byte
 	ContractCodeVal = make([]byte, fi.Size())
-        f.Read(ContractCodeVal)
+	f.Read(ContractCodeVal)
 	mapstruct := make(map[string]interface{})
-	
-        abi.Setmapval(mapstruct, "contract", name)
-        abi.Setmapval(mapstruct, "vm_type", uint8(fileType))
-        abi.Setmapval(mapstruct, "vm_version", uint8(0))
-	
+
+	abi.Setmapval(mapstruct, "contract", name)
+	abi.Setmapval(mapstruct, "vm_type", uint8(fileType))
+	abi.Setmapval(mapstruct, "vm_version", uint8(1))
+
 	abi.Setmapval(mapstruct, "contract_code", ContractCodeVal)
 	//fmt.Printf("contract_code: %x", ContractCodeVal)
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "deploycode")
 
-	trx := &chain.Transaction{
-		Version:     1,
-		CursorNum:   chainInfo.HeadBlockNum,
-		CursorLabel: chainInfo.CursorLabel,
-		Lifetime:    chainInfo.HeadBlockTime + 100,
-		Sender:      name,
-		Contract:    "bottos",
-		Method:      "deploycode",
-		Param:       BytesToHex(param),
-		SigAlg:      1,
-	}
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, user, "bottos", "deploycode", BytesToHex(param))
 
-	sign, err := cli.signTrx(trx, param)
-	if err != nil {
+	if err != nil || ptrx == nil {
+		fmt.Println("Deploy code error! May be your wallet has not been created ok unlocked?")
 		return
 	}
 
-	trx.Signature = sign
+	trx := *ptrx
+
 	var deployCodeRsp *chain.SendTransactionResponse
-	
+
 	http_method := "restful"
 
 	if http_method == "grpc" {
-		deployCodeRsp, err = cli.client.SendTransaction(context.TODO(), trx)
+		deployCodeRsp, err = cli.client.SendTransaction(context.TODO(), ptrx)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -975,27 +960,27 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 			return
 		}
 	} else {
-		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+		http_url := "http://" + ChainAddr + "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
-    		req_new := bytes.NewBuffer([]byte(req))
+		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
 		if err != nil || httpRspBody == nil {
-			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 			return
 		}
 		var respbody chain.SendTransactionResponse
 		json.Unmarshal(httpRspBody, &respbody)
-		
+
 		if respbody.Errcode != 0 {
-		    fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
-		    return
-			
+			fmt.Println("Deploy code error! ", respbody.Errcode, ":", respbody.Msg)
+			return
+
 		}
 
 		deployCodeRsp = &respbody
 	}
-	
-	fmt.Printf("Deploy contract: %v Succeed\n", name)
+
+	/*fmt.Printf("\nPush transaction done for deploying contract %v.\n", name)
 	fmt.Printf("Trx: \n")
 
 	type PrintDeployCodeParam struct {
@@ -1006,8 +991,8 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	}
 
 	pdcp := &PrintDeployCodeParam{}
-	pdcp.Name = name 
-	pdcp.VMType = byte(fileType) 
+	pdcp.Name = name
+	pdcp.VMType = byte(fileType)
 	pdcp.VMVersion = 1
 	codeHex := BytesToHex(ContractCodeVal[0:100])
 	pdcp.ContractCode = codeHex + "..."
@@ -1028,8 +1013,9 @@ func (cli *CLI) deploycode(name string, path string, fileTypeInput string) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %v\n", deployCodeRsp.Result.TrxHash)
+	cli.jsonPrint(b)*/
+	fmt.Printf("\nTrxHash: %v\n", deployCodeRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
 }
 
 func checkAbi(abiRaw []byte) error {
