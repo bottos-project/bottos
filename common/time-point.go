@@ -26,8 +26,9 @@
 package common
 
 import (
-	log "github.com/cihub/seelog"
 	"time"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/aristanetworks/goarista/monotime"
 )

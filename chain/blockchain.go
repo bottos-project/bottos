@@ -319,32 +319,31 @@ func (bc *BlockChain) committedBlockCallback(block *types.Block) {
 	}
 }
 
-
-//HeadBlockTime get lastest block time
+//HeadBlockTime get head block time
 func (bc *BlockChain) HeadBlockTime() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockTime
 }
 
-//HeadBlockNum get lastest block number
+//HeadBlockNum get head block number
 func (bc *BlockChain) HeadBlockNum() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockNum
 }
 
-//HeadBlockHash get lastest block hash
+//HeadBlockHash get head block hash
 func (bc *BlockChain) HeadBlockHash() common.Hash {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastBlockHash
 }
 
-//HeadBlockDelegate get current delegator
+//HeadBlockDelegate get delegate of head block
 func (bc *BlockChain) HeadBlockDelegate() string {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.CurrentDelegate
 }
 
-//LastConsensusBlockNum get lastest consensus block numnber
+//LastConsensusBlockNum get lib block num
 func (bc *BlockChain) LastConsensusBlockNum() uint64 {
 	coreState, _ := bc.roleIntf.GetChainState()
 	return coreState.LastConsensusBlockNum

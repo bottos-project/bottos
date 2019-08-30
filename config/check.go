@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 //SignKeyValidate validate the keypair is valid
@@ -38,7 +40,8 @@ func PortValidate(port int) (bool, error) {
 	return true, nil
 }
 
-func MongoUrlValidate(url string) (bool, error) {
+//MongoURLValidate validate the mongoDB Url is valid
+func MongoURLValidate(url string) (bool, error) {
 	if url == "" {
 		return true, nil
 	}
@@ -51,7 +54,8 @@ func MongoUrlValidate(url string) (bool, error) {
 	return true, nil
 }
 
-func IpValidate(ip string) (bool, error) {
+//IPValidate validate the IP is valid
+func IPValidate(ip string) (bool, error) {
 	if ip == "" {
 		return true, nil
 	}
