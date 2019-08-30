@@ -318,10 +318,10 @@ func (a *ApiService) GetAccount(ctx context.Context, req *api.GetAccountRequest,
 	return nil
 }
 
-//GetKeyValue query contract object
-func (a *ApiService) GetKeyValue(ctx context.Context, req *api.GetKeyValueRequest, resp *api.GetKeyValueResponse) error {
+//QueryDBValue query contract object
+func (a *ApiService) QueryDBValue(ctx context.Context, req *api.QueryDBValueRequest, resp *api.QueryDBValueResponse) error {
 	contract := req.Contract
-	object := req.Object
+	object := req.TableName
 	key := req.Key
 	value, err := a.env.RoleIntf.GetStrValue(contract, object, key)
 	if err != nil {
@@ -330,9 +330,9 @@ func (a *ApiService) GetKeyValue(ctx context.Context, req *api.GetKeyValueReques
 		return nil
 	}
 
-	resp.Result = &api.GetKeyValueResponse_Result{}
+	resp.Result = &api.QueryDBValueResponse_Result{}
 	resp.Result.Contract = contract
-	resp.Result.Object = object
+	resp.Result.TableName = object
 	resp.Result.Key = key
 	resp.Result.Value = value
 	resp.Errcode = 0
