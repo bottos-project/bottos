@@ -59,13 +59,23 @@ func IPValidate(ip string) (bool, error) {
 	if ip == "" {
 		return true, nil
 	}
-	ipAddr := net.ParseIP(ip)
-	if ipAddr.To4() == nil && ipAddr.To16() == nil {
-		return false, errors.New("not an IPv4 or IPv6 address")
-	} else {
+	if ip == "localhost" {
 		return true, nil
 	}
+	ipAddr := net.ParseIP(ip)
+	if ipAddr == nil {
+		return false, errors.New("not an validate IPv4 or IPv6 address")
+	}
+
+	// specialIP := ipAddr.IsInterfaceLocalMulticast() || ipAddr.IsMulticast() || ipAddr.IsUnspecified() ||
+	// 	(ipAddr.To4() != nil && ipAddr.Equal(net.IPv4(255, 255, 255, 255))) ||
+	// 	ipAddr[15] == 0 || ipAddr[15] == 255
+	if ipAddr.To4() == nil && ipAddr.To16() == nil {
+		return false, errors.New("not an validate IPv4 or IPv6 address")
+	}
+	return true, nil
 }
+
 
 func IpValidateAll(ipAddrs []string) (bool, error) {
 	if len(ipAddrs) > 0 {
