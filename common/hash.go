@@ -132,7 +132,7 @@ func NumberToBytes(num interface{}, bits int) []byte {
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.BigEndian, num)
 	if err != nil {
-		log.Infof("NumberToBytes failed:", err)
+		log.Errorf("COMMON NumberToBytes failed:", err)
 	}
 
 	return buf.Bytes()[buf.Len()-(bits/8):]
