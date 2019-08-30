@@ -50,7 +50,6 @@ type BlockChainInterface interface {
 	GetHeaderByNumber(number uint64) *types.Header
 	GetTransaction(hash common.Hash) *types.BlockTransaction
 	GetCommittedTransaction(hash common.Hash) *types.BlockTransaction
-	GetLastBlockNumber() (uint64, error)
 
 	HeadBlockTime() uint64
 	HeadBlockNum() uint64

@@ -44,7 +44,6 @@ import (
 )
 
 //BlockChain the chain info
-//BlockChain the chain info
 type BlockChain struct {
 	dbInst   *db.DBService
 	blockDb  *BlockDB
