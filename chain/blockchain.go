@@ -202,9 +202,23 @@ func (bc *BlockChain) loadDB(ctx *cli.Context) error {
 	return nil
 }
 
+func (bc *BlockChain) makeGenesisBlock() *types.Block {
+	header := &types.Header{
+		Version: 1,
+		Number:  0,
+		//PrevBlockHash: config.GetChainID(),
+		Timestamp: config.Genesis.GenesisTime,
+		Delegate:  []byte(config.BOTTOS_CONTRACT_NAME),
+	}
+
+	var trxs []*types.BlockTransaction
+	block := types.NewBlock(header, trxs)
+
+	return block
+}
 
 //RegisterHandledBlockCallback call back register
-func (bc *BlockChain) RegisterHandledBlockCallback(cb HandledBlockCallback) {
+func (bc *BlockChain) RegisterHandledBlockCallback(cb BlockCallback) {
 	bc.handledBlockCB = append(bc.handledBlockCB, cb)
 }
 
@@ -277,14 +291,16 @@ func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 
 	return bc.blockDb.GetBlock(hash)
 }
+
 //GetBlockHashByNumber get block hash from chain by number
 func (bc *BlockChain) GetBlockHashByNumber(number uint64) common.Hash {
-	return GetBlockHashByNumber(bc.blockDb, number)
+	return bc.blockDb.GetBlockHashByNumber(number)
 }
 
-//WriteBlock write block to chain
+//WriteBlock write block to blockdb
 func (bc *BlockChain) WriteBlock(block *types.Block) error {
-	return WriteBlock(bc.blockDb, block)
+	err := bc.blockDb.WriteBlock(block)
+	return err
 }
 
 func (bc *BlockChain) handledBlockCallback(block *types.Block) {
