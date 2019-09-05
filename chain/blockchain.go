@@ -235,16 +235,17 @@ func (bc *BlockChain) HasBlock(hash common.Hash) bool {
 	return HasBlock(bc.blockDb, hash)
 }
 
-//GetBlock get block from cache and chain by hash
+//GetBlock get block from forkdb main fork and blockdb by hash
 func (bc *BlockChain) GetBlock(hash common.Hash) *types.Block {
 	// cache
-	block := bc.blockCache.GetBlock(hash)
+	block := bc.forkdb.GetMainForkBlock(hash)
 	if block != nil {
 		return block
 	}
 
-	return GetBlock(bc.blockDb, hash)
+	return bc.blockDb.GetBlock(hash)
 }
+
 
 //GetBlockByHash get block from chain by hash
 func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
