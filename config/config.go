@@ -312,6 +312,16 @@ func LoadConfig(ctx *cli.Context) error {
 	return nil
 }
 
+
+func GetDelegateSignKey(pubkey string) ([]byte, error) {
+	if pubkey == BtoConfig.Delegate.Signature.PublicKey {
+		return common.HexStringToBytes(BtoConfig.Delegate.Signature.PrivateKey), nil
+	}
+
+	return nil, fmt.Errorf("Not Found")
+}
+
+
 func parsePeerListCLI(raw string) ([]string, error) {
 	var peerList []string
 	val := strings.Replace(raw, " ", "", -1)
