@@ -150,17 +150,17 @@ func GetChainID() []byte {
 }
 
 func loadConfigFile(fn string) error {
-	file, e := loadConfigJson(fn)
-	if e != nil {
-		return fmt.Errorf("Load config file error: ", e)
+	f, err := os.Open(fn)
+	if err != nil {
+		return err
 	}
+	defer f.Close()
 
-	e = json.Unmarshal(file, &Param)
-	if e != nil {
-		return fmt.Errorf("Parse config file error: %v", e)
+	err = toml.NewDecoder(bufio.NewReader(f)).Decode(&BtoConfig)
+	if _, ok := err.(*toml.LineError); ok {
+		err = errors.New(fn + ", " + err.Error())
 	}
-
-	return nil
+	return err
 }
 
 func loadGenesisFile(fn string) error {
