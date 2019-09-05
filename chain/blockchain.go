@@ -30,10 +30,7 @@ import (
 	"sync"
 	"unsafe"
 
-	log "github.com/cihub/seelog"
-
-	"fmt"
-
+	"github.com/bottos-project/bottos/cmd"
 	"github.com/bottos-project/bottos/common"
 	berr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
@@ -59,18 +56,20 @@ type BlockChain struct {
 }
 
 //CreateBlockChain create a chain
-func CreateBlockChain(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
-	blockCache, err := CreateBlockChainCache()
+func CreateBlockChain(db *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
+	forkDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/forkdb")
+	forkdb, err := CreateForkDB(forkDBPath)
 	if err != nil {
 		return nil, err
 	}
 
 	bc := &BlockChain{
-		blockDb:        dbInstance,
-		blockCache:     blockCache,
-		roleIntf:       roleIntf,
-		nc:             nc,
-		handledBlockCB: []HandledBlockCallback{},
+		dbInst:   db,
+		blockDb:  NewBlockDB(db),
+		forkdb:   forkdb,
+		roleIntf: roleIntf,
+		nc:       nc,
+		trxPool:  nil,
 	}
 
 	return bc, nil
