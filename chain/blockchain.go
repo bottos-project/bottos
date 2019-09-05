@@ -366,6 +366,60 @@ func (bc *BlockChain) initBlockCache() error {
 		return err
 	}
 
+//InsertBlock insert the latest block to block chain.
+func (bc *BlockChain) InsertBlock(block *types.Block) berr.ErrCode {
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	if block.GetNumber() <= bc.forkdb.GetStartBlockNum() {
+		return bc.checkConsensusedBlock(block)
+	}
+
+	if err := version.CheckBlock(block, "InsertBlock"); err != berr.ErrNoError {
+		return err
+	}
+
+	newHeadBlock, errcode := bc.forkdb.Insert(block)
+	if errcode != berr.ErrNoError {
+		log.Errorf("ForkDB insert error: %v", errcode)
+		return errcode
+	}
+
+	session := bc.dbInst.GetSession()
+	if session != nil {
+		bc.dbInst.ResetSession()
+	}
+
+	if newHeadBlock.GetPrevBlockHash() != bc.HeadBlockHash() {
+		return bc.processSwitchFork(newHeadBlock)
+	}
+
+	session = bc.dbInst.BeginUndo(config.PRIMARY_TRX_SESSION)
+	errcode = bc.handleBlock(block, false)
+	if errcode != berr.ErrNoError {
+		bc.dbInst.ResetSession()
+		bc.forkdb.Remove(block)
+		return errcode
+	}
+
+	chainSate, _ := bc.roleIntf.GetChainState()
+	lastLib := chainSate.LastConsensusBlockNum
+	validated := bc.CheckAcceptedValidators(block)
+	if validated {
+		bc.updateLib(block)
+		bc.updateProduceTransfering(block)
+	}
+	bc.dbInst.Push(session)
+	if validated {
+		bc.commitLib(block, lastLib)
+	}
+	bc.handledBlockCallback(block)
+
+	fmt.Printf("InsertBlock, number:%v, time:%v, delegate:%v, trxn:%v, hash:%x, prevHash:%x, version:%v\n",
+		block.GetNumber(), common.TimeFormat(block.GetTimestamp()), string(block.GetDelegate()), len(block.BlockTransactions), block.Hash(), block.GetPrevBlockHash(), version.GetStringVersion(block.GetVersion()))
+
+	return berr.ErrNoError
+}
 	return nil
 }
 
