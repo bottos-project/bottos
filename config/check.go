@@ -76,11 +76,23 @@ func IPValidate(ip string) (bool, error) {
 	return true, nil
 }
 
-
-func IpValidateAll(ipAddrs []string) (bool, error) {
+//AddressValidateAll validate the IP:port is valid
+func AddressValidateAll(ipAddrs []string) (bool, error) {
 	if len(ipAddrs) > 0 {
-		for _, ip := range ipAddrs {
-			boolFlag, err := IpValidate(ip)
+		for _, address := range ipAddrs {
+			addressPair := strings.Split(address, ":")
+			if len(addressPair) < 2 {
+				return false, errors.New("Address should be like IP:Port")
+			}
+			boolFlag, err := IPValidate(addressPair[0])
+			if err != nil {
+				return boolFlag, err
+			}
+			port, err := strconv.Atoi(addressPair[1])
+			if err != nil {
+				return false, errors.New("Address should be like IP:Port, make sure the port is valid")
+			}
+			boolFlag, err = PortValidate(port)
 			if err != nil {
 				return boolFlag, err
 			}
