@@ -101,6 +101,53 @@ func (d *DBService) Commit(revision uint64) error {
 func (d *DBService) Rollback() error {
 	return d.codeRepo.CallRollback()
 }
+
 func (d *DBService) RollbackAll() error {
 	return d.codeRepo.CallRollbackAll()
+}
+
+func (d *DBService) AddObject(object string) {
+	d.codeRepo.CallAddObject(object)
+}
+func (d *DBService) GetSession() *codedb.UndoSession {
+	return d.codeRepo.CallGetSession()
+}
+func (d *DBService) GetSessionEx() *codedb.UndoSession {
+	return d.codeRepo.CallGetSessionEx()
+}
+func (d *DBService) ResetSession() error {
+	return d.codeRepo.CallResetSession()
+}
+func (d *DBService) ResetSubSession() error {
+	return d.codeRepo.CallResetSubSession()
+}
+func (d *DBService) FreeSessionEx() error {
+	return d.codeRepo.CallFreeSessionEx()
+}
+func (d *DBService) Squash() {
+	d.codeRepo.CallSquash()
+}
+
+func (d *DBService) UndoFlush() {
+	d.codeRepo.CallUndoFlush()
+}
+func (d *DBService) LoadStateDB() {
+	d.codeRepo.CallLoadStateDB()
+}
+
+func (d *DBService) ReleaseUndoInfo() {
+	d.codeRepo.CallReleaseUndoInfo()
+}
+
+func (d *DBService) Push(session *codedb.UndoSession) {
+	d.codeRepo.CallPush(session)
+}
+func (d *DBService) PushEx(session *codedb.UndoSession) {
+	d.codeRepo.CallPushEx(session)
+}
+func (d *DBService) Lock() {
+	d.codeRepo.CallGlobalLock()
+}
+func (d *DBService) UnLock() {
+	d.codeRepo.CallGlobalUnLock()
 }
