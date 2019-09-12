@@ -72,9 +72,19 @@ func (d *DBService) GetAllObjects(keyName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjects(keyName)
 }
 
+//GetAllObjectsFilter is to get all objects by keyName
+func (d *DBService) GetAllObjectsFilter(keyName string) ([]string, error) {
+	return d.codeRepo.CallGetAllObjectsFilter(keyName)
+}
+
 //GetAllObjectsSortByIndex is to get all objects by sorted index
 func (d *DBService) GetAllObjectsSortByIndex(indexName string) ([]string, error) {
 	return d.codeRepo.CallGetAllObjectsSortByIndex(indexName)
+}
+
+//GetAllObjectsSortByIndex is to get all objects by sorted index
+func (d *DBService) GetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greaterThan string) ([]string, error) {
+	return d.codeRepo.CallGetObjectsWithinRangeByIndex(indexName, lessOrEqual, greaterThan)
 }
 
 //DeleteObject is to delete object by object and key
