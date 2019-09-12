@@ -431,6 +431,9 @@ func (nc *NativeContract) checkCode(code []byte) error {
 	return nil
 }
 
+func (nc *NativeContract) generateExContractName(contractName string, sender string) string {
+	return contractName + "@" + sender
+}
 func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
