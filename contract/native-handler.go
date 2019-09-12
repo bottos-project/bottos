@@ -434,6 +434,20 @@ func (nc *NativeContract) checkCode(code []byte) error {
 func (nc *NativeContract) generateExContractName(contractName string, sender string) string {
 	return contractName + "@" + sender
 }
+func (nc *NativeContract) saveContractNametoAccount(accountName string, contractName string, ctx *Context) berr.ErrCode {
+	account, _ := ctx.RoleIntf.GetAccount(accountName)
+	if nil == account {
+		return berr.ErrAccountNameIllegal
+	}
+
+	if len(account.ContractName) < int(config.MAX_CONTRACT_NUM_PER_ACCOUNT) {
+		account.ContractName = append(account.ContractName, contractName)
+		ctx.RoleIntf.SetAccount(account.AccountName, account)
+		return berr.ErrNoError
+	}
+
+	return berr.ErrContractNumReachMaxPerAccount
+}
 func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
 	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
