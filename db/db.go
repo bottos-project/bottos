@@ -100,7 +100,7 @@ type DBApi interface {
 	BatchDelete(key []byte)
 	BatchCommit() error
 	//code db interface can rollback
-	StartUndoSession()
+
 	CreatObjectIndex(objectName string, indexName string) error
 	CreatObjectMultiIndex(objectName string, indexName string, indexJson string, secKey string) error
 	SetObject(objectName string, objectValue interface{}) error
