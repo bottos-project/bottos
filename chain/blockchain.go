@@ -91,6 +91,14 @@ func (bc *BlockChain) Init() error {
 	return nil
 }
 
+func (bc *BlockChain) SetTrxPool(trxPool *transaction.TrxPool) {
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	bc.trxPool = trxPool
+}
+
+
 //Close close chain cache
 func (bc *BlockChain) Close() {
 	bc.dbInst.Lock()
