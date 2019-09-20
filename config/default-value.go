@@ -41,7 +41,7 @@ const CONSENSUS_BLOCKS_PERCENT uint32 = 70
 const MAX_DELEGATE_VOTES uint32 = 40
 
 // DELEGATE_PATICIPATION define delegate paticipation
-const DELEGATE_PATICIPATION uint64 = 33
+const DELEGATE_PATICIPATION uint32 = 33
 
 // MAX_BLOCK_SIZE define max block size
 const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
