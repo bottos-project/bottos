@@ -200,6 +200,11 @@ func loadGenesisFile(fn string) error {
 	return nil
 }
 
+func SetGenesisConfig(config *GenesisConfig) {
+	Genesis = *config
+	data, _ := bpl.Marshal(Genesis)
+	ChainID = common.DoubleSha256(data)
+}
 func timeFromRFC3339(ts string) (uint64, error) {
 	if !strings.HasSuffix(ts, "Z") {
 		ts += "Z"

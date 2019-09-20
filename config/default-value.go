@@ -63,6 +63,8 @@ const MAX_ACCOUNT_NAME_LENGTH int = 16
 // ACCOUNT_NAME_REGEXP define account name format
 const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
 
+// HASH_SHA256_LENGTH define sha256 hash value length
+const HASH_SHA256_LENGTH int = 32
 // DEFAULT_BLOCK_TIME_LIMIT define default block time limit when producing block
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 
