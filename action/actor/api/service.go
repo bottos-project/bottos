@@ -533,8 +533,34 @@ func (a *ApiService) GetForecastResBalance(ctx context.Context, req *api.GetFore
 
 	return nil
 }
+
+//ConnectPeerByAddress query peers
+func (a *ApiService) ConnectPeerByAddress(ctx context.Context, req *api.ConnectPeerByAddressRequest, resp *api.ConnectPeerByAddressResponse) error {
+	resp.Errcode = 0
+	return nil
+}
+
+//DisconnectPeerByAddress query peers
+func (a *ApiService) DisconnectPeerByAddress(ctx context.Context, req *api.DisconnectPeerByAddressRequest, resp *api.DisconnectPeerByAddressResponse) error {
+	resp.Errcode = 0
+	return nil
+}
+
+//GetPeerStateByAddress query peers
+func (a *ApiService) GetPeerStateByAddress(ctx context.Context, req *api.GetPeerStateByAddressRequest, resp *api.GetPeerStateByAddressResponse) error {
+	resp.Errcode = 0
+	return nil
+}
+
 //GetPeers query peers
 func (a *ApiService) GetPeers(ctx context.Context, req *api.GetPeersRequest, resp *api.GetPeersResponse) error {
+	resp.Errcode = 0
+
+	return nil
+}
+
+//GetHashForSign query account Brief
+func (a *ApiService) GetHashForSign(ctx context.Context, req *api.GetHashForSignRequest, resp *api.GetHashForSignResponse) error {
 	resp.Errcode = 0
 
 	return nil

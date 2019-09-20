@@ -136,8 +136,8 @@ func (c *ChainActor) HandleNewProducedBlock(ctx actor.Context, req *message.Inse
 		}
 		ctx.Sender().Request(resp, ctx.Self())
 	}
-	if errcode == chain.InsertBlockSuccess {
-		r := &message.RemovePendingTrxsReq{Trxs: req.Block.Transactions}
+	if errcode == berr.ErrNoError {
+		r := &message.RemovePendingBlockTrxsReq{Trxs: req.Block.BlockTransactions}
 		trxPoolActorPid.Tell(r)
 
 		BroadCastBlock(req.Block)
