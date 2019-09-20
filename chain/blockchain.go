@@ -445,6 +445,19 @@ func (bc *BlockChain) ImportBlock(block *types.Block) berr.ErrCode {
 
 	return berr.ErrNoError
 }
+func (bc *BlockChain) popBlock() error {
+	session := bc.dbInst.GetSession()
+	if session != nil {
+		bc.dbInst.ResetSession()
+	}
+	headBlockHash := bc.HeadBlockHash()
+
+	b := bc.GetBlockByHash(headBlockHash)
+	if b == nil {
+		return fmt.Errorf("CHAIN block not found, block hash %x", headBlockHash)
+	}
+
+	bc.dbInst.Rollback()
 	return nil
 }
 
