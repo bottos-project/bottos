@@ -114,8 +114,14 @@ type DBApi interface {
 	GetAllObjectsSortByIndex(indexName string) ([]string, error)
 	GetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greater string) ([]string, error)
 	DeleteObject(objectName string, key string) (string, error)
-	Commit()
-	Rollback()
+	//db undo interface
+	LoadStateDB()
+	AddObject(string)
+	Commit(uint64) error
+	Rollback() error
+	RollbackAll() error
+	UndoFlush()
+	ReleaseUndoInfo()
 	Reset() //TODO
 }
 

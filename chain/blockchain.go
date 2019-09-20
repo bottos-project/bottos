@@ -91,6 +91,14 @@ func (bc *BlockChain) Init() error {
 	return nil
 }
 
+func (bc *BlockChain) SetTrxPool(trxPool *transaction.TrxPool) {
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	bc.trxPool = trxPool
+}
+
+
 //Close close chain cache
 func (bc *BlockChain) Close() {
 	bc.dbInst.Lock()
@@ -416,6 +424,23 @@ func (bc *BlockChain) InsertBlock(block *types.Block) berr.ErrCode {
 	bc.handledBlockCallback(block)
 
 	fmt.Printf("InsertBlock, number:%v, time:%v, delegate:%v, trxn:%v, hash:%x, prevHash:%x, version:%v\n",
+		block.GetNumber(), common.TimeFormat(block.GetTimestamp()), string(block.GetDelegate()), len(block.BlockTransactions), block.Hash(), block.GetPrevBlockHash(), version.GetStringVersion(block.GetVersion()))
+
+	return berr.ErrNoError
+}
+func (bc *BlockChain) ImportBlock(block *types.Block) berr.ErrCode {
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	errcode := bc.handleBlock(block, true)
+	if errcode != berr.ErrNoError {
+		return errcode
+	}
+
+	bc.updateImportLib(block)
+	bc.handledBlockCallback(block)
+
+	fmt.Printf("ImportBlock, number:%v, time:%v, delegate:%v, trxn:%v, hash:%x, prevHash:%x, version:%v\n",
 		block.GetNumber(), common.TimeFormat(block.GetTimestamp()), string(block.GetDelegate()), len(block.BlockTransactions), block.Hash(), block.GetPrevBlockHash(), version.GetStringVersion(block.GetVersion()))
 
 	return berr.ErrNoError
