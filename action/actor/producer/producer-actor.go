@@ -122,17 +122,17 @@ func (p *ProducerActor) working() uint32 {
 	if p.ins.IsReady() {
 		p.db.Lock()
 		defer p.db.UnLock()
-		log.Infof("begin to producer block ")
+		start := common.MeasureStart()
 		p.pendingTxSession = p.db.GetSession()
 		if p.pendingTxSession != nil {
 			log.Infof("p.pendingTxSession need to reset ")
 			p.db.ResetSession()
 		}
-		log.Infof("begin session......... ")
 		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
 
 		trxs := GetAllPendingTrx()
 		log.Info("get trx times", common.Elapsed(start))
+		pendingTrxlen := len(trxs)
 		block := &types.Block{}
 		data, _ := bpl.Marshal(block)
 		pendingBlockSize := uint32(len(data))
@@ -175,7 +175,13 @@ func (p *ProducerActor) working() uint32 {
 				continue
 			}
 			log.Debug("PRODUCER apply start elapse", common.Elapsed(applyStart))
-			data, _ := bpl.Marshal(trx)
+
+			//add BlockTransaction
+			dtag := new(types.BlockTransaction)
+			dtag.Transaction = trx
+			dtag.ResourceReceipt = resReceipt
+
+			data, _ := bpl.Marshal(dtag)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
 			log.Info("pendingBlockSize ", pendingBlockSize)
 
@@ -197,7 +203,15 @@ func (p *ProducerActor) working() uint32 {
 		if block != nil {
 			log.Errorf("PRODUCER block, hash: %x, delegate: %s, num:%v, trxn:%v, pendingTrxn:%v, blockTime:%s, blockSize %v\n",
 				block.Hash(), block.Header.Delegate, block.GetNumber(), len(block.BlockTransactions), pendingTrxlen, time.Unix(int64(block.Header.Timestamp), 0), pendingBlockSize)
-			ApplyBlock(block)
+
+			if config.BtoConfig.Delegate.Solo == false {
+				ConsensusProducedBlock(block)
+			} else {
+				AddBlock(block)
+			}
+
+		} else {
+			return config.PRODUCER_TIME_OUT
 		}
 		return p.ins.CalcNextReportTime(block)
 	}
