@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -30,36 +30,10 @@ import (
 )
 
 var apiactorPid *actor.PID
-var netActor *actor.PID
 
 // SetApiActorPid is to save api actor
 func SetApiActorPid(apid *actor.PID) {
 	apiactorPid = apid
 }
 
-// SetNetActorPid is to save net actor
-func SetNetActorPid(pid *actor.PID) {
-	netActor = pid
-}
 
-func sendTrxRsp(trxRsp uint64, pid *actor.PID) {
-
-	pid.Tell("pushTrxRsp")
-	/*
-		pushTrxReq := &types.Transaction{
-			RefBlockNum: 11,
-			Sender:      22,
-		}
-
-			trxactorPid.Tell(pushTrxReq)
-
-			f := trxactorPid.RequestFuture(pushTrxReq, 5000*time.Millisecond)
-			es, err := f.Result() // waits for pid to reply
-
-			log.Infof("this is es err", es, err)
-	*/
-	//result, _ := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
-
-	//log.Info(result)
-
-}
