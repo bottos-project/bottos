@@ -81,9 +81,10 @@ func InitActors(env *env.ActorEnv) *MultiActor {
 		netactor.NewNetActor(env),
 		trxactor.NewTrxActor(),
 		trxpoolactor.NewTrxPoolActor(),
-		trxprehandleactor.NewTrxPreHandleActor(),
+		trxprehandleactor.NewTrxPreHandleActor(env),
 		chainactor.NewChainActor(env),
 		produceractor.NewProducerActor(env),
+		consensusactor.NewConsensusActor(env),
 	}
 	registerActorMsgTbl(mActor)
 	return mActor
@@ -94,18 +95,26 @@ func registerActorMsgTbl(m *MultiActor) {
 	log.Info("RegisterActorMsgTbl")
 	apiactor.SetTrxPreHandleActorPid(m.trxPreHandleActor) // api --> trx
 	restactor.SetTrxPreHandleActorPid(m.trxPreHandleActor) // api --> trx
+	walletrestactor.SetTrxPreHandleActorPid(m.trxPreHandleActor) // api --> trx
 	apiactor.SetChainActorPid(m.chainActorPid) // api --> chain
 	restactor.SetChainActorPid(m.chainActorPid)	// restapi --> chain
+	//walletrestactor.SetChainActorPid(m.chainActorPid)            // restapi --> chain
 	trxactor.SetApiActorPid(m.apiActorPid)          // trx --> api
 	produceractor.SetChainActorPid(m.chainActorPid) // producer --> chain
 	produceractor.SetTrxPoolActorPid(m.trxPoolActorPid)     // producer --> trx
 	produceractor.SetNetActorPid(m.netActorPid)     // producer --> chain
+	produceractor.SetConsensusActorPid(m.consensusActorPid)      // producer --> consensus
+
 	chainactor.SetTrxPoolActorPid(m.trxPoolActorPid)        // chain --> trx
 	chainactor.SetNetActorPid(m.netActorPid)        // chain --> net
 
 	netactor.SetTrxPreHandleActorPid(m.trxPreHandleActor)     //p2p --> trx
 	netactor.SetChainActorPid(m.chainActorPid) //p2p --> chain
 	netactor.SetConsensusActorPid(m.consensusActorPid)    //p2p --> consensus
+
+	consensusactor.SetChainActorPid(m.chainActorPid) //consensus --> chain
+	consensusactor.SetNetActorPid(m.netActorPid)     //consensus --> p2p
+
 }
 
 //GetTrxActorPID get trx actor pid
