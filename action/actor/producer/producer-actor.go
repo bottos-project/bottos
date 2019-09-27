@@ -78,7 +78,7 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 	switch msg := context.Message().(type) {
 
 	case *actor.Started:
-		log.Infof("ProducerActor received started msg: %s", msg)
+		log.Error("PRODUCER received started msg ", msg)
 
 		context.SetReceiveTimeout(time.Duration(config.PRODUCER_TIME_OUT) * time.Millisecond)
 
@@ -87,19 +87,19 @@ func (p *ProducerActor) handleSystemMsg(context actor.Context) bool {
 		context.SetReceiveTimeout(time.Duration(elapse) * time.Millisecond)
 
 	case *actor.Stopping:
-		log.Info("ProducerActor received stopping msg")
+		log.Error("PRODUCER received stopping msg")
 
 	case *actor.Restart:
-		log.Info("ProducerActor received restart msg")
+		log.Error("PRODUCER received restart msg")
 
 	case *actor.Restarting:
-		log.Info("ProducerActor received restarting msg")
+		log.Error("PRODUCER received restarting msg")
 
 	case *actor.Stop:
-		log.Info("ProducerActor received Stop msg")
+		log.Error("PRODUCER received Stop msg")
 
 	case *actor.Stopped:
-		log.Info("ProducerActor received Stopped msg")
+		log.Error("PRODUCER received Stopped msg")
 
 	default:
 		return false
@@ -115,7 +115,7 @@ func (p *ProducerActor) Receive(context actor.Context) {
 		return
 	}
 
-	log.Error("ProducerActor received Unknown msg")
+	log.Error("PRODUCER received Unknown msg")
 }
 func (p *ProducerActor) working() uint32 {
 
@@ -125,13 +125,13 @@ func (p *ProducerActor) working() uint32 {
 		start := common.MeasureStart()
 		p.pendingTxSession = p.db.GetSession()
 		if p.pendingTxSession != nil {
-			log.Infof("p.pendingTxSession need to reset ")
+			log.Debug("PRODUCER p.pendingTxSession need to reset")
 			p.db.ResetSession()
 		}
 		p.pendingTxSession = p.db.BeginUndo(config.PRIMARY_TRX_SESSION)
 
 		trxs := GetAllPendingTrx()
-		log.Info("get trx times", common.Elapsed(start))
+		log.Debug("PRODUCER get trx times", common.Elapsed(start))
 		pendingTrxlen := len(trxs)
 		block := &types.Block{}
 		data, _ := bpl.Marshal(block)
@@ -183,7 +183,6 @@ func (p *ProducerActor) working() uint32 {
 
 			data, _ := bpl.Marshal(dtag)
 			pendingBlockSize += uint32(unsafe.Sizeof(data))
-			log.Info("pendingBlockSize ", pendingBlockSize)
 
 			if pendingBlockSize > coreStat.Config.MaxBlockSize {
 				p.db.ResetSubSession()
@@ -193,7 +192,6 @@ func (p *ProducerActor) working() uint32 {
 			p.db.Squash()
 
 			pendingBlockTrx = append(pendingBlockTrx, dtag)
-			log.Info("pack apply elapse", common.Elapsed(applyStart))
 		}
 
 		removeTransaction(removeTrx)
