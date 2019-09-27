@@ -167,9 +167,9 @@ func (c *ChainActor) HandleReceiveBlock(ctx actor.Context, req *message.ReceiveB
 
 //HandleQueryTrxReq query trx
 func (c *ChainActor) HandleQueryTrxReq(ctx actor.Context, req *message.QueryTrxReq) {
-	tx := actorEnv.TxStore.GetTransaction(req.TrxHash)
+	tx := actorEnv.Chain.GetTransaction(req.TrxHash)
 	if ctx.Sender() != nil {
-		resp := &message.QueryTrxResp{}
+		resp := &message.QueryBlockTrxResp{}
 		if tx == nil {
 			resp.Error = log.Errorf("Transaction not found")
 		} else {
