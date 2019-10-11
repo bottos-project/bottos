@@ -372,6 +372,666 @@ func (cli *CLI) transfer(from, to string, amount big.Int, memo string) {
 	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
 }
 
+func (cli *CLI) newmsignaccount(name string, authority string, threshold uint32, referrer string) {
+
+
+    //0check-name
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	account, _ := cli.getAccountInfoOverHttp(name, infourl, true)
+
+	if account != nil {
+		fmt.Println("\nError: The multisign account has been already registered.\n")
+		return
+	}
+
+	//0check-authority
+	beginIndex := strings.Index(authority, "[")
+	endIndex := strings.LastIndex(authority, "]")
+	if beginIndex < 0 || endIndex < 0 {
+		fmt.Println("\nError: Invalid multisign account authority. Ensure your multisign account authority is valid.\n")
+		return
+	}
+	var msignAccountAuthority []role.MsignAccountAuthority
+	if err := json.Unmarshal([]byte(authority[beginIndex:endIndex+1]), &msignAccountAuthority); err != nil {
+		fmt.Println("\nError: Invalid multisign account authority. Ensure your multisign account authority is valid.\n")
+		return
+	}
+	for _, mauthority := range msignAccountAuthority {
+		//0check-authority-account
+		infourl := "http://" + ChainAddr + "/v1/account/brief"
+		authorityAccount, err := cli.getAccountInfoOverHttp(mauthority.AuthorAccount, infourl)
+		if err != nil || authorityAccount == nil {
+			fmt.Println("\nError: Account", mauthority.AuthorAccount,"in 'authority' has not been found!\n")
+			return
+		}
+		//0check-authority-weight
+		if mauthority.Weight > threshold {
+			fmt.Println("\nError:  Forbid multisign account authority's weight be larger than threshold\n")
+			return
+		}
+	}
+
+	// 1, new account trx
+	type NewMultiAccountParam struct {
+		Account   string `json:"account"`
+		Authority string `json:"authority"`
+		Threshold uint32 `json:"threshold"`
+	}
+
+
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+
+	abi.Setmapval(mapstruct, "account", name)
+	abi.Setmapval(mapstruct, "authority", authority)
+	abi.Setmapval(mapstruct, "threshold", threshold)
+
+	param, err := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "newmsignaccount")
+
+	Sender := "bottos"
+	if len(referrer) > 0 {
+		Sender = referrer
+	}
+
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, Sender, "bottos", "newmsignaccount", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+
+	req, _ := json.Marshal(trx)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	rsp := &respbody
+
+
+	fmt.Printf("\nTrxHash: %v\n", rsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+
+func (cli *CLI) pushmsignproposal(proposal, account, transfer, proposer string) {
+
+
+
+	type PushmsignproposalParam struct {
+		Proposal   string `json:"proposal"`
+		Account     string `json:"account"`
+		Transfer string `json:"transfer"`
+		Proposer   string `json:"proposer"`
+	}
+
+	//0check-account/proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	accountName, _ := cli.getAccountInfoOverHttp(account, infourl, true)
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if accountName == nil || proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.\n")
+		return
+	}
+
+	//0check-transfer
+	transferParam := &role.MsignTransferParam{}
+	if err := json.Unmarshal([]byte(transfer), transferParam); err != nil {
+		fmt.Println("\nError: Wrong transfer infomation.\n")
+		return
+	}
+	//0check-transfer-from/to
+	fromName, _ := cli.getAccountInfoOverHttp(transferParam.From, infourl, true)
+	toName, _ := cli.getAccountInfoOverHttp(transferParam.To, infourl, true)
+
+	if fromName == nil || toName == nil{
+		fmt.Println("\nError: The multisign proposal transfer from or to has not been found.\n ")
+		return
+	}
+
+	//0check-transfer-amount
+	_, transfer_value_str, err := transferStrinToBigInt(transferParam.Amount)
+	if err != nil {
+		fmt.Println("\nError: Invalid multisign proposal transfer amount. Ensure your multisign proposal transfer amount is valid.\n")
+		return
+	}
+
+	transferParam.Amount = transfer_value_str
+	transfer_bytes, err := json.Marshal(transferParam)
+	if err != nil {
+		fmt.Println("\nError: Wrong transfer infomation.\n")
+		return
+	}
+	transfer = string(transfer_bytes)
+
+
+	//1ABI
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "proposal", proposal)
+	abi.Setmapval(mapstruct, "account", account)
+	abi.Setmapval(mapstruct, "transfer", transfer)
+	abi.Setmapval(mapstruct, "proposer", proposer)
+
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "pushmsignproposal")
+
+	if nil != msgPackErr {
+		fmt.Println("\nError: msg pack err: ", msgPackErr)
+		return
+	}
+
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(proposer); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = proposer
+	}
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "pushmsignproposal", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+
+	req, _ := json.Marshal(trx)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError:  BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("\nError! ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	newAccountRsp := &respbody
+
+
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+
+func (cli *CLI) reviewmsignproposal(proposer,proposal string) {
+
+
+	//0check-proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.")
+		return
+	}
+
+	//0check-proposal
+	http_url := "http://" + ChainAddr + "/v1/proposal/review"
+	getproposal := &chain.ReviewProposalRequest{ProposalName: proposal,Proposer:proposer}
+	req, _ := json.Marshal(getproposal)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: . httpRspBody: ", httpRspBody, ", err: ", err)
+		return
+	}
+
+	var proposalrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &proposalrespbody)
+
+	if err != nil {
+		fmt.Println("\nError:  Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody), ". proposalresp:")
+		return
+	}
+
+
+	if proposalrespbody.Result == nil {
+		fmt.Printf("\nError: The multisign proposal has not been found.\n\n")
+		return
+	}
+
+
+
+	b, _ := json.Marshal(proposalrespbody.Result)
+	var reviewProposal chain.ReviewProposalResponse_Result
+	err = json.Unmarshal(b, &reviewProposal)
+
+	if err != nil {
+		fmt.Println("Error! Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody))
+		return
+	}
+
+	fmt.Printf("\n    ProposalName: %s\n\n", reviewProposal.ProposalName)
+	fmt.Printf("    MsignAccountName: %s\n\n", reviewProposal.MsignAccountName)
+	fmt.Printf("    AuthorList: %s\n\n", reviewProposal.AuthorList)
+	fmt.Printf("    Available: %t\n\n", reviewProposal.Available)
+	fmt.Printf("    PackedTransaction: %s\n\n", reviewProposal.PackedTransaction)
+	fmt.Printf("    Transaction: [%s]\n\n", reviewProposal.Transaction)
+	fmt.Printf("    Time: %d\n\n", reviewProposal.Time)
+
+}
+func (cli *CLI) approvemsignproposal(proposal, account, proposer string) {
+
+
+
+	type ApproveMsignProposalParam struct {
+		Proposal   string `json:"proposal"`
+		Account     string `json:"account"`
+		Proposer   string `json:"proposer"`
+	}
+
+	//0check-account/proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	accountName, _ := cli.getAccountInfoOverHttp(account, infourl, true)
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if accountName == nil || proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.\n")
+		return
+	}
+
+	//0check-proposal
+	http_url := "http://" + ChainAddr + "/v1/proposal/review"
+	getproposal := &chain.ReviewProposalRequest{ProposalName: proposal,Proposer:proposer}
+	req, _ := json.Marshal(getproposal)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError:  httpRspBody: ", httpRspBody, ", err: ", err,"\n")
+		return
+	}
+
+	var proposalrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &proposalrespbody)
+
+	if err != nil {
+		fmt.Println("\nError:  Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody), ". proposalresp:\n")
+		return
+	}
+
+
+	if proposalrespbody.Result == nil {
+		fmt.Printf("\nError: The multisign proposal has not been found.\n\n")
+		return
+	}
+
+	//1ABI
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "proposal", proposal)
+	abi.Setmapval(mapstruct, "account", account)
+	abi.Setmapval(mapstruct, "proposer", proposer)
+
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "approvemsignproposal")
+
+	if nil != msgPackErr {
+		fmt.Println("msg pack err: ", msgPackErr)
+		return
+	}
+
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(account); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = account
+	}
+	http_url = "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "approvemsignproposal", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+	req, _ = json.Marshal(trx)
+	req_new = bytes.NewBuffer([]byte(req))
+	httpRspBody, err = send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("\nError:  ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	newAccountRsp := &respbody
+
+
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+func (cli *CLI) unapprovemsignproposal(proposal, account, proposer string) {
+
+
+
+	type UnapproveMsignProposalParam struct {
+		Proposal   string `json:"proposal"`
+		Account     string `json:"account"`
+		Proposer   string `json:"proposer"`
+	}
+
+
+	//0check-account/proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	accountName, _ := cli.getAccountInfoOverHttp(account, infourl, true)
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if accountName == nil || proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.\n")
+		return
+	}
+
+	//0check-proposal
+	http_url := "http://" + ChainAddr + "/v1/proposal/review"
+	getproposal := &chain.ReviewProposalRequest{ProposalName: proposal,Proposer:proposer}
+	req, _ := json.Marshal(getproposal)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError. httpRspBody: ", httpRspBody, ", err: ", err,"\n")
+		return
+	}
+
+	var proposalrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &proposalrespbody)
+
+	if err != nil {
+		fmt.Println("\nError: Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody), ". proposalresp:\n")
+		return
+	}
+
+
+	if proposalrespbody.Result == nil {
+		fmt.Printf("\nError: The multisign proposal has not been found.\n\n")
+		return
+	}
+
+	//1ABI
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "proposal", proposal)
+	abi.Setmapval(mapstruct, "account", account)
+	abi.Setmapval(mapstruct, "proposer", proposer)
+
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "unapprovemsign")
+
+	if nil != msgPackErr {
+		fmt.Println("\nError: msg pack err: ", msgPackErr)
+		return
+	}
+
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(proposer); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = proposer
+	}
+	http_url = "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "unapprovemsign", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+	req, _ = json.Marshal(trx)
+	req_new = bytes.NewBuffer([]byte(req))
+	httpRspBody, err = send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("\nError:  ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	newAccountRsp := &respbody
+
+
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+func (cli *CLI) execmsignproposal(proposal, proposer string) {
+
+
+
+	type ExecMsignProposalParam struct {
+		Proposal   string `json:"proposal"`
+		Proposer   string `json:"proposer"`
+	}
+	//0check-proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.")
+		return
+	}
+
+	//0check-proposal
+	http_url := "http://" + ChainAddr + "/v1/proposal/review"
+	getproposal := &chain.ReviewProposalRequest{ProposalName: proposal,Proposer:proposer}
+	req, _ := json.Marshal(getproposal)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError:  httpRspBody: ", httpRspBody, ", err: ", err)
+		return
+	}
+
+	var proposalrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &proposalrespbody)
+
+	if err != nil {
+		fmt.Println("\nError:  Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody), ". proposalresp:")
+		return
+	}
+
+
+	if proposalrespbody.Result == nil {
+		fmt.Printf("\nError: The multisign proposal has not been found.\n\n")
+		return
+	}
+
+	//1-ABI
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "proposal", proposal)
+	abi.Setmapval(mapstruct, "proposer", proposer)
+
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "execmsignproposal")
+
+	if nil != msgPackErr {
+		fmt.Println("\nError: msg pack err: ", msgPackErr)
+		return
+	}
+
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(proposer); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = proposer
+	}
+	http_url = "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "execmsignproposal", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+
+	req, _ = json.Marshal(trx)
+	req_new = bytes.NewBuffer([]byte(req))
+	httpRspBody, err = send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("\nError:  ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	newAccountRsp := &respbody
+
+
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+func (cli *CLI) cancelmsignproposal(proposal, proposer string) {
+
+
+
+	type CancelMsignProposalParam struct {
+		Proposal   string `json:"proposal"`
+		Proposer   string `json:"proposer"`
+	}
+
+
+	//0check-proposer
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	proposerName, _ := cli.getAccountInfoOverHttp(proposer, infourl, true)
+
+	if proposerName == nil{
+		fmt.Println("\nError: The multisign account or proposer has not been found.")
+		return
+	}
+
+	//0check-proposal
+	http_url := "http://" + ChainAddr + "/v1/proposal/review"
+	getproposal := &chain.ReviewProposalRequest{ProposalName: proposal,Proposer:proposer}
+	req, _ := json.Marshal(getproposal)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError:  httpRspBody: ", httpRspBody, ", err: ", err)
+		return
+	}
+
+	var proposalrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &proposalrespbody)
+
+	if err != nil {
+		fmt.Println("\nError:  Unmarshal to proposal failed: ", err, "| body is: ", string(httpRspBody), ". proposalresp:")
+		return
+	}
+
+
+	if proposalrespbody.Result == nil {
+		fmt.Printf("\nError: The multisign proposal has not been found.\n\n")
+		return
+	}
+
+	//1-ABI
+	Abi, abierr := getAbibyContractName("bottos")
+	if abierr != nil {
+		fmt.Println("\nError: get abi err: ", abierr)
+		return
+	}
+
+	mapstruct := make(map[string]interface{})
+	abi.Setmapval(mapstruct, "proposal", proposal)
+	abi.Setmapval(mapstruct, "proposer", proposer)
+
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "cancelmsignproposal")
+
+	if nil != msgPackErr {
+		fmt.Println("\nError: msg pack err: ", msgPackErr)
+		return
+	}
+
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(proposer); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = proposer
+	}
+	http_url = "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "cancelmsignproposal", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		return
+	}
+
+	trx := *ptrx
+
+	req, _ = json.Marshal(trx)
+	req_new = bytes.NewBuffer([]byte(req))
+	httpRspBody, err = send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("\nError: BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		return
+	}
+
+	var respbody chain.SendTransactionResponse
+	json.Unmarshal(httpRspBody, &respbody)
+	if respbody.Errcode != 0 {
+		fmt.Println("\nError: ", respbody.Errcode, ":", respbody.Msg)
+		return
+	}
+	newAccountRsp := &respbody
+
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+}
+
 func (cli *CLI) jsonPrint(data []byte) {
 	var out bytes.Buffer
 	json.Indent(&out, data, "", "    ")
