@@ -218,98 +218,140 @@ func (cli *CLI) signTrx(trx *chain.Transaction, param []byte, seckey string) (st
 	return BytesToHex(signdata), err
 }
 
-func (cli *CLI) transfer(from string, to string, amount big.Int) {
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
-	
-	if err != nil {
-		fmt.Println("GetInfo error: ", err)
+func (cli *CLI) transfer(from, to string, amount big.Int, memo string) {
+
+	infourl := "http://" + ChainAddr + "/v1/account/info"
+	account, err := cli.getAccountInfoOverHttp(from, infourl)
+
+	if err != nil || account == nil {
+		fmt.Println("Account 'from' does not exist!")
+		return
+	}
+
+	balance := big.NewInt(0)
+	mulval := big.NewInt(100000000)
+
+	balanceResult1, result := balance.SetString(account.Balance, 10)
+	if false == result {
+		fmt.Println("Error: balance.SetString failed. account: ", account)
+		return
+	}
+
+	infourl = "http://" + ChainAddr + "/v1/account/brief"
+	account, err = cli.getAccountInfoOverHttp(to, infourl)
+
+	if err != nil || account == nil {
+		fmt.Println("Account 'to' does not exist!")
+		return
+	}
+
+	if balanceResult1.Cmp(&amount) < 0 /* < amount */ {
+		var mulrestlt *big.Int = big.NewInt(0)
+		var modrestlt *big.Int = big.NewInt(0)
+
+		mulrestlt, err = safemath.U256Div(mulrestlt, balanceResult1, mulval)
+
+		if err != nil {
+			return
+		}
+
+		mulval2 := big.NewInt(100000000)
+		modrestlt, err = safemath.U256Mod(modrestlt, balanceResult1, mulval2)
+		if err != nil {
+			return
+		}
+
+		fmt.Printf("Error: User %s has %d.%08d BTO, it is less than your transfer amount!\n", from, mulrestlt, modrestlt)
 		return
 	}
 
 	type TransferParam struct {
 		From   string `json:"from"`
 		To     string `json:"to"`
-		Amount big.Int `json:"value"`
+		Amount string `json:"value"`
+		Memo   string `json:"memo"`
 	}
 
-	value := big.NewInt(100000000)
+	value := big.NewInt(1)
 	value2 := big.NewInt(0)
 
 	value2, _ = safemath.U256Mul(value2, &amount, value)
-	tp := &TransferParam{
-		From:   from,
-		To:     to,
-		Amount: *value2,
+
+	value2str := value2.String()
+	if len(value2str) <= 8 {
+		idx := 0
+
+		add_zero_cnt := 9 - len(value2str)
+		for idx < add_zero_cnt {
+			idx++
+			value2str = "0" + value2str //ensure 0.*** can be guaranteed
+		}
 	}
 
+	/*tp := &TransferParam{
+		From:   from,
+		To:     to,
+		Amount: value2str[0:len(value2str)-8] + "." + value2str[len(value2str)-8:],
+		Memo:   memo,
+	}*/
+
 	Abi, abierr := getAbibyContractName("bottos")
-        if abierr != nil {
-           return
-        }
+	if abierr != nil {
+		return
+	}
 
 	mapstruct := make(map[string]interface{})
 	abi.Setmapval(mapstruct, "from", from)
 	abi.Setmapval(mapstruct, "to", to)
 	abi.Setmapval(mapstruct, "value", *value2)
-	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "transfer")
+	abi.Setmapval(mapstruct, "memo", memo)
 
-	trx := &chain.Transaction{
-		Version:     1,
-		CursorNum:   chainInfo.HeadBlockNum,
-		CursorLabel: chainInfo.CursorLabel,
-		Lifetime:    chainInfo.HeadBlockTime + 100,
-		Sender:      from,
-		Contract:    "bottos",
-		Method:      "transfer",
-		Param:       BytesToHex(param),
-		SigAlg:      1,
-	}
+	param, msgPackErr := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "transfer")
 
-	sign, err := cli.signTrx(trx, param)
-	if err != nil {
+	if nil != msgPackErr {
+		fmt.Println("msg pack err: ", msgPackErr)
 		return
 	}
 
-	trx.Signature = sign
+	var realSender string
+	if accountType, accountName := common.AnalyzeName(from); accountType == common.NameTypeExContract {
+		realSender = accountName
+	}
+	if realSender == "" {
+		realSender = from
+	}
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, realSender, "bottos", "transfer", BytesToHex(param))
 
-	/*newAccountRsp, err := cli.client.SendTransaction(context.TODO(), trx)
-	if err != nil || newAccountRsp == nil {
-		fmt.Println(err)
+	if err != nil || ptrx == nil {
 		return
 	}
 
-	if newAccountRsp.Errcode != 0 {
-		fmt.Printf("Transfer error:\n")
-		fmt.Printf("    %v\n", newAccountRsp.Msg)
-		return
-	}*/
-	
+	trx := *ptrx
+
 	req, _ := json.Marshal(trx)
 	req_new := bytes.NewBuffer([]byte(req))
-	httpRspBody, err := send_httpreq("POST", "http://" + ChainAddr + "/v1/transaction/send", req_new)
+	httpRspBody, err := send_httpreq("POST", "http://"+ChainAddr+"/v1/transaction/send", req_new)
 	if err != nil || httpRspBody == nil {
-		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 		return
 	}
-	
+
 	var respbody chain.SendTransactionResponse
 	json.Unmarshal(httpRspBody, &respbody)
 	if respbody.Errcode != 0 {
 		fmt.Println("Error! ", respbody.Errcode, ":", respbody.Msg)
-		return 
+		return
 	}
 	newAccountRsp := &respbody
 
-
-	fmt.Printf("Transfer Succeed\n")
+	/*fmt.Printf("\nPush transaction done.\n")
 	fmt.Printf("    From: %v\n", from)
 	fmt.Printf("    To: %v\n", to)
-	fmt.Println("    Amount:", value2)
+	fmt.Println("    Amount:", value2str[0:len(value2str)-8]+"."+value2str[len(value2str)-8:])
+	fmt.Printf("    Memo: %v\n", memo)
 	fmt.Printf("Trx: \n")
 
-	tp.Amount = amount
 	printTrx := Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -325,8 +367,9 @@ func (cli *CLI) transfer(from string, to string, amount big.Int) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	cli.jsonPrint(b)*/
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
 }
 
 func (cli *CLI) jsonPrint(data []byte) {
