@@ -260,7 +260,7 @@ func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 
 	// sender must be from
 	if !nc.checkSigner(ParamName, ctx.Trx.Sender) {
-		return berr.ErrContractAccountMismatch
+		return berr.ErrAccountMismatch
 	}
 
 	// check limit
