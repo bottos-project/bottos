@@ -49,10 +49,17 @@ type PeersInfo struct {
 	LastBlock uint64
 	Addr string
 	Port string
+	Account string
+	NodeType string
 	ChainId string
 	Version uint32
+	IsActive bool
 }
 type ProtocolInterface interface {
 	GetBlockSyncState() bool
+	GetBlockSyncDistance() uint64
 	GetPeerInfo()(uint64,[]*PeersInfo)
+	UpdatePeerStateToActive(addr string) bool
+	UpdatePeerStateToInActive(addr string, timeout uint32) bool
+	QueryPeerState(addr string) bool
 }
