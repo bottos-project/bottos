@@ -43,9 +43,56 @@ func NewCLI() *CLI {
 	service := micro.NewService()
 	//avoid parameters conflict with those of bcli
 	//service.Init()
+	bcli_re = regexp.MustCompile(common.ACCOUNT_NAME_REGEXP)
 	cli.client = chain.NewChainClient("bottos", service.Client())
+	bcli_contract_re = regexp.MustCompile(common.EX_CONTRACT_NAME_REGEXP)
+
+	bcli_short_contract_reg = regexp.MustCompile(common.CONTRACT_NAME_REGEXP)
 
 	return cli
+}
+
+func verifyPassword(s string) bool {
+	letters := 0
+
+	len_letters := len(s)
+
+	if len_letters < 6 || len_letters > 20 {
+		return false
+	}
+
+	number := false
+	upper := false
+	lower := false
+	//special := false
+
+	for _, s := range s {
+		if number && upper && lower {
+			return true
+		}
+		switch {
+		case unicode.IsNumber(s):
+			number = true
+		case unicode.IsUpper(s):
+			upper = true
+			letters++
+		case unicode.IsLower(s):
+			lower = true
+			letters++
+			/* case unicode.IsPunct(s) || unicode.IsSymbol(s):
+			   special = true*/
+		case unicode.IsLetter(s) || s == ' ':
+			letters++
+		default:
+			//return false, false, false, false
+		}
+	}
+
+	if number && upper && lower {
+		return true
+	}
+
+	return false
 }
 
 func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error {
