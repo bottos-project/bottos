@@ -75,16 +75,17 @@ func CreateBlockChain(db *db.DBService, roleIntf role.RoleInterface, nc contract
 	return bc, nil
 }
 
-func (bc *BlockChain) Init() error {
-	if err := bc.initChain(); err != nil {
+func (bc *BlockChain) Init(ctx *cli.Context) error {
+	bc.dbInst.Lock()
+	defer bc.dbInst.UnLock()
+
+	gsb := bc.blockDb.GetBlockByNumber(0)
+	if gsb == nil {
+		err := bc.initNewChain(ctx)
 		return err
 	}
 
-	if err := bc.LoadBlockDb(); err != nil {
-		return err
-	}
-
-	if err := bc.initBlockCache(); err != nil {
+	if err := bc.loadDB(ctx); err != nil {
 		return err
 	}
 
