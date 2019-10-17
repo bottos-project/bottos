@@ -358,6 +358,20 @@ func (bc *BlockChain) LastConsensusBlockNum() uint64 {
 	return coreState.LastConsensusBlockNum
 }
 
+func (bc *BlockChain) checkConsensusedBlock(block *types.Block) berr.ErrCode {
+	num := block.GetNumber()
+	localBlock := bc.GetBlockByNumber(num)
+	if localBlock.Hash() == block.Hash() {
+		return berr.ErrNoError
+	} else {
+		if localBlock.GetPrevBlockHash() == block.GetPrevBlockHash() {
+			return berr.ErrBlockInsertErrorDiffLibLinked
+		} else {
+			return berr.ErrBlockInsertErrorDiffLibNotLinked
+		}
+	}
+}
+
 //GenesisTimestamp get genesis time
 func (bc *BlockChain) GenesisTimestamp() uint64 {
 	return config.Genesis.GenesisTime
