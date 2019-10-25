@@ -159,4 +159,9 @@ var (
 		Usage: "recover at blocknum",
 		Value: 0,
 	}
+	RecoverFromDataDirFlag = cli.StringFlag{
+		Name:  "recover_from_datadir",
+		Usage: "recover from datadir",
+		Value: "",
+	}
 )
