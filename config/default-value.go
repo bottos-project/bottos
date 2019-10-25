@@ -57,6 +57,9 @@ const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 // BOTTOS_SUPPLY_MUL define dot num of bto
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
+// PRIVATE_KEY_REGEXP define private key format
+const PRIVATE_KEY_REGEXP string = "[0-9a-zA-Z]{64}"
+
 // MAX_ACCOUNT_NAME_LENGTH define max account name length
 const MAX_ACCOUNT_NAME_LENGTH int = 16
 
