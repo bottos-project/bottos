@@ -60,6 +60,83 @@ type Transaction struct {
 	Signature   string      `json:"signature"`
 }
 
+
+func (cli *CLI) UnlockWalletOverHttp(http_url string, account string, password string, storepath string) (*chain.UnlockAccountResponse, error) {
+	var getinfo *chain.UnlockAccountRequest
+	getinfo = &chain.UnlockAccountRequest{AccountName: account, Passwd: password}
+
+	req, _ := json.Marshal(getinfo)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+		return nil, errors.New("Error!")
+	}
+
+	var trxrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+
+	if err != nil {
+		fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		return nil, errors.New("Error!")
+	} else if trxrespbody.Errcode != 0 {
+		fmt.Println("Error! ", trxrespbody.Errcode, ":", trxrespbody.Msg)
+		return nil, errors.New("Error!")
+
+	} else if trxrespbody.Result == nil {
+		fmt.Println("Error! trxrespbody.Result is empty!")
+		return nil, errors.New("Error!")
+	}
+
+	b, _ := json.Marshal(trxrespbody.Result)
+	//cli.jsonPrint(b)
+	var RspInfo chain.UnlockAccountResponse
+	json.Unmarshal(b, &RspInfo)
+
+	return &RspInfo, nil
+}
+
+func (cli *CLI) GetPrivateKeyOverHttp(http_url string, account string) (string, error) {
+	var getinfo *chain.GetKeyPairRequest
+	getinfo = &chain.GetKeyPairRequest{AccountName: account}
+
+	req, _ := json.Marshal(getinfo)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", http_url, req_new)
+	if err != nil || httpRspBody == nil {
+		fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+		return "", errors.New("Error!")
+	}
+
+	var trxrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+
+	if err != nil {
+		fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+		return "", errors.New("Error!")
+	} else if trxrespbody.Errcode != 0 {
+		fmt.Println("Error! ", trxrespbody.Errcode, ":", trxrespbody.Msg)
+		return "", errors.New("Error!")
+
+	} else if trxrespbody.Result == nil {
+		fmt.Println("Error! trxrespbody.Result is empty!")
+		return "", errors.New("Error!")
+	}
+
+	b, _ := json.Marshal(trxrespbody.Result)
+	//cli.jsonPrint(b)
+	var RspInfo chain.GetKeyPairResponse
+	json.Unmarshal(b, &RspInfo)
+
+	if RspInfo.Result != nil {
+		return RspInfo.Result.PrivateKey, nil
+	}
+
+	return "", errors.New("Error!")
+}
+
 func (cli *CLI) getChainInfo() (*chain.GetInfoResponse_Result, error) {
 	chainInfoRsp, err := cli.client.GetInfo(context.TODO(), &chain.GetInfoRequest{})
 	if err != nil || chainInfoRsp == nil {
