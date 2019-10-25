@@ -52,6 +52,8 @@ var TrxPoolInst *TrxPool
 
 // TrxPool is definition of trx pool
 type TrxPool struct {
+	cache       []*CachedTransaction
+	cacheMap    map[common.Hash]*CachedTransaction
 	pending     map[common.Hash]*types.Transaction
 	roleIntf    role.RoleInterface
 	netActorPid *actor.PID
