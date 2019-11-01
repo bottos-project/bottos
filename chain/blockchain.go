@@ -358,6 +358,15 @@ func (bc *BlockChain) LastConsensusBlockNum() uint64 {
 	return coreState.LastConsensusBlockNum
 }
 
+// interface for p2p
+func (bc *BlockChain) IsKnownBlock(block *types.Block) bool {
+	if bc.forkdb.HasBlock(block.Hash()) {
+		return true
+	}
+
+	return bc.blockDb.HasBlock(block.Hash())
+}
+
 func (bc *BlockChain) checkConsensusedBlock(block *types.Block) berr.ErrCode {
 	num := block.GetNumber()
 	localBlock := bc.GetBlockByNumber(num)
