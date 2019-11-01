@@ -60,6 +60,236 @@ type Transaction struct {
 	Signature   string      `json:"signature"`
 }
 
+func getBottosAbi() (abi.ABI, error) {
+	abistring := `{
+	    "types": null,
+	    "structs": [
+		{
+		    "name": "NewAccount",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"pubkey": "string"
+		    }
+		},
+		{
+		    "name": "Transfer",
+		    "base": "",
+		    "fields": {
+			"from": "string",
+			"to": "string",
+			"value": "uint256",
+			"memo" : "string"
+		    }
+		},
+		{
+		    "name": "SetDelegate",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"pubkey": "string",
+			"location": "string",
+			"description": "string"
+		    }
+		},
+		{
+		    "name": "UnsetDelegate",
+		    "base": "",
+		    "fields": {
+			"name": "string"
+		    }
+		},
+		{
+		    "name": "GrantCredit",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"spender": "string",
+			"limit": "uint256"
+		    }
+		},
+		{
+		    "name": "CancelCredit",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"spender": "string"
+		    }
+		},
+		{
+		    "name": "TransferFrom",
+		    "base": "",
+		    "fields": {
+			"from": "string",
+			"to": "string",
+			"value": "uint256"
+		    }
+		},
+		{
+		    "name": "DeployCode",
+		    "base": "",
+		    "fields": {
+			"contract": "string",
+			"vm_type": "uint8",
+			"vm_version": "uint8",
+			"contract_code": "bytes"
+		    }
+		},
+		{
+		    "name": "DeployABI",
+		    "base": "",
+		    "fields": {
+			"contract": "string",
+			"contract_abi": "bytes",
+			"filetype":"string"
+		    }
+		},
+		{
+		    "name": "RegDelegate",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"pubkey": "string",
+			"location": "string",
+			"description": "string"
+		    }
+		},
+		{
+		    "name": "UnregDelegate",
+		    "base": "",
+		    "fields": {
+			"name": "string"
+		    }
+		},
+		{
+		    "name": "VoteDelegate",
+		    "base": "",
+		    "fields": {
+			"voteop": "uint8",
+			"voter": "string",
+			"delegate": "string"
+		    }
+		},
+		{
+		    "name": "Stake",
+		    "base": "",
+		    "fields": {
+			"amount": "uint256",
+			"target": "string"
+		    }
+		},
+		{
+		    "name": "Unstake",
+		    "base": "",
+		    "fields": {
+			"amount": "uint256",
+			"source": "string"
+		    }
+		},
+		{
+		    "name": "Claim",
+		    "base": "",
+		    "fields": {
+			"amount": "uint256"
+		    }
+		},
+		{
+		    "name": "BlkProdTrans",
+		    "base": "",
+		    "fields": {
+			"actblknum": "uint64"
+		    }
+		},
+		{
+		    "name": "SetTransitVote",
+		    "base": "",
+		    "fields": {
+			"name": "string",
+			"vote": "uint64"
+		    }
+		}
+	    ],
+	    "actions": [
+		{
+		    "action_name": "newaccount",
+		    "type": "NewAccount"
+		},
+		{
+		    "action_name": "transfer",
+		    "type": "Transfer"
+		},
+		{
+		    "action_name": "grantcredit",
+		    "type": "GrantCredit"
+		},
+		{
+		    "action_name": "cancelcredit",
+		    "type": "CancelCredit"
+		},
+		{
+		    "action_name": "transferfrom",
+		    "type": "TransferFrom"
+		},
+		{
+		    "action_name": "deploycode",
+		    "type": "DeployCode"
+		},
+		{
+		    "action_name": "deployabi",
+		    "type": "DeployABI"
+		},
+		{
+		    "action_name": "regdelegate",
+		    "type": "RegDelegate"
+		},
+		{
+		    "action_name": "unregdelegate",
+		    "type": "UnregDelegate"
+		},
+		{
+		    "action_name": "votedelegate",
+		    "type": "VoteDelegate"
+		},
+		{
+		    "action_name": "stake",
+		    "type": "Stake"
+		},
+		{
+		    "action_name": "unstake",
+		    "type": "Unstake"
+		},
+		{
+		    "action_name": "claim",
+		    "type": "Claim"
+		},
+		{
+		    "action_name": "setdelegate",
+		    "type": "SetDelegate"
+		},
+		{
+		    "action_name": "settransitvote",
+		    "type": "SetTransitVote"
+		},
+		{
+		    "action_name": "unsetdelegate",
+		    "type": "UnsetDelegate"
+		},
+		{
+		    "action_name": "blkprodtrans",
+		    "type": "BlkProdTrans"
+		}
+	    ],
+	    "tables": null
+	}
+	`
+	Abi, err := abi.ParseAbi([]byte(abistring))
+	if err != nil {
+		fmt.Println("Parse abistring", abistring, " to abi failed!")
+		return abi.ABI{}, err
+	}
+
+	return *Abi, nil
+}
 
 func (cli *CLI) UnlockWalletOverHttp(http_url string, account string, password string, storepath string) (*chain.UnlockAccountResponse, error) {
 	var getinfo *chain.UnlockAccountRequest
