@@ -56,8 +56,8 @@ type BlockChain struct {
 }
 
 //CreateBlockChain create a chain
-func CreateBlockChain(db *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
-	forkDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/forkdb")
+func CreateBlockChain(datadir string, db *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface) (BlockChainInterface, error) {
+	forkDBPath := filepath.Join(datadir, "data/forkdb")
 	forkdb, err := CreateForkDB(forkDBPath)
 	if err != nil {
 		return nil, err
