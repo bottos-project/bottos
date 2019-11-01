@@ -28,6 +28,9 @@ package config
 // DEFAULT_BLOCK_INTERVAL define defalut interval of block production
 const DEFAULT_BLOCK_INTERVAL uint32 = 3
 
+//PRODUCER_TIME_OUT for actor to set time out with millseconds
+const PRODUCER_TIME_OUT uint32 = 50
+
 // BLOCKS_PER_ROUND define block num per round
 const BLOCKS_PER_ROUND uint32 = 29
 
