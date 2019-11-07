@@ -146,9 +146,51 @@ func (trxApplyService *TrxApplyService) ApplyBlockTransaction(trx *types.BlockTr
 		return f, bErr, h, rr
 	}
 
-	if !trxApplyService.CheckTransactionLifeTime(trx) {		
-		return false, bottosErr.ErrTrxLifeTimeError, nil
+	//todo
+	var resouceReceipt *types.ResourceReceipt
+	resService := CreateResProcessorService(trxApplyService.roleIntf)
+	f, err := checkMinBalance(resService, trx.Transaction.Sender)
+	if err != nil {
+		log.Warnf("RESOURCE:checkMinBalance failed:%v", err)
+		//return false, bottosErr.ErrTrxResourceCheckMinBalance, nil, resouceReceipt, resUsage
 	}
+
+	flag, bErr, _, resReceipt, resUsage := trxApplyService.ExecuteTransaction(trx.Transaction, false)
+	if !flag {
+		log.Errorf("RESOURCE: execute transaction failed, trx %x, error %v", trx.Transaction.Hash(), bottosErr.GetCodeString(bErr))
+		return false, bErr, nil, nil
+	}
+
+	_, timeUsage, err, be := ProcessTimeResource(trxApplyService.roleIntf, trx.Transaction, trx.ResourceReceipt.TimeTokenCost, f)
+	if err != nil {
+		log.Errorf("RESOURCE: process time rsc failed, trx %x, error %v", trx.Transaction.Hash(), err)
+		return false, bottosErr.ErrTrxCheckTimeInternalError, nil, resouceReceipt
+	}
+	if int(be) != 0 {
+		log.Errorf("RESOURCE: process time rsc failed, trx %x, error %v", trx.Transaction.Hash(), bottosErr.GetCodeString(be))
+		return false, be, nil, resouceReceipt
+	}
+
+	resUsage = generateNewUsage(resUsage, timeUsage)
+
+	err = UpdateTimeUsage(trxApplyService.roleIntf, resUsage)
+	if err != nil {
+		log.Errorf("RESOURCE: update time usage failed, trx %x, error %v", trx.Transaction.Hash(), err)
+		return false, bottosErr.ErrTrxCheckResourceInternalError, nil, nil
+	}
+
+	//verify space Cost
+	if resReceipt.SpaceTokenCost != trx.ResourceReceipt.SpaceTokenCost {
+		log.Errorf("RESOURCE: verify space failed, trx %x, nowCost:%v, trxSpaceCost:%v", trx.Transaction.Hash(), resReceipt.SpaceTokenCost, trx.ResourceReceipt.SpaceTokenCost)
+		return false, bottosErr.ErrNoError, nil, nil
+	}
+
+	//TODO
+	//if resReceipt.TimeTokenCost ==timeTokenCost  {
+	//	return false, bottosErr.ErrNoError, nil, nil
+	//}
+	return true, bottosErr.ErrNoError, nil, nil
+}
 
 // ExecuteTransaction is to handle a transaction, include parameters checking
 func (trxApplyService *TrxApplyService) ExecuteTransaction(trx *types.Transaction, verifyTimeFlag bool) (bool, bottosErr.ErrCode, *types.HandledTransaction, *types.ResourceReceipt, role.ResourceUsage) {
