@@ -41,13 +41,13 @@ const VOTED_DELEGATES_PER_ROUND uint32 = 28
 const CONSENSUS_BLOCKS_PERCENT uint32 = 70
 
 // MAX_DELEGATE_VOTES define max delegate votes
-const MAX_DELEGATE_VOTES uint32 = 40
+const MAX_DELEGATE_VOTES uint32 = 49
 
 // DELEGATE_PATICIPATION define delegate paticipation
 const DELEGATE_PATICIPATION uint32 = 33
 
 // MAX_BLOCK_SIZE define max block size
-const MAX_BLOCK_SIZE uint32 = 32000000 //2048000000
+const MAX_BLOCK_SIZE uint32 = 5242880 // Byte
 // DEFALT_SLOT_CHECK_INTERVAL define default slot check interval
 const DEFALT_SLOT_CHECK_INTERVAL = 500000
 
@@ -60,17 +60,18 @@ const BOTTOS_INIT_SUPPLY uint64 = 1000000000
 // BOTTOS_SUPPLY_MUL define dot num of bto
 const BOTTOS_SUPPLY_MUL uint64 = 100000000
 
+// TOTAL_DELEGATE_REWARD total delegate reward
+const TOTAL_DELEGATE_REWARD uint64 = 64000000
+
 // PRIVATE_KEY_REGEXP define private key format
 const PRIVATE_KEY_REGEXP string = "[0-9a-zA-Z]{64}"
 
-// MAX_ACCOUNT_NAME_LENGTH define max account name length
-const MAX_ACCOUNT_NAME_LENGTH int = 16
-
-// ACCOUNT_NAME_REGEXP define account name format
-const ACCOUNT_NAME_REGEXP string = "^[a-z][a-z0-9]{2,15}$"
+// PUBLIC_KEY_REGEXP define public key format
+const PUBLIC_KEY_REGEXP string = "[0-9a-zA-Z]{130}"
 
 // HASH_SHA256_LENGTH define sha256 hash value length
 const HASH_SHA256_LENGTH int = 32
+
 // DEFAULT_BLOCK_TIME_LIMIT define default block time limit when producing block
 const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 
@@ -78,7 +79,9 @@ const DEFAULT_BLOCK_TIME_LIMIT uint64 = 1000
 const DEFAULT_MAX_LIFE_TIME uint64 = 10000 //unit: second
 
 // DEFAULT_MAX_PENDING_TRX_IN_POOL define max pending transaction num in local transaction pool
-const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 1000
+const DEFAULT_MAX_PENDING_TRX_IN_POOL uint64 = 30000
+
+const DEFAULT_MAX_SYNC_DISTANCE_PUT_TRX_IN_CACHE uint64 = 3
 
 // DEFAULT_OPTIONDB_NAME define default option db name
 const DEFAULT_OPTIONDB_NAME string = "bottos"
@@ -97,6 +100,10 @@ const DEFAUL_MAX_CONTRACT_DEPTH uint32 = 10
 
 // DEFAUL_MAX_SUB_CONTRACT_NUM define max sub contract num
 const DEFAUL_MAX_SUB_CONTRACT_NUM uint32 = 10
+
+//DEFAULT_BLOCK_CONSENSUS_TIMEOUT define default block consensus timeout time 6 block 18s
+const DEFAULT_BLOCK_CONSENSUS_TIMEOUT uint32 = 18
+const DEFAUL_MAX_NOTICE_CONTRACT_NUM uint32 = 5
 
 const PRIMARY_TRX_SESSION string = "primary"
 const SUB_TRX_SESSION string = "subsession"
