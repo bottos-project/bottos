@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -37,6 +37,7 @@ import (
 const (
 	//CONFIG_FILE_NAME configure file
 	CONFIG_FILE_NAME = "./cliconfig.json"
+        PUBKEY_LEN   = 130
 )
 
 //CONFIG configure pointer
