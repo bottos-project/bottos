@@ -234,67 +234,129 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 	}
 }
 
-func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
+func (cli *CLI) BcliSendTransaction(pushtrxinfo *BcliPushTrxInfo) {
 
-	Abi, abierr := getAbibyContractName(pushtrxinfo.contract)
-        if abierr != nil {
-	   fmt.Println("Push Transaction fail due to get Abi failed:", pushtrxinfo.contract)
-           return
-        }
-	
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
-	
-	if err != nil {
-		fmt.Println("QueryChainInfo error: ", err)
+	var err error
+	var abierr error
+	var Abi abi.ABI
+
+	if !IsContractExist(pushtrxinfo.contract) {
+		fmt.Printf("Push Transaction fail due to the contract [ %s ] does not exist on chain!\n", pushtrxinfo.contract)
 		return
 	}
-	
+
+	Abi, abierr = getAbibyContractName(pushtrxinfo.contract)
+	if abierr != nil {
+		fmt.Println("Push Transaction fail due to get Abi failed:", pushtrxinfo.contract)
+		return
+	}
+
+	abiFieldsAttr := getAbiFieldsByAbiEx(pushtrxinfo.contract, pushtrxinfo.method, Abi, "")
+
+	if abiFieldsAttr == nil {
+		fmt.Println("Error! BcliSendTransaction failed! Can not get abiFieldsAttr. Please check does your contract and your Abi deploy in succeed.")
+		return
+	}
+
+	abiFields := abiFieldsAttr.GetStringPair()
+
+	if len(abiFields) != len(pushtrxinfo.ParamMap) {
+		fmt.Println("Push Transaction fail due to your param value count does not consist to your contact's abi number count:", pushtrxinfo.contract)
+		return
+	}
+
 	mapstruct := make(map[string]interface{})
-	
-	for key, value := range(pushtrxinfo.ParamMap) {
-        	abi.Setmapval(mapstruct, key, value)
+
+	for idx, value := range abiFields {
+
+		if val, ok := pushtrxinfo.ParamMap[value.Key]; ok {
+			fmt.Println(idx, ":", value, ", KEY: ", value.Key, ", VAL: ", val)
+
+			if value.Value == "uint8" {
+				ival, err := strconv.ParseUint(val.(string), 10, 8)
+				if err != nil {
+					fmt.Println("Wrong parameter for uin8: ", value.Key)
+					return
+				}
+				abi.Setmapval(mapstruct, value.Key, uint8(ival))
+			} else if value.Value == "uint16" {
+				ival, err := strconv.ParseUint(val.(string), 10, 16)
+				if err != nil {
+					fmt.Println("Wrong parameter for uint16: ", value.Key)
+					return
+				}
+				abi.Setmapval(mapstruct, value.Key, uint16(ival))
+			} else if value.Value == "uint32" {
+				ival, err := strconv.ParseUint(val.(string), 10, 32)
+				if err != nil {
+					fmt.Println("Wrong parameter for uint32: ", value.Key)
+					return
+				}
+				abi.Setmapval(mapstruct, value.Key, uint32(ival))
+			} else if value.Value == "uint64" {
+				ival, err := strconv.ParseUint(val.(string), 10, 64)
+				if err != nil {
+					fmt.Println("Wrong parameter for uint64: ", value.Key)
+					return
+				}
+				abi.Setmapval(mapstruct, value.Key, uint64(ival))
+			} else if value.Value == "uint256" || value.Value == "uint128" {
+				balance := big.NewInt(0)
+
+				ival, result := balance.SetString(val.(string), 10)
+				if false == result {
+					fmt.Println("Error: bcli balance.SetString failed.")
+					return
+				}
+				abi.Setmapval(mapstruct, value.Key, *ival)
+			} else {
+				abi.Setmapval(mapstruct, value.Key, val)
+			}
+		} else {
+			fmt.Println("Your param does not include keyword of [", value.Key, "], which is needs by your contract abi, please try again.")
+			return
+		}
 	}
 
-	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, pushtrxinfo.contract, pushtrxinfo.method)
+	param, errMarshal := abi.MarshalAbiEx(mapstruct, &Abi, pushtrxinfo.contract, pushtrxinfo.method)
 
-	trx := &chain.Transaction{
-		Version:     1,
-		CursorNum:   chainInfo.HeadBlockNum,
-		CursorLabel: chainInfo.CursorLabel,
-		Lifetime:    chainInfo.HeadBlockTime + 100,
-		Sender:      pushtrxinfo.sender,
-		Contract:    pushtrxinfo.contract,
-		Method:      pushtrxinfo.method,
-		Param:       BytesToHex(param),
-		SigAlg:      1,
-	}
-	
-	sign, err := cli.signTrx(trx, param)
-	if err != nil {
-	   	fmt.Println("Push Transaction fail due to sign Trx failed.")
+	if errMarshal != nil {
+		fmt.Println(errMarshal)
 		return
 	}
-	
+
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, pushtrxinfo.sender, pushtrxinfo.contract, pushtrxinfo.method, BytesToHex(param))
+
+	if err != nil || ptrx == nil {
+		if err != nil {
+			fmt.Println("BcliSignTrxOverHttp Failed!")
+		} else {
+			fmt.Println("BcliSignTrxOverHttp failed due to ptrx is nil!")
+		}
+
+		return
+	}
+
+	trx := *ptrx
+
 	http_method := "restful"
-	trx.Signature = sign
 	var newAccountRsp *chain.SendTransactionResponse
-	
+
 	if http_method == "grpc" {
-		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), trx)
+		newAccountRsp, err = cli.client.SendTransaction(context.TODO(), ptrx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
-	   		fmt.Println("Push Transaction fail due to get grpc response failed.")
+			fmt.Println("Push Transaction fail due to get grpc response failed.")
 			return
 		}
 	} else {
-		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
+		http_url := "http://" + ChainAddr + "/v1/transaction/send"
 		req, _ := json.Marshal(trx)
-    		req_new := bytes.NewBuffer([]byte(req))
+		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
 		if err != nil || httpRspBody == nil {
-			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 			return
 		}
 		var respbody chain.SendTransactionResponse
@@ -308,7 +370,7 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 		return
 	}
 
-	fmt.Printf("Transfer Succeed:\n")
+	/*fmt.Printf("\nPush transaction done.\n")
 	fmt.Printf("Trx: \n")
 
 	printTrx := Transaction{
@@ -326,9 +388,11 @@ func (cli *CLI) BcliPushTransaction (pushtrxinfo *BcliPushTrxInfo) {
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	cli.jsonPrint(b)*/
+	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
 }
+
 
 type GetContractCodeAbi struct {
 	Contract string `json:"contract"`
