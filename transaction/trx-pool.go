@@ -145,16 +145,24 @@ func (trxPool *TrxPool) Stop() {
 
 // CheckTransactionBaseCondition is checking trx
 func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
-	if isTransactionExist(trx) {
-		return false, bottos.ErrTrxAlreadyInPool
+
+	if trxPool.isTransactionExist(trx) {
+		log.Info("TRX check exist error, already in pool, trx %x ", trx.Hash())
+
+		return false, bottosErr.ErrTrxAlreadyInPool
 	}
+
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
-		log.Errorf("trx %x pending num over", trx.Hash())
+		log.Errorf("TRX check pool num reach max error, trx %x", trx.Hash())
 		return false, bottosErr.ErrTrxPendingNumLimit
 	}
 
-	if !trxPool.VerifySignature(trx) {
-		return false, bottosErr.ErrTrxSignError
+	chainState, _ := trxPool.roleIntf.GetChainState()
+	myVersion := version.GetVersionByBlockNum(chainState.LastBlockNum)
+	if myVersion != nil && trx.Version > myVersion.VersionNumber {
+		log.Errorf("VERSION handle CheckTransactionBaseCondition failed, trx.hash %x, trx.version %v, my version %v", trx.Hash(), version.GetStringVersion(trx.Version), myVersion.VersionString)
+		
+		return false, bottosErr.ErrTrxVersionError
 	}
 
 	return true, bottosErr.ErrNoError
