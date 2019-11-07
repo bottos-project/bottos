@@ -246,6 +246,18 @@ func (trxPool *TrxPool) RemoveTransactions(trxs []*types.Transaction) {
 	for _, trx := range trxs {
 		delete(trxPool.pending, trx.Hash())
 	}
+// RemoveBlockTransactions is interface to remove trxs in trx pool
+func (trxPool *TrxPool) RemoveBlockTransactions(trxs []*types.BlockTransaction) {
+
+	trxPool.mu.Lock()
+	defer trxPool.mu.Unlock()
+
+	for _, trx := range trxs {
+		log.Infof("TRX rm block trx %x", trx.Transaction.Hash())
+		delete(trxPool.pending, trx.Transaction.Hash())
+	}
+
+	log.Infof("TRX after rm block trx num in pool %v", len(trxPool.pending))
 }
 
 // RemoveSingleTransaction is interface to remove single trx in trx pool
