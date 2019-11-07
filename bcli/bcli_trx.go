@@ -59,6 +59,128 @@ type GetTransactionResponse struct {
 	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
 }
 
+type ResponseStruct struct {
+	Errcode uint32      `json:"errcode"`
+	Msg     string      `json:"msg"`
+	Result  interface{} `json:"result"`
+}
+
+func Sha256(msg []byte) []byte {
+	sha := sha256.New()
+	sha.Write([]byte(hex.EncodeToString(msg)))
+	return sha.Sum(nil)
+}
+
+// call wallet's v1/wallet/signhash
+type SignDataResponse_Result struct {
+	SignValue string `protobuf:"bytes,1,opt,name=sign_value,json=signValue" json:"sign_value"`
+}
+
+type SignDataResponse struct {
+	Errcode uint32      `protobuf:"varint,1,opt,name=errcode" json:"errcode"`
+	Msg     string      `protobuf:"bytes,2,opt,name=msg" json:"msg"`
+	Result  interface{} `protobuf:"bytes,3,opt,name=result" json:"result"`
+}
+
+func SignHash(digest []byte, account string, url string) ([]byte, error, berr.ErrCode) {
+	values := map[string]interface{}{
+		"account_name": account,
+		"type":         "normal",
+		"hash":         common.BytesToHex(digest),
+	}
+	jsonValue, _ := json.Marshal(values)
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+	if err != nil || resp.StatusCode != 200 {
+		return nil, fmt.Errorf("wallet signature failed1: %s, %v", err, resp), berr.RestErrInternal
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("wallet signature failed2: %v", resp), berr.RestErrInternal
+	}
+
+	var respStruct SignDataResponse
+	err = json.Unmarshal(body, &respStruct)
+	if err != nil || respStruct.Errcode != uint32(berr.ErrNoError) {
+		return nil, fmt.Errorf("wallet signature failed3!"), berr.ErrCode(respStruct.Errcode)
+	} else if respStruct.Result == nil {
+		return nil, fmt.Errorf("respStruct.Result is empty!"), berr.ErrCode(respStruct.Errcode)
+	}
+
+	var respStruct2 SignDataResponse_Result
+	b, _ := json.Marshal(respStruct.Result)
+	err = json.Unmarshal(b, &respStruct2)
+
+	if err != nil {
+		return nil, fmt.Errorf("wallet signature failed4!"), berr.ErrCode(respStruct.Errcode)
+	}
+
+	signdata, err := common.HexToBytes(respStruct2.SignValue)
+	return signdata, err, 0
+}
+
+func (cli *CLI) BcliSignTrxOverHttp(http_url string, sender string, contract string, method string, param string) (*chain.Transaction, error) {
+
+	chaininfo, err := cli.GetChainInfoOverHttp("http://" + ChainAddr + "/v1/block/height")
+	if err != nil {
+		fmt.Println("cli.GetChainInfoOverHttp failed!")
+		return nil, err
+	}
+
+	//fmt.Printf("Current block num: %d, version: %d [%s] ", num, blockInfo.VersionNum, version.ParseStringVersion(blockInfo.VersionNum))
+	param_bin, _ := common.HexToBytes(param)
+	basictrx := &types.BasicTransaction{
+		Version:     chaininfo.HeadBlockVersion,
+		CursorNum:   chaininfo.HeadBlockNum,
+		CursorLabel: chaininfo.CursorLabel,
+		Lifetime:    chaininfo.HeadBlockTime + 100,
+		Sender:      sender,
+		Contract:    contract,
+		Method:      method,
+		Param:       param_bin,
+		SigAlg:      1,
+	}
+
+	msg, err := bpl.Marshal(basictrx)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil, err
+	}
+
+	//Add chainID Flag
+	chainID, _ := hex.DecodeString(chaininfo.ChainId)
+	msg = bytes.Join([][]byte{msg, chainID}, []byte{})
+	hash := Sha256(msg)
+
+	intTrx := &chain.Transaction{
+		Version:     chaininfo.HeadBlockVersion,
+		CursorNum:   chaininfo.HeadBlockNum,
+		CursorLabel: chaininfo.CursorLabel,
+		Lifetime:    chaininfo.HeadBlockTime + 100,
+		Sender:      sender,
+		Contract:    contract,
+		Method:      method,
+		Param:       param,
+		SigAlg:      1,
+		//Signature:   signature,
+	}
+
+	http_url_sign := "http://" + ChainAddrWallet + "/v1/wallet/signhash"
+	tmpval, err, errcode := SignHash(hash, sender, http_url_sign)
+	intTrx.Signature = common.BytesToHex(tmpval)
+
+	if err != nil {
+		if errcode == berr.RestErrWalletLocked {
+			fmt.Printf("\nYour wallet of account [%s] is locked. Please unlock it first.\n\n", sender)
+		} else {
+			fmt.Println("BcliSignTrxOverHttp failed: ", err)
+		}
+		return nil, err
+	}
+
+	return intTrx, nil
+}
+
 func (cli *CLI) BcliGetTransaction (trxhash string) {
 	
 	var newAccountRsp *chain.GetTransactionResponse
