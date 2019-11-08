@@ -37,6 +37,10 @@ type ApiService struct {
 	env *env.ActorEnv
 }
 
+type ListWalletResponse_Result struct {
+	WalletPath  string `protobuf:"bytes,1,opt,name=wallet_path,json=walletPath" json:"wallet_path"`
+	AccountName string `protobuf:"bytes,2,opt,name=account_name,json=accountName" json:"account_name"`
+}
 var roleIntf role.RoleInterface
 //SetChainActorPid set chain actor pid
 func SetRoleIntf(tpid role.RoleInterface, env *actionenv.ActorEnv) {
