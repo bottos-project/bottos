@@ -42,6 +42,8 @@ type ListWalletResponse_Result struct {
 	AccountName string `protobuf:"bytes,2,opt,name=account_name,json=accountName" json:"account_name"`
 }
 var roleIntf role.RoleInterface
+var actorenv *actionenv.ActorEnv
+
 //SetChainActorPid set chain actor pid
 func SetRoleIntf(tpid role.RoleInterface, env *actionenv.ActorEnv) {
 	roleIntf = tpid
