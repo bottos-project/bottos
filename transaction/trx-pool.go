@@ -21,25 +21,21 @@
 package transaction
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/bpl"
 	"github.com/bottos-project/bottos/common"
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
+	"github.com/bottos-project/bottos/context"
 	"github.com/bottos-project/bottos/contract"
 	"github.com/bottos-project/bottos/db"
 	"github.com/bottos-project/bottos/role"
-
-	"crypto/sha256"
-	"encoding/hex"
+	"github.com/bottos-project/bottos/version"
 
 	bottosErr "github.com/bottos-project/bottos/common/errors"
-	"github.com/bottos-project/crypto-go/crypto"
 	log "github.com/cihub/seelog"
 )
 
@@ -52,15 +48,14 @@ var TrxPoolInst *TrxPool
 
 // TrxPool is definition of trx pool
 type TrxPool struct {
-	cache       []*CachedTransaction
-	cacheMap    map[common.Hash]*CachedTransaction
 	pending     map[common.Hash]*types.Transaction
 	roleIntf    role.RoleInterface
 	netActorPid *actor.PID
 
-	dbInst *db.DBService
-	mu     sync.RWMutex
-	quit   chan struct{}
+	dbInst   *db.DBService
+
+	mu   sync.RWMutex
+	quit chan struct{}
 }
 
 // InitTrxPool is init trx pool process when system start
