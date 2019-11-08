@@ -186,9 +186,17 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 }
 
 // HandleTransactionFromFront is handling trx from front
-func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, trx *types.Transaction) {
-	log.Infof("rcv trx %x from front,sender %v, contract %v, method %v", trx.Hash(), trx.Sender, trx.Contract, trx.Method)
-	trxPool.HandleTransactionCommon(context, trx)
+func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, p2pTrx *types.P2PTransaction) {
+	log.Infof("TRX rcv trx from front, trx %x, sender %v, contract %v, method %v, TTL %v", p2pTrx.Transaction.Hash(), p2pTrx.Transaction.Sender, p2pTrx.Transaction.Contract, p2pTrx.Transaction.Method, p2pTrx.TTL)
+
+	err := trxPool.HandleTransactionCommon(context, p2pTrx.Transaction)
+	
+	if bottosErr.ErrNoError != err {
+		log.Errorf("TRX handle trx from front failed, trx %x, error %v", p2pTrx.Transaction.Hash(), err)
+		trxApplyServiceInst.AddTrxErrorCode(p2pTrx.Transaction.Hash(), err)
+	} else {
+		trxPool.SendP2PTrx(p2pTrx)
+	}
 }
 
 // HandleTransactionFromP2P is handling trx from P2P
