@@ -185,6 +185,14 @@ func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *type
 	trxPool.netActorPid.Tell(notify)
 }
 
+// SendP2PTrx sends p2p trx
+func (trxPool *TrxPool) SendP2PTrx(p2pTrx *types.P2PTransaction){
+	notify := &message.NotifyTrx{
+		P2PTrx: p2pTrx,
+	}
+	trxPool.netActorPid.Tell(notify)
+}
+
 // HandleTransactionFromFront is handling trx from front
 func (trxPool *TrxPool) HandleTransactionFromFront(context actor.Context, p2pTrx *types.P2PTransaction) {
 	log.Infof("TRX rcv trx from front, trx %x, sender %v, contract %v, method %v, TTL %v", p2pTrx.Transaction.Hash(), p2pTrx.Transaction.Sender, p2pTrx.Transaction.Contract, p2pTrx.Transaction.Method, p2pTrx.TTL)
