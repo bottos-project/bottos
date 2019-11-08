@@ -271,6 +271,50 @@ func (trxApplyService *TrxApplyService) ExecuteTransaction(trx *types.Transactio
 	}
 
 	log.Infof("TRX contract exec succ, space is %v, time %v ", space, execTime)
+
+	//Add check Space token fee Start
+	// Failure to execute without deducting commission charges
+
+	if trx.Sender != config.BOTTOS_CONTRACT_NAME {
+		spaceTokenCost, spaceUsage, err, be := ProcessSpaceResource(trxApplyService.roleIntf, trx, space, f)
+		if err != nil {
+			log.Errorf("RESOURCE: check Process Space Resource failed:%v", err)
+			return false, bottosErr.ErrTrxCheckSpaceInternalError, nil, resouceReceipt, resUsage
+		}
+		if int(be) != 0 {
+			log.Errorf("RESOURCE: check Process Space Resource failed:%v", bottosErr.GetCodeString(be))
+			return false, be, nil, resouceReceipt, resUsage
+		}
+
+		//Start TIME calc
+		var timeUsage role.ResourceUsage
+		var timeTokenCost uint64
+
+		//if trxApplyService.roleIntf.IsMyselfValidator() {
+		if verifyTimeFlag {
+			var be bottosErr.ErrCode
+			timeTokenCost, timeUsage, err, be = ProcessTimeResource(trxApplyService.roleIntf, trx, execTime, f)
+			if err != nil {
+				log.Errorf("RESOURCE: check Process Time Resource failed:%v", err)
+				return false, bottosErr.ErrTrxCheckTimeInternalError, nil, resouceReceipt, resUsage
+			}
+			if int(be) != 0 {
+				log.Errorf("RESOURCE: check Process Time Resource failed:%v", bottosErr.GetCodeString(be))
+				return false, be, nil, resouceReceipt, resUsage
+			}
+		}
+
+		resUsage = generateNewUsage(spaceUsage, timeUsage)
+
+		err = UpdateResourceUsage(trxApplyService.roleIntf, resUsage)
+		if err != nil {
+			log.Errorf("RESOURCE: Update Resource Usage failed:%v", err)
+			return false, bottosErr.ErrTrxCheckResourceInternalError, nil, resouceReceipt, resUsage
+		}
+		resouceReceipt = AddResourceReceipt(timeUsage.AccountName, spaceTokenCost, timeTokenCost)
+	}
+	//Check Time token fee End
+
 	handleTrx := &types.HandledTransaction{
 		Transaction: trx,
 		DerivedTrx:  derivedTrxList,
