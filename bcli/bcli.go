@@ -1346,6 +1346,31 @@ func (cli *CLI) jsonPrint(data []byte) {
 	fmt.Println(string(out.Bytes()))
 }
 
+func IsContractExist(contractname string) bool {
+	var err error
+	if contractname == config.BOTTOS_CONTRACT_NAME {
+		return true
+	}
+
+	httpurl_contractcode := "http://" + ChainAddr + "/v1/contract/code"
+	getcontract := &GetContractCodeAbi{Contract: contractname}
+	req, _ := json.Marshal(getcontract)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", httpurl_contractcode, req_new)
+
+	if err != nil || httpRspBody == nil {
+		return false
+	}
+	var trxrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+	if err != nil || trxrespbody.Result == nil {
+		return false
+	}
+
+	return true
+}
+
 //getAbibyContractName function
 func getAbibyContractName(contractname string) (abi.ABI, error) {
 	var abistring string
