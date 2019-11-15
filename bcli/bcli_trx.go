@@ -193,7 +193,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 	http_method := "restful"
 
 	if http_method == "grpc" {
-		gettrx := &chain.GetTransactionRequest{trxhash}
+		gettrx := &chain.GetTransactionRequest{TrxHash: trxhash}
 		newAccountRsp, err = cli.client.GetTransaction(context.TODO(), gettrx)
 		if err != nil || newAccountRsp == nil {
 			fmt.Println(err)
@@ -431,7 +431,6 @@ func (cli *CLI) BcliSendTransaction(pushtrxinfo *BcliPushTrxInfo) {
 	fmt.Printf("\nTrxHash: %v\n", newAccountRsp.Result.TrxHash)
 	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
 }
-
 
 type GetContractCodeAbi struct {
 	Contract string `json:"contract"`

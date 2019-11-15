@@ -27,8 +27,11 @@ package types
 
 import (
 	"crypto/sha256"
-	"github.com/bottos-project/bottos/common"
+
 	"github.com/bottos-project/bottos/bpl"
+	"github.com/bottos-project/bottos/common"
+	"github.com/bottos-project/bottos/common/signature"
+	log "github.com/cihub/seelog"
 )
 
 type Block struct {
@@ -47,7 +50,20 @@ type Header struct {
 	DelegateChanges []string
 }
 
-func NewBlock(h *Header, txs []*Transaction) *Block {
+type BlockDetail struct {
+	BlockVersion      uint32        `json:"block_version"`
+	PrevBlockHash    string         `json:"prev_block_hash"`
+	BlockNum         uint64         `json:"block_num"`
+	BlockHash        string         `json:"block_hash"`
+	CursorBlockLabel uint32         `json:"cursor_block_label"`
+	BlockTime        uint64         `json:"block_time"`
+	TrxMerkleRoot    string         `json:"trx_merkle_root"`
+	Delegate         string         `json:"delegate"`
+	DelegateSign     string         `json:"delegate_sign"`
+	Trxs             []*interface{} `json:"trxs"`
+}
+
+func NewBlock(h *Header, txs []*BlockTransaction) *Block {
 	b := Block{Header: copyHeader(h)}
 
 	if len(txs) > 0 {
