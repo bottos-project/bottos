@@ -215,7 +215,7 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 
 	} else {
 		http_url := "http://"+ChainAddr+ "/v1/transaction/get"
-		gettrx := &chain.GetTransactionRequest{trxhash}
+		gettrx := &chain.GetTransactionRequest{TrxHash: trxhash}
 		req, _ := json.Marshal(gettrx)
 		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
@@ -233,8 +233,43 @@ func (cli *CLI) BcliGetTransaction (trxhash string) {
 		    return
 		}
 		
+		if trxrespbody.Result != nil {
 		b, _ := json.Marshal(trxrespbody.Result)
 		cli.jsonPrint(b)
+	}
+		http_url = "http://" + ChainAddr + "/v1/transaction/status"
+		gettrx = &chain.GetTransactionRequest{TrxHash: trxhash}
+		req, _ = json.Marshal(gettrx)
+		req_new = bytes.NewBuffer([]byte(req))
+		httpRspBody, err = send_httpreq("POST", http_url, req_new)
+		if err != nil || httpRspBody == nil {
+			fmt.Println("Error. httpRspBody: ", httpRspBody, ", err: ", err)
+			return
+		}
+
+		err = json.Unmarshal(httpRspBody, &trxrespbody)
+
+		if err != nil {
+			fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+			return
+		}
+		if trxrespbody.Result == nil {
+			fmt.Printf("\nGet transaction status failed\n\n")
+			return
+		}
+
+		b, _ := json.Marshal(trxrespbody.Result)
+		//cli.jsonPrint(b)
+
+		var trxstatus TransactionStatus
+		err = json.Unmarshal(b, &trxstatus)
+
+		if err != nil {
+			fmt.Println("Error! Unmarshal to trx failed: ", err, "| body is: ", string(httpRspBody), ". trxrsp:")
+			return
+		}
+
+		fmt.Printf("\n<<<Transaction Status>>> : %s\n\n", trxstatus.Status)
 	}
 }
 
