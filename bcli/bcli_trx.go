@@ -22,6 +22,10 @@ type BcliPushTrxInfo struct {
 	ParamMap map[string]interface{}
 }
 
+type TransactionStatus struct {
+	Status string `json:"status"`
+}
+
 func send_httpreq (get_or_post string, ReqUrl string, ReqMsg io.Reader) ([]byte, error) {
     var err error	
     
