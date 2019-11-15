@@ -1373,7 +1373,6 @@ func IsContractExist(contractname string) bool {
 
 //getAbibyContractName function
 func getAbibyContractName(contractname string) (abi.ABI, error) {
-	var abistring string
 	/*NodeIp := "127.0.0.1"
 	addr := "http://" + NodeIp + ":8080/rpc"
 	params := `service=bottos&method=Chain.GetAbi&request={
@@ -1401,10 +1400,31 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	}
 	
 	*/
+
 	http_url := "http://" + ChainAddr + "/v1/contract/abi"
-	abistring, err := GetAbiOverHttp(http_url, contractname)
-	if len(abistring) <= 0 || err != nil {
-		return abi.ABI{}, errors.New("len(abistring) <= 0")
+	Abi, err := GetAbiOverHttp(http_url, contractname)
+	if err != nil {
+		return abi.ABI{}, errors.New("GetAbiOverHttp failed")
+	}
+
+	return Abi, nil
+}
+
+//getAbiFieldsByAbiEx function
+func getAbiFieldsByAbiEx(contractname string, method string, abi abi.ABI, subStructName string) *abi.FeildMap {
+	for _, subaction := range abi.Actions {
+		if subaction.ActionName != method {
+			continue
+		}
+		structname := subaction.Type
+
+		for _, substruct := range abi.Structs {
+			if subStructName != "" {
+				if substruct.Name != subStructName {
+					continue
+				}
+			} else if structname != substruct.Name {
+				continue
 	}
 
 	Abi, err := abi.ParseAbi([]byte(abistring))
