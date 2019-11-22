@@ -1427,13 +1427,11 @@ func getAbiFieldsByAbiEx(contractname string, method string, abi abi.ABI, subStr
 				continue
 	}
 
-	Abi, err := abi.ParseAbi([]byte(abistring))
-	if err != nil {
-		fmt.Println("Parse abistring", abistring, " to abi failed!")
-		return abi.ABI{}, err
+			return substruct.Fields
+		}
 	}
 
-	return *Abi, nil
+	return nil
 }
 
 func (cli *CLI) newaccount(name string, pubkey string, referrer string) {
