@@ -34,9 +34,18 @@ import (
 	log "github.com/cihub/seelog"
 )
 
-type Block struct {
+type BlockV0 struct {
 	Header       *Header
 	Transactions []*Transaction
+	ValidatorSet []*Validator
+}
+
+//how to add field when upgrade version: NewField   uint64 `version:"x.x.x"`，x.x.x is new version
+type Block struct {
+	Header       *Header
+	BlockTransactions []*BlockTransaction
+	//Transactions []*Transaction
+	ValidatorSet []*Validator
 }
 
 type Header struct {
