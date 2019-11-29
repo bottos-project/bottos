@@ -151,6 +151,23 @@ func (trxPool *TrxPool) expirationCheckLoop() {
 	}
 }
 
+func (trxPool *TrxPool) IsCacheEmpty() bool {
+
+	trxPool.cacheMutex.Lock()
+	defer trxPool.cacheMutex.Unlock()
+
+	return len(trxPool.cache) == 0
+}
+
+func (trxPool *TrxPool) IsTransactionInCache(trxHash common.Hash) bool {
+
+	trxPool.cacheMutex.Lock()
+	defer trxPool.cacheMutex.Unlock()
+
+	_, exist := trxPool.cacheMap[trxHash]
+	return exist
+}
+
 func (trxPool *TrxPool) isTransactionExist(trx *types.Transaction) bool {
 
 	trxPool.mu.Lock()
