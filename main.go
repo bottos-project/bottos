@@ -38,38 +38,63 @@ var (
 )
 
 func init() {
-	app.Usage = "the bottos command line interface"
-	app.Version = "3.2.0"
-	app.Copyright = "Copyright 2017~2022 The Bottos Authors"
+	app.Usage = config.USAGE
+	app.Version = version.GetAppVersionString()
+	app.Copyright = config.COPYRIGHT
 	app.Flags = []cli.Flag{
 		cmd.ConfigFileFlag,
 		cmd.GenesisFileFlag,
 		cmd.DataDirFlag,
 		cmd.DisableRESTFlag,
 		cmd.RESTPortFlag,
-		cmd.RESTServerAddrFlag,
-		cmd.DisableRPCFlag,
-		cmd.RPCPortFlag,
+		//cmd.EnableRPCFlag,
+		//cmd.RPCPortFlag,
 		cmd.P2PPortFlag,
 		cmd.P2PServerAddrFlag,
+		cmd.RESTServerAddrFlag,
 		cmd.PeerListFlag,
 		cmd.DelegateSignkeyFlag,
 		cmd.DelegateFlag,
-		cmd.EnableStaleReportFlag,
+		cmd.DelegatePrateFlag,
 		cmd.EnableMongoDBFlag,
 		cmd.MongoDBFlag,
 		cmd.LogConfigFlag,
 		cmd.WalletDirFlag,
 		cmd.EnableWalletFlag,
+		cmd.WalletRESTPortFlag,
+		cmd.WalletRESTServerAddrFlag,
+		cmd.DebugFlag,
+		cmd.LogMinLevelFlag,
+		cmd.LogMaxLevelFlag,
+		cmd.LogLevelsFlag,
+		cmd.LogMaxrollsFlag,
+		cmd.RecoverAtBlockNumFlag,
+		cmd.RecoverFromDataDirFlag,
+		cmd.RestMaxLimit,
+		cmd.WalletRestMaxLimit,
 	}
 	app.Action = startBottos
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
+		if ctx.GlobalBool(cmd.DebugFlag.Name) {
+			go func() {
+				http.ListenAndServe("0.0.0.0:6060", nil)
+			}()
+		}
+		return nil
+	}
+	app.After = func(ctx *cli.Context) error {
+		if ctx.GlobalBool(cmd.DebugFlag.Name) {
+			saveHeapProfile()
+		}
 		return nil
 	}
 }
 
 func main() {
+
+	signal.Ignore(syscall.SIGHUP)
+
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
