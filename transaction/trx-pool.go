@@ -41,20 +41,31 @@ import (
 
 var (
 	trxExpirationCheckInterval = 60 * time.Second // Time interval for check expiration pending transactions
+	trxCacheCheckInterval      = 2 * time.Second  // Time interval for check cache pending transactions
 )
 
 // TrxPoolInst is local var of TrxPool
 var TrxPoolInst *TrxPool
 
+type CachedTransaction struct {
+	hash common.Hash
+	msg  interface{} //*message.PushTrxForP2PReq or *message.ReceiveTrx
+}
+
 // TrxPool is definition of trx pool
 type TrxPool struct {
+	cache       []*CachedTransaction
+	cacheMap    map[common.Hash]*CachedTransaction
 	pending     map[common.Hash]*types.Transaction
 	roleIntf    role.RoleInterface
+	protocol    context.ProtocolInterface
 	netActorPid *actor.PID
+	trxActorPid *actor.PID
 
 	dbInst   *db.DBService
 
 	mu   sync.RWMutex
+	cacheMutex sync.RWMutex
 	quit chan struct{}
 }
 
@@ -62,18 +73,53 @@ type TrxPool struct {
 func InitTrxPool(dbInstance *db.DBService, roleIntf role.RoleInterface, nc contract.NativeContractInterface, protocol context.ProtocolInterface, netActorPid *actor.PID) *TrxPool {
 
 	TrxPoolInst = &TrxPool{
+		cache:       make([]*CachedTransaction, 0, 100),
+		cacheMap:    make(map[common.Hash]*CachedTransaction),
 		pending:     make(map[common.Hash]*types.Transaction),
 		roleIntf:    roleIntf,
+		protocol:    protocol,
 		netActorPid: netActorPid,
+		trxActorPid: trxActorPid,
 		dbInst:      dbInstance,
 		quit: make(chan struct{}),
 	}
 
 	CreateTrxApplyService(roleIntf, nc)
 
+	go TrxPoolInst.cacheCheckLoop()
 	go TrxPoolInst.expirationCheckLoop()
 
 	return TrxPoolInst
+}
+
+func (trxPool *TrxPool) cacheCheckLoop() {
+
+	expire := time.NewTicker(trxCacheCheckInterval)
+	defer expire.Stop()
+
+	for {
+		select {
+		case <-expire.C:
+
+			trxPool.cacheMutex.Lock()
+
+			if len(trxPool.cache) > 0 && trxPool.protocol.GetBlockSyncState() {
+				log.Infof("TRX trx num in cache before check: %v", len(trxPool.cache))
+				for _, c := range trxPool.cache {
+					log.Infof("TRX remove cache trx %x", c.hash)
+					trxPool.trxActorPid.Tell(c.msg)
+				}
+				trxPool.cache = trxPool.cache[0:0]
+				trxPool.cacheMap = make(map[common.Hash]*CachedTransaction)
+				log.Infof("TRX trx num in cache after check: %v", len(trxPool.cache))
+			}
+
+			trxPool.cacheMutex.Unlock()
+
+		case <-trxPool.quit:
+			return
+		}
+	}
 }
 
 func (trxPool *TrxPool) expirationCheckLoop() {
