@@ -81,6 +81,17 @@ func GetResourceUsageRoleByName(ldb *db.DBService, name string) (*ResourceUsage,
 
 	return res, nil
 }
+
+// SetResourceLimitRole is to set resource limit
+/*func SetResourceReceiptRole(ldb *db.DBService, accountName string, value *ResourceReceipt) error {
+	key := accountName
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return ldb.SetObject(ResourceLimitObjectName, key, string(jsonvalue))
+}*/
+
 // GetResourceLimitRole is to get resource limit
 /*func GetResourceReceiptRole(ldb *db.DBService, accountName string) (*ResourceReceipt, error) {
 	key := accountName
