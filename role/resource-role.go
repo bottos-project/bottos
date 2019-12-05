@@ -63,4 +63,22 @@ func GetResourceLimitRole(ldb *db.DBService, accountName string) (*ResourceLimit
 
 	return res, nil
 }
+// GetResourceUsageRoleByName is to get resource usage
+func GetResourceUsageRoleByName(ldb *db.DBService, name string) (*ResourceUsage, error) {
+	key := name
+	value, err := ldb.GetObject(ResourceUsageObjectName, key)
+	if err != nil {
+		log.Errorf("DB: get resource role:%v", err)
+		return nil, err
+	}
+
+	res := &ResourceUsage{}
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		log.Errorf("ROLE Unmarshal failed %v", err)
+		return nil, err
+	}
+
+	return res, nil
+}
 
