@@ -34,7 +34,28 @@ import (
 )
 
 func Test_SetBinValue(t *testing.T) {
+	ins := db.NewDbService("./file3", "./file3/db.db")
+	err := CreateKeyValueRole(ins)
+	if err != nil {
+		log.Error(err)
+	}
+	value := make([]byte, 100)
+	value = []byte{220, 0, 2, 206, 0, 0, 0, 2, 206, 0, 0, 0, 3}
+	err = SetBinValue(ins, "dbtest3@usermng1111", "usermng1111", "testTableNametestKeyName4", value)
+	if err != nil {
+		log.Error("GetBinValue", err)
+	}
+	myvalue, err1 := GetBinValue(ins, "dbtest3@usermng1111", "usermng1111", "testTableNametestKeyName4")
+	if err1 != nil {
+		log.Error("GetBinValue", err1)
+	}
+	fmt.Println("myvalue ", myvalue)
 
+	myvalue2, err2 := GetBinValue(ins, "dbtest3@usermng1111", "usermng1111", "testTableNametestKeyName4")
+	if err2 != nil {
+		log.Error("GetBinValue", err2)
+	}
+	fmt.Println("myvalue ", myvalue2)
 	fmt.Println("success")
 
 }
