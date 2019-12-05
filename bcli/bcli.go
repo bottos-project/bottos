@@ -1346,9 +1346,33 @@ func (cli *CLI) jsonPrint(data []byte) {
 	fmt.Println(string(out.Bytes()))
 }
 
+func IsContractExist(contractname string) bool {
+	var err error
+	if contractname == config.BOTTOS_CONTRACT_NAME {
+		return true
+	}
+
+	httpurl_contractcode := "http://" + ChainAddr + "/v1/contract/code"
+	getcontract := &GetContractCodeAbi{Contract: contractname}
+	req, _ := json.Marshal(getcontract)
+	req_new := bytes.NewBuffer([]byte(req))
+	httpRspBody, err := send_httpreq("POST", httpurl_contractcode, req_new)
+
+	if err != nil || httpRspBody == nil {
+		return false
+	}
+	var trxrespbody TODO.ResponseStruct
+
+	err = json.Unmarshal(httpRspBody, &trxrespbody)
+	if err != nil || trxrespbody.Result == nil {
+		return false
+	}
+
+	return true
+}
+
 //getAbibyContractName function
 func getAbibyContractName(contractname string) (abi.ABI, error) {
-	var abistring string
 	/*NodeIp := "127.0.0.1"
 	addr := "http://" + NodeIp + ":8080/rpc"
 	params := `service=bottos&method=Chain.GetAbi&request={
@@ -1376,26 +1400,56 @@ func getAbibyContractName(contractname string) (abi.ABI, error) {
 	}
 	
 	*/
+
 	http_url := "http://" + ChainAddr + "/v1/contract/abi"
-	abistring, err := GetAbiOverHttp(http_url, contractname)
-	if len(abistring) <= 0 || err != nil {
-		return abi.ABI{}, errors.New("len(abistring) <= 0")
-	}
-
-	Abi, err := abi.ParseAbi([]byte(abistring))
+	Abi, err := GetAbiOverHttp(http_url, contractname)
 	if err != nil {
-		fmt.Println("Parse abistring", abistring, " to abi failed!")
-		return abi.ABI{}, err
+		return abi.ABI{}, errors.New("GetAbiOverHttp failed")
 	}
 
-	return *Abi, nil
+	return Abi, nil
 }
 
-func (cli *CLI) newaccount(name string, pubkey string) {
+//getAbiFieldsByAbiEx function
+func getAbiFieldsByAbiEx(contractname string, method string, abi abi.ABI, subStructName string) *abi.FeildMap {
+	for _, subaction := range abi.Actions {
+		if subaction.ActionName != method {
+			continue
+		}
+		structname := subaction.Type
 
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
+		for _, substruct := range abi.Structs {
+			if subStructName != "" {
+				if substruct.Name != subStructName {
+					continue
+				}
+			} else if structname != substruct.Name {
+				continue
+	}
+
+			return substruct.Fields
+		}
+	}
+
+	return nil
+}
+
+func (cli *CLI) newaccount(name string, pubkey string, referrer string) {
+
+	var err error
+
+	infourl := "http://" + ChainAddr + "/v1/account/brief"
+	account, _ := cli.getAccountInfoOverHttp(name, infourl, true)
+
+	if account != nil {
+		fmt.Println("The account has been already registered.")
+		return
+	}
+
+	if len(pubkey) != PUBKEY_LEN {
+		fmt.Println("\nNewaccount error: public key len is invalid! Public key sample: 0454f1c2223d553aa6ee53ea1ccea8b7bf78b8ca99f3ff622a3bb3e62dedc712089033d6091d77296547bc071022ca2838c9e86dec29667cf740e5c9e654b6127f")
+		return
+	}
 	
 	if err != nil {
 		fmt.Println("GetInfo error: ", err)
@@ -1423,43 +1477,25 @@ func (cli *CLI) newaccount(name string, pubkey string) {
         abi.Setmapval(mapstruct, "pubkey", pubkey)
         
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "newaccount")
-
-	trx := &chain.Transaction{
-		Version:     1,
-		CursorNum:   chainInfo.HeadBlockNum,
-		CursorLabel: chainInfo.CursorLabel,
-		Lifetime:    chainInfo.HeadBlockTime + 100,
-		Sender:      "delta",
-		Contract:    "bottos",
-		Method:      "newaccount",
-		Param:       BytesToHex(param),
-		SigAlg:      1,
+	Sender := "bottos"
+	if len(referrer) > 0 {
+		Sender = referrer
 	}
 
-	sign, err := cli.signTrx(trx, param)
-	if err != nil {
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, Sender, "bottos", "newaccount", BytesToHex(param))
+
+	if err != nil || ptrx == nil {
 		return
 	}
 
-	trx.Signature = sign
-
-	/*rsp, err := cli.client.SendTransaction(context.TODO(), trx)
-	if err != nil || rsp == nil {
-		fmt.Println(err)
-		return
-	}
-
-	if rsp.Errcode != 0 {
-		fmt.Printf("Newaccount error:\n")
-		fmt.Printf("    %v\n", rsp.Msg)
-		return
-	} */
+	trx := *ptrx
 	
 	req, _ := json.Marshal(trx)
 	req_new := bytes.NewBuffer([]byte(req))
 	httpRspBody, err := send_httpreq("POST", "http://" + ChainAddr + "/v1/transaction/send", req_new)
 	if err != nil || httpRspBody == nil {
-		fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+		fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 		return
 	}
 	
@@ -1471,10 +1507,8 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 	}
 	rsp := &respbody
 	
-
-	fmt.Printf("Create account: %v Succeed\n", name)
+	/*fmt.Printf("\nPush transaction done for creating account %v.\n", name)
 	fmt.Printf("Trx: \n")
-
 	printTrx := Transaction{
 		Version:     trx.Version,
 		CursorNum:   trx.CursorNum,
@@ -1484,14 +1518,16 @@ func (cli *CLI) newaccount(name string, pubkey string) {
 		Contract:    trx.Contract,
 		Method:      trx.Method,
 		Param:       nps,
-		ParamBin:    trx.Param,
+		ParamBin:    common.BytesToHex(param),
 		SigAlg:      trx.SigAlg,
 		Signature:   trx.Signature,
 	}
 
 	b, _ := json.Marshal(printTrx)
-	cli.jsonPrint(b)
-	fmt.Printf("TrxHash: %v\n", rsp.Result.TrxHash)
+	cli.jsonPrint(b)*/
+	fmt.Printf("\nTrxHash: %v\n", rsp.Result.TrxHash)
+	fmt.Printf("\nThis transaction is sent. Please check its result by command : bcli transaction get --trxhash  <hash>\n\n")
+	fmt.Printf("Please create wallet for your new account.\n")
 }
 
 func (cli *CLI) getaccount(name string) {

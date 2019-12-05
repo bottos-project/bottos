@@ -746,6 +746,52 @@ func (bc *BlockChain) InsertBlock(block *types.Block) uint32 {
 	return InsertBlockSuccess
 }
 
+//CheckAcceptedValidators if validator is greater than 2/3
+func (b *BlockChain) CheckAcceptedValidators(block *types.Block) bool {
+	if block.GetNumber() == 0 {
+		log.Errorf("CHAIN block number is 0")
+		return true
+	}
+	gs, _ := b.roleIntf.GetGenesisState()
+	if gs.ProduceTransfer == false {
+		log.Errorf("CHAIN ProduceTransfer is false")
+		return true
+	}
+
+	if len(block.ValidatorSet) < int(types.BFTConfirmNum()) {
+		log.Errorf("CHAIN block validator set is less, length %v", len(block.ValidatorSet))
+		return false
+	}
+
+	var count uint32
+	count = 0
+	for _, val := range block.ValidatorSet {
+		if val == nil {
+			continue
+		}
+		delegate, err := b.roleIntf.GetDelegateByAccountName(string(val.Delegate))
+		if err != nil {
+			log.Errorf("CHAIN find delegate by account failed", string(val.Delegate))
+			continue
+		}
+		pubkey := common.HexStringToBytes(delegate.ReportKey)
+		log.Debugf("CHAIN account %s, pubkey %x", string(val.Delegate), pubkey)
+		if !block.VerifyVote(pubkey, val) {
+			continue
+		}
+		if val.VoteInfo.VoteResult == config.BLOCK_VOTE_RESULT_ACCEPT {
+			count++
+		}
+	}
+
+	if count >= types.BFTConfirmNum() {
+		log.Debug("CHAIN check block vote greater than 2/3")
+		return true
+	}
+	log.Debug("CHAIN check block vote less than 2/3")
+	return false
+
+}
 
 func (b *BlockChain) GetLastBlockNumber() (uint64, error) {
 	lastb := b.blockDb.GetLastBlock()
