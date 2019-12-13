@@ -33,7 +33,8 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/bottos-project/bottos/action/env"
 	"github.com/bottos-project/bottos/action/message"
-	"github.com/bottos-project/bottos/chain"
+	"github.com/bottos-project/bottos/common"
+	berr "github.com/bottos-project/bottos/common/errors"
 	"github.com/bottos-project/bottos/common/types"
 )
 
