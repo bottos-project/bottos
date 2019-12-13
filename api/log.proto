@@ -1,0 +1,14 @@
+﻿syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/bottos-project/bottos/api";
+
+message SetLogConfigItemRequest {
+    string key = 1;
+	string value = 2;
+}
+
+message SetLogConfigItemResponse {
+    uint32 errcode = 1;
+}
