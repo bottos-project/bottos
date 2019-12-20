@@ -105,15 +105,15 @@ func (t *TrxActor) Receive(context actor.Context) {
 
 		trxPool.HandleTransactionFromP2P(context, msg.P2PTrx)
 
-	case *message.GetAllPendingTrxReq:
+	//case *message.GetAllPendingTrxReq:
 
-		trxPool.GetAllPendingTransactions(context)
+	//	trxPool.GetAllPendingTransactions(context)
 
-		log.Info("get all pending trx, elapsed time ",common.Elapsed(start) )
+	//	log.Info("get all pending trx, elapsed time ",common.Elapsed(start) )
 
-	case *message.RemovePendingTrxsReq:
+	//case *message.RemovePendingTrxsReq:
 
-		trxPool.RemoveTransactions(msg.Trxs)
+	//	trxPool.RemoveTransactions(msg.Trxs)
 
 	default:
 		log.Errorf("trx actor: Unknown msg ", msg)
