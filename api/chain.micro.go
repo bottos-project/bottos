@@ -170,6 +170,26 @@ func (c *chainClient) GetTransferCredit(ctx context.Context, in *GetTransferCred
 	return out, nil
 }
 
+func (c *chainClient) GetAllDelegates(ctx context.Context, in *GetAllDelegatesRequest, opts ...client.CallOption) (*GetAllDelegatesResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetAllDelegates", in)
+	out := new(GetAllDelegatesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chainClient) GetDelegate(ctx context.Context, in *GetDelegateRequest, opts ...client.CallOption) (*GetDelegateResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetDelegate", in)
+	out := new(GetDelegateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Chain service
 
 type ChainHandler interface {
