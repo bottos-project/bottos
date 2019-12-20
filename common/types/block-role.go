@@ -126,9 +126,9 @@ func (b *Block) GetMerkleRoot() common.Hash {
 }
 
 func (b *Block) ComputeMerkleRoot() common.Hash {
-	if len(b.Transactions) > 0 {
+	if len(b.BlockTransactions) > 0 {
 		var hs []common.Hash
-		for _, tx := range b.Transactions {
+		for _, tx := range b.BlockTransactions {
 			hs = append(hs, tx.Hash())
 		}
 		return common.ComputeMerkleRootHash(hs)
@@ -136,23 +136,18 @@ func (b *Block) ComputeMerkleRoot() common.Hash {
 	return common.Hash{}
 }
 
-func (b *Block) Sign(signkey string) common.Hash {
-	// TODO
-	return common.Hash{}
-}
-
 func (b *Block) GetDelegate() []byte {
 	return b.Header.GetDelegate()
 }
 
-func (b *Block) GetDelegateSign() common.Hash {
-	bh := b.Header.GetDelegateSign()
-	return common.BytesToHash(bh)
+func (b *Block) GetDelegateSign() []byte {
+	sign := b.Header.GetDelegateSign()
+	return sign
 }
 
-func (b *Block) GetTransactionByHash(hash common.Hash) *Transaction {
-	for _, transaction := range b.Transactions {
-		if transaction.Hash() == hash {
+func (b *Block) GetTransactionByHash(hash common.Hash) *BlockTransaction {
+	for _, transaction := range b.BlockTransactions {
+		if transaction.Transaction.Hash() == hash {
 			return transaction
 		}
 	}
