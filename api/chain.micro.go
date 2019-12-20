@@ -32,9 +32,34 @@ type ChainClient interface {
 	GetInfo(ctx context.Context, in *GetInfoRequest, opts ...client.CallOption) (*GetInfoResponse, error)
 	GetAccountBrief(ctx context.Context, in *GetAccountBriefRequest, opts ...client.CallOption) (*GetAccountBriefResponse, error)
 	GetAccount(ctx context.Context, in *GetAccountRequest, opts ...client.CallOption) (*GetAccountResponse, error)
-	GetKeyValue(ctx context.Context, in *GetKeyValueRequest, opts ...client.CallOption) (*GetKeyValueResponse, error)
+	QueryDBValue(ctx context.Context, in *QueryDBValueRequest, opts ...client.CallOption) (*QueryDBValueResponse, error)
 	GetAbi(ctx context.Context, in *GetAbiRequest, opts ...client.CallOption) (*GetAbiResponse, error)
 	GetTransferCredit(ctx context.Context, in *GetTransferCreditRequest, opts ...client.CallOption) (*GetTransferCreditResponse, error)
+	//    delegate
+	GetAllDelegates(ctx context.Context, in *GetAllDelegatesRequest, opts ...client.CallOption) (*GetAllDelegatesResponse, error)
+	GetDelegate(ctx context.Context, in *GetDelegateRequest, opts ...client.CallOption) (*GetDelegateResponse, error)
+	//    resource
+	GetForecastResBalance(ctx context.Context, in *GetForecastResBalanceRequest, opts ...client.CallOption) (*GetForecastResBalanceResponse, error)
+	//    p2p
+	ConnectPeerByAddress(ctx context.Context, in *ConnectPeerByAddressRequest, opts ...client.CallOption) (*ConnectPeerByAddressResponse, error)
+	DisconnectPeerByAddress(ctx context.Context, in *DisconnectPeerByAddressRequest, opts ...client.CallOption) (*DisconnectPeerByAddressResponse, error)
+	GetPeerStateByAddress(ctx context.Context, in *GetPeerStateByAddressRequest, opts ...client.CallOption) (*GetPeerStateByAddressResponse, error)
+	GetPeers(ctx context.Context, in *GetPeersRequest, opts ...client.CallOption) (*GetPeersResponse, error)
+	GetHashForSign(ctx context.Context, in *GetHashForSignRequest, opts ...client.CallOption) (*GetHashForSignResponse, error)
+	//    wallet
+	GenerateKeyPair(ctx context.Context, in *GenerateKeyPairRequest, opts ...client.CallOption) (*GenerateKeyPairResponse, error)
+	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...client.CallOption) (*CreateAccountResponse, error)
+	CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...client.CallOption) (*CreateWalletResponse, error)
+	CreateWalletManual(ctx context.Context, in *CreateWalletManualRequest, opts ...client.CallOption) (*CreateWalletManualResponse, error)
+	UnlockAccount(ctx context.Context, in *UnlockAccountRequest, opts ...client.CallOption) (*UnlockAccountResponse, error)
+	LockAccount(ctx context.Context, in *LockAccountRequest, opts ...client.CallOption) (*LockAccountResponse, error)
+	ListWallet(ctx context.Context, in *ListWalletRequest, opts ...client.CallOption) (*ListWalletResponse, error)
+	GetKeyPair(ctx context.Context, in *GetKeyPairRequest, opts ...client.CallOption) (*GetKeyPairResponse, error)
+	GetPubKey(ctx context.Context, in *GetPubKeyRequest, opts ...client.CallOption) (*GetPubKeyResponse, error)
+	SignTransaction(ctx context.Context, in *SignTransactionRequest, opts ...client.CallOption) (*SignTransactionResponse, error)
+	SignData(ctx context.Context, in *SignDataRequest, opts ...client.CallOption) (*SignDataResponse, error)
+	SignHash(ctx context.Context, in *SignHashRequest, opts ...client.CallOption) (*SignHashResponse, error)
+	ReviewProposal(ctx context.Context, in *ReviewProposalRequest, opts ...client.CallOption) (*ReviewProposalResponse, error)
 }
 
 type chainClient struct {
@@ -115,9 +140,9 @@ func (c *chainClient) GetAccount(ctx context.Context, in *GetAccountRequest, opt
 	return out, nil
 }
 
-func (c *chainClient) GetKeyValue(ctx context.Context, in *GetKeyValueRequest, opts ...client.CallOption) (*GetKeyValueResponse, error) {
-	req := c.c.NewRequest(c.serviceName, "Chain.GetKeyValue", in)
-	out := new(GetKeyValueResponse)
+func (c *chainClient) QueryDBValue(ctx context.Context, in *QueryDBValueRequest, opts ...client.CallOption) (*QueryDBValueResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.QueryDBValue", in)
+	out := new(QueryDBValueResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
