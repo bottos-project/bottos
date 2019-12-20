@@ -500,6 +500,17 @@ type GetAccountResponse_Result struct {
 	Pubkey        string `protobuf:"bytes,2,opt,name=pubkey" json:"pubkey"`
 	Balance       string `protobuf:"bytes,3,opt,name=balance" json:"balance"`
 	StakedBalance string `protobuf:"bytes,4,opt,name=staked_balance,json=stakedBalance" json:"staked_balance"`
+	StakedSpaceBalance   string                   `protobuf:"bytes,5,opt,name=staked_space_balance,json=stakedSpaceBalance" json:"staked_space_balance"`
+	StakedTimeBalance    string                   `protobuf:"bytes,6,opt,name=staked_time_balance,json=stakedTimeBalance" json:"staked_time_balance"`
+	UnStakingBalance     string                   `protobuf:"bytes,7,opt,name=unStaking_balance,json=unStakingBalance" json:"unStaking_balance"`
+	UnStakingTimestamp   uint64                   `protobuf:"varint,8,opt,name=unStaking_timestamp,json=unStakingTimestamp" json:"unStaking_timestamp"`
+	Authority            []*MsignAccountAuthority `protobuf:"bytes,9,rep,name=authority" json:"authority"`
+	Threshold            uint32                   `protobuf:"varint,10,opt,name=threshold" json:"threshold"`
+	Resource             *Resource                `protobuf:"bytes,11,opt,name=resource" json:"resource"`
+	UnClaimedBlockReward string                   `protobuf:"bytes,12,opt,name=unClaimed_block_reward,json=unClaimedBlockReward" json:"unClaimed_block_reward"`
+	UnClaimedVoteReward  string                   `protobuf:"bytes,13,opt,name=unClaimed_vote_reward,json=unClaimedVoteReward" json:"unClaimed_vote_reward"`
+	DeployContractList   string                   `protobuf:"bytes,14,opt,name=deploy_contract_list,json=deployContractList" json:"deploy_contract_list"`
+	Vote                 *Vote                    `protobuf:"bytes,15,opt,name=vote" json:"vote"`
 }
 
 func (m *GetAccountResponse_Result) Reset()                    { *m = GetAccountResponse_Result{} }
