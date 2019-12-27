@@ -2075,15 +2075,8 @@ func checkAbi(abiRaw []byte) error {
 	return nil
 }
 
-func (cli *CLI) deployabi(name string, path string) {
-	//chainInfo, err := cli.getChainInfo()
-	infourl := "http://" + ChainAddr + "/v1/block/height"
-	chainInfo, err := cli.GetChainInfoOverHttp(infourl)
-	
-	if err != nil {
-		fmt.Println("GetInfo error: ", err)
-		return
-	}
+func (cli *CLI) deployabi(name string, path string, user string, fileType string) {
+	var err error
 
 	_, err = ioutil.ReadFile(path)
 	if err != nil {
@@ -2118,50 +2111,43 @@ func (cli *CLI) deployabi(name string, path string) {
 	
         abi.Setmapval(mapstruct, "contract", name)
 	abi.Setmapval(mapstruct, "contract_abi", tempAbi)
+	abi.Setmapval(mapstruct, "filetype", fileType)
 	
 	param, _ := abi.MarshalAbiEx(mapstruct, &Abi, "bottos", "deployabi")
 
-	trx1 := &chain.Transaction{
-		Version:     1,
-		CursorNum:   chainInfo.HeadBlockNum,
-		CursorLabel: chainInfo.CursorLabel,
-		Lifetime:    chainInfo.HeadBlockTime + 100,
-		Sender:      name,
-		Contract:    "bottos",
-		Method:      "deployabi",
-		Param:       BytesToHex(param),
-		SigAlg:      1,
-	}
+	http_url := "http://" + ChainAddrWallet + "/v1/wallet/signtransaction"
+	ptrx, err := cli.BcliSignTrxOverHttp(http_url, user, "bottos", "deployabi", BytesToHex(param))
 
-	sign, err := cli.signTrx(trx1, param)
-	if err != nil {
+	if err != nil || ptrx == nil {
+		fmt.Println("Deploy abi error! May be your wallet has not been created ok unlocked?")
 		return
 	}
 	
+	trx := *ptrx
+
 	http_method := "restful"
-	trx1.Signature = sign
 	
 	var deployAbiRsp *chain.SendTransactionResponse
 	
 	if http_method == "grpc" {
-		deployAbiRsp, err = cli.client.SendTransaction(context.TODO(), trx1)
+		deployAbiRsp, err = cli.client.SendTransaction(context.TODO(), ptrx)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	} else {
 		http_url := "http://"+ChainAddr+ "/v1/transaction/send"
-		req, _ := json.Marshal(trx1)
+		req, _ := json.Marshal(trx)
     		req_new := bytes.NewBuffer([]byte(req))
 		httpRspBody, err := send_httpreq("POST", http_url, req_new)
 		if err != nil || httpRspBody == nil {
-			fmt.Println("BcliPushTransaction Error:", err, ", httpRspBody: ", httpRspBody)
+			fmt.Println("BcliSendTransaction Error:", err, ", httpRspBody: ", httpRspBody)
 			return
 		}
 		var respbody chain.SendTransactionResponse
 		json.Unmarshal(httpRspBody, &respbody)
 		if respbody.Errcode != 0 {
-		    fmt.Println("Error! ",respbody.Errcode, ":", respbody.Msg)
+			fmt.Println("Deploy abi error! ", respbody.Errcode, ":", respbody.Msg)
 		    return
 		}
 		deployAbiRsp = &respbody
