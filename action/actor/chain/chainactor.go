@@ -27,7 +27,6 @@ package chainactor
 
 import (
 	"fmt"
-
 	log "github.com/cihub/seelog"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
@@ -121,7 +120,7 @@ func (c *ChainActor) Receive(context actor.Context) {
 	case *message.QueryChainInfoReq:
 		c.HandleQueryChainInfoReq(context, msg)
 	default:
-		log.Error("BlockActor received Unknown msg")
+		log.Error("ChainActor received Unknown msg")
 	}
 }
 
@@ -216,7 +215,7 @@ func (c *ChainActor) HandleQueryChainInfoReq(ctx actor.Context, req *message.Que
 }
 
 func BroadCastBlock(block *types.Block) {
-	broadCastBlock := &message.NotifyBlock{block}
+	broadCastBlock := &message.NotifyBlock{Block: block}
 	NetActorPid.Tell(broadCastBlock)
 	return
 }
