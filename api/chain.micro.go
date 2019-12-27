@@ -190,6 +190,36 @@ func (c *chainClient) GetDelegate(ctx context.Context, in *GetDelegateRequest, o
 	return out, nil
 }
 
+unc (c *chainClient) GetForecastResBalance(ctx context.Context, in *GetForecastResBalanceRequest, opts ...client.CallOption) (*GetForecastResBalanceResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.GetForecastResBalance", in)
+	out := new(GetForecastResBalanceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chainClient) ConnectPeerByAddress(ctx context.Context, in *ConnectPeerByAddressRequest, opts ...client.CallOption) (*ConnectPeerByAddressResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.ConnectPeerByAddress", in)
+	out := new(ConnectPeerByAddressResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chainClient) DisconnectPeerByAddress(ctx context.Context, in *DisconnectPeerByAddressRequest, opts ...client.CallOption) (*DisconnectPeerByAddressResponse, error) {
+	req := c.c.NewRequest(c.serviceName, "Chain.DisconnectPeerByAddress", in)
+	out := new(DisconnectPeerByAddressResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Chain service
 
 type ChainHandler interface {
