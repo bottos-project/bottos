@@ -27,17 +27,20 @@ package actionactor
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	apiactor "github.com/bottos-project/bottos/action/actor/api"
-	chainactor "github.com/bottos-project/bottos/action/actor/chain"
-	netactor "github.com/bottos-project/bottos/action/actor/net"
-	produceractor "github.com/bottos-project/bottos/action/actor/producer"
-	"github.com/bottos-project/bottos/action/actor/transaction/trxpoolactor"
+	"github.com/bottos-project/bottos/action/actor/api"
+	"github.com/bottos-project/bottos/action/actor/chain"
+	consensusactor "github.com/bottos-project/bottos/action/actor/consensus"
+	"github.com/bottos-project/bottos/action/actor/net"
+	"github.com/bottos-project/bottos/action/actor/producer"
 	"github.com/bottos-project/bottos/action/actor/transaction/trxhandleactor"
+	"github.com/bottos-project/bottos/action/actor/transaction/trxpoolactor"
 	"github.com/bottos-project/bottos/action/actor/transaction/trxprehandleactor"
+	//	bfttestactor "github.com/bottos-project/bottos/action/actor/bfttest"
 	log "github.com/cihub/seelog"
 
 	"github.com/bottos-project/bottos/action/env"
 	restactor"github.com/bottos-project/bottos/restful/handler"
+	walletrestactor "github.com/bottos-project/bottos/restful/wallet"
 )
 
 var apiActorPid *actor.PID
@@ -66,7 +69,6 @@ func (m *MultiActor) GetTrxActor() *actor.PID {
 func (m *MultiActor) GetTrxPreHandleActor() *actor.PID {
 	return m.trxPreHandleActor
 }
-
 
 //GetNetActor get net actor PID
 func (m *MultiActor) GetNetActor() *actor.PID {
