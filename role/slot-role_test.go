@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -25,18 +25,18 @@
 package role
 
 import (
-	log "github.com/cihub/seelog"
 	"testing"
 	"time"
 
+	log "github.com/cihub/seelog"
+
 	"github.com/bottos-project/bottos/common"
-	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/db"
 )
 
 func startup() RoleInterface {
-	config.LoadConfig()
-	dbInst := db.NewDbService("./temp/db", "./temp/codedb", "")
+	//config.LoadConfig()
+	dbInst := db.NewDbService("./temp/db", "./temp/codedb")
 	if dbInst == nil {
 		log.Error("Create DB service fail")
 	}
