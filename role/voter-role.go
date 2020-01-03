@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -27,6 +27,7 @@ package role
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/bottos-project/bottos/db"
 	log "github.com/cihub/seelog"
@@ -35,6 +36,7 @@ import (
 const (
 	//VoterObjectName is the table name of voter object
 	VoterObjectName string = "voter"
+	VoterObjectKeyName string = "owner"
 )
 
 // Voter is definition of voter
@@ -45,6 +47,10 @@ type Voter struct {
 
 // CreateVoterRole is create voter role
 func CreateVoterRole(ldb *db.DBService) error {
+	err := ldb.CreatObjectIndex(VoterObjectName, VoterObjectKeyName, VoterObjectKeyName)
+	if err != nil {
+		return err
+	}
 	ldb.AddObject(VoterObjectName)
 	return nil
 }
@@ -77,3 +83,24 @@ func GetVoterRole(ldb *db.DBService, accountName string) (*Voter, error) {
 
 	return res, nil
 }
+
+
+func GetAllVotersRole(ldb *db.DBService) ([]*Voter, error) {
+	objects, err := ldb.GetAllObjects(VoterObjectKeyName)
+	if err != nil {
+		log.Error("ROLE get all voter objects failed ", err)
+		return nil, err
+	}
+	var voters = []*Voter{}
+	for _, object := range objects {
+		res := &Voter{}
+		err = json.Unmarshal([]byte(object), res)
+		if err != nil {
+			log.Error("ROLE Unmarshal failed ", err)
+			return nil, errors.New("invalid object to Unmarshal" + object)
+		}
+		voters = append(voters, res)
+	}
+	return voters, nil
+}
+
