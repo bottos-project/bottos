@@ -168,6 +168,27 @@ func (trxPool *TrxPool) IsTransactionInCache(trxHash common.Hash) bool {
 	return exist
 }
 
+func (trxPool *TrxPool) AddTransactionToCache(trxMsg interface{}) {
+	trxPool.cacheMutex.Lock()
+	defer trxPool.cacheMutex.Unlock()
+
+	var trxHash common.Hash
+	switch msg := trxMsg.(type) {
+	case *message.PushTrxForP2PReq:
+		trxHash = msg.P2PTrx.Transaction.Hash()
+	case *message.ReceiveTrx:
+		trxHash = msg.P2PTrx.Transaction.Hash()
+	default:
+		log.Errorf("add trx to cache, unknown msg type %v", msg)
+		return
+	}
+
+	c := &CachedTransaction{hash: trxHash, msg: trxMsg}
+	trxPool.cache = append(trxPool.cache, c)
+	trxPool.cacheMap[c.hash] = c
+	log.Infof("TRX add trx %x to cache, num in cache %v", c.hash, len(trxPool.cache))
+}
+
 func (trxPool *TrxPool) isTransactionExist(trx *types.Transaction) bool {
 
 	trxPool.mu.Lock()
