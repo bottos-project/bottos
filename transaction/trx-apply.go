@@ -463,6 +463,10 @@ func (trxApplyService *TrxApplyService) IsTrxInPendingPool(trxHash common.Hash) 
 	}
 }
 
+func (trxApplyService *TrxApplyService) IsTrxInCache(trxHash common.Hash) bool {
+	return TrxPoolInst.IsTransactionInCache(trxHash)
+}
+
 //GetAvailableSpace
 func (trxApplyService *TrxApplyService) GetAvailableSpace(acc string) (Limit, Limit, error) {
 	/*cs, _ := trxApplyService.roleIntf.GetChainState()
