@@ -448,23 +448,60 @@ func (nc *NativeContract) saveContractNametoAccount(accountName string, contract
 
 	return berr.ErrContractNumReachMaxPerAccount
 }
-func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
+func (nc *NativeContract) deployContract(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "deploycode", ctx.Trx.Param)
+	param, _ := abi.UnmarshalAbiEx("bottos", Abi, "deploycontract", ctx.Trx.Param)
 	if param == nil || len(param) <= 0 {
 		return berr.ErrContractParamParseError
 	}
-	
+
+	Sender := ctx.Trx.Sender
 	ParamContract := param["contract"].(string)
-	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
 	ParamVmType := param["vm_type"].(byte)
+	ParamVMVersion := param["vm_version"].(byte)
+	ParamContractCode, _ := common.HexToBytes(param["contract_code"].(string))
+	ParamContractAbi, _ := common.HexToBytes(param["contract_abi"].(string))
+
+	if ParamVmType != byte(vm.VmTypeWasm) {
+		return berr.ErrContractJSNotSupport
+	}
+
+	if !common.CheckContractNameContent(ParamContract) {
+		return berr.ErrContractNameIllegal
+	}
 
 	// check account
-	cerr := nc.checkAccount(ctx.RoleIntf, ParamContract)
+	cerr := nc.checkAccount(ctx.RoleIntf, Sender)
 	if cerr != berr.ErrNoError {
 		return cerr
 	}
 
+	account, _ := ctx.RoleIntf.GetAccount(Sender)
+	if nil == account {
+		return berr.ErrAccountNameIllegal
+	} else if len(account.ContractName) == int(config.MAX_CONTRACT_NUM_PER_ACCOUNT) {
+		return berr.ErrContractNumReachMaxPerAccount
+	}
+	// for _, contractName := range account.ContractName {
+	// 	if ParamContract == contractName {
+	// 		return berr.ErrContractAlreadyExist
+	// 	}
+	// }
+
+	cerr = nc.deployCode(ctx, ParamContract, ParamVmType, ParamVMVersion, ParamContractCode)
+	if cerr != berr.ErrNoError {
+		return cerr
+	}
+
+	cerr = nc.deployAbi(ctx, ParamContract, ParamVmType, ParamVMVersion, ParamContractAbi)
+	if cerr != berr.ErrNoError {
+		return cerr
+	}
+
+	return berr.ErrNoError
+}
+
+func (nc *NativeContract) deployCode(ctx *Context, ParamContract string, ParamVmType byte, ParamVMVersion byte, ParamContractCode []byte) berr.ErrCode {
 	// check code
 	err := nc.checkCode(ParamContractCode)
 	if err != nil {
@@ -473,14 +510,44 @@ func (nc *NativeContract) deployCode(ctx *Context) berr.ErrCode {
 
 	codeHash := common.Sha256(ParamContractCode)
 
-	account, _ := ctx.RoleIntf.GetAccount(ParamContract)
-	account.VMType = byte(ParamVmType)
-	account.CodeVersion = codeHash
-	account.ContractCode = make([]byte, len(ParamContractCode))
-	copy(account.ContractCode, ParamContractCode)
-	err = ctx.RoleIntf.SetAccount(account.AccountName, account)
+	exContractName := nc.generateExContractName(ParamContract, ctx.Trx.Sender)
+
+	contract, _ := ctx.RoleIntf.GetContract(exContractName)
+	if nil == contract {
+		contract = &role.Contract{
+			ContractName:      exContractName,
+			DeployAccountName: ctx.Trx.Sender,
+		}
+
+		saveErr := nc.saveContractNametoAccount(ctx.Trx.Sender, ParamContract, ctx)
+		if berr.ErrNoError != saveErr {
+			return saveErr
+		}
+	}
+
+	contract.VMType = byte(ParamVmType)
+	if ctx.Trx.Version > version.GetUintVersion("1.2.0") {
+		contract.VMVersion = byte(ParamVMVersion)
+	}
+	contract.CodeVersion = codeHash
+	contract.ContractCode = make([]byte, len(ParamContractCode))
+	copy(contract.ContractCode, ParamContractCode)
+
+	err = ctx.RoleIntf.SetContract(contract.ContractName, contract)
 	if err != nil {
 		return berr.ErrTrxContractHanldeError
+	}
+
+	balance, _ := ctx.RoleIntf.GetBalance(exContractName)
+	if nil == balance {
+		balance := &role.Balance{
+			AccountName: exContractName,
+			Balance:     big.NewInt(0),
+		}
+		err = ctx.RoleIntf.SetBalance(exContractName, balance)
+		if err != nil {
+			return berr.ErrTrxContractHanldeError
+		}
 	}
 
 	return berr.ErrNoError
