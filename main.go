@@ -116,6 +116,14 @@ func loadConfig(ctx *cli.Context) {
 	log.Infof("Bottos ChainID: %x", config.GetChainID())
 }
 
+func initVersion() {
+	if err := version.Init(); err != nil {
+		log.Critical(err)
+		log.Flush()
+		os.Exit(1)
+	}
+}
+
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
