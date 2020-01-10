@@ -104,16 +104,15 @@ func main() {
 func loadConfig(ctx *cli.Context) {
 	config.InitConfig()
 
-	if err := config.InitLogConfig(ctx); err != nil {
-		os.Exit(1)
-	}
-
 	if err := config.LoadConfig(ctx); err != nil {
-		log.Errorf("%v", err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	log.Infof("Bottos ChainID: %x", config.GetChainID())
+	if err := config.InitLogConfig(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func initVersion() {
