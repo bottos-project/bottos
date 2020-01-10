@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -77,6 +77,7 @@ type RoleInterface interface {
 	GetScheduleDelegate() (*ScheduleDelegate, error)
 	SetVoter(name string, value *Voter) error
 	GetVoter(name string) (*Voter, error)
+	GetAllVoters() ([]*Voter, error)
 
 	CreateDelegateVotes() error
 	GetDelegateVotes(key string) (*DelegateVotes, error)
