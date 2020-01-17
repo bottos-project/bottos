@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -189,6 +189,34 @@ func UnpackBin16(reader io.Reader) ([]byte, error) {
 			n, e := reader.Read(value)
 			if e == nil && uint16(n) == size {
 				return value, nil
+			}
+		}
+	}
+
+	return []byte{}, e
+}
+
+//UnpackBin is to unpack message
+func UnpackBin(reader io.Reader) ([]byte, error) {
+	c, e := readByte(reader)
+	if e == nil {
+		if c == BIN16 {
+			size, _, e := readUint16(reader)
+			if e == nil {
+				value := make([]byte, size)
+				n, e := reader.Read(value)
+				if e == nil && uint16(n) == size {
+					return value, nil
+				}
+			}
+		} else if c == BIN32 {
+			size, _, e := readUint32(reader)
+			if e == nil {
+				value := make([]byte, size)
+				n, e := reader.Read(value)
+				if e == nil && uint32(n) == size {
+					return value, nil
+				}
 			}
 		}
 	}

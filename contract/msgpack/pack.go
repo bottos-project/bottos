@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -32,6 +32,8 @@ import (
 const (
 	//BIN16 is byte array type identifier
 	BIN16 = 0xc5
+	//BIN32 is byte array type identifier
+	BIN32 = 0xc6
 	//UINT8 is uint8
 	UINT8 = 0xcc
 	//UINT16 is uint16
@@ -101,6 +103,27 @@ func PackBin16(writer io.Writer, value []byte) (n int, err error) {
 	}
 	n2, err := writer.Write(value)
 	return n1 + n2, err
+}
+
+//PackBin32 is to pack a given value and writes it into the specified writer.
+func PackBin32(writer io.Writer, value []byte) (n int, err error) {
+	length := len(value)
+	n1, err := writer.Write(Bytes{BIN32, byte(length >> 24), byte(length >> 16), byte(length >> 8), byte(length)})
+	if err != nil {
+		return n1, err
+	}
+	n2, err := writer.Write(value)
+	return n1 + n2, err
+}
+
+//PackBin is to pack a given value and writes it into the specified writer.
+func PackBin(writer io.Writer, value []byte) (n int, err error) {
+	length := len(value)
+	if length < 65536 {
+		return PackBin16(writer, value)
+	} else {
+		return PackBin32(writer, value)
+	}
 }
 
 //PackStr16 is to pack a given value and writes it into the specified writer.
