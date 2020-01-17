@@ -102,6 +102,20 @@ type RoleInterface interface {
 	SetBinValue(contract string, object string, key string, value []byte) error
 	GetBinValue(contract string, object string, key string) ([]byte, error)
 	RemoveKeyValue(contract string, object string, key string) error
+
+        SetDelegateReward(accountName string, value *DelegateReward) error
+	GetDelegateReward(accountName string) (*DelegateReward, error)
+	GetDelegateRewardByAccountName(key string) (*DelegateReward, error)
+	GetAllDelegateReward() ([]*DelegateReward, error)
+	GetDelegateUnpaidReward(delegateName string) (*big.Int, *big.Int)
+	SetRewardPool(value *RewardPool) error
+	GetRewardPool() (*RewardPool, error)
+	RewardHandleVotesChange(delegateName string, amount *big.Int, isTransitVote bool) error
+	DelegateRewardUnReg(delegateName string) error
+	DelegateRewardReReg(delegateName string) error
+	OnBlock(delegateName string) error
+	ClaimReward(delegateName string, isUnReg bool) error
+	InitRewardPoolRole() error
 }
 
 //NewRole is creating new role
