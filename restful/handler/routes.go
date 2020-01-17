@@ -26,7 +26,7 @@ const (
 	GET_CONTRACT_CODE = "/v1/contract/code"
 
 	// Common query
-	GET_KEY_VALUE = "/v1/common/query"
+	QUERY_DB_VALUE = "/v1/common/queryDB"
 	JSON_TO_BIN   = "/v1/common/jsontobin"
 
 	//node
