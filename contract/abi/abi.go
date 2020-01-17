@@ -370,7 +370,13 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 			}
 			
 			if valType != abiValType {
+			if (valType == "Int") && (abiValType == "uint256") {
+
+			} else if (valType == "Int") && (abiValType == "uint128") {
+
+			} else {
 				return fmt.Errorf("EncodeAbiEx: abiValType %s mismatch to valType %s", abiValType, valType)
+		}
 		}
 
 		switch abiValType {
