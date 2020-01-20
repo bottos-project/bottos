@@ -28,13 +28,17 @@ package role
 import (
 	"encoding/json"
 
+	"errors"
+	"math/big"
+
 	"github.com/bottos-project/bottos/common/safemath"
 	"github.com/bottos-project/bottos/db"
-	"math/big"
+	log "github.com/cihub/seelog"
 )
 
 // BalanceObjectName is definition of object name of balance
 const BalanceObjectName string = "balance"
+
 // StakedBalanceObjectName is definition of object name of stake balance
 const StakedBalanceObjectName string = "staked_balance"
 
@@ -65,6 +69,7 @@ func SetBalanceRole(ldb *db.DBService, accountName string, value *Balance) error
 	key := accountName
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Errorf("ROLE Marshal failed %s,%v", accountName, err)
 		return err
 	}
 	return ldb.SetObject(BalanceObjectName, key, string(jsonvalue))
@@ -81,6 +86,7 @@ func GetBalanceRole(ldb *db.DBService, accountName string) (*Balance, error) {
 	res := &Balance{Balance:big.NewInt(0)}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Errorf("ROLE Unmarshal failed %s,%v", accountName, err)
 		return nil, err
 	}
 
@@ -142,6 +148,7 @@ func SetStakedBalanceRole(ldb *db.DBService, accountName string, value *StakedBa
 	key := accountName
 	jsonvalue, err := json.Marshal(value)
 	if err != nil {
+		log.Errorf("DB Marshal failed %s,%v", accountName, err)
 		return err
 	}
 
@@ -159,6 +166,7 @@ func GetStakedBalanceRoleByName(ldb *db.DBService, name string) (*StakedBalance,
 	res := &StakedBalance{}
 	err = json.Unmarshal([]byte(value), res)
 	if err != nil {
+		log.Errorf("ROLE Unmarshal failed %s,%v", name, err)
 		return nil, err
 	}
 
