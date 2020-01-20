@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -48,6 +48,8 @@ type Balance struct {
 type StakedBalance struct {
 	AccountName   string `json:"account_name"`
 	StakedBalance *big.Int `json:"staked_balance"`
+	StakedTimeBalance  *big.Int `json:"staked_time_balance"`
+	StakedSpaceBalance *big.Int `json:"staked_space_balance"`
 	UnstakingBalance *big.Int `json:"unstaking_balance"`
 	LastUnstakingTime uint64 `json:"unstaking_time"`
 }
