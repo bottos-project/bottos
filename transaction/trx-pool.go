@@ -225,10 +225,21 @@ func (trxPool *TrxPool) Stop() {
 // CheckTransactionBaseCondition is checking trx
 func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (bool, bottosErr.ErrCode) {
 
+	if trxPool.IsTransactionInCache(trx.Hash()) {
+		log.Infof("TRX check exist error, already in cache, trx %x ", trx.Hash())
+
+		return false, bottosErr.ErrTrxAlreadyInCache
+	}
+
 	if trxPool.isTransactionExist(trx) {
-		log.Info("TRX check exist error, already in pool, trx %x ", trx.Hash())
+		log.Infof("TRX check exist error, already in pool, trx %x ", trx.Hash())
 
 		return false, bottosErr.ErrTrxAlreadyInPool
+	}
+
+	if len(trxPool.cache) > 0 && (config.DEFAULT_MAX_PENDING_TRX_IN_POOL/10) <= (uint64)(len(trxPool.cache)) {
+		log.Errorf("TRX check cache num reach max error, trx %x", trx.Hash())
+		return false, bottosErr.ErrTrxCacheNumLimit
 	}
 
 	if config.DEFAULT_MAX_PENDING_TRX_IN_POOL <= (uint64)(len(trxPool.pending)) {
