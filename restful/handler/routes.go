@@ -15,6 +15,8 @@ const (
 	SEND_TRANSACTION = "/v1/transaction/send"
 	GET_TRANSACTION  = "/v1/transaction/get"
 	GET_TRANSACTION_STATUS = "/v1/transaction/status"
+	GET_HASH_FOR_SIGN      = "/v1/transaction/getHashForSign"
+	GET_HASH_FOR_SIGN2      = "/v1/transaction/getHashForSign2"
 
 	//Account
 	GET_ACCOUNT_BRIEF   = "/v1/account/brief"
