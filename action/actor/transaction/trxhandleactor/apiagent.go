@@ -38,9 +38,7 @@ func SetApiActorPid(apid *actor.PID) {
 
 
  func sendTrxRsp(trxRsp uint64, pid *actor.PID) {
-
- 	pid.Tell("pushTrxRsp")
-	
+ 
 		pushTrxReq := &types.Transaction{
 			RefBlockNum: 11,
 			Sender:      22,
@@ -53,8 +51,5 @@ func SetApiActorPid(apid *actor.PID) {
 
 			log.Infof("this is es err", es, err)
 	
-	result, _ := trxactorPid.RequestFuture(pushTrxReq, 500*time.Millisecond).Result() // await result
-
-	log.Info(result)
 
 }
