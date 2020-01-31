@@ -55,6 +55,9 @@ type RoleInterface interface {
 	IsAccountExist(name string) bool
 	SetContract(name string, value *Contract) error
 	GetContract(name string) (*Contract, error)
+	SetContractTable(contract string, table string) error
+	GetContractTable(contract string, table string) (*ContractTable, error)
+	GetContractTables() ([]string, error)
 	SetBalance(accountName string, value *Balance) error
 	GetBalance(accountName string) (*Balance, error)
 	SetStakedBalance(accountName string, value *StakedBalance) error
