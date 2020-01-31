@@ -44,6 +44,9 @@ const (
 
 	//p2p
 	GET_ALL_PEERINFO = "/v1/p2p/getpeers"
+	CONNECT_PEER_BY_ADDRESS = "/v1/p2p/connectpeer"
+	DISCONNECT_PEER_BY_ADDRESS = "/v1/p2p/disconnectpeer"
+	GET_PEER_STATE_BY_ADDRESS = "/v1/p2p/getpeerstate"
 
 	//MutlSign
 	Proposal_Review = "/v1/proposal/review"
@@ -59,7 +62,6 @@ type Route struct {
 type Routes []Route
 
 func NewRouter() *mux.Router {
-
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		router.
@@ -192,8 +194,24 @@ var routes = Routes{
 		GET_FORECAST_RESOURCE_BALANCE,
 		GetForecastResBalance,
 	},
-
-
+	Route{
+		"",
+		"POST",
+		CONNECT_PEER_BY_ADDRESS,
+		ConnectPeerbyAddress,
+	},
+	Route{
+		"",
+		"POST",
+		DISCONNECT_PEER_BY_ADDRESS,
+		DisConnectPeerbyAddress,
+	},
+	Route{
+		"",
+		"POST",
+		GET_PEER_STATE_BY_ADDRESS,
+		GetPeerStatebyAddress,
+	},
 	Route{
 		"",
 		"POST",
