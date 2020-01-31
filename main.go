@@ -123,6 +123,27 @@ func initVersion() {
 	}
 }
 
+func recover(ctx *cli.Context) {
+	var err error
+	blockNum := uint64(ctx.GlobalInt(cmd.RecoverAtBlockNumFlag.Name))
+	datadir := ctx.GlobalString(cmd.RecoverFromDataDirFlag.Name)
+	if blockNum == 0 && len(datadir) == 0 {
+		err = errors.New("param error.")
+	}
+	if err == nil {
+		err = recoverAtBlockNumber(ctx, blockNum, datadir)
+	}
+	if err != nil {
+		fmt.Printf("recover error: %v\n", err)
+		log.Critical(err)
+		log.Flush()
+		os.Exit(1)
+	} else {
+		fmt.Println("recover finished.")
+		log.Info("recover finished.")
+	}
+}
+
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
