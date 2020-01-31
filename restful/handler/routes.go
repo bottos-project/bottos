@@ -148,8 +148,8 @@ var routes = Routes{
 	Route{
 		"",
 		"POST",
-		GET_KEY_VALUE,
-		GetKeyValue,
+		QUERY_DB_VALUE,
+		QueryDBValue,
 	},
 	Route{
 		"",
