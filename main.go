@@ -147,8 +147,8 @@ func recover(ctx *cli.Context) {
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
-	blockDBPath := filepath.Join(config.Param.DataDir, "block/")
-	stateDBPath := filepath.Join(config.Param.DataDir, "state.db")
+	blockDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/block/")
+	stateDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/state.db")
 	dbInst := db.NewDbService(blockDBPath, stateDBPath)
 	if dbInst == nil {
 		log.Critical("Create DB service fail")
