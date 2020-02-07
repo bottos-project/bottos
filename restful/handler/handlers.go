@@ -664,13 +664,11 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := &api.GetAccountResponse_Result{}
-	result.AccountName = name
-	result.Pubkey = common.BytesToHex(account.PublicKey)
-	result.Balance = balance.Balance.String()
 	result.StakedBalance = stakedBalance.StakedBalance.String()
-	resp.Result=result
-	resp.Errcode = 0
+		result.StakedSpaceBalance = stakedBalance.StakedSpaceBalance.String()
+		result.StakedTimeBalance = stakedBalance.StakedTimeBalance.String()
+		result.UnStakingBalance = stakedBalance.UnstakingBalance.String()
+		result.UnStakingTimestamp = stakedBalance.LastUnstakingTime
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		panic(err)
