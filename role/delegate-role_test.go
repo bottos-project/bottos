@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -63,7 +63,7 @@ func TestDelegate_writedb(t *testing.T) {
 }
 
 func TestDelegate_WritedbTheSameKey(t *testing.T) {
-	ins := db.NewDbService("./file2", "./file2/db2.db", "")
+	ins := db.NewDbService("./file2", "./file2/db2.db")
 	err := CreateDelegateRole(ins)
 	if err != nil {
 		log.Error(err)
