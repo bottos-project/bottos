@@ -157,14 +157,6 @@ func startBottos(ctx *cli.Context) error {
 
 	roleIntf := role.NewRole(dbInst)
 
-	var mdbActor *actor.PID = nil
-	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
-		mdbActor = startMangoDB(roleIntf)
-		if mdbActor == nil {
-			log.Critical("Start MongoDB service fail")
-			os.Exit(1)
-		}
-	}
 
 	nc, err := contract.NewNativeContract(roleIntf)
 	if err != nil {
@@ -179,7 +171,16 @@ func startBottos(ctx *cli.Context) error {
 	}
 
 	if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
-		chain.RegisterHandledBlockCallback(func (block *types.Block) {
+		var mdbActor *actor.PID = nil
+		if ctx.GlobalBool(cmd.EnableMongoDBFlag.Name) {
+			mdbActor = startMangoDB(roleIntf)
+			if mdbActor == nil {
+				log.Critical("Start MongoDB service fail")
+				log.Flush()
+				os.Exit(1)
+			}
+		}
+		chain.RegisterCommittedBlockCallback(func (block *types.Block) {
 			mdbActor.Tell(block)
 		})
 	}
