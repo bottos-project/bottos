@@ -273,7 +273,7 @@ func startRPCService(actorenv *actionenv.ActorEnv) {
 }
 
 func startMangoDB(roleIntf role.RoleInterface) *actor.PID {
-	optiondb := db.NewOptionDbService(config.Param.OptionDb)
+	optiondb := db.NewOptionDbService(config.BtoConfig.Plugin.MongoDB.URL)
 	if optiondb == nil {
 		log.Errorf("Start optional db fail")
 		return nil
