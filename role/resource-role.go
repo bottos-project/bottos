@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -46,6 +46,35 @@ type ResourceLimit struct {
 	FreeTimeTokenLimitInWin    uint64 `json:"free_time_token_limit_in_win"`
 	FreeSpaceTokenLimitInWin   uint64 `json:"free_space_token_limit_in_win"`
 }
+
+// ResourceUsage 单账户在窗口期内已使用的资源量，每次触发执行合约时更新
+type ResourceUsage struct {
+	AccountName                string `json:"account_name"`
+	PledgedSpaceTokenUsedInWin uint64 `json:"pledged_space_token_used_in_win"`
+	PledgedTimeTokenUsedInWin  uint64 `json:"pledged_time_token_used_in_win"`
+	FreeTimeTokenUsedInWin     uint64 `json:"free_time_token_used_in_win"` // balance大于1 BTO时才有的免费资源使用量
+	FreeSpaceTokenUsedInWin    uint64 `json:"free_space_token_used_in_win"`
+	LastSpaceCursorBlock       uint64 `json:"last_space_cursor_block"` //上次使用资源的block位置
+	LastTimeCursorBlock        uint64 `json:"last_time_cursor_block"`  //上次使用资源的block位置
+}
+
+// CreateResourceLimitRole is to create resource limit role
+func CreateResourceLimitRole(ldb *db.DBService) error {
+	ldb.AddObject(ResourceLimitObjectName)
+	return nil
+}
+
+// SetResourceLimitRole is to set resource limit
+func SetResourceLimitRole(ldb *db.DBService, accountName string, value *ResourceLimit) error {
+	key := accountName
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		log.Error("ROLE Marshal failed accountName ", accountName)
+		return err
+	}
+	return ldb.SetObject(ResourceLimitObjectName, key, string(jsonvalue))
+}
+
 // GetResourceLimitRole is to get resource limit
 func GetResourceLimitRole(ldb *db.DBService, accountName string) (*ResourceLimit, error) {
 	key := accountName
