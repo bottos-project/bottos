@@ -119,6 +119,8 @@ type RoleInterface interface {
 	OnBlock(delegateName string) error
 	ClaimReward(delegateName string, isUnReg bool) error
 	InitRewardPoolRole() error
+         
+         CreateTableIndex(contract string, table string, index string, indexJson string) error
 }
 
 //NewRole is creating new role
