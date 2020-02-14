@@ -39,6 +39,11 @@ func TestAccount_writedb(t *testing.T) {
 	if err != nil {
 		log.Error(err)
 	}
+	err = CreateContractRole(ins)
+	if err != nil {
+		log.Error(err)
+	}
+	
 	value1 := &Account{
 		AccountName:  "account1",
 		PublicKey:    []byte("7QBxKhpppiy7q4AcNYKRY2ofb3mR5RP8ssMAX65VEWjpAgaAnF"),
