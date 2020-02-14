@@ -147,6 +147,15 @@ func recover(ctx *cli.Context) {
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
+        //start Wallet REST Api
+	if ctx.GlobalBool(cmd.EnableWalletFlag.Name) {
+		var walletRestMaxLimit int
+		if ctx.GlobalIsSet(cmd.WalletRestMaxLimit.Name) {
+			walletRestMaxLimit = ctx.GlobalInt(cmd.WalletRestMaxLimit.Name)
+		}
+		go startWalletRestApi(walletRestMaxLimit)
+	}
+
 	blockDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/block/")
 	stateDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/state.db")
 	dbInst := db.NewDbService(blockDBPath, stateDBPath)
