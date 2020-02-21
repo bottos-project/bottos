@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -106,6 +106,21 @@ func GetBinValue(ldb *db.DBService, contract string, object string, key string) 
 		return []byte{}, log.Errorf("GetStrValue error, contract: %v, object: %v, key: %v", contract, object, key)
 	}
 	return []byte(value), nil
+}
+
+func IsBinExist(ldb *db.DBService, contract string, object string, key string) bool {
+	newkey := constructKey(contract, object, key)
+	value, err := getKeyValueRole(ldb, newkey)
+
+	log.Infof("IsBinExist, contract: %v, object: %v, key: %v, hex string value: %s", contract, object, key, value)
+
+	if err != nil {
+		log.Infof("IsBinExist, false")
+		return false
+	} else {
+		log.Infof("IsBinExist, true")
+		return true
+	}
 }
 
 func setKeyValueRole(ldb *db.DBService, key string, value string) error {
