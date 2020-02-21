@@ -64,3 +64,14 @@ func CreateTransitVotesRole(ldb *db.DBService) error {
 	return nil
 }
 
+// SetTransitVotesRole is to save delegate votes in transition period
+func SetTransitVotesRole(ldb *db.DBService, key string, value *TransitVotes) error {
+	jsonvalue, err := json.Marshal(value)
+	if err != nil {
+		log.Error("ROLE Marshal failed ", err)
+		return err
+	}
+
+	return ldb.SetObject(TransitVotesObjectName, key, string(jsonvalue))
+}
+
