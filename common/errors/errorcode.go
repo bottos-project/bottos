@@ -299,6 +299,8 @@ var (
 		ErrTrxVmTypeInvalid:                "push trx: " + "contract vm type error",
 		ErrTrxNoticeContractNumError:       "push trx: " + "notice contract num error",
 		ErrTrxContractNotExist:             "push trx: " + "contract not exist",
+		ErrTrxCacheNumLimit:                "push trx: " + "trx cache busy",
+		ErrTrxAlreadyInCache:               "push trx: " + "already in cache",
 		ErrTrxVersionError:                 "push trx: " + "trx version not match",
 
 		ErrAccountNameIllegal:             "push trx: " + "illegal account name",
