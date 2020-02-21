@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -140,6 +140,14 @@ func (b *Block) GetSyncState() bool {
 	return false
 }
 
+//GetSyncState get current synchronize number
+func (b *Block) GetSyncDistance() uint64 {
+	if b.S.state == STATE_NORMAL {
+		return 0
+	}
+	return  b.S.libRemote - b.S.libLocal
+}
+
 func (b *Block) UpdateHeadNumber() {
 	lastNum := b.chainIf.HeadBlockNum()
 
@@ -214,7 +222,7 @@ func (b *Block) processLastBlockNumberRsp(index uint16, data []byte) {
 		LastBlockVersion: last.BlockVersion,
 	}
 
-	log.Errorf("PROTOCOL processLastBlockNumberRsp index %d lib:%d  head: %d headversion: %d", index, last.LibNumber, last.BlockNumber, last.BlockVersion)
+	log.Debugf("PROTOCOL processLastBlockNumberRsp index %d lib:%d  head: %d head version: %d", index, last.LibNumber, last.BlockNumber, last.BlockVersion)
 
 	b.S.infoc <- info
 }
@@ -234,7 +242,7 @@ func (b *Block) processBlockHeaderReq(index uint16, data []byte) {
 func (b *Block) processHeaderReq(r *headerReq) {
 	if r.req.Begin > r.req.End ||
 		r.req.End-r.req.Begin >= SYNC_BLOCK_BUNDLE_MAX {
-		log.Errorf("PROTOCOL processBlockHeaderReq wrong lenght")
+		log.Errorf("PROTOCOL processBlockHeaderReq wrong length")
 		return
 	}
 
@@ -279,7 +287,7 @@ func (b *Block) processBlockReq(index uint16, data []byte, ptype uint16) {
 		return
 	}
 	localVersion := version.GetVersionNumByBlockNum(req.Number)
-	log.Errorf("PROTOCOL get block:%d, %d, num %d", index, ptype, req.Number)
+	log.Debugf("PROTOCOL get block:%d, %d, num %d", index, ptype, req.Number)
 	if localVersion != req.Version {
 		log.Errorf("PROTOCOL blocknum %d version not match localVersion %d,version %d ", req.Number, localVersion, req.Version)
 		return
