@@ -259,25 +259,35 @@ func (trxPool *TrxPool) CheckTransactionBaseCondition(trx *types.Transaction) (b
 }
 
 // HandleTransactionCommon is processing trx
-func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *types.Transaction) {
+func (trxPool *TrxPool) HandleTransactionCommon(context actor.Context, trx *types.Transaction) bottosErr.ErrCode {
+	trxPool.dbInst.Lock()
+	defer trxPool.dbInst.UnLock()
 
 	if checkResult, err := trxPool.CheckTransactionBaseCondition(trx); true != checkResult {
-		context.Respond(err)
-		return
+		return err
 	}
+	session := trxPool.dbInst.GetSession()
+	if session == nil {
+		trxPool.dbInst.BeginUndo(config.PRIMARY_TRX_SESSION)
+	}
+	trxPool.dbInst.BeginUndo(config.SUB_TRX_SESSION)
 
-	result, err, _ := trxApplyServiceInst.ApplyTransaction(trx)
+	var result bool
+	var err bottosErr.ErrCode
+	if trx.Contract == config.BOTTOS_CONTRACT_NAME && trx.Method == "stake" {
+		result, err, _, _, _ = trxApplyServiceInst.ExecuteTransaction(trx, false)
+	} else {
+		result, err, _, _, _ = trxApplyServiceInst.ExecuteTransaction(trx, true)
+	}
 	if !result {
-		context.Respond(err)
-		return
+		trxPool.dbInst.ResetSubSession()
+		return err
 	}
 
 	trxPool.addTransaction(trx)
+	trxPool.dbInst.Squash()
 
-	notify := &message.NotifyTrx{
-		Trx: trx,
-	}
-	trxPool.netActorPid.Tell(notify)
+	return bottosErr.ErrNoError
 }
 
 // SendP2PTrx sends p2p trx
