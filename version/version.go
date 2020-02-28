@@ -17,7 +17,7 @@ type VersionInfo struct {
 }
 
 var versions []VersionInfo = []VersionInfo{ //in reverse order, from high to low
-	//{BlockNum: 9999999, VersionString: "1.2.2"},
+	{BlockNum: 11456000, VersionString: "1.2.2"},
 	{BlockNum: 4533000, VersionString: "1.2.1"},
 	{BlockNum: 3110000, VersionString: "1.2.0"},
 	{BlockNum: 880000, VersionString: "1.1.0"},
