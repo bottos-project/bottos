@@ -99,8 +99,6 @@ var routes = Routes{
 		GET_GEN_BLK_TIME,
 		GetGenerateBlockTime,
 	},
-
-
 	Route{
 		"",
 		"GET",
@@ -125,14 +123,12 @@ var routes = Routes{
 		GET_TRANSACTION,
 		GetTransaction,
 	},
-
 	Route{
 		"",
 		"POST",
 		GET_TRANSACTION_STATUS,
 		GetTransactionStatus,
 	},
-
 	Route{
 		"",
 		"POST",
@@ -181,7 +177,6 @@ var routes = Routes{
 		GET_ALL_DELEFATE,
 		GetAllDelegates,
 	},
-	
 	Route{
 		"",
 		"GET",
@@ -218,7 +213,6 @@ var routes = Routes{
 		GET_ALL_PEERINFO,
 		GetPeers,
 	},
-
 	//Multi Sign
 	Route{
 		"",
@@ -226,4 +220,11 @@ var routes = Routes{
 		Proposal_Review,
 		ReviewProposal,
 	},
+        Route{
+		"",
+		"POST",
+		GET_HASH_FOR_SIGN,
+		GetHashForSign,
+	},
+
 }
