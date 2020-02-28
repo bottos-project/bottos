@@ -533,17 +533,20 @@ func GetTransactionStatus(w http.ResponseWriter, r *http.Request) {
 	if bottosErr.ErrNoError != errCode {
 		log.Errorf("REST:get trx error code:%v",errCode)
 
-		//resp.Errcode = uint32(errCode)
-		resp.Errcode = uint32(bottosErr.ErrNoError)
-		//resp.Msg = bottosErr.GetCodeString(errCode)
-		resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+		resp.Errcode = uint32(errCode)
+		resp.Msg = bottosErr.GetCodeString(errCode)
 		resp.Result = &TransactionStatus{Status: bottosErr.GetCodeString(errCode)}
 		encoderRestResponse(w, resp)
 		return
 	}
 
-	isInPool := trxApply.IsTrxInPendingPool(common.HexToHash(req.TrxHash))
-	if true == isInPool {
+	if trxApply.IsTrxInCache(common.HexToHash(req.TrxHash)) {
+		resp.Errcode = uint32(bottosErr.RestErrTxSending)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTxSending)
+		resp.Result = &TransactionStatus{Status: "sending"}
+		encoderRestResponse(w, resp)
+		return
+	} else if trxApply.IsTrxInPendingPool(common.HexToHash(req.TrxHash)) {
 		resp.Errcode = uint32(bottosErr.RestErrTxPending)
 		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTxPending)
 		resp.Result = &TransactionStatus{Status: "pending"}
