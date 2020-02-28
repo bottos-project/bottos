@@ -108,7 +108,10 @@ func (p *protocol) GetPeerInfo()( uint64, []*context.PeersInfo) {
 					Addr:      pr[j].Info.Addr,
 					Port:      pr[j].Info.Port,
 					ChainId:   pr[j].Info.ChainId,
+					Account:   pr[j].Info.Account,
+					NodeType:  pr[j].Info.NodeType,
 					Version:   pr[j].Info.Version,
+					IsActive:  pr[j].IsActive,
 				}
 				peersInfo = append(peersInfo, peer)
 				peerCount++
