@@ -156,6 +156,10 @@ func startBottos(ctx *cli.Context) error {
 		go startWalletRestApi(walletRestMaxLimit)
 	}
 
+	if ctx.GlobalIsSet(cmd.RecoverAtBlockNumFlag.Name) || ctx.GlobalIsSet(cmd.RecoverFromDataDirFlag.Name) {
+		recover(ctx)
+	}
+
 	blockDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/block/")
 	stateDBPath := filepath.Join(config.BtoConfig.Node.DataDir, "data/state.db")
 	dbInst := db.NewDbService(blockDBPath, stateDBPath)
