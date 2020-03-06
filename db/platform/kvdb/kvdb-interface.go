@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -38,4 +38,9 @@ type KvDBRepo interface {
 	CallSeek(prefixKey []byte) ([]string, error)
 
 	CallNewIterator() iterator.Iterator
+
+	CallNewBatch()
+	CallBatchPut(key []byte, value []byte)
+	CallBatchDelete(key []byte)
+	CallBatchCommit() error
 }
