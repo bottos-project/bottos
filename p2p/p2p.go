@@ -67,6 +67,12 @@ func MakeP2PServer(p *config.P2PConfig, roleIntf role.RoleInterface) *P2PServer 
 	LocalPeerInfo.Addr = p.P2PServAddr
 	LocalPeerInfo.Port = strconv.Itoa(p.P2PPort)
 	LocalPeerInfo.ChainId = common.BytesToHex(config.GetChainID())
+	if roleIntf.IsMyselfDelegate() == true {
+		LocalPeerInfo.NodeType = "delegate"
+		LocalPeerInfo.Account = roleIntf.GetMySelf()
+	} else {
+		LocalPeerInfo.NodeType = "service"
+	}
 	coreState, err := roleIntf.GetChainState()
 	if err != nil {
 		LocalPeerInfo.Version = version.GetAppVersionNum()
