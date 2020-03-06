@@ -1,4 +1,4 @@
-// Copyright 2017~2022 The Bottos Authors
+﻿// Copyright 2017~2022 The Bottos Authors
 // This file is part of the Bottos Chain library.
 // Created by Rocket Core Team of Bottos.
 
@@ -122,7 +122,16 @@ type DBApi interface {
 	RollbackAll() error
 	UndoFlush()
 	ReleaseUndoInfo()
-	Reset() //TODO
+
+	//session undo
+	BeginUndo(string) *codedb.UndoSession
+	GetSession() *codedb.UndoSession
+	GetSessionEx() *codedb.UndoSession
+	ResetSession() error
+	ResetSubSession() error
+	FreeSessionEx() error
+	Squash()
+	Push(session *codedb.UndoSession)
 }
 
 type OptionDBApi interface {
