@@ -113,6 +113,7 @@ type DBApi interface {
 	GetAllObjects(keyName string) ([]string, error)
 	GetAllObjectsSortByIndex(indexName string) ([]string, error)
 	GetObjectsWithinRangeByIndex(indexName string, lessOrEqual string, greater string) ([]string, error)
+	GetObjectsByCondition(indexName string, op codedb.ViewOpCode, param1 string, param2 string, maxBufLen uint32) ([]string, bool, error)
 	DeleteObject(objectName string, key string) (string, error)
 	//db undo interface
 	LoadStateDB()
