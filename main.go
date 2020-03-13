@@ -232,6 +232,20 @@ func startBottos(ctx *cli.Context) error {
 	return nil
 }
 
+func saveHeapProfile() {
+	log.Infof("begin save memory")
+	runtime.GC()
+	f, err := os.Create(fmt.Sprintf("heap_%s_%d_%s.prof", "bottos", 112233, time.Now().Format("2006_01_02_03_04_05")))
+	if err != nil {
+		log.Infof("error save memory")
+		return
+	}
+	defer f.Close()
+	pprof.Lookup("heap").WriteTo(f, 1)
+
+	log.Infof("end save memory")
+}
+
 //WaitSystemDown is to handle ctrl+C
 func WaitSystemDown(chain chain.BlockChainInterface, actors *cactor.MultiActor) {
 	exit := make(chan bool, 0)
