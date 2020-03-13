@@ -344,8 +344,8 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 		return fmt.Errorf("EncodeAbiEx: fields number mismatch! count: %d, count2: %d", count, count2)
 	}
 	
-	if (count <= 0) {
-		return fmt.Errorf("EncodeAbiEx: count is 0!", count)
+	if count == 0 {
+		return nil
 	}
 
 	msgpack.PackArraySize(w, uint16(count))
@@ -479,8 +479,9 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 	abiFields := abiFieldsAttr.GetStringPair()
 	
 	count  := len(abiFields)
-	if (count <= 0) {
-		return nil
+	
+	if count == 0 {
+		return nil, true
 	}
 	
 	if len(abiFields) > 0 {
