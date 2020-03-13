@@ -75,6 +75,22 @@ func SetTransitVotesRole(ldb *db.DBService, key string, value *TransitVotes) err
 	return ldb.SetObject(TransitVotesObjectName, key, string(jsonvalue))
 }
 
+// getTransitVotesRoleByVote is to get delegate votes by vote
+func getTransitVotesRoleByVote(ldb *db.DBService, vote uint64) (*TransitVotes, error) {
+	value, err := ldb.GetObjectByIndex(TransitVotesObjectName, TransitVotesObjectIndexVote, strconv.FormatUint(vote, 10))
+	if err != nil {
+		return nil, err
+	}
+	res := &TransitVotes{}
+	err = json.Unmarshal([]byte(value), res)
+	if err != nil {
+		log.Error("ROLE Unmarshal failed ", err)
+		return nil, err
+	}
+
+	return res, nil
+
+}
 
 // GetTransitVotesRole is to get delegate votes by account name
 func GetTransitVotesRole(ldb *db.DBService, key string) (*TransitVotes, error) {
