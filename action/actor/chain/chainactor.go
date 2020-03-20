@@ -119,6 +119,14 @@ func (c *ChainActor) Receive(context actor.Context) {
 		c.HandleQueryBlockReq(context, msg)
 	case *message.QueryChainInfoReq:
 		c.HandleQueryChainInfoReq(context, msg)
+	case *message.PrevoteReq:
+		c.PreVoteBlockReq(context, msg)
+	case *message.PrecommitReq:
+		c.PreCommitBlockReq(context, msg)
+	case *message.CommitReq:
+		c.CommitBlockReq(context, msg)
+	case *message.SyncCommitReq:
+		c.SyncCommitBlockReq(context, msg)
 	default:
 		log.Error("ChainActor received Unknown msg")
 	}
