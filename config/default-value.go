@@ -107,6 +107,7 @@ const DEFAUL_MAX_NOTICE_CONTRACT_NUM uint32 = 5
 
 const PRIMARY_TRX_SESSION string = "primary"
 const SUB_TRX_SESSION string = "subsession"
+const CONSENSUS_VERSION string = "1.0"
 
 const TRX_IN uint16 = 0
 const TRX_IN_TTL uint16 = 1
