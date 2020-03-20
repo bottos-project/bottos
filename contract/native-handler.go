@@ -244,9 +244,8 @@ func (nc *NativeContract) grantCredit(ctx *Context) berr.ErrCode {
 		return cerr
 	}
 
-	cerr = nc.checkAccount(ctx.RoleIntf, ParamSpender)
-	if cerr != berr.ErrNoError {
-		return cerr
+	if err := nc.checkAccountExist(ctx.RoleIntf, ParamSpender); err != berr.ErrNoError {
+		return err
 	}
 
 	if ParamName == ParamSpender {
