@@ -54,7 +54,7 @@ func MakeProtocol(config *config.P2PConfig, chain chain.BlockChainInterface,role
 	runner := p2p.MakeP2PServer(config,roleIntf)
 
 	p := &protocol{
-		d: discover.MakeDiscover(config),
+		d: discover.MakeDiscover(config, roleIntf),
 		t: transaction.MakeTransaction(roleIntf),
 		b: block.MakeBlock(chain, true), //we should get node type here
 		c: consensus.MakeConsensus(),
