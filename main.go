@@ -147,6 +147,8 @@ func recover(ctx *cli.Context) {
 func startBottos(ctx *cli.Context) error {
 	loadConfig(ctx)
 
+	initVersion()
+
         //start Wallet REST Api
 	if ctx.GlobalBool(cmd.EnableWalletFlag.Name) {
 		var walletRestMaxLimit int
