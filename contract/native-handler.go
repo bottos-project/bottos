@@ -1038,6 +1038,24 @@ func (nc *NativeContract) checkAccountNameContent(name string) bool {
 	return nc.re.MatchString(name)
 }
 
+
+func (nc *NativeContract) claimReward(ctx *Context) berr.ErrCode {
+	sender := ctx.Trx.Sender
+
+	err := ctx.RoleIntf.ClaimReward(sender, false)
+
+	if err != nil {
+		if err.Error() == "already claimed within past day" {
+			return berr.ErrContractAlreadyClaimedReward
+		}
+
+		return berr.ErrTrxContractHanldeError
+	}
+
+	return berr.ErrNoError
+}
+
+
 func (nc *NativeContract) isAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
 	account, err := RoleIntf.GetAccount(name)
 	if err == nil {
