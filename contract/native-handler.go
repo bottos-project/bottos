@@ -1022,6 +1022,18 @@ func (nc *NativeContract) checkMsignProposalName(name string) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+
+func (nc *NativeContract) isMsignAccountNameExist(RoleIntf role.RoleInterface, name string) bool {
+	account, err := RoleIntf.GetMsignAccount(name)
+	if err == nil {
+		if account != nil && account.MsignAccountName == name {
+			return true
+		}
+	}
+	return false
+}
+
+
 func (nc *NativeContract) checkAccountNameContent(name string) bool {
 	return nc.re.MatchString(name)
 }
