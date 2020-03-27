@@ -1006,6 +1006,22 @@ func (nc *NativeContract) checkAccountName(name string) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+func (nc *NativeContract) checkMsignProposalName(name string) berr.ErrCode {
+	if len(name) == 0 {
+		return berr.ErrMsignProposalNameIllegal
+	}
+
+	if len(name) > common.MaxNameLength {
+		return berr.ErrMsignProposalNameIllegal
+	}
+
+	if !common.CheckAccountNameContent(name) {
+		return berr.ErrMsignProposalNameIllegal
+	}
+
+	return berr.ErrNoError
+}
+
 func (nc *NativeContract) checkAccountNameContent(name string) bool {
 	return nc.re.MatchString(name)
 }
