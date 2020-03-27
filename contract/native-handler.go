@@ -169,23 +169,8 @@ func (nc *NativeContract) innertransfer(ctx *Context, FromWhom string, ToWhom st
 		return berr.ErrContractTransferToSelf
 	}
 
-	if !isMsign {
-
-		// base account must be same
-		if nc.checkSigner(fromAccount, senderAccount) {
-
-			// if senderType is ExContract type ,then the full name of sender and from must be same
-			if common.NameTypeExContract == senderType {
-				if ctx.Trx.Sender != FromWhom {
+	if !isMsign && !nc.checkSigner(fromAccount, ctx.Trx.Sender) {
 		return berr.ErrAccountMismatch
-				} else {
-				}
-			} else {
-			}
-
-		} else {
-			return berr.ErrAccountMismatch
-		}
 	}
 
 	// check funds
