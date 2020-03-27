@@ -990,6 +990,16 @@ func (nc *NativeContract) voteDelegate(ctx *Context) berr.ErrCode {
 	return berr.ErrNoError
 }
 
+func (nc *NativeContract) checkContract(roleIntf role.RoleInterface, name string) berr.ErrCode {
+
+	if !nc.isContractNameExist(roleIntf, name) {
+		return berr.ErrAccountNotFound
+	}
+
+	return berr.ErrNoError
+}
+
+
 func (nc *NativeContract) checkAccountName(name string) berr.ErrCode {
 	if len(name) == 0 {
 		return berr.ErrContractAccountNameIllegal
