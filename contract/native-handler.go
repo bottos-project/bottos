@@ -591,7 +591,8 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 	}
 
 	amount := transfer["amount"].(*big.Int)
-
+	target := transfer["target"].(string)
+	
 	// check account
 	if errcode := nc.checkAccount(ctx.RoleIntf, ctx.Trx.Sender); errcode != berr.ErrNoError {
 		return errcode
