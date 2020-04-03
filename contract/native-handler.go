@@ -689,6 +689,47 @@ func (nc *NativeContract) unstake(ctx *Context) berr.ErrCode {
 
 	// amount should more than 0
 	if 1 != amount.Cmp(big.NewInt(0)) {
+	switch source {
+	case "vote":
+		if -1 == sb.StakedBalance.Cmp(amount) {
+			return berr.ErrContractInsufficientFunds
+		}
+		oldStakeAmount := sb.StakedBalance
+
+		//update
+		if err := sb.UnstakingAmount(amount, source); err != nil {
+			return berr.ErrContractTransferOverflow
+		}
+		if err := unStakeUpdate(ctx, sb, source, oldStakeAmount, amount); err != berr.ErrNoError {
+			return err
+		}
+	case "space":
+		if -1 == sb.StakedSpaceBalance.Cmp(amount) {
+			return berr.ErrContractInsufficientFunds
+		}
+		oldStakeAmount := sb.StakedSpaceBalance
+
+		//update
+		if err := sb.UnstakingAmount(amount, source); err != nil {
+			return berr.ErrContractTransferOverflow
+		}
+		if err := unStakeUpdate(ctx, sb, source, oldStakeAmount, amount); err != berr.ErrNoError {
+			return err
+		}
+	case "time":
+		if -1 == sb.StakedTimeBalance.Cmp(amount) {
+			return berr.ErrContractInsufficientFunds
+		}
+		oldStakeAmount := sb.StakedTimeBalance
+
+		//update
+		if err := sb.UnstakingAmount(amount, source); err != nil {
+			return berr.ErrContractTransferOverflow
+		}
+		if err := unStakeUpdate(ctx, sb, source, oldStakeAmount, amount); err != berr.ErrNoError {
+			return err
+		}
+	default:
 		return berr.ErrTrxContractHanldeError
 	}
 
