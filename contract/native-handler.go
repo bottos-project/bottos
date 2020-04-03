@@ -643,8 +643,8 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 			return berr.ErrTrxContractHanldeError
 		}
 	} else {
-		if voter.Delegate != "" {
-			delegateVote, err := ctx.RoleIntf.GetDelegateVotes(voter.Delegate)
+		if voter.Delegate != "" && target == "vote" {
+			err := ctx.RoleIntf.RewardHandleVotesChange(voter.Delegate, amount, false)
 			if err != nil {
 				return berr.ErrTrxContractHanldeError
 			}
