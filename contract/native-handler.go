@@ -546,10 +546,15 @@ func (nc *NativeContract) checkAbi(abiRaw []byte) error {
 }
 
 func (nc *NativeContract) deployAbi(ctx *Context) berr.ErrCode {
-	Abi := abi.GetAbi()
-	param := abi.UnmarshalAbiEx("bottos", Abi, "deployabi", ctx.Trx.Param)
-	if param == nil || len(param) <= 0 {
-		return berr.ErrContractParamParseError
+	var exContractName string = ""
+	if ParamContract == config.BOTTOS_CONTRACT_NAME {
+		if ctx.Trx.Sender != config.BOTTOS_CONTRACT_NAME {
+			return berr.ErrContractNotFound
+		} else {
+			exContractName = config.BOTTOS_CONTRACT_NAME
+		}
+	} else {
+		exContractName = nc.generateExContractName(ParamContract, ctx.Trx.Sender)
 	}
 	
 	ParamContract := param["contract"].(string)
