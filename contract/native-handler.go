@@ -663,6 +663,17 @@ func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 }
 
 func (nc *NativeContract) unstake(ctx *Context) berr.ErrCode {
+	cs, err := ctx.RoleIntf.GetChainState()
+	if err != nil {
+		return berr.ErrContractTransferOverflow
+	}
+
+	_, err = ctx.RoleIntf.GetDelegateByAccountName(ctx.Trx.Sender)
+
+	if err == nil && ctx.RoleIntf.IsTransitPeriod(cs.LastBlockNum) {
+		return berr.ErrContractChainNotActivated
+	}
+	
 	Abi := abi.GetAbi()
 	transfer := abi.UnmarshalAbiEx("bottos", Abi, "unstake", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
