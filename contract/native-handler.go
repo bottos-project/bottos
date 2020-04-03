@@ -585,7 +585,7 @@ func (nc *NativeContract) deployAbi(ctx *Context) berr.ErrCode {
 
 func (nc *NativeContract) stake(ctx *Context) berr.ErrCode {
 	Abi := abi.GetAbi()
-	transfer := abi.UnmarshalAbiEx("bottos", Abi, "stake", ctx.Trx.Param)
+	transfer, _ := abi.UnmarshalAbiEx("bottos", Abi, "stake", ctx.Trx.Param)
 	if transfer == nil || len(transfer) <= 0 {
 		return berr.ErrContractParamParseError
 	}
