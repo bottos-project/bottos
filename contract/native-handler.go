@@ -1136,7 +1136,7 @@ func (nc *NativeContract) checkAccount(RoleIntf role.RoleInterface, name string)
 	}
 
 	if !nc.isAccountNameExist(RoleIntf, name) {
-		return berr.ErrContractAccountNotFound
+		return berr.ErrAccountNotFound
 	}
 
 	return berr.ErrNoError
