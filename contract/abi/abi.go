@@ -616,6 +616,119 @@ func UnmarshalAbiExForMgoDB(contractName string, Abi *ABI, method string, data [
 	return mapResult, isOK
 }
 
+
+
+//DecodeAbiExWithBigInt is to encode message
+func DecodeAbiExWithBigInt(contractName string, method string, r io.Reader, abi ABI, subStructName string, subStructValueName string, mapResultIn *map[string]interface{}) (map[string]interface{}, bool) {
+	var errs error
+	mapResult := make(map[string]interface{})
+
+	if mapResultIn != nil && len(subStructName) > 0 {
+		mapResult = *mapResultIn
+		mapResult[subStructValueName] = make(map[string]interface{})
+		mapResult = mapResult[subStructValueName].(map[string]interface{})
+	}
+
+	abiFieldsAttr := getAbiFieldsByAbiEx(contractName, method, abi, subStructName)
+	if abiFieldsAttr == nil {
+		return nil, false
+	}
+
+	abiFields := abiFieldsAttr.GetStringPair()
+
+	count := len(abiFields)
+	
+	if count == 0 {
+		return nil, true
+	}
+
+	if len(abiFields) > 0 {
+		_, errs = msgpack.UnpackArraySize(r)
+		if errs != nil {
+			return nil, false
+		}
+	} else {
+		return nil, false
+	}
+	var i uint64 = 0
+	for _, abiValTypeAttr := range abiFields {
+		abiValKey := strings.ToLower(abiValTypeAttr.Key)
+		abiValType := abiValTypeAttr.Value
+
+		switch abiValType {
+		case "string":
+			val, err := msgpack.UnpackStr16(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint8":
+			val, err := msgpack.UnpackUint8(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint16":
+			val, err := msgpack.UnpackUint16(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint32":
+			val, err := msgpack.UnpackUint32(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "uint64":
+			val, err := msgpack.UnpackUint64(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, val)
+			i++
+		case "bytes":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				return nil, false
+			}
+			Setmapval(mapResult, abiValKey, common.BytesToHex(val))
+			i++
+		case "uint128":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				return nil, false
+			}
+			valueBigInt := big.NewInt(0)
+			valueBigInt = valueBigInt.SetBytes(val)
+
+			Setmapval(mapResult, abiValKey, valueBigInt.String())
+			i++
+		case "uint256":
+			val, err := msgpack.UnpackBin16(r)
+			if err != nil {
+				return nil, false
+			}
+			valueBigInt := big.NewInt(0)
+			valueBigInt = valueBigInt.SetBytes(val)
+
+			Setmapval(mapResult, abiValKey, valueBigInt.String())
+			i++
+		default:
+			DecodeAbiEx(contractName, method, r, abi, abiValType, abiValKey, &mapResult)
+		}
+		i += 1
+	}
+
+	return mapResult, true
+}
+
+
+
 var a  *ABI
 
 func GetAbi() *ABI {
