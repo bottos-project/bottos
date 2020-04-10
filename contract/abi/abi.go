@@ -356,8 +356,8 @@ func EncodeAbiEx(contractName string, method string, w io.Writer, value map[stri
 
 			val, ok := value[abiValKey]
 			
-			if !ok {
-				return fmt.Errorf("EncodeAbiEx: value abiValKey %s not found in map", abiValKey)
+			if count == 0 {
+				return nil
 			}
 			
 			valType := reflect.TypeOf(val).Name()
