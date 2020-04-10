@@ -149,11 +149,6 @@ func (nc *NativeContract) innertransfer(ctx *Context, FromWhom string, ToWhom st
 		return berr.ErrAccountNameIllegal
 	}
 
-	senderType, senderAccount := common.AnalyzeName(ctx.Trx.Sender)
-	if common.NameTypeUnknown == senderType {
-		return berr.ErrAccountNameIllegal
-	}
-
 	// check account
 	cerr := nc.checkAccount(ctx.RoleIntf, fromAccount)
 	if cerr != berr.ErrNoError {
