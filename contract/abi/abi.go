@@ -600,6 +600,22 @@ func UnmarshalAbiEx(contractName string, Abi *ABI, method string, data []byte) (
 	return mapResult
 }
 
+//UnmarshalAbiEx is to unserialize the message
+func UnmarshalAbiExForMgoDB(contractName string, Abi *ABI, method string, data []byte) (map[string]interface{}, bool) {
+	var abi ABI
+
+	if Abi == nil {
+		return nil, false
+	}
+
+	abi = *Abi
+
+	r := bytes.NewReader(data)
+	mapResult, isOK := DecodeAbiExWithBigInt(contractName, method, r, abi, "", "", nil)
+
+	return mapResult, isOK
+}
+
 var a  *ABI
 
 func GetAbi() *ABI {
