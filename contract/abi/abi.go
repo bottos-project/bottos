@@ -550,6 +550,28 @@ func DecodeAbiEx(contractName string, method string, r io.Reader, abi ABI, subSt
 
 					Setmapval(mapResult, abiValKey, valueBigInt)
 					i++
+				case "uint128":
+					val, err := msgpack.UnpackBin16(r)
+					if err != nil {
+						fmt.Println("unpack uint128 error ", val, err)
+						return nil, false
+					}
+					valueBigInt := big.NewInt(0)
+					valueBigInt = valueBigInt.SetBytes(val)
+
+					Setmapval(mapResult, abiValKey, valueBigInt)
+					i++
+				case "uint256":
+					val, err := msgpack.UnpackBin16(r)
+					if err != nil {
+						fmt.Println("unpack uint256 error ", val, err)
+						return nil, false
+					}
+					valueBigInt := big.NewInt(0)
+					valueBigInt = valueBigInt.SetBytes(val)
+
+					Setmapval(mapResult, abiValKey, valueBigInt)
+					i++
 				default:
 					DecodeAbiEx(contractName, method, r, abi, abiValType, abiValKey, &mapResult)
 				}
