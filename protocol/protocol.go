@@ -122,6 +122,13 @@ func (p *protocol) GetPeerInfo()( uint64, []*context.PeersInfo) {
 	}
 	return peerCount, peersInfo
 }
+
+func (p *protocol) QueryPeerState(addr string) bool {
+	return p2p.Runner.QueryPeerState(addr)
+}
+
+
+
 func (p *protocol) GetBlockSyncState() bool {
 
 	if config.BtoConfig.Delegate.Solo == true {
