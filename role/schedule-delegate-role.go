@@ -212,6 +212,6 @@ func ShuffleEelectCandidateListRole(ldb *db.DBService, block *types.Block) ([]st
 	r.Shuffle(len(electSchedule), func(i, j int) {
 		newSchedule[i], newSchedule[j] = newSchedule[j], newSchedule[i]
 	})
-
+	log.Info("ROLE New Elected, before shuffle: ", label, " ", electSchedule, " ", newSchedule)
 	return newSchedule, nil
 }
