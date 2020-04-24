@@ -130,6 +130,16 @@ func (p *protocol) GetBlockSyncState() bool {
 	return p.b.GetSyncState()
 }
 
+
+func (p *protocol) GetBlockSyncDistance() uint64 {
+	if config.BtoConfig.Delegate.Solo == true {
+		return 0
+	}
+	return p.b.GetSyncDistance()
+}
+
+
+
 func (p *protocol) SetChainActor(tpid *actor.PID) {
 	p.b.SetActor(tpid)
 }
