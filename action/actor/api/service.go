@@ -233,8 +233,8 @@ var QuerhChainInfoCntSuc uint32 = 0
 //GetInfo query chain info
 func (a *ApiService) GetInfo(ctx context.Context, req *api.GetInfoRequest, resp *api.GetInfoResponse) error {
 
-	QuerhChainInfoCntReq++
 
+	QuerhChainInfoCntReq++
 	log.Error("api actor rcv QueryChainInfo Req, cnt ", QuerhChainInfoCntReq)
 
 	/*
