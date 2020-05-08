@@ -1,6 +1,7 @@
-﻿package handler
+package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -25,11 +26,11 @@ import (
 	"github.com/bottos-project/bottos/common/types"
 	"github.com/bottos-project/bottos/config"
 	"github.com/bottos-project/bottos/contract/abi"
+	comtool "github.com/bottos-project/bottos/restful/common"
 	"github.com/bottos-project/bottos/role"
 	"github.com/bottos-project/bottos/transaction"
 	log "github.com/cihub/seelog"
 	"math/big"
-	comtool "github.com/bottos-project/bottos/restful/common"
 )
 
 //ApiService is actor service
@@ -41,6 +42,7 @@ type ListWalletResponse_Result struct {
 	WalletPath  string `protobuf:"bytes,1,opt,name=wallet_path,json=walletPath" json:"wallet_path"`
 	AccountName string `protobuf:"bytes,2,opt,name=account_name,json=accountName" json:"account_name"`
 }
+
 var roleIntf role.RoleInterface
 var actorenv *actionenv.ActorEnv
 
@@ -531,7 +533,7 @@ func GetTransactionStatus(w http.ResponseWriter, r *http.Request) {
 	trxApply := transaction.NewTrxApplyService()
 	errCode := trxApply.GetTrxErrorCode(common.HexToHash(req.TrxHash))
 	if bottosErr.ErrNoError != errCode {
-		log.Errorf("REST:get trx error code:%v",errCode)
+		log.Errorf("REST:get trx error code:%v", errCode)
 
 		resp.Errcode = uint32(errCode)
 		resp.Msg = bottosErr.GetCodeString(errCode)
@@ -668,10 +670,10 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result.StakedBalance = stakedBalance.StakedBalance.String()
-		result.StakedSpaceBalance = stakedBalance.StakedSpaceBalance.String()
-		result.StakedTimeBalance = stakedBalance.StakedTimeBalance.String()
-		result.UnStakingBalance = stakedBalance.UnstakingBalance.String()
-		result.UnStakingTimestamp = stakedBalance.LastUnstakingTime
+	result.StakedSpaceBalance = stakedBalance.StakedSpaceBalance.String()
+	result.StakedTimeBalance = stakedBalance.StakedTimeBalance.String()
+	result.UnStakingBalance = stakedBalance.UnstakingBalance.String()
+	result.UnStakingTimestamp = stakedBalance.LastUnstakingTime
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		panic(err)
@@ -830,8 +832,6 @@ func ConnetPeerbyAddress(w http.ResponseWriter, r *http.Request) {
 	address := msgReq.Address
 	isDone := actorenv.Protocol.UpdatePeerStateToActive(address)
 
-
-
 	result := &api.ConnectPeerByAddressResponse_Result{
 		Result: isDone,
 	}
@@ -859,8 +859,6 @@ func DisConnectPeerbyAddress(w http.ResponseWriter, r *http.Request) {
 	address := msgReq.Address
 	isDone := actorenv.Protocol.UpdatePeerStateToUnActive(address)
 
-
-
 	result := &api.DisconnectPeerByAddressResponse_Result{
 		Result: isDone,
 	}
@@ -869,7 +867,6 @@ func DisConnectPeerbyAddress(w http.ResponseWriter, r *http.Request) {
 	resp.Result = result
 	encoderRestResponse(w, resp)
 }
-
 
 //GetPeers get all peers
 func GetPeerStatebyAddress(w http.ResponseWriter, r *http.Request) {
@@ -888,8 +885,6 @@ func GetPeerStatebyAddress(w http.ResponseWriter, r *http.Request) {
 
 	address := msgReq.Address
 	state := actorenv.Protocol.QueryPeerState(address)
-
-
 
 	result := &api.GetPeerStateByAddressResponse_Result{
 		IsActive: state,
@@ -1214,4 +1209,112 @@ func GetTrxHashForSign(sender, contract, method string, param []byte, h *api.Get
 		SigAlg:      config.SIGN_ALG,
 	}
 	return comtool.Sha256(msg), intTrx, err
+}
+
+//GetHashForSign2 get hash before signature transaction
+func GetHashForSign2(w http.ResponseWriter, r *http.Request) {
+	var req *JsonToBinRequest
+	var resp comtool.ResponseStruct
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Errorf("REST:json Decoder failed:%v", err)
+
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+	if resp := checkNil(req, 0); resp.Errcode != 0 {
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	flag, res := comtool.VerifyAccount(req.Sender)
+	if !flag {
+		encoderRestResponse(w, res)
+		return
+	}
+	flag, res = comtool.VerifyContract(req.Contract)
+	if !flag {
+		encoderRestResponse(w, res)
+		return
+	}
+	flag, res = comtool.VerifyMethod(req.Method)
+	if !flag {
+		encoderRestResponse(w, res)
+		return
+	}
+
+	contract, err := GetContract(req.Contract)
+	if err != nil {
+		resp.Errcode = uint32(bottosErr.ErrContractNotFound)
+		resp.Msg = bottosErr.GetCodeString((bottosErr.ErrCode)(resp.Errcode))
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+	var abis *abi.ABI
+	if len(contract.ContractAbi) > 0 {
+		abis, _ = abi.ParseAbi(contract.ContractAbi)
+	} else {
+		//May be this time user hasn't deployed his abi yet.
+		resp.Errcode = uint32(bottosErr.ErrNoError)
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	bin, res := getJsonBin(abis, req)
+	if len(bin) <= 0 {
+		encoderRestResponse(w, res)
+		return
+	}
+
+	//param, err := common.HexToBytes(req.Param)
+	if err != nil {
+		log.Errorf("REST:HexToBytes failed:%v", err)
+
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+	if err != nil {
+		log.Errorf("REST:HexToBytes failed:%v", err)
+
+		resp.Errcode = uint32(bottosErr.RestErrJsonNewEncoder)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrJsonNewEncoder)
+		resp.Result = err
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	h, intTrx, err := GetTrxHashForSign(req.Sender, req.Contract, req.Method, bin, nil)
+
+	if nil != err {
+		resp.Errcode = uint32(bottosErr.RestErrTrxSignError)
+		resp.Msg = bottosErr.GetCodeString(bottosErr.RestErrTrxSignError)
+		resp.Result = err.Error()
+		log.Errorf("REST:GetTrxHashBeforeSign failed, errcode:%d PushTrxReq error:%s", resp.Errcode, err)
+
+		encoderRestResponse(w, resp)
+		return
+	}
+
+	result := &api.GetHashForSignResponse_Result{
+		Trx:         service.ConvertIntTrxToApiTrx(intTrx),
+		HashForSign: hex.EncodeToString(h),
+	}
+
+	resp.Errcode = uint32(bottosErr.ErrNoError)
+	resp.Msg = bottosErr.GetCodeString(bottosErr.ErrNoError)
+	resp.Result = result
+	encoderRestResponse(w, resp)
+	return
 }
