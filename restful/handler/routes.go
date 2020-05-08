@@ -1,4 +1,4 @@
-﻿package handler
+package handler
 
 import (
 	"net/http"
@@ -12,11 +12,11 @@ const (
 	GET_BLK_DETAIL = "/v1/block/detail"
 
 	// Transaction
-	SEND_TRANSACTION = "/v1/transaction/send"
-	GET_TRANSACTION  = "/v1/transaction/get"
+	SEND_TRANSACTION       = "/v1/transaction/send"
+	GET_TRANSACTION        = "/v1/transaction/get"
 	GET_TRANSACTION_STATUS = "/v1/transaction/status"
 	GET_HASH_FOR_SIGN      = "/v1/transaction/getHashForSign"
-	GET_HASH_FOR_SIGN2      = "/v1/transaction/getHashForSign2"
+	GET_HASH_FOR_SIGN2     = "/v1/transaction/getHashForSign2"
 
 	//Account
 	GET_ACCOUNT_BRIEF   = "/v1/account/brief"
@@ -29,7 +29,7 @@ const (
 
 	// Common query
 	QUERY_DB_VALUE = "/v1/common/queryDB"
-	JSON_TO_BIN   = "/v1/common/jsontobin"
+	JSON_TO_BIN    = "/v1/common/jsontobin"
 
 	//node
 	GET_GEN_BLK_TIME = "/v1/node/generateblocktime"
@@ -39,14 +39,14 @@ const (
 	GET_ALL_DELEFATE = "/v1/delegate/getall"
 
 	//global
-	GET_GLOBAL_STAKED      = "/v1/global/stakedbalance"
+	GET_GLOBAL_STAKED             = "/v1/global/stakedbalance"
 	GET_FORECAST_RESOURCE_BALANCE = "/v1/resource/forecastresource"
 
 	//p2p
-	GET_ALL_PEERINFO = "/v1/p2p/getpeers"
-	CONNECT_PEER_BY_ADDRESS = "/v1/p2p/connectpeer"
+	GET_ALL_PEERINFO           = "/v1/p2p/getpeers"
+	CONNECT_PEER_BY_ADDRESS    = "/v1/p2p/connectpeer"
 	DISCONNECT_PEER_BY_ADDRESS = "/v1/p2p/disconnectpeer"
-	GET_PEER_STATE_BY_ADDRESS = "/v1/p2p/getpeerstate"
+	GET_PEER_STATE_BY_ADDRESS  = "/v1/p2p/getpeerstate"
 
 	//MutlSign
 	Proposal_Review = "/v1/proposal/review"
@@ -220,11 +220,16 @@ var routes = Routes{
 		Proposal_Review,
 		ReviewProposal,
 	},
-        Route{
+	Route{
 		"",
 		"POST",
 		GET_HASH_FOR_SIGN,
 		GetHashForSign,
 	},
-
+	Route{
+		"",
+		"POST",
+		GET_HASH_FOR_SIGN2,
+		GetHashForSign2,
+	},
 }
